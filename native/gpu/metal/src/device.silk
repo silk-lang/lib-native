@@ -1,0 +1,1388 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Derived from metal-rs, Copyright 2017 GFX developers.
+
+import types { MTLSize, MTLSizeAndAlign, MTLAccelerationStructureSizes }
+
+/// Unsafe raw bindings. Object ownership is explicit; no handles are automatically released.
+pub struct FeatureSetCapabilities {}
+
+impl FeatureSetCapabilities {
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_metal_kit(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_metal_kit(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_metal_performance_shaders(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_metal_performance_shaders(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_programmable_blending(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_programmable_blending(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_pvrtc_pixel_formats(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_pvrtc_pixel_formats(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_eac_etc_pixel_formats(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_eac_etc_pixel_formats(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_astc_pixel_formats(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_astc_pixel_formats(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_linear_textures(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_linear_textures(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_bc_pixel_formats(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_bc_pixel_formats(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_msaa_depth_resolve(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_msaa_depth_resolve(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_counting_occlusion_query(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_counting_occlusion_query(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_base_vertex_instance_drawing(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_base_vertex_instance_drawing(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_indirect_buffers(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_indirect_buffers(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_cube_map_texture_arrays(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_cube_map_texture_arrays(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_texture_barriers(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_texture_barriers(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_layered_rendering(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_layered_rendering(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_tessellation(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_tessellation(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_resource_heaps(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_resource_heaps(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_memoryless_render_targets(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_memoryless_render_targets(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_function_specialization(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_function_specialization(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_function_buffer_read_writes(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_function_buffer_read_writes(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_function_texture_read_writes(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_function_texture_read_writes(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_array_of_textures(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_array_of_textures(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_array_of_samplers(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_array_of_samplers(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_stencil_texture_views(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_stencil_texture_views(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_depth_16_pixel_format(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_depth_16_pixel_format(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_extended_range_pixel_formats(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_extended_range_pixel_formats(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_wide_color_pixel_format(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_wide_color_pixel_format(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_combined_msaa_store_and_resolve_action(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_combined_msaa_store_and_resolve_action(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_deferred_store_action(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_deferred_store_action(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_msaa_blits(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_msaa_blits(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_srgb_writes(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_srgb_writes(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_16_bit_unsigned_integer_coordinates(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_16_bit_unsigned_integer_coordinates(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_extract_insert_and_reverse_bits(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_extract_insert_and_reverse_bits(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_simd_barrier(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_simd_barrier(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_sampler_max_anisotropy(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_sampler_max_anisotropy(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_sampler_lod_clamp(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_sampler_lod_clamp(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_border_color(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_border_color(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_dual_source_blending(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_dual_source_blending(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_argument_buffers(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_argument_buffers(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_programmable_sample_positions(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_programmable_sample_positions(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_uniform_type(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_uniform_type(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_imageblocks(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_imageblocks(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_tile_shaders(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_tile_shaders(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_imageblock_sample_coverage_control(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_imageblock_sample_coverage_control(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_threadgroup_sharing(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_threadgroup_sharing(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_post_depth_coverage(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_post_depth_coverage(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_quad_scoped_permute_operations(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_quad_scoped_permute_operations(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_raster_order_groups(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_raster_order_groups(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_non_uniform_threadgroup_size(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_non_uniform_threadgroup_size(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_multiple_viewports(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_multiple_viewports(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_device_notifications(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_device_notifications(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_stencil_feedback(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_stencil_feedback(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_stencil_resolve(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_stencil_resolve(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn supports_binary_archive(feature_set: u64) -> bool {
+    return unsafe metal_FeatureSetCapabilities_supports_binary_archive(feature_set) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn max_vertex_attributes(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_max_vertex_attributes(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn max_buffer_argument_entries(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_max_buffer_argument_entries(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn max_texture_argument_entries(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_max_texture_argument_entries(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn max_sampler_state_argument_entries(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_max_sampler_state_argument_entries(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn max_threadgroup_memory_argument_entries(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_max_threadgroup_memory_argument_entries(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn max_inlined_constant_data_buffers(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_max_inlined_constant_data_buffers(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn max_inline_constant_buffer_length(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_max_inline_constant_buffer_length(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn max_threads_per_threadgroup(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_max_threads_per_threadgroup(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn max_total_threadgroup_memory_allocation(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_max_total_threadgroup_memory_allocation(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn max_total_tile_memory_allocation(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_max_total_tile_memory_allocation(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn threadgroup_memory_length_alignment(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_threadgroup_memory_length_alignment(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table. Returns false for None without writing out; otherwise writes the Some value.
+  pub unsafe fn max_constant_buffer_function_memory_allocation(feature_set: u64, out: *mut u32) -> bool {
+    return unsafe metal_FeatureSetCapabilities_max_constant_buffer_function_memory_allocation(feature_set, out) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn max_fragment_inputs(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_max_fragment_inputs(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn max_fragment_input_components(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_max_fragment_input_components(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn max_function_constants(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_max_function_constants(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn max_tessellation_factor(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_max_tessellation_factor(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn max_viewports_and_scissor_rectangles(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_max_viewports_and_scissor_rectangles(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn max_raster_order_groups(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_max_raster_order_groups(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn max_buffer_length(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_max_buffer_length(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn min_buffer_offset_alignment(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_min_buffer_offset_alignment(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn max_1d_texture_size(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_max_1d_texture_size(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn max_2d_texture_size(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_max_2d_texture_size(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn max_cube_map_texture_size(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_max_cube_map_texture_size(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn max_3d_texture_size(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_max_3d_texture_size(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn max_array_layers(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_max_array_layers(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn copy_texture_buffer_alignment(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_copy_texture_buffer_alignment(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table. Returns false for None without writing out; otherwise writes the Some value.
+  pub unsafe fn new_texture_buffer_alignment(feature_set: u64, out: *mut u32) -> bool {
+    return unsafe metal_FeatureSetCapabilities_new_texture_buffer_alignment(feature_set, out) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn max_color_render_targets(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_max_color_render_targets(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn max_point_primitive_size(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_max_point_primitive_size(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table. Returns false for None without writing out; otherwise writes the Some value.
+  pub unsafe fn max_total_color_render_target_size(feature_set: u64, out: *mut u32) -> bool {
+    return unsafe metal_FeatureSetCapabilities_max_total_color_render_target_size(feature_set, out) != 0
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn max_visibility_query_offset(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_max_visibility_query_offset(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn a8_unorm_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_a8_unorm_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn r8_unorm_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_r8_unorm_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn r8_unorm_srgb_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_r8_unorm_srgb_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn r8_snorm_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_r8_snorm_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn r8_uint_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_r8_uint_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn r8_sint_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_r8_sint_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn r16_unorm_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_r16_unorm_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn r16_snorm_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_r16_snorm_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn r16_uint_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_r16_uint_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn r16_sint_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_r16_sint_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn r16_float_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_r16_float_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn rg8_unorm_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_rg8_unorm_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn rg8_unorm_srgb_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_rg8_unorm_srgb_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn rg8_snorm_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_rg8_snorm_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn rg8_uint_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_rg8_uint_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn rg8_sint_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_rg8_sint_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn b5_g6_r5_unorm_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_b5_g6_r5_unorm_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn a1_bgr5_unorm_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_a1_bgr5_unorm_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn abgr4_unorm_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_abgr4_unorm_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn bgr5_a1_unorm_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_bgr5_a1_unorm_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn r32_uint_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_r32_uint_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn r32_sint_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_r32_sint_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn r32_float_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_r32_float_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn rg16_unorm_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_rg16_unorm_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn rg16_snorm_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_rg16_snorm_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn rg16_uint_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_rg16_uint_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn rg16_sint_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_rg16_sint_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn rg16_float_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_rg16_float_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn rgba8_unorm_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_rgba8_unorm_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn rgba8_unorm_srgb_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_rgba8_unorm_srgb_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn rgba8_snorm_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_rgba8_snorm_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn rgba8_uint_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_rgba8_uint_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn rgba8_sint_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_rgba8_sint_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn bgra8_unorm_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_bgra8_unorm_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn bgra8_unorm_srgb_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_bgra8_unorm_srgb_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn rgb10_a2_unorm_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_rgb10_a2_unorm_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn rgb10_a2_uint_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_rgb10_a2_uint_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn rg11_b10_float_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_rg11_b10_float_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn rgb9_e5_float_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_rgb9_e5_float_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn rg32_uint_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_rg32_uint_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn rg32_sint_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_rg32_sint_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn rg32_float_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_rg32_float_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn rgba16_unorm_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_rgba16_unorm_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn rgba16_snorm_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_rgba16_snorm_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn rgba16_uint_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_rgba16_uint_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn rgba16_sint_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_rgba16_sint_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn rgba16_float_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_rgba16_float_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn rgba32_uint_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_rgba32_uint_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn rgba32_sint_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_rgba32_sint_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn rgba32_float_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_rgba32_float_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn pvrtc_pixel_formats_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_pvrtc_pixel_formats_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn eac_etc_pixel_formats_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_eac_etc_pixel_formats_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn astc_pixel_formats_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_astc_pixel_formats_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn bc_pixel_formats_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_bc_pixel_formats_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn gbgr422_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_gbgr422_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn bgrg422_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_bgrg422_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn depth16_unorm_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_depth16_unorm_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn depth32_float_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_depth32_float_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn stencil8_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_stencil8_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn depth24_unorm_stencil8_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_depth24_unorm_stencil8_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn depth32_float_stencil8_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_depth32_float_stencil8_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn x24_stencil8_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_x24_stencil8_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn x32_stencil8_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_x32_stencil8_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn bgra10_xr_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_bgra10_xr_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn bgra10_xr_srgb_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_bgra10_xr_srgb_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn bgr10_xr_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_bgr10_xr_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn bgr10_xr_srgb_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_bgr10_xr_srgb_capabilities(feature_set)
+  }
+
+  /// feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table.
+  pub unsafe fn bgr10_a2_unorm_capabilities(feature_set: u64) -> u32 {
+    return unsafe metal_FeatureSetCapabilities_bgr10_a2_unorm_capabilities(feature_set)
+  }
+}
+
+/// Unsafe raw bindings. Object ownership is explicit; no handles are automatically released.
+pub struct Device {}
+
+impl Device {
+  /// Returns an owned +1 device, or null if Metal is unavailable.
+  pub unsafe fn system_default() -> ?*mut u8 {
+    return unsafe metal_Device_system_default()
+  }
+
+  /// Returns an owned +1 NSArray of devices. Elements are borrowed from the array; retain them to outlive it.
+  pub unsafe fn all() -> ?*mut u8 {
+    return unsafe metal_Device_all()
+  }
+
+  /// Returns borrowed UTF-8 storage owned by the NSString property. Keep the device alive.
+  pub unsafe fn name(object: ?*mut u8) -> ?[*]const u8 {
+    return unsafe metal_Device_name(object)
+  }
+
+  /// Returns borrowed UTF-8 storage owned by the NSString property. Private vendor API; caller must ensure selector availability.
+  pub unsafe fn vendor(object: ?*mut u8) -> ?[*]const u8 {
+    return unsafe metal_Device_vendor(object)
+  }
+
+  /// Returns borrowed UTF-8 storage owned by the NSString property. Private vendor API; caller must ensure selector availability.
+  pub unsafe fn family_name(object: ?*mut u8) -> ?[*]const u8 {
+    return unsafe metal_Device_family_name(object)
+  }
+
+  /// Caller must ensure the device and selector are available.
+  pub unsafe fn registry_id(object: ?*mut u8) -> u64 {
+    return unsafe metal_Device_registry_id(object)
+  }
+
+  /// Caller must ensure the device and selector are available.
+  pub unsafe fn location(object: ?*mut u8) -> u64 {
+    return unsafe metal_Device_location(object)
+  }
+
+  /// Caller must ensure the device and selector are available.
+  pub unsafe fn location_number(object: ?*mut u8) -> u64 {
+    return unsafe metal_Device_location_number(object)
+  }
+
+  /// Caller must ensure the device and selector are available.
+  pub unsafe fn max_threadgroup_memory_length(object: ?*mut u8) -> u64 {
+    return unsafe metal_Device_max_threadgroup_memory_length(object)
+  }
+
+  /// Returns the threadgroup dimensions by value.
+  pub unsafe fn max_threads_per_threadgroup(object: ?*mut u8) -> MTLSize {
+    return unsafe metal_Device_max_threads_per_threadgroup(object)
+  }
+
+  /// Caller must ensure the device and selector are available.
+  pub unsafe fn is_low_power(object: ?*mut u8) -> bool {
+    return unsafe metal_Device_is_low_power(object) != 0
+  }
+
+  /// Caller must ensure the device and selector are available.
+  pub unsafe fn is_headless(object: ?*mut u8) -> bool {
+    return unsafe metal_Device_is_headless(object) != 0
+  }
+
+  /// Caller must ensure the device and selector are available.
+  pub unsafe fn is_removable(object: ?*mut u8) -> bool {
+    return unsafe metal_Device_is_removable(object) != 0
+  }
+
+  /// Caller must ensure the device and selector are available.
+  pub unsafe fn supports_raytracing(object: ?*mut u8) -> bool {
+    return unsafe metal_Device_supports_raytracing(object) != 0
+  }
+
+  /// Caller must ensure the device and selector are available.
+  pub unsafe fn has_unified_memory(object: ?*mut u8) -> bool {
+    return unsafe metal_Device_has_unified_memory(object) != 0
+  }
+
+  /// Caller must ensure the device and selector are available.
+  pub unsafe fn recommended_max_working_set_size(object: ?*mut u8) -> u64 {
+    return unsafe metal_Device_recommended_max_working_set_size(object)
+  }
+
+  /// Caller must ensure the device and selector are available.
+  pub unsafe fn max_transfer_rate(object: ?*mut u8) -> u64 {
+    return unsafe metal_Device_max_transfer_rate(object)
+  }
+
+  /// Caller must ensure the device and selector are available.
+  pub unsafe fn supports_shader_barycentric_coordinates(object: ?*mut u8) -> bool {
+    return unsafe metal_Device_supports_shader_barycentric_coordinates(object) != 0
+  }
+
+  /// Caller must ensure the device and selector are available.
+  pub unsafe fn supports_function_pointers(object: ?*mut u8) -> bool {
+    return unsafe metal_Device_supports_function_pointers(object) != 0
+  }
+
+  /// Caller must ensure the device and selector are available.
+  pub unsafe fn supports_dynamic_libraries(object: ?*mut u8) -> bool {
+    return unsafe metal_Device_supports_dynamic_libraries(object) != 0
+  }
+
+  /// Caller must ensure the device and selector are available.
+  pub unsafe fn d24_s8_supported(object: ?*mut u8) -> bool {
+    return unsafe metal_Device_d24_s8_supported(object) != 0
+  }
+
+  /// Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements.
+  pub unsafe fn new_fence(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_Device_new_fence(object)
+  }
+
+  /// Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements.
+  pub unsafe fn new_command_queue(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_Device_new_command_queue(object)
+  }
+
+  /// Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements.
+  pub unsafe fn new_default_library(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_Device_new_default_library(object)
+  }
+
+  /// Caller must ensure the device and selector are available.
+  pub unsafe fn argument_buffers_support(object: ?*mut u8) -> u64 {
+    return unsafe metal_Device_argument_buffers_support(object)
+  }
+
+  /// Caller must ensure the device and selector are available.
+  pub unsafe fn read_write_texture_support(object: ?*mut u8) -> u64 {
+    return unsafe metal_Device_read_write_texture_support(object)
+  }
+
+  /// Caller must ensure the device and selector are available.
+  pub unsafe fn raster_order_groups_supported(object: ?*mut u8) -> bool {
+    return unsafe metal_Device_raster_order_groups_supported(object) != 0
+  }
+
+  /// Caller must ensure the device and selector are available.
+  pub unsafe fn supports_32bit_float_filtering(object: ?*mut u8) -> bool {
+    return unsafe metal_Device_supports_32bit_float_filtering(object) != 0
+  }
+
+  /// Caller must ensure the device and selector are available.
+  pub unsafe fn supports_32bit_MSAA(object: ?*mut u8) -> bool {
+    return unsafe metal_Device_supports_32bit_MSAA(object) != 0
+  }
+
+  /// Caller must ensure the device and selector are available.
+  pub unsafe fn supports_query_texture_LOD(object: ?*mut u8) -> bool {
+    return unsafe metal_Device_supports_query_texture_LOD(object) != 0
+  }
+
+  /// Caller must ensure the device and selector are available.
+  pub unsafe fn supports_BC_texture_compression(object: ?*mut u8) -> bool {
+    return unsafe metal_Device_supports_BC_texture_compression(object) != 0
+  }
+
+  /// Caller must ensure the device and selector are available.
+  pub unsafe fn supports_pull_model_interpolation(object: ?*mut u8) -> bool {
+    return unsafe metal_Device_supports_pull_model_interpolation(object) != 0
+  }
+
+  /// Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements.
+  pub unsafe fn new_event(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_Device_new_event(object)
+  }
+
+  /// Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements.
+  pub unsafe fn new_shared_event(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_Device_new_shared_event(object)
+  }
+
+  /// Caller must ensure the device and selector are available.
+  pub unsafe fn max_argument_buffer_sampler_count(object: ?*mut u8) -> u64 {
+    return unsafe metal_Device_max_argument_buffer_sampler_count(object)
+  }
+
+  /// Caller must ensure the device and selector are available.
+  pub unsafe fn current_allocated_size(object: ?*mut u8) -> u64 {
+    return unsafe metal_Device_current_allocated_size(object)
+  }
+
+  /// Caller must ensure the device and selector are available.
+  pub unsafe fn max_buffer_length(object: ?*mut u8) -> u64 {
+    return unsafe metal_Device_max_buffer_length(object)
+  }
+
+  /// Returns a borrowed +0 NSArray of counter sets; retain the array or individual elements to extend their lifetimes.
+  pub unsafe fn counter_sets(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_Device_counter_sets(object)
+  }
+
+  /// Caller must ensure the device and selector are available.
+  pub unsafe fn supports_feature_set(object: ?*mut u8, feature: u64) -> bool {
+    return unsafe metal_Device_supports_feature_set(object, feature) != 0
+  }
+
+  /// Caller must ensure the device and selector are available.
+  pub unsafe fn supports_family(object: ?*mut u8, family: i64) -> bool {
+    return unsafe metal_Device_supports_family(object, family) != 0
+  }
+
+  /// Caller must ensure the device and selector are available.
+  pub unsafe fn supports_vertex_amplification_count(object: ?*mut u8, count: u64) -> bool {
+    return unsafe metal_Device_supports_vertex_amplification_count(object, count) != 0
+  }
+
+  /// Caller must ensure the device and selector are available.
+  pub unsafe fn supports_texture_sample_count(object: ?*mut u8, count: u64) -> bool {
+    return unsafe metal_Device_supports_texture_sample_count(object, count) != 0
+  }
+
+  /// Caller must ensure the device and selector are available.
+  pub unsafe fn supports_counter_sampling(object: ?*mut u8, sampling_point: u64) -> bool {
+    return unsafe metal_Device_supports_counter_sampling(object, sampling_point) != 0
+  }
+
+  /// Caller must ensure the device and selector are available.
+  pub unsafe fn minimum_linear_texture_alignment_for_pixel_format(object: ?*mut u8, format: u64) -> u64 {
+    return unsafe metal_Device_minimum_linear_texture_alignment_for_pixel_format(object, format)
+  }
+
+  /// Caller must ensure the device and selector are available.
+  pub unsafe fn minimum_texture_buffer_alignment_for_pixel_format(object: ?*mut u8, format: u64) -> u64 {
+    return unsafe metal_Device_minimum_texture_buffer_alignment_for_pixel_format(object, format)
+  }
+
+  /// Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements.
+  pub unsafe fn new_command_queue_with_max_command_buffer_count(object: ?*mut u8, count: u64) -> ?*mut u8 {
+    return unsafe metal_Device_new_command_queue_with_max_command_buffer_count(object, count)
+  }
+
+  /// Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements.
+  pub unsafe fn new_texture(object: ?*mut u8, descriptor: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_Device_new_texture(object, descriptor)
+  }
+
+  /// Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements.
+  pub unsafe fn new_sampler(object: ?*mut u8, descriptor: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_Device_new_sampler(object, descriptor)
+  }
+
+  /// Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements.
+  pub unsafe fn new_depth_stencil_state(object: ?*mut u8, descriptor: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_Device_new_depth_stencil_state(object, descriptor)
+  }
+
+  /// Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements.
+  pub unsafe fn new_argument_encoder(object: ?*mut u8, arguments: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_Device_new_argument_encoder(object, arguments)
+  }
+
+  /// Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements.
+  pub unsafe fn new_heap(object: ?*mut u8, descriptor: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_Device_new_heap(object, descriptor)
+  }
+
+  /// Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements.
+  pub unsafe fn new_acceleration_structure_with_size(object: ?*mut u8, size: u64) -> ?*mut u8 {
+    return unsafe metal_Device_new_acceleration_structure_with_size(object, size)
+  }
+
+  /// Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore.
+  pub unsafe fn new_dynamic_library(object: ?*mut u8, library: ?*mut u8, error: ?*mut ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_Device_new_dynamic_library(object, library, error)
+  }
+
+  /// Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore.
+  pub unsafe fn new_dynamic_library_with_url(object: ?*mut u8, url: ?*mut u8, error: ?*mut ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_Device_new_dynamic_library_with_url(object, url, error)
+  }
+
+  /// Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore.
+  pub unsafe fn new_binary_archive_with_descriptor(object: ?*mut u8, descriptor: ?*mut u8, error: ?*mut ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_Device_new_binary_archive_with_descriptor(object, descriptor, error)
+  }
+
+  /// Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore.
+  pub unsafe fn new_render_pipeline_state(object: ?*mut u8, descriptor: ?*mut u8, error: ?*mut ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_Device_new_render_pipeline_state(object, descriptor, error)
+  }
+
+  /// Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore.
+  pub unsafe fn new_compute_pipeline_state_with_function(object: ?*mut u8, function: ?*mut u8, error: ?*mut ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_Device_new_compute_pipeline_state_with_function(object, function, error)
+  }
+
+  /// Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore.
+  pub unsafe fn new_counter_sample_buffer_with_descriptor(object: ?*mut u8, descriptor: ?*mut u8, error: ?*mut ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_Device_new_counter_sample_buffer_with_descriptor(object, descriptor, error)
+  }
+
+  /// Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore. reflection receives a separately owned +1 reflection object, or null, and must be released.
+  pub unsafe fn new_render_pipeline_state_with_reflection(object: ?*mut u8, descriptor: ?*mut u8, reflection_options: u64, reflection: *mut ?*mut u8, error: ?*mut ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_Device_new_render_pipeline_state_with_reflection(object, descriptor, reflection_options, reflection, error)
+  }
+
+  /// Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore. reflection receives a separately owned +1 reflection object, or null, and must be released.
+  pub unsafe fn new_mesh_render_pipeline_state_with_reflection(object: ?*mut u8, descriptor: ?*mut u8, reflection_options: u64, reflection: *mut ?*mut u8, error: ?*mut ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_Device_new_mesh_render_pipeline_state_with_reflection(object, descriptor, reflection_options, reflection, error)
+  }
+
+  /// Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore. reflection receives a separately owned +1 reflection object, or null, and must be released.
+  pub unsafe fn new_compute_pipeline_state_with_reflection(object: ?*mut u8, descriptor: ?*mut u8, reflection_options: u64, reflection: *mut ?*mut u8, error: ?*mut ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_Device_new_compute_pipeline_state_with_reflection(object, descriptor, reflection_options, reflection, error)
+  }
+
+  /// Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore. Uses the SDK descriptor selector with no reflection options.
+  pub unsafe fn new_mesh_render_pipeline_state(object: ?*mut u8, descriptor: ?*mut u8, error: ?*mut ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_Device_new_mesh_render_pipeline_state(object, descriptor, error)
+  }
+
+  /// Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore. Uses the SDK descriptor selector with no reflection options.
+  pub unsafe fn new_compute_pipeline_state(object: ?*mut u8, descriptor: ?*mut u8, error: ?*mut ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_Device_new_compute_pipeline_state(object, descriptor, error)
+  }
+
+  /// Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore. src is NUL-terminated UTF-8.
+  pub unsafe fn new_library_with_source(object: ?*mut u8, src: ?[*]const u8, options: ?*mut u8, error: ?*mut ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_Device_new_library_with_source(object, src, options, error)
+  }
+
+  /// Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore. file is a NUL-terminated UTF-8 filesystem path.
+  pub unsafe fn new_library_with_file(object: ?*mut u8, file: ?[*]const u8, error: ?*mut ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_Device_new_library_with_file(object, file, error)
+  }
+
+  /// Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore. library_data points to length readable bytes; dispatch copies the bytes before this returns.
+  pub unsafe fn new_library_with_data(object: ?*mut u8, library_data: ?[*]const u8, length: u64, error: ?*mut ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_Device_new_library_with_data(object, library_data, length, error)
+  }
+
+  /// Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements.
+  pub unsafe fn new_buffer(object: ?*mut u8, length: u64, options: u64) -> ?*mut u8 {
+    return unsafe metal_Device_new_buffer(object, length, options)
+  }
+
+  /// Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. bytes points to length readable bytes, copied by Metal.
+  pub unsafe fn new_buffer_with_data(object: ?*mut u8, bytes: ?[*]const u8, length: u64, options: u64) -> ?*mut u8 {
+    return unsafe metal_Device_new_buffer_with_data(object, bytes, length, options)
+  }
+
+  /// Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. bytes must satisfy Metal no-copy alignment and lifetime requirements. When has_deallocator is true, the copied block captures the callback/context values; keep both valid until Metal invokes the callback, potentially on another thread. The callback receives context, bytes, and length. When false, deallocator is not called and the caller retains responsibility for storage lifetime.
+  pub unsafe fn new_buffer_with_bytes_no_copy(object: ?*mut u8, bytes: ?[*]mut u8, length: u64, options: u64, deallocator: extern "C" fn(?*mut u8, ?[*]mut u8, u64) -> (), context: ?*mut u8, has_deallocator: bool) -> ?*mut u8 {
+    let mut has_deallocator_abi: u8 = 0
+    if has_deallocator {
+      has_deallocator_abi = 1
+    }
+    return unsafe metal_Device_new_buffer_with_bytes_no_copy(object, bytes, length, options, deallocator, context, has_deallocator_abi)
+  }
+
+  /// Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements.
+  pub unsafe fn new_indirect_command_buffer_with_descriptor(object: ?*mut u8, descriptor: ?*mut u8, max_command_count: u64, options: u64) -> ?*mut u8 {
+    return unsafe metal_Device_new_indirect_command_buffer_with_descriptor(object, descriptor, max_command_count, options)
+  }
+
+  /// Returns the aggregate by value; caller must ensure API availability and argument validity.
+  pub unsafe fn heap_buffer_size_and_align(object: ?*mut u8, length: u64, options: u64) -> MTLSizeAndAlign {
+    return unsafe metal_Device_heap_buffer_size_and_align(object, length, options)
+  }
+
+  /// Returns the aggregate by value; caller must ensure API availability and argument validity.
+  pub unsafe fn heap_acceleration_structure_size_and_align_with_size(object: ?*mut u8, size: u64) -> MTLSizeAndAlign {
+    return unsafe metal_Device_heap_acceleration_structure_size_and_align_with_size(object, size)
+  }
+
+  /// Returns the aggregate by value; caller must ensure API availability and argument validity.
+  pub unsafe fn heap_texture_size_and_align(object: ?*mut u8, descriptor: ?*mut u8) -> MTLSizeAndAlign {
+    return unsafe metal_Device_heap_texture_size_and_align(object, descriptor)
+  }
+
+  /// Returns the aggregate by value; caller must ensure API availability and argument validity.
+  pub unsafe fn acceleration_structure_sizes_with_descriptor(object: ?*mut u8, desc: ?*mut u8) -> MTLAccelerationStructureSizes {
+    return unsafe metal_Device_acceleration_structure_sizes_with_descriptor(object, desc)
+  }
+
+  /// Writes the paired CPU and GPU timestamps to the supplied outputs.
+  pub unsafe fn sample_timestamps(object: ?*mut u8, cpu_timestamp: *mut u64, gpu_timestamp: *mut u64) -> () {
+    unsafe metal_Device_sample_timestamps(object, cpu_timestamp, gpu_timestamp)
+  }
+}
+
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_metal_kit(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_metal_performance_shaders(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_programmable_blending(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_pvrtc_pixel_formats(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_eac_etc_pixel_formats(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_astc_pixel_formats(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_linear_textures(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_bc_pixel_formats(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_msaa_depth_resolve(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_counting_occlusion_query(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_base_vertex_instance_drawing(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_indirect_buffers(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_cube_map_texture_arrays(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_texture_barriers(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_layered_rendering(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_tessellation(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_resource_heaps(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_memoryless_render_targets(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_function_specialization(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_function_buffer_read_writes(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_function_texture_read_writes(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_array_of_textures(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_array_of_samplers(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_stencil_texture_views(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_depth_16_pixel_format(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_extended_range_pixel_formats(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_wide_color_pixel_format(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_combined_msaa_store_and_resolve_action(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_deferred_store_action(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_msaa_blits(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_srgb_writes(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_16_bit_unsigned_integer_coordinates(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_extract_insert_and_reverse_bits(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_simd_barrier(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_sampler_max_anisotropy(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_sampler_lod_clamp(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_border_color(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_dual_source_blending(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_argument_buffers(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_programmable_sample_positions(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_uniform_type(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_imageblocks(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_tile_shaders(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_imageblock_sample_coverage_control(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_threadgroup_sharing(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_post_depth_coverage(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_quad_scoped_permute_operations(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_raster_order_groups(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_non_uniform_threadgroup_size(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_multiple_viewports(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_device_notifications(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_stencil_feedback(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_stencil_resolve(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_supports_binary_archive(feature_set: u64) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_max_vertex_attributes(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_max_buffer_argument_entries(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_max_texture_argument_entries(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_max_sampler_state_argument_entries(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_max_threadgroup_memory_argument_entries(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_max_inlined_constant_data_buffers(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_max_inline_constant_buffer_length(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_max_threads_per_threadgroup(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_max_total_threadgroup_memory_allocation(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_max_total_tile_memory_allocation(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_threadgroup_memory_length_alignment(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_max_constant_buffer_function_memory_allocation(feature_set: u64, out: *mut u32) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_max_fragment_inputs(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_max_fragment_input_components(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_max_function_constants(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_max_tessellation_factor(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_max_viewports_and_scissor_rectangles(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_max_raster_order_groups(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_max_buffer_length(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_min_buffer_offset_alignment(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_max_1d_texture_size(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_max_2d_texture_size(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_max_cube_map_texture_size(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_max_3d_texture_size(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_max_array_layers(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_copy_texture_buffer_alignment(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_new_texture_buffer_alignment(feature_set: u64, out: *mut u32) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_max_color_render_targets(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_max_point_primitive_size(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_max_total_color_render_target_size(feature_set: u64, out: *mut u32) -> u8
+unsafe extern "C" fn metal_FeatureSetCapabilities_max_visibility_query_offset(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_a8_unorm_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_r8_unorm_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_r8_unorm_srgb_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_r8_snorm_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_r8_uint_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_r8_sint_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_r16_unorm_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_r16_snorm_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_r16_uint_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_r16_sint_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_r16_float_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_rg8_unorm_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_rg8_unorm_srgb_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_rg8_snorm_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_rg8_uint_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_rg8_sint_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_b5_g6_r5_unorm_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_a1_bgr5_unorm_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_abgr4_unorm_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_bgr5_a1_unorm_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_r32_uint_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_r32_sint_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_r32_float_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_rg16_unorm_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_rg16_snorm_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_rg16_uint_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_rg16_sint_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_rg16_float_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_rgba8_unorm_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_rgba8_unorm_srgb_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_rgba8_snorm_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_rgba8_uint_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_rgba8_sint_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_bgra8_unorm_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_bgra8_unorm_srgb_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_rgb10_a2_unorm_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_rgb10_a2_uint_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_rg11_b10_float_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_rgb9_e5_float_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_rg32_uint_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_rg32_sint_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_rg32_float_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_rgba16_unorm_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_rgba16_snorm_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_rgba16_uint_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_rgba16_sint_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_rgba16_float_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_rgba32_uint_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_rgba32_sint_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_rgba32_float_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_pvrtc_pixel_formats_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_eac_etc_pixel_formats_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_astc_pixel_formats_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_bc_pixel_formats_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_gbgr422_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_bgrg422_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_depth16_unorm_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_depth32_float_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_stencil8_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_depth24_unorm_stencil8_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_depth32_float_stencil8_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_x24_stencil8_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_x32_stencil8_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_bgra10_xr_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_bgra10_xr_srgb_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_bgr10_xr_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_bgr10_xr_srgb_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_FeatureSetCapabilities_bgr10_a2_unorm_capabilities(feature_set: u64) -> u32
+unsafe extern "C" fn metal_Device_system_default() -> ?*mut u8
+unsafe extern "C" fn metal_Device_all() -> ?*mut u8
+unsafe extern "C" fn metal_Device_name(object: ?*mut u8) -> ?[*]const u8
+unsafe extern "C" fn metal_Device_vendor(object: ?*mut u8) -> ?[*]const u8
+unsafe extern "C" fn metal_Device_family_name(object: ?*mut u8) -> ?[*]const u8
+unsafe extern "C" fn metal_Device_registry_id(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_Device_location(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_Device_location_number(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_Device_max_threadgroup_memory_length(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_Device_max_threads_per_threadgroup(object: ?*mut u8) -> MTLSize
+unsafe extern "C" fn metal_Device_is_low_power(object: ?*mut u8) -> u8
+unsafe extern "C" fn metal_Device_is_headless(object: ?*mut u8) -> u8
+unsafe extern "C" fn metal_Device_is_removable(object: ?*mut u8) -> u8
+unsafe extern "C" fn metal_Device_supports_raytracing(object: ?*mut u8) -> u8
+unsafe extern "C" fn metal_Device_has_unified_memory(object: ?*mut u8) -> u8
+unsafe extern "C" fn metal_Device_recommended_max_working_set_size(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_Device_max_transfer_rate(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_Device_supports_shader_barycentric_coordinates(object: ?*mut u8) -> u8
+unsafe extern "C" fn metal_Device_supports_function_pointers(object: ?*mut u8) -> u8
+unsafe extern "C" fn metal_Device_supports_dynamic_libraries(object: ?*mut u8) -> u8
+unsafe extern "C" fn metal_Device_d24_s8_supported(object: ?*mut u8) -> u8
+unsafe extern "C" fn metal_Device_new_fence(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_Device_new_command_queue(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_Device_new_default_library(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_Device_argument_buffers_support(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_Device_read_write_texture_support(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_Device_raster_order_groups_supported(object: ?*mut u8) -> u8
+unsafe extern "C" fn metal_Device_supports_32bit_float_filtering(object: ?*mut u8) -> u8
+unsafe extern "C" fn metal_Device_supports_32bit_MSAA(object: ?*mut u8) -> u8
+unsafe extern "C" fn metal_Device_supports_query_texture_LOD(object: ?*mut u8) -> u8
+unsafe extern "C" fn metal_Device_supports_BC_texture_compression(object: ?*mut u8) -> u8
+unsafe extern "C" fn metal_Device_supports_pull_model_interpolation(object: ?*mut u8) -> u8
+unsafe extern "C" fn metal_Device_new_event(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_Device_new_shared_event(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_Device_max_argument_buffer_sampler_count(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_Device_current_allocated_size(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_Device_max_buffer_length(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_Device_counter_sets(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_Device_supports_feature_set(object: ?*mut u8, feature: u64) -> u8
+unsafe extern "C" fn metal_Device_supports_family(object: ?*mut u8, family: i64) -> u8
+unsafe extern "C" fn metal_Device_supports_vertex_amplification_count(object: ?*mut u8, count: u64) -> u8
+unsafe extern "C" fn metal_Device_supports_texture_sample_count(object: ?*mut u8, count: u64) -> u8
+unsafe extern "C" fn metal_Device_supports_counter_sampling(object: ?*mut u8, sampling_point: u64) -> u8
+unsafe extern "C" fn metal_Device_minimum_linear_texture_alignment_for_pixel_format(object: ?*mut u8, format: u64) -> u64
+unsafe extern "C" fn metal_Device_minimum_texture_buffer_alignment_for_pixel_format(object: ?*mut u8, format: u64) -> u64
+unsafe extern "C" fn metal_Device_new_command_queue_with_max_command_buffer_count(object: ?*mut u8, count: u64) -> ?*mut u8
+unsafe extern "C" fn metal_Device_new_texture(object: ?*mut u8, descriptor: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_Device_new_sampler(object: ?*mut u8, descriptor: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_Device_new_depth_stencil_state(object: ?*mut u8, descriptor: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_Device_new_argument_encoder(object: ?*mut u8, arguments: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_Device_new_heap(object: ?*mut u8, descriptor: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_Device_new_acceleration_structure_with_size(object: ?*mut u8, size: u64) -> ?*mut u8
+unsafe extern "C" fn metal_Device_new_dynamic_library(object: ?*mut u8, library: ?*mut u8, error: ?*mut ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_Device_new_dynamic_library_with_url(object: ?*mut u8, url: ?*mut u8, error: ?*mut ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_Device_new_binary_archive_with_descriptor(object: ?*mut u8, descriptor: ?*mut u8, error: ?*mut ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_Device_new_render_pipeline_state(object: ?*mut u8, descriptor: ?*mut u8, error: ?*mut ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_Device_new_compute_pipeline_state_with_function(object: ?*mut u8, function: ?*mut u8, error: ?*mut ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_Device_new_counter_sample_buffer_with_descriptor(object: ?*mut u8, descriptor: ?*mut u8, error: ?*mut ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_Device_new_render_pipeline_state_with_reflection(object: ?*mut u8, descriptor: ?*mut u8, reflection_options: u64, reflection: *mut ?*mut u8, error: ?*mut ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_Device_new_mesh_render_pipeline_state_with_reflection(object: ?*mut u8, descriptor: ?*mut u8, reflection_options: u64, reflection: *mut ?*mut u8, error: ?*mut ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_Device_new_compute_pipeline_state_with_reflection(object: ?*mut u8, descriptor: ?*mut u8, reflection_options: u64, reflection: *mut ?*mut u8, error: ?*mut ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_Device_new_mesh_render_pipeline_state(object: ?*mut u8, descriptor: ?*mut u8, error: ?*mut ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_Device_new_compute_pipeline_state(object: ?*mut u8, descriptor: ?*mut u8, error: ?*mut ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_Device_new_library_with_source(object: ?*mut u8, src: ?[*]const u8, options: ?*mut u8, error: ?*mut ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_Device_new_library_with_file(object: ?*mut u8, file: ?[*]const u8, error: ?*mut ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_Device_new_library_with_data(object: ?*mut u8, library_data: ?[*]const u8, length: u64, error: ?*mut ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_Device_new_buffer(object: ?*mut u8, length: u64, options: u64) -> ?*mut u8
+unsafe extern "C" fn metal_Device_new_buffer_with_data(object: ?*mut u8, bytes: ?[*]const u8, length: u64, options: u64) -> ?*mut u8
+@callbacks("deallocator")
+unsafe extern "C" fn metal_Device_new_buffer_with_bytes_no_copy(object: ?*mut u8, bytes: ?[*]mut u8, length: u64, options: u64, deallocator: extern "C" fn(?*mut u8, ?[*]mut u8, u64) -> (), context: ?*mut u8, has_deallocator: u8) -> ?*mut u8
+unsafe extern "C" fn metal_Device_new_indirect_command_buffer_with_descriptor(object: ?*mut u8, descriptor: ?*mut u8, max_command_count: u64, options: u64) -> ?*mut u8
+unsafe extern "C" fn metal_Device_heap_buffer_size_and_align(object: ?*mut u8, length: u64, options: u64) -> MTLSizeAndAlign
+unsafe extern "C" fn metal_Device_heap_acceleration_structure_size_and_align_with_size(object: ?*mut u8, size: u64) -> MTLSizeAndAlign
+unsafe extern "C" fn metal_Device_heap_texture_size_and_align(object: ?*mut u8, descriptor: ?*mut u8) -> MTLSizeAndAlign
+unsafe extern "C" fn metal_Device_acceleration_structure_sizes_with_descriptor(object: ?*mut u8, desc: ?*mut u8) -> MTLAccelerationStructureSizes
+unsafe extern "C" fn metal_Device_sample_timestamps(object: ?*mut u8, cpu_timestamp: *mut u64, gpu_timestamp: *mut u64) -> ()

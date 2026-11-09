@@ -1,0 +1,4870 @@
+{
+  "repository": "https://github.com/gfx-rs/metal-rs",
+  "revision": "e47bc888d3837f85ea8b01c9e66ccf73236293b9",
+  "methods": [
+    {
+      "rust": "PrimitiveAccelerationStructureDescriptor.descriptor",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "PrimitiveAccelerationStructureDescriptor.set_geometry_descriptors",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "AccelerationStructure.gpu_resource_id",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "AccelerationStructureGeometryDescriptor.set_opaque",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "AccelerationStructureGeometryDescriptor.set_primitive_data_buffer",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "AccelerationStructureGeometryDescriptor.set_primitive_data_stride",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "AccelerationStructureGeometryDescriptor.set_primitive_data_element_size",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "AccelerationStructureGeometryDescriptor.set_intersection_function_table_offset",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "AccelerationStructureTriangleGeometryDescriptor.descriptor",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "AccelerationStructureTriangleGeometryDescriptor.set_index_buffer",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "AccelerationStructureTriangleGeometryDescriptor.set_index_buffer_offset",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "AccelerationStructureTriangleGeometryDescriptor.set_index_type",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "AccelerationStructureTriangleGeometryDescriptor.set_vertex_buffer",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "AccelerationStructureTriangleGeometryDescriptor.set_vertex_buffer_offset",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "AccelerationStructureTriangleGeometryDescriptor.set_vertex_stride",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "AccelerationStructureTriangleGeometryDescriptor.set_triangle_count",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "AccelerationStructureTriangleGeometryDescriptor.set_vertex_format",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "AccelerationStructureTriangleGeometryDescriptor.set_transformation_matrix_buffer",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "AccelerationStructureTriangleGeometryDescriptor.set_transformation_matrix_buffer_offset",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "AccelerationStructureBoundingBoxGeometryDescriptor.descriptor",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "AccelerationStructureBoundingBoxGeometryDescriptor.set_bounding_box_buffer",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "AccelerationStructureBoundingBoxGeometryDescriptor.set_bounding_box_count",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "AccelerationStructureBoundingBoxGeometryDescriptor.set_bounding_box_stride",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "AccelerationStructureBoundingBoxGeometryDescriptor.set_bounding_box_buffer_offset",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "InstanceAccelerationStructureDescriptor.descriptor",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "InstanceAccelerationStructureDescriptor.set_instance_descriptor_type",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "InstanceAccelerationStructureDescriptor.set_instanced_acceleration_structures",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "InstanceAccelerationStructureDescriptor.set_instance_count",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "InstanceAccelerationStructureDescriptor.set_instance_descriptor_buffer",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "InstanceAccelerationStructureDescriptor.set_instance_descriptor_buffer_offset",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "InstanceAccelerationStructureDescriptor.set_instance_descriptor_stride",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "IndirectInstanceAccelerationStructureDescriptor.descriptor",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "IndirectInstanceAccelerationStructureDescriptor.set_instance_descriptor_buffer",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "IndirectInstanceAccelerationStructureDescriptor.set_instance_descriptor_buffer_offset",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "IndirectInstanceAccelerationStructureDescriptor.set_instance_descriptor_stride",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "IndirectInstanceAccelerationStructureDescriptor.set_max_instance_count",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "IndirectInstanceAccelerationStructureDescriptor.set_instance_count_buffer",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "IndirectInstanceAccelerationStructureDescriptor.set_instance_count_buffer_offset",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "IndirectInstanceAccelerationStructureDescriptor.set_instance_descriptor_type",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "IndirectInstanceAccelerationStructureDescriptor.set_motion_transform_buffer",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "IndirectInstanceAccelerationStructureDescriptor.set_motion_transform_buffer_offset",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "IndirectInstanceAccelerationStructureDescriptor.set_max_motion_transform_count",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "IndirectInstanceAccelerationStructureDescriptor.set_motion_transform_count_buffer",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "IndirectInstanceAccelerationStructureDescriptor.set_motion_transform_count_buffer_offset",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "AccelerationStructureCommandEncoder.build_acceleration_structure",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "AccelerationStructureCommandEncoder.copy_acceleration_structure",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "AccelerationStructureCommandEncoder.write_compacted_acceleration_structure_size",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "AccelerationStructureCommandEncoder.write_compacted_acceleration_structure_size_with_type",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "AccelerationStructureCommandEncoder.copy_and_compact_acceleration_structure",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "AccelerationStructureCommandEncoder.refit_acceleration_structure",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "AccelerationStructureCommandEncoder.update_fence",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "AccelerationStructureCommandEncoder.wait_for_fence",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "AccelerationStructureCommandEncoder.use_heap",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "AccelerationStructureCommandEncoder.use_heaps",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "AccelerationStructureCommandEncoder.use_resource",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "AccelerationStructureCommandEncoder.use_resources",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "AccelerationStructureCommandEncoder.sample_counters_in_buffer",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "IntersectionFunctionTableDescriptor.new",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "IntersectionFunctionTableDescriptor.set_function_count",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "IntersectionFunctionTable.set_function",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "IntersectionFunctionTable.set_functions",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "IntersectionFunctionTable.set_buffer",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "IntersectionFunctionTable.set_buffers",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "IntersectionFunctionTable.set_visible_function_table",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "IntersectionFunctionTable.set_visible_function_tables",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "IntersectionFunctionTable.gpu_resource_id",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "VisibleFunctionTableDescriptor.new",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "VisibleFunctionTableDescriptor.set_function_count",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "VisibleFunctionTable.set_functions",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "VisibleFunctionTable.set_function",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "VisibleFunctionTable.gpu_resource_id",
+      "source": "src/acceleration_structure.rs"
+    },
+    {
+      "rust": "AccelerationStructurePassDescriptor.new",
+      "source": "src/acceleration_structure_pass.rs"
+    },
+    {
+      "rust": "AccelerationStructurePassDescriptor.sample_buffer_attachments",
+      "source": "src/acceleration_structure_pass.rs"
+    },
+    {
+      "rust": "AccelerationStructurePassSampleBufferAttachmentDescriptorArray.object_at",
+      "source": "src/acceleration_structure_pass.rs"
+    },
+    {
+      "rust": "AccelerationStructurePassSampleBufferAttachmentDescriptorArray.set_object_at",
+      "source": "src/acceleration_structure_pass.rs"
+    },
+    {
+      "rust": "AccelerationStructurePassSampleBufferAttachmentDescriptor.new",
+      "source": "src/acceleration_structure_pass.rs"
+    },
+    {
+      "rust": "AccelerationStructurePassSampleBufferAttachmentDescriptor.sample_buffer",
+      "source": "src/acceleration_structure_pass.rs"
+    },
+    {
+      "rust": "AccelerationStructurePassSampleBufferAttachmentDescriptor.set_sample_buffer",
+      "source": "src/acceleration_structure_pass.rs"
+    },
+    {
+      "rust": "AccelerationStructurePassSampleBufferAttachmentDescriptor.start_of_encoder_sample_index",
+      "source": "src/acceleration_structure_pass.rs"
+    },
+    {
+      "rust": "AccelerationStructurePassSampleBufferAttachmentDescriptor.set_start_of_encoder_sample_index",
+      "source": "src/acceleration_structure_pass.rs"
+    },
+    {
+      "rust": "AccelerationStructurePassSampleBufferAttachmentDescriptor.end_of_encoder_sample_index",
+      "source": "src/acceleration_structure_pass.rs"
+    },
+    {
+      "rust": "AccelerationStructurePassSampleBufferAttachmentDescriptor.set_end_of_encoder_sample_index",
+      "source": "src/acceleration_structure_pass.rs"
+    },
+    {
+      "rust": "StructMember.name",
+      "source": "src/argument.rs"
+    },
+    {
+      "rust": "StructMember.offset",
+      "source": "src/argument.rs"
+    },
+    {
+      "rust": "StructMember.data_type",
+      "source": "src/argument.rs"
+    },
+    {
+      "rust": "StructMember.struct_type",
+      "source": "src/argument.rs"
+    },
+    {
+      "rust": "StructMember.array_type",
+      "source": "src/argument.rs"
+    },
+    {
+      "rust": "StructMemberArray.object_at",
+      "source": "src/argument.rs"
+    },
+    {
+      "rust": "StructMemberArray.count",
+      "source": "src/argument.rs"
+    },
+    {
+      "rust": "StructType.members",
+      "source": "src/argument.rs"
+    },
+    {
+      "rust": "StructType.member_from_name",
+      "source": "src/argument.rs"
+    },
+    {
+      "rust": "ArrayType.array_length",
+      "source": "src/argument.rs"
+    },
+    {
+      "rust": "ArrayType.stride",
+      "source": "src/argument.rs"
+    },
+    {
+      "rust": "ArrayType.element_type",
+      "source": "src/argument.rs"
+    },
+    {
+      "rust": "ArrayType.element_struct_type",
+      "source": "src/argument.rs"
+    },
+    {
+      "rust": "ArrayType.element_array_type",
+      "source": "src/argument.rs"
+    },
+    {
+      "rust": "Argument.name",
+      "source": "src/argument.rs"
+    },
+    {
+      "rust": "Argument.type_",
+      "source": "src/argument.rs"
+    },
+    {
+      "rust": "Argument.access",
+      "source": "src/argument.rs"
+    },
+    {
+      "rust": "Argument.index",
+      "source": "src/argument.rs"
+    },
+    {
+      "rust": "Argument.is_active",
+      "source": "src/argument.rs"
+    },
+    {
+      "rust": "Argument.buffer_alignment",
+      "source": "src/argument.rs"
+    },
+    {
+      "rust": "Argument.buffer_data_size",
+      "source": "src/argument.rs"
+    },
+    {
+      "rust": "Argument.buffer_data_type",
+      "source": "src/argument.rs"
+    },
+    {
+      "rust": "Argument.buffer_struct_type",
+      "source": "src/argument.rs"
+    },
+    {
+      "rust": "Argument.threadgroup_memory_alignment",
+      "source": "src/argument.rs"
+    },
+    {
+      "rust": "Argument.threadgroup_memory_data_size",
+      "source": "src/argument.rs"
+    },
+    {
+      "rust": "Argument.texture_type",
+      "source": "src/argument.rs"
+    },
+    {
+      "rust": "Argument.texture_data_type",
+      "source": "src/argument.rs"
+    },
+    {
+      "rust": "ArgumentDescriptor.new",
+      "source": "src/argument.rs"
+    },
+    {
+      "rust": "ArgumentDescriptor.set_data_type",
+      "source": "src/argument.rs"
+    },
+    {
+      "rust": "ArgumentDescriptor.set_index",
+      "source": "src/argument.rs"
+    },
+    {
+      "rust": "ArgumentDescriptor.set_access",
+      "source": "src/argument.rs"
+    },
+    {
+      "rust": "ArgumentDescriptor.set_array_length",
+      "source": "src/argument.rs"
+    },
+    {
+      "rust": "ArgumentDescriptor.set_texture_type",
+      "source": "src/argument.rs"
+    },
+    {
+      "rust": "BlitPassDescriptor.new",
+      "source": "src/blitpass.rs"
+    },
+    {
+      "rust": "BlitPassDescriptor.sample_buffer_attachments",
+      "source": "src/blitpass.rs"
+    },
+    {
+      "rust": "BlitPassSampleBufferAttachmentDescriptorArray.object_at",
+      "source": "src/blitpass.rs"
+    },
+    {
+      "rust": "BlitPassSampleBufferAttachmentDescriptorArray.set_object_at",
+      "source": "src/blitpass.rs"
+    },
+    {
+      "rust": "BlitPassSampleBufferAttachmentDescriptor.new",
+      "source": "src/blitpass.rs"
+    },
+    {
+      "rust": "BlitPassSampleBufferAttachmentDescriptor.sample_buffer",
+      "source": "src/blitpass.rs"
+    },
+    {
+      "rust": "BlitPassSampleBufferAttachmentDescriptor.set_sample_buffer",
+      "source": "src/blitpass.rs"
+    },
+    {
+      "rust": "BlitPassSampleBufferAttachmentDescriptor.start_of_encoder_sample_index",
+      "source": "src/blitpass.rs"
+    },
+    {
+      "rust": "BlitPassSampleBufferAttachmentDescriptor.set_start_of_encoder_sample_index",
+      "source": "src/blitpass.rs"
+    },
+    {
+      "rust": "BlitPassSampleBufferAttachmentDescriptor.end_of_encoder_sample_index",
+      "source": "src/blitpass.rs"
+    },
+    {
+      "rust": "BlitPassSampleBufferAttachmentDescriptor.set_end_of_encoder_sample_index",
+      "source": "src/blitpass.rs"
+    },
+    {
+      "rust": "Buffer.length",
+      "source": "src/buffer.rs"
+    },
+    {
+      "rust": "Buffer.contents",
+      "source": "src/buffer.rs"
+    },
+    {
+      "rust": "Buffer.did_modify_range",
+      "source": "src/buffer.rs"
+    },
+    {
+      "rust": "Buffer.new_texture_with_descriptor",
+      "source": "src/buffer.rs"
+    },
+    {
+      "rust": "Buffer.remote_storage_buffer",
+      "source": "src/buffer.rs"
+    },
+    {
+      "rust": "Buffer.new_remote_buffer_view_for_device",
+      "source": "src/buffer.rs"
+    },
+    {
+      "rust": "Buffer.add_debug_marker",
+      "source": "src/buffer.rs"
+    },
+    {
+      "rust": "Buffer.remove_all_debug_markers",
+      "source": "src/buffer.rs"
+    },
+    {
+      "rust": "Buffer.gpu_address",
+      "source": "src/buffer.rs"
+    },
+    {
+      "rust": "Buffer.gpu_resource_id",
+      "source": "src/buffer.rs"
+    },
+    {
+      "rust": "CaptureDescriptor.new",
+      "source": "src/capturedescriptor.rs"
+    },
+    {
+      "rust": "CaptureDescriptor.set_capture_device",
+      "source": "src/capturedescriptor.rs"
+    },
+    {
+      "rust": "CaptureDescriptor.set_capture_scope",
+      "source": "src/capturedescriptor.rs"
+    },
+    {
+      "rust": "CaptureDescriptor.set_capture_command_queue",
+      "source": "src/capturedescriptor.rs"
+    },
+    {
+      "rust": "CaptureDescriptor.output_url",
+      "source": "src/capturedescriptor.rs"
+    },
+    {
+      "rust": "CaptureDescriptor.set_output_url",
+      "source": "src/capturedescriptor.rs"
+    },
+    {
+      "rust": "CaptureDescriptor.destination",
+      "source": "src/capturedescriptor.rs"
+    },
+    {
+      "rust": "CaptureDescriptor.set_destination",
+      "source": "src/capturedescriptor.rs"
+    },
+    {
+      "rust": "CaptureScope.begin_scope",
+      "source": "src/capturemanager.rs"
+    },
+    {
+      "rust": "CaptureScope.end_scope",
+      "source": "src/capturemanager.rs"
+    },
+    {
+      "rust": "CaptureScope.label",
+      "source": "src/capturemanager.rs"
+    },
+    {
+      "rust": "CaptureManager.shared",
+      "source": "src/capturemanager.rs"
+    },
+    {
+      "rust": "CaptureManager.new_capture_scope_with_device",
+      "source": "src/capturemanager.rs"
+    },
+    {
+      "rust": "CaptureManager.new_capture_scope_with_command_queue",
+      "source": "src/capturemanager.rs"
+    },
+    {
+      "rust": "CaptureManager.default_capture_scope",
+      "source": "src/capturemanager.rs"
+    },
+    {
+      "rust": "CaptureManager.set_default_capture_scope",
+      "source": "src/capturemanager.rs"
+    },
+    {
+      "rust": "CaptureManager.start_capture",
+      "source": "src/capturemanager.rs"
+    },
+    {
+      "rust": "CaptureManager.start_capture_with_device",
+      "source": "src/capturemanager.rs"
+    },
+    {
+      "rust": "CaptureManager.start_capture_with_command_queue",
+      "source": "src/capturemanager.rs"
+    },
+    {
+      "rust": "CaptureManager.start_capture_with_scope",
+      "source": "src/capturemanager.rs"
+    },
+    {
+      "rust": "CaptureManager.stop_capture",
+      "source": "src/capturemanager.rs"
+    },
+    {
+      "rust": "CaptureManager.is_capturing",
+      "source": "src/capturemanager.rs"
+    },
+    {
+      "rust": "CaptureManager.supports_destination",
+      "source": "src/capturemanager.rs"
+    },
+    {
+      "rust": "CommandBuffer.label",
+      "source": "src/commandbuffer.rs"
+    },
+    {
+      "rust": "CommandBuffer.set_label",
+      "source": "src/commandbuffer.rs"
+    },
+    {
+      "rust": "CommandBuffer.enqueue",
+      "source": "src/commandbuffer.rs"
+    },
+    {
+      "rust": "CommandBuffer.commit",
+      "source": "src/commandbuffer.rs"
+    },
+    {
+      "rust": "CommandBuffer.status",
+      "source": "src/commandbuffer.rs"
+    },
+    {
+      "rust": "CommandBuffer.present_drawable",
+      "source": "src/commandbuffer.rs"
+    },
+    {
+      "rust": "CommandBuffer.wait_until_completed",
+      "source": "src/commandbuffer.rs"
+    },
+    {
+      "rust": "CommandBuffer.wait_until_scheduled",
+      "source": "src/commandbuffer.rs"
+    },
+    {
+      "rust": "CommandBuffer.add_completed_handler",
+      "source": "src/commandbuffer.rs"
+    },
+    {
+      "rust": "CommandBuffer.add_scheduled_handler",
+      "source": "src/commandbuffer.rs"
+    },
+    {
+      "rust": "CommandBuffer.new_blit_command_encoder",
+      "source": "src/commandbuffer.rs"
+    },
+    {
+      "rust": "CommandBuffer.blit_command_encoder_with_descriptor",
+      "source": "src/commandbuffer.rs"
+    },
+    {
+      "rust": "CommandBuffer.new_compute_command_encoder",
+      "source": "src/commandbuffer.rs"
+    },
+    {
+      "rust": "CommandBuffer.compute_command_encoder_with_dispatch_type",
+      "source": "src/commandbuffer.rs"
+    },
+    {
+      "rust": "CommandBuffer.compute_command_encoder_with_descriptor",
+      "source": "src/commandbuffer.rs"
+    },
+    {
+      "rust": "CommandBuffer.new_render_command_encoder",
+      "source": "src/commandbuffer.rs"
+    },
+    {
+      "rust": "CommandBuffer.new_parallel_render_command_encoder",
+      "source": "src/commandbuffer.rs"
+    },
+    {
+      "rust": "CommandBuffer.new_acceleration_structure_command_encoder",
+      "source": "src/commandbuffer.rs"
+    },
+    {
+      "rust": "CommandBuffer.acceleration_structure_command_encoder_with_descriptor",
+      "source": "src/commandbuffer.rs"
+    },
+    {
+      "rust": "CommandBuffer.encode_signal_event",
+      "source": "src/commandbuffer.rs"
+    },
+    {
+      "rust": "CommandBuffer.encode_wait_for_event",
+      "source": "src/commandbuffer.rs"
+    },
+    {
+      "rust": "CommandBuffer.push_debug_group",
+      "source": "src/commandbuffer.rs"
+    },
+    {
+      "rust": "CommandBuffer.pop_debug_group",
+      "source": "src/commandbuffer.rs"
+    },
+    {
+      "rust": "CommandQueue.label",
+      "source": "src/commandqueue.rs"
+    },
+    {
+      "rust": "CommandQueue.set_label",
+      "source": "src/commandqueue.rs"
+    },
+    {
+      "rust": "CommandQueue.new_command_buffer",
+      "source": "src/commandqueue.rs"
+    },
+    {
+      "rust": "CommandQueue.new_command_buffer_with_unretained_references",
+      "source": "src/commandqueue.rs"
+    },
+    {
+      "rust": "CommandQueue.device",
+      "source": "src/commandqueue.rs"
+    },
+    {
+      "rust": "ComputePassDescriptor.new",
+      "source": "src/computepass.rs"
+    },
+    {
+      "rust": "ComputePassDescriptor.sample_buffer_attachments",
+      "source": "src/computepass.rs"
+    },
+    {
+      "rust": "ComputePassDescriptor.set_dispatch_type",
+      "source": "src/computepass.rs"
+    },
+    {
+      "rust": "ComputePassSampleBufferAttachmentDescriptorArray.object_at",
+      "source": "src/computepass.rs"
+    },
+    {
+      "rust": "ComputePassSampleBufferAttachmentDescriptorArray.set_object_at",
+      "source": "src/computepass.rs"
+    },
+    {
+      "rust": "ComputePassSampleBufferAttachmentDescriptor.new",
+      "source": "src/computepass.rs"
+    },
+    {
+      "rust": "ComputePassSampleBufferAttachmentDescriptor.sample_buffer",
+      "source": "src/computepass.rs"
+    },
+    {
+      "rust": "ComputePassSampleBufferAttachmentDescriptor.set_sample_buffer",
+      "source": "src/computepass.rs"
+    },
+    {
+      "rust": "ComputePassSampleBufferAttachmentDescriptor.start_of_encoder_sample_index",
+      "source": "src/computepass.rs"
+    },
+    {
+      "rust": "ComputePassSampleBufferAttachmentDescriptor.set_start_of_encoder_sample_index",
+      "source": "src/computepass.rs"
+    },
+    {
+      "rust": "ComputePassSampleBufferAttachmentDescriptor.end_of_encoder_sample_index",
+      "source": "src/computepass.rs"
+    },
+    {
+      "rust": "ComputePassSampleBufferAttachmentDescriptor.set_end_of_encoder_sample_index",
+      "source": "src/computepass.rs"
+    },
+    {
+      "rust": "CounterSampleBufferDescriptor.new",
+      "source": "src/counters.rs"
+    },
+    {
+      "rust": "CounterSampleBufferDescriptor.counter_set",
+      "source": "src/counters.rs"
+    },
+    {
+      "rust": "CounterSampleBufferDescriptor.set_counter_set",
+      "source": "src/counters.rs"
+    },
+    {
+      "rust": "CounterSampleBufferDescriptor.label",
+      "source": "src/counters.rs"
+    },
+    {
+      "rust": "CounterSampleBufferDescriptor.set_label",
+      "source": "src/counters.rs"
+    },
+    {
+      "rust": "CounterSampleBufferDescriptor.sample_count",
+      "source": "src/counters.rs"
+    },
+    {
+      "rust": "CounterSampleBufferDescriptor.set_sample_count",
+      "source": "src/counters.rs"
+    },
+    {
+      "rust": "CounterSampleBufferDescriptor.storage_mode",
+      "source": "src/counters.rs"
+    },
+    {
+      "rust": "CounterSampleBufferDescriptor.set_storage_mode",
+      "source": "src/counters.rs"
+    },
+    {
+      "rust": "CounterSampleBuffer.sample_count",
+      "source": "src/counters.rs"
+    },
+    {
+      "rust": "CounterSampleBuffer.resolve_counter_range",
+      "source": "src/counters.rs"
+    },
+    {
+      "rust": "CounterSet.name",
+      "source": "src/counters.rs"
+    },
+    {
+      "rust": "StencilDescriptor.new",
+      "source": "src/depthstencil.rs"
+    },
+    {
+      "rust": "StencilDescriptor.stencil_compare_function",
+      "source": "src/depthstencil.rs"
+    },
+    {
+      "rust": "StencilDescriptor.set_stencil_compare_function",
+      "source": "src/depthstencil.rs"
+    },
+    {
+      "rust": "StencilDescriptor.stencil_failure_operation",
+      "source": "src/depthstencil.rs"
+    },
+    {
+      "rust": "StencilDescriptor.set_stencil_failure_operation",
+      "source": "src/depthstencil.rs"
+    },
+    {
+      "rust": "StencilDescriptor.depth_failure_operation",
+      "source": "src/depthstencil.rs"
+    },
+    {
+      "rust": "StencilDescriptor.set_depth_failure_operation",
+      "source": "src/depthstencil.rs"
+    },
+    {
+      "rust": "StencilDescriptor.depth_stencil_pass_operation",
+      "source": "src/depthstencil.rs"
+    },
+    {
+      "rust": "StencilDescriptor.set_depth_stencil_pass_operation",
+      "source": "src/depthstencil.rs"
+    },
+    {
+      "rust": "StencilDescriptor.read_mask",
+      "source": "src/depthstencil.rs"
+    },
+    {
+      "rust": "StencilDescriptor.set_read_mask",
+      "source": "src/depthstencil.rs"
+    },
+    {
+      "rust": "StencilDescriptor.write_mask",
+      "source": "src/depthstencil.rs"
+    },
+    {
+      "rust": "StencilDescriptor.set_write_mask",
+      "source": "src/depthstencil.rs"
+    },
+    {
+      "rust": "DepthStencilDescriptor.new",
+      "source": "src/depthstencil.rs"
+    },
+    {
+      "rust": "DepthStencilDescriptor.depth_compare_function",
+      "source": "src/depthstencil.rs"
+    },
+    {
+      "rust": "DepthStencilDescriptor.set_depth_compare_function",
+      "source": "src/depthstencil.rs"
+    },
+    {
+      "rust": "DepthStencilDescriptor.depth_write_enabled",
+      "source": "src/depthstencil.rs"
+    },
+    {
+      "rust": "DepthStencilDescriptor.set_depth_write_enabled",
+      "source": "src/depthstencil.rs"
+    },
+    {
+      "rust": "DepthStencilDescriptor.front_face_stencil",
+      "source": "src/depthstencil.rs"
+    },
+    {
+      "rust": "DepthStencilDescriptor.set_front_face_stencil",
+      "source": "src/depthstencil.rs"
+    },
+    {
+      "rust": "DepthStencilDescriptor.back_face_stencil",
+      "source": "src/depthstencil.rs"
+    },
+    {
+      "rust": "DepthStencilDescriptor.set_back_face_stencil",
+      "source": "src/depthstencil.rs"
+    },
+    {
+      "rust": "DepthStencilDescriptor.label",
+      "source": "src/depthstencil.rs"
+    },
+    {
+      "rust": "DepthStencilDescriptor.set_label",
+      "source": "src/depthstencil.rs"
+    },
+    {
+      "rust": "DepthStencilState.device",
+      "source": "src/depthstencil.rs"
+    },
+    {
+      "rust": "DepthStencilState.label",
+      "source": "src/depthstencil.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_metal_kit",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_metal_performance_shaders",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_programmable_blending",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_pvrtc_pixel_formats",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_eac_etc_pixel_formats",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_astc_pixel_formats",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_linear_textures",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_bc_pixel_formats",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_msaa_depth_resolve",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_counting_occlusion_query",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_base_vertex_instance_drawing",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_indirect_buffers",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_cube_map_texture_arrays",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_texture_barriers",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_layered_rendering",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_tessellation",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_resource_heaps",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_memoryless_render_targets",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_function_specialization",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_function_buffer_read_writes",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_function_texture_read_writes",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_array_of_textures",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_array_of_samplers",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_stencil_texture_views",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_depth_16_pixel_format",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_extended_range_pixel_formats",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_wide_color_pixel_format",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_combined_msaa_store_and_resolve_action",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_deferred_store_action",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_msaa_blits",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_srgb_writes",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_16_bit_unsigned_integer_coordinates",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_extract_insert_and_reverse_bits",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_simd_barrier",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_sampler_max_anisotropy",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_sampler_lod_clamp",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_border_color",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_dual_source_blending",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_argument_buffers",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_programmable_sample_positions",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_uniform_type",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_imageblocks",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_tile_shaders",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_imageblock_sample_coverage_control",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_threadgroup_sharing",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_post_depth_coverage",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_quad_scoped_permute_operations",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_raster_order_groups",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_non_uniform_threadgroup_size",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_multiple_viewports",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_device_notifications",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_stencil_feedback",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_stencil_resolve",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.supports_binary_archive",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.max_vertex_attributes",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.max_buffer_argument_entries",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.max_texture_argument_entries",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.max_sampler_state_argument_entries",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.max_threadgroup_memory_argument_entries",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.max_inlined_constant_data_buffers",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.max_inline_constant_buffer_length",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.max_threads_per_threadgroup",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.max_total_threadgroup_memory_allocation",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.max_total_tile_memory_allocation",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.threadgroup_memory_length_alignment",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.max_constant_buffer_function_memory_allocation",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.max_fragment_inputs",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.max_fragment_input_components",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.max_function_constants",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.max_tessellation_factor",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.max_viewports_and_scissor_rectangles",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.max_raster_order_groups",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.max_buffer_length",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.min_buffer_offset_alignment",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.max_1d_texture_size",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.max_2d_texture_size",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.max_cube_map_texture_size",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.max_3d_texture_size",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.max_array_layers",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.copy_texture_buffer_alignment",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.new_texture_buffer_alignment",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.max_color_render_targets",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.max_point_primitive_size",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.max_total_color_render_target_size",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.max_visibility_query_offset",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.a8_unorm_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.r8_unorm_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.r8_unorm_srgb_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.r8_snorm_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.r8_uint_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.r8_sint_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.r16_unorm_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.r16_snorm_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.r16_uint_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.r16_sint_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.r16_float_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.rg8_unorm_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.rg8_unorm_srgb_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.rg8_snorm_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.rg8_uint_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.rg8_sint_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.b5_g6_r5_unorm_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.a1_bgr5_unorm_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.abgr4_unorm_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.bgr5_a1_unorm_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.r32_uint_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.r32_sint_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.r32_float_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.rg16_unorm_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.rg16_snorm_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.rg16_uint_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.rg16_sint_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.rg16_float_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.rgba8_unorm_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.rgba8_unorm_srgb_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.rgba8_snorm_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.rgba8_uint_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.rgba8_sint_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.bgra8_unorm_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.bgra8_unorm_srgb_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.rgb10_a2_unorm_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.rgb10_a2_uint_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.rg11_b10_float_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.rgb9_e5_float_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.rg32_uint_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.rg32_sint_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.rg32_float_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.rgba16_unorm_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.rgba16_snorm_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.rgba16_uint_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.rgba16_sint_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.rgba16_float_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.rgba32_uint_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.rgba32_sint_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.rgba32_float_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.pvrtc_pixel_formats_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.eac_etc_pixel_formats_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.astc_pixel_formats_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.bc_pixel_formats_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.gbgr422_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.bgrg422_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.depth16_unorm_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.depth32_float_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.stencil8_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.depth24_unorm_stencil8_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.depth32_float_stencil8_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.x24_stencil8_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.x32_stencil8_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.bgra10_xr_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.bgra10_xr_srgb_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.bgr10_xr_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.bgr10_xr_srgb_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "MTLFeatureSet.bgr10_a2_unorm_capabilities",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.system_default",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.all",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.name",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.vendor",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.family_name",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.registry_id",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.location",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.location_number",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.max_threadgroup_memory_length",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.max_threads_per_threadgroup",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.is_low_power",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.is_headless",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.is_removable",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.supports_raytracing",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.has_unified_memory",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.recommended_max_working_set_size",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.max_transfer_rate",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.supports_feature_set",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.supports_family",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.supports_vertex_amplification_count",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.supports_texture_sample_count",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.supports_shader_barycentric_coordinates",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.supports_function_pointers",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.supports_dynamic_libraries",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.supports_counter_sampling",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.d24_s8_supported",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.new_fence",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.new_command_queue",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.new_command_queue_with_max_command_buffer_count",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.new_default_library",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.new_library_with_source",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.new_library_with_file",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.new_library_with_data",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.new_dynamic_library",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.new_dynamic_library_with_url",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.new_binary_archive_with_descriptor",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.new_render_pipeline_state_with_reflection",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.new_render_pipeline_state",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.new_mesh_render_pipeline_state_with_reflection",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.new_mesh_render_pipeline_state",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.new_compute_pipeline_state_with_function",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.new_compute_pipeline_state",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.new_compute_pipeline_state_with_reflection",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.new_buffer",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.new_buffer_with_bytes_no_copy",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.new_buffer_with_data",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.new_counter_sample_buffer_with_descriptor",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.new_indirect_command_buffer_with_descriptor",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.new_texture",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.new_sampler",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.new_depth_stencil_state",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.argument_buffers_support",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.read_write_texture_support",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.raster_order_groups_supported",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.supports_32bit_float_filtering",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.supports_32bit_MSAA",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.supports_query_texture_LOD",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.supports_BC_texture_compression",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.supports_pull_model_interpolation",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.new_argument_encoder",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.new_heap",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.new_event",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.new_shared_event",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.heap_buffer_size_and_align",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.heap_acceleration_structure_size_and_align_with_size",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.heap_texture_size_and_align",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.minimum_linear_texture_alignment_for_pixel_format",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.minimum_texture_buffer_alignment_for_pixel_format",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.max_argument_buffer_sampler_count",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.current_allocated_size",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.max_buffer_length",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.acceleration_structure_sizes_with_descriptor",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.new_acceleration_structure_with_size",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.sample_timestamps",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Device.counter_sets",
+      "source": "src/device.rs"
+    },
+    {
+      "rust": "Drawable.present",
+      "source": "src/drawable.rs"
+    },
+    {
+      "rust": "Drawable.drawable_id",
+      "source": "src/drawable.rs"
+    },
+    {
+      "rust": "Drawable.add_presented_handler",
+      "source": "src/drawable.rs"
+    },
+    {
+      "rust": "Drawable.presented_time",
+      "source": "src/drawable.rs"
+    },
+    {
+      "rust": "CommandEncoder.label",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "CommandEncoder.set_label",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "CommandEncoder.end_encoding",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "CommandEncoder.insert_debug_signpost",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "CommandEncoder.push_debug_group",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "CommandEncoder.pop_debug_group",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ParallelRenderCommandEncoder.render_command_encoder",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_render_pipeline_state",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_viewport",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_viewports",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_front_facing_winding",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_cull_mode",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_depth_clip_mode",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_depth_bias",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_scissor_rect",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_scissor_rects",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_triangle_fill_mode",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_blend_color",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_depth_stencil_state",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_stencil_reference_value",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_stencil_front_back_reference_value",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_visibility_result_mode",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_vertex_amplification_count",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_vertex_bytes",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_vertex_buffer",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_vertex_buffer_offset",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_vertex_buffers",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_vertex_texture",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_vertex_textures",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_vertex_sampler_state",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_vertex_sampler_states",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_vertex_sampler_state_with_lod",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_vertex_acceleration_structure",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_vertex_intersection_function_table",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_vertex_visible_function_table",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_vertex_visible_function_tables",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_object_buffer",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_object_buffer_offset",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_object_bytes",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_object_sampler_state",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_object_sampler_state_with_lod",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_object_texture",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_object_threadgroup_memory_length",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_object_buffers",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_object_sampler_states",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_object_textures",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_mesh_buffer",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_mesh_buffer_offset",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_mesh_bytes",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_mesh_sampler_state",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_mesh_sampler_state_with_lod",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_mesh_texture",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_mesh_buffers",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_mesh_sampler_states",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_mesh_textures",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_fragment_bytes",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_fragment_buffer",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_fragment_buffer_offset",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_fragment_buffers",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_fragment_texture",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_fragment_textures",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_fragment_sampler_state",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_fragment_sampler_states",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_fragment_sampler_state_with_lod",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_fragment_acceleration_structure",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_fragment_intersection_function_table",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_fragment_visible_function_table",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.set_fragment_visible_function_tables",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.draw_primitives",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.draw_primitives_instanced",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.draw_primitives_instanced_base_instance",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.draw_primitives_indirect",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.draw_indexed_primitives",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.draw_indexed_primitives_instanced",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.draw_indexed_primitives_instanced_base_instance",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.draw_indexed_primitives_indirect",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.draw_mesh_threadgroups",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.draw_mesh_threadgroups_with_indirect_buffer",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.draw_mesh_threads",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.use_resource",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.use_resource_at",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.use_resources",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.use_heap",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.use_heap_at",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.use_heaps",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.execute_commands_in_buffer",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.update_fence",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.wait_for_fence",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "RenderCommandEncoder.sample_counters_in_buffer",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "BlitCommandEncoder.synchronize_resource",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "BlitCommandEncoder.fill_buffer",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "BlitCommandEncoder.generate_mipmaps",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "BlitCommandEncoder.copy_from_buffer",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "BlitCommandEncoder.copy_from_texture",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "BlitCommandEncoder.copy_from_buffer_to_texture",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "BlitCommandEncoder.copy_from_texture_to_buffer",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "BlitCommandEncoder.optimize_contents_for_gpu_access",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "BlitCommandEncoder.optimize_contents_for_gpu_access_slice_level",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "BlitCommandEncoder.optimize_contents_for_cpu_access",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "BlitCommandEncoder.optimize_contents_for_cpu_access_slice_level",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "BlitCommandEncoder.update_fence",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "BlitCommandEncoder.wait_for_fence",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "BlitCommandEncoder.copy_indirect_command_buffer",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "BlitCommandEncoder.reset_commands_in_buffer",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "BlitCommandEncoder.optimize_indirect_command_buffer",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "BlitCommandEncoder.sample_counters_in_buffer",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "BlitCommandEncoder.resolve_counters",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ComputeCommandEncoder.set_compute_pipeline_state",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ComputeCommandEncoder.set_buffer",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ComputeCommandEncoder.set_buffers",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ComputeCommandEncoder.set_texture",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ComputeCommandEncoder.set_textures",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ComputeCommandEncoder.set_sampler_state",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ComputeCommandEncoder.set_sampler_states",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ComputeCommandEncoder.set_sampler_state_with_lod",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ComputeCommandEncoder.set_bytes",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ComputeCommandEncoder.set_visible_function_table",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ComputeCommandEncoder.set_visible_function_tables",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ComputeCommandEncoder.dispatch_thread_groups",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ComputeCommandEncoder.dispatch_threads",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ComputeCommandEncoder.dispatch_thread_groups_indirect",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ComputeCommandEncoder.set_threadgroup_memory_length",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ComputeCommandEncoder.memory_barrier_with_resources",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ComputeCommandEncoder.use_resource",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ComputeCommandEncoder.use_resources",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ComputeCommandEncoder.use_heap",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ComputeCommandEncoder.use_heaps",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ComputeCommandEncoder.update_fence",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ComputeCommandEncoder.wait_for_fence",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ComputeCommandEncoder.set_acceleration_structure",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ComputeCommandEncoder.set_intersection_function_table",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ComputeCommandEncoder.sample_counters_in_buffer",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ArgumentEncoder.encoded_length",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ArgumentEncoder.alignment",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ArgumentEncoder.set_argument_buffer",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ArgumentEncoder.set_argument_buffer_to_element",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ArgumentEncoder.set_buffer",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ArgumentEncoder.set_buffers",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ArgumentEncoder.set_texture",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ArgumentEncoder.set_textures",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ArgumentEncoder.set_sampler_state",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ArgumentEncoder.set_sampler_states",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ArgumentEncoder.set_render_pipeline_state",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ArgumentEncoder.set_render_pipeline_states",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ArgumentEncoder.constant_data",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ArgumentEncoder.set_indirect_command_buffer",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ArgumentEncoder.set_indirect_command_buffers",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "ArgumentEncoder.new_argument_encoder_for_buffer",
+      "source": "src/encoder.rs"
+    },
+    {
+      "rust": "Heap.device",
+      "source": "src/heap.rs"
+    },
+    {
+      "rust": "Heap.label",
+      "source": "src/heap.rs"
+    },
+    {
+      "rust": "Heap.set_label",
+      "source": "src/heap.rs"
+    },
+    {
+      "rust": "Heap.cpu_cache_mode",
+      "source": "src/heap.rs"
+    },
+    {
+      "rust": "Heap.storage_mode",
+      "source": "src/heap.rs"
+    },
+    {
+      "rust": "Heap.hazard_tracking_mode",
+      "source": "src/heap.rs"
+    },
+    {
+      "rust": "Heap.resource_options",
+      "source": "src/heap.rs"
+    },
+    {
+      "rust": "Heap.set_purgeable_state",
+      "source": "src/heap.rs"
+    },
+    {
+      "rust": "Heap.size",
+      "source": "src/heap.rs"
+    },
+    {
+      "rust": "Heap.used_size",
+      "source": "src/heap.rs"
+    },
+    {
+      "rust": "Heap.heap_type",
+      "source": "src/heap.rs"
+    },
+    {
+      "rust": "Heap.current_allocated_size",
+      "source": "src/heap.rs"
+    },
+    {
+      "rust": "Heap.max_available_size_with_alignment",
+      "source": "src/heap.rs"
+    },
+    {
+      "rust": "Heap.new_buffer",
+      "source": "src/heap.rs"
+    },
+    {
+      "rust": "Heap.new_texture",
+      "source": "src/heap.rs"
+    },
+    {
+      "rust": "Heap.new_buffer_with_offset",
+      "source": "src/heap.rs"
+    },
+    {
+      "rust": "Heap.new_texture_with_offset",
+      "source": "src/heap.rs"
+    },
+    {
+      "rust": "Heap.new_acceleration_structure_with_descriptor",
+      "source": "src/heap.rs"
+    },
+    {
+      "rust": "Heap.new_acceleration_structure_with_descriptor_offset",
+      "source": "src/heap.rs"
+    },
+    {
+      "rust": "Heap.new_acceleration_structure_with_size",
+      "source": "src/heap.rs"
+    },
+    {
+      "rust": "Heap.new_acceleration_structure_with_size_offset",
+      "source": "src/heap.rs"
+    },
+    {
+      "rust": "HeapDescriptor.new",
+      "source": "src/heap.rs"
+    },
+    {
+      "rust": "HeapDescriptor.cpu_cache_mode",
+      "source": "src/heap.rs"
+    },
+    {
+      "rust": "HeapDescriptor.set_cpu_cache_mode",
+      "source": "src/heap.rs"
+    },
+    {
+      "rust": "HeapDescriptor.storage_mode",
+      "source": "src/heap.rs"
+    },
+    {
+      "rust": "HeapDescriptor.set_storage_mode",
+      "source": "src/heap.rs"
+    },
+    {
+      "rust": "HeapDescriptor.size",
+      "source": "src/heap.rs"
+    },
+    {
+      "rust": "HeapDescriptor.set_size",
+      "source": "src/heap.rs"
+    },
+    {
+      "rust": "HeapDescriptor.hazard_tracking_mode",
+      "source": "src/heap.rs"
+    },
+    {
+      "rust": "HeapDescriptor.set_hazard_tracking_mode",
+      "source": "src/heap.rs"
+    },
+    {
+      "rust": "HeapDescriptor.resource_options",
+      "source": "src/heap.rs"
+    },
+    {
+      "rust": "HeapDescriptor.heap_type",
+      "source": "src/heap.rs"
+    },
+    {
+      "rust": "HeapDescriptor.set_heap_type",
+      "source": "src/heap.rs"
+    },
+    {
+      "rust": "IndirectCommandBufferDescriptor.new",
+      "source": "src/indirect_encoder.rs"
+    },
+    {
+      "rust": "IndirectCommandBufferDescriptor.command_types",
+      "source": "src/indirect_encoder.rs"
+    },
+    {
+      "rust": "IndirectCommandBufferDescriptor.set_command_types",
+      "source": "src/indirect_encoder.rs"
+    },
+    {
+      "rust": "IndirectCommandBufferDescriptor.inherit_buffers",
+      "source": "src/indirect_encoder.rs"
+    },
+    {
+      "rust": "IndirectCommandBufferDescriptor.set_inherit_buffers",
+      "source": "src/indirect_encoder.rs"
+    },
+    {
+      "rust": "IndirectCommandBufferDescriptor.inherit_pipeline_state",
+      "source": "src/indirect_encoder.rs"
+    },
+    {
+      "rust": "IndirectCommandBufferDescriptor.set_inherit_pipeline_state",
+      "source": "src/indirect_encoder.rs"
+    },
+    {
+      "rust": "IndirectCommandBufferDescriptor.max_vertex_buffer_bind_count",
+      "source": "src/indirect_encoder.rs"
+    },
+    {
+      "rust": "IndirectCommandBufferDescriptor.set_max_vertex_buffer_bind_count",
+      "source": "src/indirect_encoder.rs"
+    },
+    {
+      "rust": "IndirectCommandBufferDescriptor.max_fragment_buffer_bind_count",
+      "source": "src/indirect_encoder.rs"
+    },
+    {
+      "rust": "IndirectCommandBufferDescriptor.set_max_fragment_buffer_bind_count",
+      "source": "src/indirect_encoder.rs"
+    },
+    {
+      "rust": "IndirectCommandBufferDescriptor.max_kernel_buffer_bind_count",
+      "source": "src/indirect_encoder.rs"
+    },
+    {
+      "rust": "IndirectCommandBufferDescriptor.set_max_kernel_buffer_bind_count",
+      "source": "src/indirect_encoder.rs"
+    },
+    {
+      "rust": "IndirectCommandBuffer.size",
+      "source": "src/indirect_encoder.rs"
+    },
+    {
+      "rust": "IndirectCommandBuffer.indirect_render_command_at_index",
+      "source": "src/indirect_encoder.rs"
+    },
+    {
+      "rust": "IndirectCommandBuffer.indirect_compute_command_at_index",
+      "source": "src/indirect_encoder.rs"
+    },
+    {
+      "rust": "IndirectCommandBuffer.reset_with_range",
+      "source": "src/indirect_encoder.rs"
+    },
+    {
+      "rust": "IndirectRenderCommand.set_render_pipeline_state",
+      "source": "src/indirect_encoder.rs"
+    },
+    {
+      "rust": "IndirectRenderCommand.set_vertex_buffer",
+      "source": "src/indirect_encoder.rs"
+    },
+    {
+      "rust": "IndirectRenderCommand.set_fragment_buffer",
+      "source": "src/indirect_encoder.rs"
+    },
+    {
+      "rust": "IndirectRenderCommand.draw_primitives",
+      "source": "src/indirect_encoder.rs"
+    },
+    {
+      "rust": "IndirectRenderCommand.draw_indexed_primitives",
+      "source": "src/indirect_encoder.rs"
+    },
+    {
+      "rust": "IndirectRenderCommand.draw_patches",
+      "source": "src/indirect_encoder.rs"
+    },
+    {
+      "rust": "IndirectRenderCommand.draw_indexed_patches",
+      "source": "src/indirect_encoder.rs"
+    },
+    {
+      "rust": "IndirectRenderCommand.reset",
+      "source": "src/indirect_encoder.rs"
+    },
+    {
+      "rust": "IndirectComputeCommand.set_compute_pipeline_state",
+      "source": "src/indirect_encoder.rs"
+    },
+    {
+      "rust": "IndirectComputeCommand.set_kernel_buffer",
+      "source": "src/indirect_encoder.rs"
+    },
+    {
+      "rust": "IndirectComputeCommand.set_threadgroup_memory_length",
+      "source": "src/indirect_encoder.rs"
+    },
+    {
+      "rust": "IndirectComputeCommand.set_stage_in_region",
+      "source": "src/indirect_encoder.rs"
+    },
+    {
+      "rust": "IndirectComputeCommand.set_barrier",
+      "source": "src/indirect_encoder.rs"
+    },
+    {
+      "rust": "IndirectComputeCommand.clear_barrier",
+      "source": "src/indirect_encoder.rs"
+    },
+    {
+      "rust": "IndirectComputeCommand.concurrent_dispatch_threadgroups",
+      "source": "src/indirect_encoder.rs"
+    },
+    {
+      "rust": "IndirectComputeCommand.concurrent_dispatch_threads",
+      "source": "src/indirect_encoder.rs"
+    },
+    {
+      "rust": "IndirectComputeCommand.reset",
+      "source": "src/indirect_encoder.rs"
+    },
+    {
+      "rust": "NSRange.new",
+      "source": "src/lib.rs"
+    },
+    {
+      "rust": "Array.from_slice",
+      "source": "src/lib.rs"
+    },
+    {
+      "rust": "Array.from_owned_slice",
+      "source": "src/lib.rs"
+    },
+    {
+      "rust": "MetalDrawable.texture",
+      "source": "src/lib.rs"
+    },
+    {
+      "rust": "NsObject.conforms_to_protocol",
+      "source": "src/lib.rs"
+    },
+    {
+      "rust": "MetalLayer.new",
+      "source": "src/lib.rs"
+    },
+    {
+      "rust": "MetalLayer.device",
+      "source": "src/lib.rs"
+    },
+    {
+      "rust": "MetalLayer.set_device",
+      "source": "src/lib.rs"
+    },
+    {
+      "rust": "MetalLayer.pixel_format",
+      "source": "src/lib.rs"
+    },
+    {
+      "rust": "MetalLayer.set_pixel_format",
+      "source": "src/lib.rs"
+    },
+    {
+      "rust": "MetalLayer.drawable_size",
+      "source": "src/lib.rs"
+    },
+    {
+      "rust": "MetalLayer.set_drawable_size",
+      "source": "src/lib.rs"
+    },
+    {
+      "rust": "MetalLayer.presents_with_transaction",
+      "source": "src/lib.rs"
+    },
+    {
+      "rust": "MetalLayer.set_presents_with_transaction",
+      "source": "src/lib.rs"
+    },
+    {
+      "rust": "MetalLayer.display_sync_enabled",
+      "source": "src/lib.rs"
+    },
+    {
+      "rust": "MetalLayer.set_display_sync_enabled",
+      "source": "src/lib.rs"
+    },
+    {
+      "rust": "MetalLayer.maximum_drawable_count",
+      "source": "src/lib.rs"
+    },
+    {
+      "rust": "MetalLayer.set_maximum_drawable_count",
+      "source": "src/lib.rs"
+    },
+    {
+      "rust": "MetalLayer.set_edge_antialiasing_mask",
+      "source": "src/lib.rs"
+    },
+    {
+      "rust": "MetalLayer.set_masks_to_bounds",
+      "source": "src/lib.rs"
+    },
+    {
+      "rust": "MetalLayer.remove_all_animations",
+      "source": "src/lib.rs"
+    },
+    {
+      "rust": "MetalLayer.next_drawable",
+      "source": "src/lib.rs"
+    },
+    {
+      "rust": "MetalLayer.contents_scale",
+      "source": "src/lib.rs"
+    },
+    {
+      "rust": "MetalLayer.set_contents_scale",
+      "source": "src/lib.rs"
+    },
+    {
+      "rust": "MetalLayer.framebuffer_only",
+      "source": "src/lib.rs"
+    },
+    {
+      "rust": "MetalLayer.set_framebuffer_only",
+      "source": "src/lib.rs"
+    },
+    {
+      "rust": "MetalLayer.is_opaque",
+      "source": "src/lib.rs"
+    },
+    {
+      "rust": "MetalLayer.set_opaque",
+      "source": "src/lib.rs"
+    },
+    {
+      "rust": "MetalLayer.wants_extended_dynamic_range_content",
+      "source": "src/lib.rs"
+    },
+    {
+      "rust": "MetalLayer.set_wants_extended_dynamic_range_content",
+      "source": "src/lib.rs"
+    },
+    {
+      "rust": "URL.new_with_string",
+      "source": "src/lib.rs"
+    },
+    {
+      "rust": "URL.absolute_string",
+      "source": "src/lib.rs"
+    },
+    {
+      "rust": "URL.path",
+      "source": "src/lib.rs"
+    },
+    {
+      "rust": "VertexAttribute.name",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "VertexAttribute.attribute_index",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "VertexAttribute.attribute_type",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "VertexAttribute.is_active",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "VertexAttribute.is_patch_data",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "VertexAttribute.is_patch_control_point_data",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "Attribute.name",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "Attribute.attribute_index",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "Attribute.attribute_type",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "Attribute.is_active",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "Attribute.is_patch_data",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "Attribute.is_patch_control_point_data",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "FunctionConstant.name",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "FunctionConstant.data_type",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "FunctionConstant.index",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "FunctionConstant.required",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "FunctionDescriptor.new",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "FunctionDescriptor.name",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "FunctionDescriptor.set_name",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "FunctionDescriptor.specialized_name",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "FunctionDescriptor.set_specialized_name",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "FunctionDescriptor.constant_values",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "FunctionDescriptor.set_constant_values",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "FunctionDescriptor.options",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "FunctionDescriptor.set_options",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "FunctionHandle.device",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "FunctionHandle.name",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "FunctionHandle.function_type",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "Function.device",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "Function.label",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "Function.set_label",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "Function.name",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "Function.function_type",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "Function.patch_type",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "Function.patch_control_point_count",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "Function.vertex_attributes",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "Function.stage_input_attributes",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "Function.new_argument_encoder",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "Function.function_constants_dictionary",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "Function.options",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "FunctionConstantValues.new",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "FunctionConstantValues.set_constant_value_at_index",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "FunctionConstantValues.set_constant_values_with_range",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "FunctionConstantValues.set_constant_value_with_name",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "CompileOptions.new",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "CompileOptions.preprocessor_macros",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "CompileOptions.set_preprocessor_macros",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "CompileOptions.is_fast_math_enabled",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "CompileOptions.set_fast_math_enabled",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "CompileOptions.language_version",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "CompileOptions.set_language_version",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "CompileOptions.library_type",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "CompileOptions.set_library_type",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "CompileOptions.install_name",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "CompileOptions.set_install_name",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "CompileOptions.libraries",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "CompileOptions.libraries_as_nsarray",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "CompileOptions.set_libraries",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "CompileOptions.set_libraries_nsarray",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "CompileOptions.preserve_invariance",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "CompileOptions.set_preserve_invariance",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "Library.device",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "Library.label",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "Library.set_label",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "Library.get_function",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "Library.function_names",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "Library.library_type",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "Library.install_name",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "Library.new_function_with_descriptor",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "Library.new_intersection_function_with_descriptor",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "DynamicLibrary.device",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "DynamicLibrary.label",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "DynamicLibrary.set_label",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "DynamicLibrary.install_name",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "DynamicLibrary.serialize_to_url",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "BinaryArchiveDescriptor.new",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "BinaryArchiveDescriptor.url",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "BinaryArchiveDescriptor.set_url",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "BinaryArchive.device",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "BinaryArchive.label",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "BinaryArchive.set_label",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "BinaryArchive.add_compute_pipeline_functions_with_descriptor",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "BinaryArchive.add_render_pipeline_functions_with_descriptor",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "BinaryArchive.serialize_to_url",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "LinkedFunctions.new",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "LinkedFunctions.functions",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "LinkedFunctions.set_functions",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "LinkedFunctions.binary_functions",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "LinkedFunctions.set_binary_functions",
+      "source": "src/library.rs"
+    },
+    {
+      "rust": "mps::mps_supports_device",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::RayIntersector.from_device",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::RayIntersector.set_cull_mode",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::RayIntersector.set_front_facing_winding",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::RayIntersector.set_intersection_data_type",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::RayIntersector.set_intersection_stride",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::RayIntersector.set_ray_data_type",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::RayIntersector.set_ray_index_data_type",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::RayIntersector.set_ray_mask",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::RayIntersector.set_ray_mask_operator",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::RayIntersector.set_ray_mask_options",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::RayIntersector.set_ray_stride",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::RayIntersector.set_triangle_intersection_test_type",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::RayIntersector.encode_intersection_to_command_buffer",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::RayIntersector.recommended_minimum_ray_batch_size_for_ray_count",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::AccelerationStructureGroup.new_with_device",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::AccelerationStructureGroup.device",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::AccelerationStructure.status",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::AccelerationStructure.usage",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::AccelerationStructure.set_usage",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::AccelerationStructure.group",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::AccelerationStructure.encode_refit_to_command_buffer",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::AccelerationStructure.rebuild",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::PolygonAccelerationStructure.set_index_buffer",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::PolygonAccelerationStructure.set_index_buffer_offset",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::PolygonAccelerationStructure.set_index_type",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::PolygonAccelerationStructure.set_mask_buffer",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::PolygonAccelerationStructure.set_mask_buffer_offset",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::PolygonAccelerationStructure.set_vertex_buffer",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::PolygonAccelerationStructure.set_vertex_buffer_offset",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::PolygonAccelerationStructure.set_vertex_stride",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::TriangleAccelerationStructure.from_device",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::TriangleAccelerationStructure.triangle_count",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::TriangleAccelerationStructure.set_triangle_count",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::InstanceAccelerationStructure.init_with_group",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::InstanceAccelerationStructure.acceleration_structures",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::InstanceAccelerationStructure.set_acceleration_structures",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::InstanceAccelerationStructure.instance_buffer",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::InstanceAccelerationStructure.set_instance_buffer",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::InstanceAccelerationStructure.instance_buffer_offset",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::InstanceAccelerationStructure.set_instance_buffer_offset",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::InstanceAccelerationStructure.transform_buffer",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::InstanceAccelerationStructure.set_transform_buffer",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::InstanceAccelerationStructure.transform_buffer_offset",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::InstanceAccelerationStructure.set_transform_buffer_offset",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::InstanceAccelerationStructure.transform_type",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::InstanceAccelerationStructure.set_transform_type",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::InstanceAccelerationStructure.mask_buffer",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::InstanceAccelerationStructure.set_mask_buffer",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::InstanceAccelerationStructure.mask_buffer_offset",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::InstanceAccelerationStructure.set_mask_buffer_offset",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::InstanceAccelerationStructure.instance_count",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "mps::InstanceAccelerationStructure.set_instance_count",
+      "source": "src/mps.rs"
+    },
+    {
+      "rust": "ComputePipelineDescriptor.new",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "ComputePipelineDescriptor.label",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "ComputePipelineDescriptor.set_label",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "ComputePipelineDescriptor.compute_function",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "ComputePipelineDescriptor.set_compute_function",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "ComputePipelineDescriptor.thread_group_size_is_multiple_of_thread_execution_width",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "ComputePipelineDescriptor.set_thread_group_size_is_multiple_of_thread_execution_width",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "ComputePipelineDescriptor.max_total_threads_per_threadgroup",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "ComputePipelineDescriptor.set_max_total_threads_per_threadgroup",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "ComputePipelineDescriptor.support_indirect_command_buffers",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "ComputePipelineDescriptor.set_support_indirect_command_buffers",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "ComputePipelineDescriptor.support_adding_binary_functions",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "ComputePipelineDescriptor.set_support_adding_binary_functions",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "ComputePipelineDescriptor.max_call_stack_depth",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "ComputePipelineDescriptor.set_max_call_stack_depth",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "ComputePipelineDescriptor.insert_libraries",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "ComputePipelineDescriptor.set_insert_libraries",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "ComputePipelineDescriptor.binary_archives",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "ComputePipelineDescriptor.set_binary_archives",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "ComputePipelineDescriptor.linked_functions",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "ComputePipelineDescriptor.set_linked_functions",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "ComputePipelineDescriptor.stage_input_descriptor",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "ComputePipelineDescriptor.set_stage_input_descriptor",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "ComputePipelineDescriptor.buffers",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "ComputePipelineDescriptor.reset",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "ComputePipelineState.label",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "ComputePipelineState.max_total_threads_per_threadgroup",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "ComputePipelineState.thread_execution_width",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "ComputePipelineState.static_threadgroup_memory_length",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "ComputePipelineState.imageblock_memory_length_for_dimensions",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "ComputePipelineState.support_indirect_command_buffers",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "ComputePipelineState.function_handle_with_function",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "ComputePipelineState.new_visible_function_table_with_descriptor",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "ComputePipelineState.new_intersection_function_table_with_descriptor",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "StageInputOutputDescriptor.new",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "StageInputOutputDescriptor.attributes",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "StageInputOutputDescriptor.index_buffer_index",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "StageInputOutputDescriptor.set_index_buffer_index",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "StageInputOutputDescriptor.index_type",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "StageInputOutputDescriptor.set_index_type",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "StageInputOutputDescriptor.layouts",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "StageInputOutputDescriptor.reset",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "AttributeDescriptorArray.object_at",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "AttributeDescriptorArray.set_object_at",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "AttributeDescriptor.buffer_index",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "AttributeDescriptor.set_buffer_index",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "AttributeDescriptor.format",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "AttributeDescriptor.set_format",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "AttributeDescriptor.offset",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "AttributeDescriptor.set_offset",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "BufferLayoutDescriptorArray.object_at",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "BufferLayoutDescriptorArray.set_object_at",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "BufferLayoutDescriptor.step_function",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "BufferLayoutDescriptor.set_step_function",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "BufferLayoutDescriptor.step_rate",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "BufferLayoutDescriptor.set_step_rate",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "BufferLayoutDescriptor.stride",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "BufferLayoutDescriptor.set_stride",
+      "source": "src/pipeline/compute.rs"
+    },
+    {
+      "rust": "PipelineBufferDescriptorArray.object_at",
+      "source": "src/pipeline/mod.rs"
+    },
+    {
+      "rust": "PipelineBufferDescriptorArray.set_object_at",
+      "source": "src/pipeline/mod.rs"
+    },
+    {
+      "rust": "PipelineBufferDescriptor.mutability",
+      "source": "src/pipeline/mod.rs"
+    },
+    {
+      "rust": "PipelineBufferDescriptor.set_mutability",
+      "source": "src/pipeline/mod.rs"
+    },
+    {
+      "rust": "RenderPipelineColorAttachmentDescriptor.pixel_format",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineColorAttachmentDescriptor.set_pixel_format",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineColorAttachmentDescriptor.is_blending_enabled",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineColorAttachmentDescriptor.set_blending_enabled",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineColorAttachmentDescriptor.source_rgb_blend_factor",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineColorAttachmentDescriptor.set_source_rgb_blend_factor",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineColorAttachmentDescriptor.destination_rgb_blend_factor",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineColorAttachmentDescriptor.set_destination_rgb_blend_factor",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineColorAttachmentDescriptor.rgb_blend_operation",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineColorAttachmentDescriptor.set_rgb_blend_operation",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineColorAttachmentDescriptor.source_alpha_blend_factor",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineColorAttachmentDescriptor.set_source_alpha_blend_factor",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineColorAttachmentDescriptor.destination_alpha_blend_factor",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineColorAttachmentDescriptor.set_destination_alpha_blend_factor",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineColorAttachmentDescriptor.alpha_blend_operation",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineColorAttachmentDescriptor.set_alpha_blend_operation",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineColorAttachmentDescriptor.write_mask",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineColorAttachmentDescriptor.set_write_mask",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineReflection.new",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineReflection.fragment_arguments",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineReflection.vertex_arguments",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineReflection.tile_arguments",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "ArgumentArray.object_at",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "ArgumentArray.count",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "ComputePipelineReflection.arguments",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.new",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.color_attachments",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.depth_attachment_pixel_format",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.set_depth_attachment_pixel_format",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.fragment_buffers",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.fragment_function",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.set_fragment_function",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.is_alpha_to_coverage_enabled",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.set_alpha_to_coverage_enabled",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.is_alpha_to_one_enabled",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.set_alpha_to_one_enabled",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.is_rasterization_enabled",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.set_rasterization_enabled",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.label",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.set_label",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.max_total_threadgroups_per_mesh_grid",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.set_max_total_threadgroups_per_mesh_grid",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.max_total_threads_per_mesh_threadgroup",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.set_max_total_threads_per_mesh_threadgroup",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.max_total_threads_per_object_threadgroup",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.set_max_total_threads_per_object_threadgroup",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.max_vertex_amplification_count",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.set_max_vertex_amplification_count",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.mesh_buffers",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.mesh_function",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.set_mesh_function",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.mesh_threadgroup_size_is_multiple_of_thread_execution_width",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.set_mesh_threadgroup_size_is_multiple_of_thread_execution_width",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.object_buffers",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.object_function",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.set_object_function",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.object_threadgroup_size_is_multiple_of_thread_execution_width",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.set_object_threadgroup_size_is_multiple_of_thread_execution_width",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.payload_memory_length",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.set_payload_memory_length",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.raster_sample_count",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.set_raster_sample_count",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.stencil_attachment_pixel_format",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.set_stencil_attachment_pixel_format",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MeshRenderPipelineDescriptor.reset",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineDescriptor.new",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineDescriptor.label",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineDescriptor.set_label",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineDescriptor.vertex_function",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineDescriptor.set_vertex_function",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineDescriptor.fragment_function",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineDescriptor.set_fragment_function",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineDescriptor.vertex_descriptor",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineDescriptor.set_vertex_descriptor",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineDescriptor.sample_count",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineDescriptor.set_sample_count",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineDescriptor.raster_sample_count",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineDescriptor.set_raster_sample_count",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineDescriptor.max_vertex_amplification_count",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineDescriptor.set_max_vertex_amplification_count",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineDescriptor.is_alpha_to_coverage_enabled",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineDescriptor.set_alpha_to_coverage_enabled",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineDescriptor.is_alpha_to_one_enabled",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineDescriptor.set_alpha_to_one_enabled",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineDescriptor.is_rasterization_enabled",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineDescriptor.set_rasterization_enabled",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineDescriptor.color_attachments",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineDescriptor.depth_attachment_pixel_format",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineDescriptor.set_depth_attachment_pixel_format",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineDescriptor.stencil_attachment_pixel_format",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineDescriptor.set_stencil_attachment_pixel_format",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineDescriptor.input_primitive_topology",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineDescriptor.set_input_primitive_topology",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineDescriptor.serialize_vertex_data",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineDescriptor.serialize_fragment_data",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineDescriptor.support_indirect_command_buffers",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineDescriptor.set_support_indirect_command_buffers",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineDescriptor.vertex_buffers",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineDescriptor.fragment_buffers",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineDescriptor.binary_archives",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineDescriptor.set_binary_archives",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineDescriptor.fragment_linked_functions",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineDescriptor.set_fragment_linked_functions",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineDescriptor.reset",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineState.device",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineState.label",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineState.new_intersection_function_table_with_descriptor",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineState.function_handle_with_function",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineState.new_visible_function_table_with_descriptor",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineColorAttachmentDescriptorArray.object_at",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "RenderPipelineColorAttachmentDescriptorArray.set_object_at",
+      "source": "src/pipeline/render.rs"
+    },
+    {
+      "rust": "MTLClearColor.new",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassAttachmentDescriptor.texture",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassAttachmentDescriptor.set_texture",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassAttachmentDescriptor.level",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassAttachmentDescriptor.set_level",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassAttachmentDescriptor.slice",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassAttachmentDescriptor.set_slice",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassAttachmentDescriptor.depth_plane",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassAttachmentDescriptor.set_depth_plane",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassAttachmentDescriptor.resolve_texture",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassAttachmentDescriptor.set_resolve_texture",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassAttachmentDescriptor.resolve_level",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassAttachmentDescriptor.set_resolve_level",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassAttachmentDescriptor.resolve_slice",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassAttachmentDescriptor.set_resolve_slice",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassAttachmentDescriptor.resolve_depth_plane",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassAttachmentDescriptor.set_resolve_depth_plane",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassAttachmentDescriptor.load_action",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassAttachmentDescriptor.set_load_action",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassAttachmentDescriptor.store_action",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassAttachmentDescriptor.set_store_action",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassColorAttachmentDescriptor.new",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassColorAttachmentDescriptor.clear_color",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassColorAttachmentDescriptor.set_clear_color",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassDepthAttachmentDescriptor.clear_depth",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassDepthAttachmentDescriptor.set_clear_depth",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassStencilAttachmentDescriptor.clear_stencil",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassStencilAttachmentDescriptor.set_clear_stencil",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassStencilAttachmentDescriptor.stencil_resolve_filter",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassStencilAttachmentDescriptor.set_stencil_resolve_filter",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassColorAttachmentDescriptorArray.object_at",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassColorAttachmentDescriptorArray.set_object_at",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassSampleBufferAttachmentDescriptor.new",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassSampleBufferAttachmentDescriptor.sample_buffer",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassSampleBufferAttachmentDescriptor.set_sample_buffer",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassSampleBufferAttachmentDescriptor.start_of_vertex_sample_index",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassSampleBufferAttachmentDescriptor.set_start_of_vertex_sample_index",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassSampleBufferAttachmentDescriptor.end_of_vertex_sample_index",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassSampleBufferAttachmentDescriptor.set_end_of_vertex_sample_index",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassSampleBufferAttachmentDescriptor.start_of_fragment_sample_index",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassSampleBufferAttachmentDescriptor.set_start_of_fragment_sample_index",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassSampleBufferAttachmentDescriptor.end_of_fragment_sample_index",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassSampleBufferAttachmentDescriptor.set_end_of_fragment_sample_index",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassSampleBufferAttachmentDescriptorArray.object_at",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassSampleBufferAttachmentDescriptorArray.set_object_at",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassDescriptor.new",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassDescriptor.color_attachments",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassDescriptor.depth_attachment",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassDescriptor.set_depth_attachment",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassDescriptor.stencil_attachment",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassDescriptor.set_stencil_attachment",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassDescriptor.visibility_result_buffer",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassDescriptor.set_visibility_result_buffer",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassDescriptor.render_target_array_length",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassDescriptor.set_render_target_array_length",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassDescriptor.render_target_width",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassDescriptor.set_render_target_width",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassDescriptor.render_target_height",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassDescriptor.set_render_target_height",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassDescriptor.default_raster_sample_count",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassDescriptor.set_default_raster_sample_count",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "RenderPassDescriptor.sample_buffer_attachments",
+      "source": "src/renderpass.rs"
+    },
+    {
+      "rust": "Resource.device",
+      "source": "src/resource.rs"
+    },
+    {
+      "rust": "Resource.label",
+      "source": "src/resource.rs"
+    },
+    {
+      "rust": "Resource.set_label",
+      "source": "src/resource.rs"
+    },
+    {
+      "rust": "Resource.cpu_cache_mode",
+      "source": "src/resource.rs"
+    },
+    {
+      "rust": "Resource.storage_mode",
+      "source": "src/resource.rs"
+    },
+    {
+      "rust": "Resource.set_purgeable_state",
+      "source": "src/resource.rs"
+    },
+    {
+      "rust": "Resource.allocated_size",
+      "source": "src/resource.rs"
+    },
+    {
+      "rust": "Resource.hazard_tracking_mode",
+      "source": "src/resource.rs"
+    },
+    {
+      "rust": "Resource.resource_options",
+      "source": "src/resource.rs"
+    },
+    {
+      "rust": "Resource.heap",
+      "source": "src/resource.rs"
+    },
+    {
+      "rust": "Resource.heap_offset",
+      "source": "src/resource.rs"
+    },
+    {
+      "rust": "Resource.make_aliasable",
+      "source": "src/resource.rs"
+    },
+    {
+      "rust": "Resource.is_aliasable",
+      "source": "src/resource.rs"
+    },
+    {
+      "rust": "SamplerDescriptor.new",
+      "source": "src/sampler.rs"
+    },
+    {
+      "rust": "SamplerDescriptor.set_min_filter",
+      "source": "src/sampler.rs"
+    },
+    {
+      "rust": "SamplerDescriptor.set_mag_filter",
+      "source": "src/sampler.rs"
+    },
+    {
+      "rust": "SamplerDescriptor.set_mip_filter",
+      "source": "src/sampler.rs"
+    },
+    {
+      "rust": "SamplerDescriptor.set_address_mode_s",
+      "source": "src/sampler.rs"
+    },
+    {
+      "rust": "SamplerDescriptor.set_address_mode_t",
+      "source": "src/sampler.rs"
+    },
+    {
+      "rust": "SamplerDescriptor.set_address_mode_r",
+      "source": "src/sampler.rs"
+    },
+    {
+      "rust": "SamplerDescriptor.set_max_anisotropy",
+      "source": "src/sampler.rs"
+    },
+    {
+      "rust": "SamplerDescriptor.set_compare_function",
+      "source": "src/sampler.rs"
+    },
+    {
+      "rust": "SamplerDescriptor.set_lod_bias",
+      "source": "src/sampler.rs"
+    },
+    {
+      "rust": "SamplerDescriptor.set_lod_min_clamp",
+      "source": "src/sampler.rs"
+    },
+    {
+      "rust": "SamplerDescriptor.set_lod_max_clamp",
+      "source": "src/sampler.rs"
+    },
+    {
+      "rust": "SamplerDescriptor.set_lod_average",
+      "source": "src/sampler.rs"
+    },
+    {
+      "rust": "SamplerDescriptor.set_normalized_coordinates",
+      "source": "src/sampler.rs"
+    },
+    {
+      "rust": "SamplerDescriptor.set_support_argument_buffers",
+      "source": "src/sampler.rs"
+    },
+    {
+      "rust": "SamplerDescriptor.set_border_color",
+      "source": "src/sampler.rs"
+    },
+    {
+      "rust": "SamplerDescriptor.label",
+      "source": "src/sampler.rs"
+    },
+    {
+      "rust": "SamplerDescriptor.set_label",
+      "source": "src/sampler.rs"
+    },
+    {
+      "rust": "SamplerState.device",
+      "source": "src/sampler.rs"
+    },
+    {
+      "rust": "SamplerState.label",
+      "source": "src/sampler.rs"
+    },
+    {
+      "rust": "SamplerState.gpu_resource_id",
+      "source": "src/sampler.rs"
+    },
+    {
+      "rust": "Event.device",
+      "source": "src/sync.rs"
+    },
+    {
+      "rust": "SharedEvent.signaled_value",
+      "source": "src/sync.rs"
+    },
+    {
+      "rust": "SharedEvent.set_signaled_value",
+      "source": "src/sync.rs"
+    },
+    {
+      "rust": "SharedEvent.notify",
+      "source": "src/sync.rs"
+    },
+    {
+      "rust": "SharedEventListener.from_queue_handle",
+      "source": "src/sync.rs"
+    },
+    {
+      "rust": "SharedEventListener.from_queue",
+      "source": "src/sync.rs"
+    },
+    {
+      "rust": "Fence.device",
+      "source": "src/sync.rs"
+    },
+    {
+      "rust": "Fence.label",
+      "source": "src/sync.rs"
+    },
+    {
+      "rust": "Fence.set_label",
+      "source": "src/sync.rs"
+    },
+    {
+      "rust": "TextureDescriptor.new",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "TextureDescriptor.texture_type",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "TextureDescriptor.set_texture_type",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "TextureDescriptor.pixel_format",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "TextureDescriptor.set_pixel_format",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "TextureDescriptor.width",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "TextureDescriptor.set_width",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "TextureDescriptor.height",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "TextureDescriptor.set_height",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "TextureDescriptor.depth",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "TextureDescriptor.set_depth",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "TextureDescriptor.mipmap_level_count",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "TextureDescriptor.set_mipmap_level_count",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "TextureDescriptor.set_mipmap_level_count_for_size",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "TextureDescriptor.sample_count",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "TextureDescriptor.set_sample_count",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "TextureDescriptor.array_length",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "TextureDescriptor.set_array_length",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "TextureDescriptor.resource_options",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "TextureDescriptor.set_resource_options",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "TextureDescriptor.cpu_cache_mode",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "TextureDescriptor.set_cpu_cache_mode",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "TextureDescriptor.storage_mode",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "TextureDescriptor.set_storage_mode",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "TextureDescriptor.usage",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "TextureDescriptor.set_usage",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "TextureDescriptor.compression_type",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "TextureDescriptor.set_compression_type",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "Texture.root_resource",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "Texture.parent_texture",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "Texture.parent_relative_level",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "Texture.parent_relative_slice",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "Texture.buffer",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "Texture.buffer_offset",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "Texture.buffer_stride",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "Texture.texture_type",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "Texture.pixel_format",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "Texture.width",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "Texture.height",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "Texture.depth",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "Texture.mipmap_level_count",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "Texture.sample_count",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "Texture.array_length",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "Texture.usage",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "Texture.framebuffer_only",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "Texture.get_bytes",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "Texture.get_bytes_in_slice",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "Texture.replace_region",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "Texture.replace_region_in_slice",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "Texture.new_texture_view",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "Texture.new_texture_view_from_slice",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "Texture.gpu_resource_id",
+      "source": "src/texture.rs"
+    },
+    {
+      "rust": "MTLSize.new",
+      "source": "src/types.rs"
+    },
+    {
+      "rust": "MTLRegion.new_1d",
+      "source": "src/types.rs"
+    },
+    {
+      "rust": "MTLRegion.new_2d",
+      "source": "src/types.rs"
+    },
+    {
+      "rust": "MTLRegion.new_3d",
+      "source": "src/types.rs"
+    },
+    {
+      "rust": "VertexBufferLayoutDescriptor.new",
+      "source": "src/vertexdescriptor.rs"
+    },
+    {
+      "rust": "VertexBufferLayoutDescriptor.stride",
+      "source": "src/vertexdescriptor.rs"
+    },
+    {
+      "rust": "VertexBufferLayoutDescriptor.set_stride",
+      "source": "src/vertexdescriptor.rs"
+    },
+    {
+      "rust": "VertexBufferLayoutDescriptor.step_function",
+      "source": "src/vertexdescriptor.rs"
+    },
+    {
+      "rust": "VertexBufferLayoutDescriptor.set_step_function",
+      "source": "src/vertexdescriptor.rs"
+    },
+    {
+      "rust": "VertexBufferLayoutDescriptor.step_rate",
+      "source": "src/vertexdescriptor.rs"
+    },
+    {
+      "rust": "VertexBufferLayoutDescriptor.set_step_rate",
+      "source": "src/vertexdescriptor.rs"
+    },
+    {
+      "rust": "VertexBufferLayoutDescriptorArray.object_at",
+      "source": "src/vertexdescriptor.rs"
+    },
+    {
+      "rust": "VertexBufferLayoutDescriptorArray.set_object_at",
+      "source": "src/vertexdescriptor.rs"
+    },
+    {
+      "rust": "VertexAttributeDescriptor.new",
+      "source": "src/vertexdescriptor.rs"
+    },
+    {
+      "rust": "VertexAttributeDescriptor.format",
+      "source": "src/vertexdescriptor.rs"
+    },
+    {
+      "rust": "VertexAttributeDescriptor.set_format",
+      "source": "src/vertexdescriptor.rs"
+    },
+    {
+      "rust": "VertexAttributeDescriptor.offset",
+      "source": "src/vertexdescriptor.rs"
+    },
+    {
+      "rust": "VertexAttributeDescriptor.set_offset",
+      "source": "src/vertexdescriptor.rs"
+    },
+    {
+      "rust": "VertexAttributeDescriptor.buffer_index",
+      "source": "src/vertexdescriptor.rs"
+    },
+    {
+      "rust": "VertexAttributeDescriptor.set_buffer_index",
+      "source": "src/vertexdescriptor.rs"
+    },
+    {
+      "rust": "VertexAttributeDescriptorArray.object_at",
+      "source": "src/vertexdescriptor.rs"
+    },
+    {
+      "rust": "VertexAttributeDescriptorArray.set_object_at",
+      "source": "src/vertexdescriptor.rs"
+    },
+    {
+      "rust": "VertexDescriptor.new",
+      "source": "src/vertexdescriptor.rs"
+    },
+    {
+      "rust": "VertexDescriptor.layouts",
+      "source": "src/vertexdescriptor.rs"
+    },
+    {
+      "rust": "VertexDescriptor.attributes",
+      "source": "src/vertexdescriptor.rs"
+    },
+    {
+      "rust": "VertexDescriptor.serialize_descriptor",
+      "source": "src/vertexdescriptor.rs"
+    },
+    {
+      "rust": "VertexDescriptor.reset",
+      "source": "src/vertexdescriptor.rs"
+    }
+  ]
+}

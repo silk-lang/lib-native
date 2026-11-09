@@ -1,0 +1,131 @@
+//! Native accessibility snapshots and actions. The AppKit backend publishes retained
+//! NSAccessibility elements. `supported` is false on backends without an OS bridge.
+import types { WindowId }
+import silk.mem.pointer { Pointer }
+import silk.collections.bytes { Bytes }
+import silk.core.result { Result }
+import silk.text.string { String }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+
+static if Intrinsic.targetOperatingSystem() == "darwin" {
+  unsafe extern "C" fn silk_macos_ax_begin(window: u32) -> ()
+  unsafe extern "C" fn silk_macos_ax_node(
+    window: u32,
+    id: u32,
+    parent: u32,
+    accessRole: u32,
+    flags: u32,
+    x: f64,
+    y: f64,
+    width: f64,
+    height: f64,
+    label: ?[*]const u8,
+    labelLength: usize,
+    value: ?[*]const u8,
+    valueLength: usize,
+  ) -> ()
+  unsafe extern "C" fn silk_macos_ax_range(
+    window: u32,
+    id: u32,
+    min: f64,
+    max: f64,
+    value: f64,
+  ) -> ()
+  unsafe extern "C" fn silk_macos_ax_end(window: u32) -> ()
+  unsafe extern "C" fn silk_macos_ax_poll(window: u32, target: *mut u32) -> u32
+  unsafe extern "C" fn silk_macos_ax_text(window: u32, output: ?[*]mut u8, capacity: usize) -> usize
+}
+
+pub struct Action {
+  pub kind: u32,
+  pub target: u32
+}
+
+pub fn supported() -> bool {
+  static if Intrinsic.targetOperatingSystem() == "darwin" {
+    return true
+  } else {
+    return false
+  }
+}
+
+pub fn begin(window: WindowId) -> () {
+  static if Intrinsic.targetOperatingSystem() == "darwin" {
+    unsafe silk_macos_ax_begin(window.value)
+  }
+}
+
+/// Roles follow ui-tree's public Role ordinal. Flags: disabled, focused, checked, selected,
+/// expanded, read-only, actionable. Bounds are top-left-origin logical window coordinates.
+pub fn node(
+  window: WindowId,
+  id: u32,
+  parent: u32,
+  accessRole: u32,
+  flags: u32,
+  x: f64,
+  y: f64,
+  width: f64,
+  height: f64,
+  label: string,
+  value: string,
+) -> () {
+  static if Intrinsic.targetOperatingSystem() == "darwin" {
+    unsafe silk_macos_ax_node(
+      window.value,
+      id,
+      parent,
+      accessRole,
+      flags,
+      x,
+      y,
+      width,
+      height,
+      Pointer.fromSlice(String.utf8Bytes(label)),
+      String.byteLength(label),
+      Pointer.fromSlice(String.utf8Bytes(value)),
+      String.byteLength(value),
+    )
+  }
+}
+
+/// Adds numeric range state to the node most recently published by `node`.
+pub fn range(window: WindowId, id: u32, min: f64, max: f64, value: f64) -> () {
+  static if Intrinsic.targetOperatingSystem() == "darwin" {
+    unsafe silk_macos_ax_range(window.value, id, min, max, value)
+  }
+}
+
+pub fn end(window: WindowId) -> () {
+  static if Intrinsic.targetOperatingSystem() == "darwin" {
+    unsafe silk_macos_ax_end(window.value)
+  }
+}
+
+/// Pops one OS action: 0 empty, 1 press, 2 focus, 3 replace text, 4 increment, 5 decrement.
+pub fn poll(window: WindowId) -> Action {
+  let mut target: u32 = 0
+  let mut kind: u32 = 0
+  static if Intrinsic.targetOperatingSystem() == "darwin" {
+    kind = unsafe silk_macos_ax_poll(window.value, Pointer.fromMutRef(&mut target))
+  }
+  return Action { kind: kind, target: target }
+}
+
+pub effect fn actionText(window: WindowId) -> String
+  ! OutOfMemoryError
+  ? &mut Allocator {
+  static if Intrinsic.targetOperatingSystem() == "darwin" {
+    let mut bytes = Bytes.make()
+    let length = unsafe silk_macos_ax_text(
+      window.value,
+      Pointer.fromMutSlice(bytes.asMutSlice()),
+      0,
+    )
+    bytes = run Bytes.zeroed(length)
+    drop unsafe silk_macos_ax_text(window.value, Pointer.fromMutSlice(bytes.asMutSlice()), length)
+    return run String.copy(String.fromUtf8(bytes.asSlice()).unwrapOr(""))
+  } else {
+    return String.make()
+  }
+}

@@ -1,0 +1,892 @@
+[
+  {
+    "rust": "ResourceRef.device",
+    "silk": "resources.Resource.device",
+    "notes": "Returns borrowed +0 object; null preserves upstream optional absence."
+  },
+  {
+    "rust": "ResourceRef.label",
+    "silk": "resources.Resource.label",
+    "notes": "Returns borrowed NUL-terminated UTF-8 from the owning NSString; may be null for no label."
+  },
+  {
+    "rust": "ResourceRef.set_label",
+    "silk": "resources.Resource.set_label",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "ResourceRef.cpu_cache_mode",
+    "silk": "resources.Resource.cpu_cache_mode",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "ResourceRef.storage_mode",
+    "silk": "resources.Resource.storage_mode",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "ResourceRef.allocated_size",
+    "silk": "resources.Resource.allocated_size",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "ResourceRef.hazard_tracking_mode",
+    "silk": "resources.Resource.hazard_tracking_mode",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "ResourceRef.resource_options",
+    "silk": "resources.Resource.resource_options",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "ResourceRef.heap_offset",
+    "silk": "resources.Resource.heap_offset",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "ResourceRef.set_purgeable_state",
+    "silk": "resources.Resource.set_purgeable_state",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "ResourceRef.heap",
+    "silk": "resources.Resource.heap",
+    "notes": "Returns borrowed +0 object; null preserves upstream optional absence."
+  },
+  {
+    "rust": "ResourceRef.make_aliasable",
+    "silk": "resources.Resource.make_aliasable",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "ResourceRef.is_aliasable",
+    "silk": "resources.Resource.is_aliasable",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "BufferRef.length",
+    "silk": "resources.Buffer.length",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "BufferRef.contents",
+    "silk": "resources.Buffer.contents",
+    "notes": "Returns borrowed mutable storage; caller guarantees CPU accessibility and synchronization."
+  },
+  {
+    "rust": "BufferRef.did_modify_range",
+    "silk": "resources.Buffer.did_modify_range",
+    "notes": "Takes the range record by value."
+  },
+  {
+    "rust": "BufferRef.new_texture_with_descriptor",
+    "silk": "resources.Buffer.new_texture_with_descriptor",
+    "notes": "Returns +1 owned object, or null on allocation failure."
+  },
+  {
+    "rust": "BufferRef.remote_storage_buffer",
+    "silk": "resources.Buffer.remote_storage_buffer",
+    "notes": "Returns borrowed +0 object; null preserves upstream optional absence."
+  },
+  {
+    "rust": "BufferRef.new_remote_buffer_view_for_device",
+    "silk": "resources.Buffer.new_remote_buffer_view_for_device",
+    "notes": "Returns +1 owned object, or null on allocation failure."
+  },
+  {
+    "rust": "BufferRef.add_debug_marker",
+    "silk": "resources.Buffer.add_debug_marker",
+    "notes": "Takes the range record by value."
+  },
+  {
+    "rust": "BufferRef.remove_all_debug_markers",
+    "silk": "resources.Buffer.remove_all_debug_markers",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "BufferRef.gpu_address",
+    "silk": "resources.Buffer.gpu_address",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "BufferRef.gpu_resource_id",
+    "silk": "resources.Buffer.gpu_resource_id",
+    "notes": "Returns the resource identifier record by value. Upstream non-SDK selector: caller must first check availability; prefer gpu_address for public buffer addressing."
+  },
+  {
+    "rust": "TextureDescriptor.new",
+    "silk": "resources.TextureDescriptor.new",
+    "notes": "Returns +1 owned object; caller releases."
+  },
+  {
+    "rust": "TextureDescriptorRef.texture_type",
+    "silk": "resources.TextureDescriptor.texture_type",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureDescriptorRef.set_texture_type",
+    "silk": "resources.TextureDescriptor.set_texture_type",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureDescriptorRef.pixel_format",
+    "silk": "resources.TextureDescriptor.pixel_format",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureDescriptorRef.set_pixel_format",
+    "silk": "resources.TextureDescriptor.set_pixel_format",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureDescriptorRef.width",
+    "silk": "resources.TextureDescriptor.width",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureDescriptorRef.set_width",
+    "silk": "resources.TextureDescriptor.set_width",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureDescriptorRef.height",
+    "silk": "resources.TextureDescriptor.height",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureDescriptorRef.set_height",
+    "silk": "resources.TextureDescriptor.set_height",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureDescriptorRef.depth",
+    "silk": "resources.TextureDescriptor.depth",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureDescriptorRef.set_depth",
+    "silk": "resources.TextureDescriptor.set_depth",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureDescriptorRef.mipmap_level_count",
+    "silk": "resources.TextureDescriptor.mipmap_level_count",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureDescriptorRef.set_mipmap_level_count",
+    "silk": "resources.TextureDescriptor.set_mipmap_level_count",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureDescriptorRef.sample_count",
+    "silk": "resources.TextureDescriptor.sample_count",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureDescriptorRef.set_sample_count",
+    "silk": "resources.TextureDescriptor.set_sample_count",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureDescriptorRef.array_length",
+    "silk": "resources.TextureDescriptor.array_length",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureDescriptorRef.set_array_length",
+    "silk": "resources.TextureDescriptor.set_array_length",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureDescriptorRef.resource_options",
+    "silk": "resources.TextureDescriptor.resource_options",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureDescriptorRef.set_resource_options",
+    "silk": "resources.TextureDescriptor.set_resource_options",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureDescriptorRef.cpu_cache_mode",
+    "silk": "resources.TextureDescriptor.cpu_cache_mode",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureDescriptorRef.set_cpu_cache_mode",
+    "silk": "resources.TextureDescriptor.set_cpu_cache_mode",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureDescriptorRef.storage_mode",
+    "silk": "resources.TextureDescriptor.storage_mode",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureDescriptorRef.set_storage_mode",
+    "silk": "resources.TextureDescriptor.set_storage_mode",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureDescriptorRef.usage",
+    "silk": "resources.TextureDescriptor.usage",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureDescriptorRef.set_usage",
+    "silk": "resources.TextureDescriptor.set_usage",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureDescriptorRef.compression_type",
+    "silk": "resources.TextureDescriptor.compression_type",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureDescriptorRef.set_compression_type",
+    "silk": "resources.TextureDescriptor.set_compression_type",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureDescriptorRef.set_mipmap_level_count_for_size",
+    "silk": "resources.TextureDescriptor.set_mipmap_level_count_for_size",
+    "notes": "Takes size by value. Matches upstream ceil(log2(maximum dimension)), including zero count for dimensions zero or one."
+  },
+  {
+    "rust": "TextureRef.root_resource",
+    "silk": "resources.Texture.root_resource",
+    "notes": "Returns borrowed +0 object; null preserves upstream optional absence."
+  },
+  {
+    "rust": "TextureRef.parent_texture",
+    "silk": "resources.Texture.parent_texture",
+    "notes": "Returns borrowed +0 object; null preserves upstream optional absence."
+  },
+  {
+    "rust": "TextureRef.parent_relative_level",
+    "silk": "resources.Texture.parent_relative_level",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureRef.parent_relative_slice",
+    "silk": "resources.Texture.parent_relative_slice",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureRef.buffer",
+    "silk": "resources.Texture.buffer",
+    "notes": "Returns borrowed +0 object; null preserves upstream optional absence."
+  },
+  {
+    "rust": "TextureRef.buffer_offset",
+    "silk": "resources.Texture.buffer_offset",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureRef.buffer_stride",
+    "silk": "resources.Texture.buffer_stride",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureRef.texture_type",
+    "silk": "resources.Texture.texture_type",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureRef.pixel_format",
+    "silk": "resources.Texture.pixel_format",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureRef.width",
+    "silk": "resources.Texture.width",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureRef.height",
+    "silk": "resources.Texture.height",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureRef.depth",
+    "silk": "resources.Texture.depth",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureRef.mipmap_level_count",
+    "silk": "resources.Texture.mipmap_level_count",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureRef.sample_count",
+    "silk": "resources.Texture.sample_count",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureRef.array_length",
+    "silk": "resources.Texture.array_length",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureRef.usage",
+    "silk": "resources.Texture.usage",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureRef.framebuffer_only",
+    "silk": "resources.Texture.framebuffer_only",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "TextureRef.get_bytes",
+    "silk": "resources.Texture.get_bytes",
+    "notes": "Takes the region record by value."
+  },
+  {
+    "rust": "TextureRef.get_bytes_in_slice",
+    "silk": "resources.Texture.get_bytes_in_slice",
+    "notes": "Takes the region record by value."
+  },
+  {
+    "rust": "TextureRef.replace_region",
+    "silk": "resources.Texture.replace_region",
+    "notes": "Takes the region record by value."
+  },
+  {
+    "rust": "TextureRef.replace_region_in_slice",
+    "silk": "resources.Texture.replace_region_in_slice",
+    "notes": "Takes the region record by value."
+  },
+  {
+    "rust": "TextureRef.new_texture_view",
+    "silk": "resources.Texture.new_texture_view",
+    "notes": "Returns +1 owned object, or null on allocation failure."
+  },
+  {
+    "rust": "TextureRef.new_texture_view_from_slice",
+    "silk": "resources.Texture.new_texture_view_from_slice",
+    "notes": "Takes range records by value. Returns +1 owned object, or null on allocation failure."
+  },
+  {
+    "rust": "TextureRef.gpu_resource_id",
+    "silk": "resources.Texture.gpu_resource_id",
+    "notes": "Returns the resource identifier record by value."
+  },
+  {
+    "rust": "HeapRef.device",
+    "silk": "resources.Heap.device",
+    "notes": "Returns borrowed +0 object; null preserves upstream optional absence."
+  },
+  {
+    "rust": "HeapRef.label",
+    "silk": "resources.Heap.label",
+    "notes": "Returns borrowed NUL-terminated UTF-8 from the owning NSString; may be null for no label."
+  },
+  {
+    "rust": "HeapRef.set_label",
+    "silk": "resources.Heap.set_label",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "HeapRef.cpu_cache_mode",
+    "silk": "resources.Heap.cpu_cache_mode",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "HeapRef.storage_mode",
+    "silk": "resources.Heap.storage_mode",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "HeapRef.hazard_tracking_mode",
+    "silk": "resources.Heap.hazard_tracking_mode",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "HeapRef.resource_options",
+    "silk": "resources.Heap.resource_options",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "HeapRef.size",
+    "silk": "resources.Heap.size",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "HeapRef.used_size",
+    "silk": "resources.Heap.used_size",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "HeapRef.heap_type",
+    "silk": "resources.Heap.heap_type",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "HeapRef.current_allocated_size",
+    "silk": "resources.Heap.current_allocated_size",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "HeapRef.set_purgeable_state",
+    "silk": "resources.Heap.set_purgeable_state",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "HeapRef.max_available_size_with_alignment",
+    "silk": "resources.Heap.max_available_size_with_alignment",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "HeapRef.new_buffer",
+    "silk": "resources.Heap.new_buffer",
+    "notes": "Returns +1 owned object, or null on allocation failure."
+  },
+  {
+    "rust": "HeapRef.new_texture",
+    "silk": "resources.Heap.new_texture",
+    "notes": "Returns +1 owned object, or null on allocation failure."
+  },
+  {
+    "rust": "HeapRef.new_buffer_with_offset",
+    "silk": "resources.Heap.new_buffer_with_offset",
+    "notes": "Returns +1 owned object, or null on allocation failure."
+  },
+  {
+    "rust": "HeapRef.new_texture_with_offset",
+    "silk": "resources.Heap.new_texture_with_offset",
+    "notes": "Returns +1 owned object, or null on allocation failure."
+  },
+  {
+    "rust": "HeapRef.new_acceleration_structure_with_descriptor",
+    "silk": "resources.Heap.new_acceleration_structure_with_descriptor",
+    "notes": "Returns +1 owned object, or null on allocation failure."
+  },
+  {
+    "rust": "HeapRef.new_acceleration_structure_with_descriptor_offset",
+    "silk": "resources.Heap.new_acceleration_structure_with_descriptor_offset",
+    "notes": "Returns +1 owned object, or null on allocation failure."
+  },
+  {
+    "rust": "HeapRef.new_acceleration_structure_with_size",
+    "silk": "resources.Heap.new_acceleration_structure_with_size",
+    "notes": "Returns +1 owned object, or null on allocation failure."
+  },
+  {
+    "rust": "HeapRef.new_acceleration_structure_with_size_offset",
+    "silk": "resources.Heap.new_acceleration_structure_with_size_offset",
+    "notes": "Returns +1 owned object, or null on allocation failure."
+  },
+  {
+    "rust": "HeapDescriptor.new",
+    "silk": "resources.HeapDescriptor.new",
+    "notes": "Returns +1 owned object; caller releases."
+  },
+  {
+    "rust": "HeapDescriptorRef.cpu_cache_mode",
+    "silk": "resources.HeapDescriptor.cpu_cache_mode",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "HeapDescriptorRef.set_cpu_cache_mode",
+    "silk": "resources.HeapDescriptor.set_cpu_cache_mode",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "HeapDescriptorRef.storage_mode",
+    "silk": "resources.HeapDescriptor.storage_mode",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "HeapDescriptorRef.set_storage_mode",
+    "silk": "resources.HeapDescriptor.set_storage_mode",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "HeapDescriptorRef.size",
+    "silk": "resources.HeapDescriptor.size",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "HeapDescriptorRef.set_size",
+    "silk": "resources.HeapDescriptor.set_size",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "HeapDescriptorRef.hazard_tracking_mode",
+    "silk": "resources.HeapDescriptor.hazard_tracking_mode",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "HeapDescriptorRef.set_hazard_tracking_mode",
+    "silk": "resources.HeapDescriptor.set_hazard_tracking_mode",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "HeapDescriptorRef.heap_type",
+    "silk": "resources.HeapDescriptor.heap_type",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "HeapDescriptorRef.set_heap_type",
+    "silk": "resources.HeapDescriptor.set_heap_type",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "HeapDescriptorRef.resource_options",
+    "silk": "resources.HeapDescriptor.resource_options",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "SamplerDescriptor.new",
+    "silk": "resources.SamplerDescriptor.new",
+    "notes": "Returns +1 owned object; caller releases."
+  },
+  {
+    "rust": "SamplerDescriptorRef.set_min_filter",
+    "silk": "resources.SamplerDescriptor.set_min_filter",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "SamplerDescriptorRef.set_mag_filter",
+    "silk": "resources.SamplerDescriptor.set_mag_filter",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "SamplerDescriptorRef.set_mip_filter",
+    "silk": "resources.SamplerDescriptor.set_mip_filter",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "SamplerDescriptorRef.set_address_mode_s",
+    "silk": "resources.SamplerDescriptor.set_address_mode_s",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "SamplerDescriptorRef.set_address_mode_t",
+    "silk": "resources.SamplerDescriptor.set_address_mode_t",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "SamplerDescriptorRef.set_address_mode_r",
+    "silk": "resources.SamplerDescriptor.set_address_mode_r",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "SamplerDescriptorRef.set_max_anisotropy",
+    "silk": "resources.SamplerDescriptor.set_max_anisotropy",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "SamplerDescriptorRef.set_compare_function",
+    "silk": "resources.SamplerDescriptor.set_compare_function",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "SamplerDescriptorRef.set_border_color",
+    "silk": "resources.SamplerDescriptor.set_border_color",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "SamplerDescriptorRef.set_lod_bias",
+    "silk": "resources.SamplerDescriptor.set_lod_bias",
+    "notes": "Private upstream feature: caller must ensure setLodBias: exists on the runtime descriptor."
+  },
+  {
+    "rust": "SamplerDescriptorRef.set_lod_min_clamp",
+    "silk": "resources.SamplerDescriptor.set_lod_min_clamp",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "SamplerDescriptorRef.set_lod_max_clamp",
+    "silk": "resources.SamplerDescriptor.set_lod_max_clamp",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "SamplerDescriptorRef.set_lod_average",
+    "silk": "resources.SamplerDescriptor.set_lod_average",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "SamplerDescriptorRef.set_normalized_coordinates",
+    "silk": "resources.SamplerDescriptor.set_normalized_coordinates",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "SamplerDescriptorRef.set_support_argument_buffers",
+    "silk": "resources.SamplerDescriptor.set_support_argument_buffers",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "SamplerDescriptorRef.label",
+    "silk": "resources.SamplerDescriptor.label",
+    "notes": "Returns borrowed NUL-terminated UTF-8 from the owning NSString; may be null for no label."
+  },
+  {
+    "rust": "SamplerDescriptorRef.set_label",
+    "silk": "resources.SamplerDescriptor.set_label",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "SamplerStateRef.device",
+    "silk": "resources.SamplerState.device",
+    "notes": "Returns borrowed +0 object; null preserves upstream optional absence."
+  },
+  {
+    "rust": "SamplerStateRef.label",
+    "silk": "resources.SamplerState.label",
+    "notes": "Returns borrowed NUL-terminated UTF-8 from the owning NSString; may be null for no label."
+  },
+  {
+    "rust": "SamplerStateRef.gpu_resource_id",
+    "silk": "resources.SamplerState.gpu_resource_id",
+    "notes": "Returns the resource identifier record by value."
+  },
+  {
+    "rust": "StencilDescriptor.new",
+    "silk": "resources.StencilDescriptor.new",
+    "notes": "Returns +1 owned object; caller releases."
+  },
+  {
+    "rust": "StencilDescriptorRef.stencil_compare_function",
+    "silk": "resources.StencilDescriptor.stencil_compare_function",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "StencilDescriptorRef.set_stencil_compare_function",
+    "silk": "resources.StencilDescriptor.set_stencil_compare_function",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "StencilDescriptorRef.stencil_failure_operation",
+    "silk": "resources.StencilDescriptor.stencil_failure_operation",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "StencilDescriptorRef.set_stencil_failure_operation",
+    "silk": "resources.StencilDescriptor.set_stencil_failure_operation",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "StencilDescriptorRef.depth_failure_operation",
+    "silk": "resources.StencilDescriptor.depth_failure_operation",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "StencilDescriptorRef.set_depth_failure_operation",
+    "silk": "resources.StencilDescriptor.set_depth_failure_operation",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "StencilDescriptorRef.depth_stencil_pass_operation",
+    "silk": "resources.StencilDescriptor.depth_stencil_pass_operation",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "StencilDescriptorRef.set_depth_stencil_pass_operation",
+    "silk": "resources.StencilDescriptor.set_depth_stencil_pass_operation",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "StencilDescriptorRef.read_mask",
+    "silk": "resources.StencilDescriptor.read_mask",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "StencilDescriptorRef.set_read_mask",
+    "silk": "resources.StencilDescriptor.set_read_mask",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "StencilDescriptorRef.write_mask",
+    "silk": "resources.StencilDescriptor.write_mask",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "StencilDescriptorRef.set_write_mask",
+    "silk": "resources.StencilDescriptor.set_write_mask",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "DepthStencilDescriptor.new",
+    "silk": "resources.DepthStencilDescriptor.new",
+    "notes": "Returns +1 owned object; caller releases."
+  },
+  {
+    "rust": "DepthStencilDescriptorRef.depth_compare_function",
+    "silk": "resources.DepthStencilDescriptor.depth_compare_function",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "DepthStencilDescriptorRef.set_depth_compare_function",
+    "silk": "resources.DepthStencilDescriptor.set_depth_compare_function",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "DepthStencilDescriptorRef.depth_write_enabled",
+    "silk": "resources.DepthStencilDescriptor.depth_write_enabled",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "DepthStencilDescriptorRef.set_depth_write_enabled",
+    "silk": "resources.DepthStencilDescriptor.set_depth_write_enabled",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "DepthStencilDescriptorRef.front_face_stencil",
+    "silk": "resources.DepthStencilDescriptor.front_face_stencil",
+    "notes": "Returns borrowed +0 object; null preserves upstream optional absence."
+  },
+  {
+    "rust": "DepthStencilDescriptorRef.set_front_face_stencil",
+    "silk": "resources.DepthStencilDescriptor.set_front_face_stencil",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "DepthStencilDescriptorRef.back_face_stencil",
+    "silk": "resources.DepthStencilDescriptor.back_face_stencil",
+    "notes": "Returns borrowed +0 object; null preserves upstream optional absence."
+  },
+  {
+    "rust": "DepthStencilDescriptorRef.set_back_face_stencil",
+    "silk": "resources.DepthStencilDescriptor.set_back_face_stencil",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "DepthStencilDescriptorRef.label",
+    "silk": "resources.DepthStencilDescriptor.label",
+    "notes": "Returns borrowed NUL-terminated UTF-8 from the owning NSString; may be null for no label."
+  },
+  {
+    "rust": "DepthStencilDescriptorRef.set_label",
+    "silk": "resources.DepthStencilDescriptor.set_label",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "DepthStencilStateRef.device",
+    "silk": "resources.DepthStencilState.device",
+    "notes": "Returns borrowed +0 object; null preserves upstream optional absence."
+  },
+  {
+    "rust": "DepthStencilStateRef.label",
+    "silk": "resources.DepthStencilState.label",
+    "notes": "Returns borrowed NUL-terminated UTF-8 from the owning NSString; may be null for no label."
+  },
+  {
+    "rust": "VertexBufferLayoutDescriptor.new",
+    "silk": "resources.VertexBufferLayoutDescriptor.new",
+    "notes": "Returns +1 owned object; caller releases."
+  },
+  {
+    "rust": "VertexBufferLayoutDescriptorRef.stride",
+    "silk": "resources.VertexBufferLayoutDescriptor.stride",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "VertexBufferLayoutDescriptorRef.set_stride",
+    "silk": "resources.VertexBufferLayoutDescriptor.set_stride",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "VertexBufferLayoutDescriptorRef.step_function",
+    "silk": "resources.VertexBufferLayoutDescriptor.step_function",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "VertexBufferLayoutDescriptorRef.set_step_function",
+    "silk": "resources.VertexBufferLayoutDescriptor.set_step_function",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "VertexBufferLayoutDescriptorRef.step_rate",
+    "silk": "resources.VertexBufferLayoutDescriptor.step_rate",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "VertexBufferLayoutDescriptorRef.set_step_rate",
+    "silk": "resources.VertexBufferLayoutDescriptor.set_step_rate",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "VertexAttributeDescriptor.new",
+    "silk": "resources.VertexAttributeDescriptor.new",
+    "notes": "Returns +1 owned object; caller releases."
+  },
+  {
+    "rust": "VertexAttributeDescriptorRef.format",
+    "silk": "resources.VertexAttributeDescriptor.format",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "VertexAttributeDescriptorRef.set_format",
+    "silk": "resources.VertexAttributeDescriptor.set_format",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "VertexAttributeDescriptorRef.offset",
+    "silk": "resources.VertexAttributeDescriptor.offset",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "VertexAttributeDescriptorRef.set_offset",
+    "silk": "resources.VertexAttributeDescriptor.set_offset",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "VertexAttributeDescriptorRef.buffer_index",
+    "silk": "resources.VertexAttributeDescriptor.buffer_index",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "VertexAttributeDescriptorRef.set_buffer_index",
+    "silk": "resources.VertexAttributeDescriptor.set_buffer_index",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "VertexBufferLayoutDescriptorArrayRef.object_at",
+    "silk": "resources.VertexBufferLayoutDescriptorArray.object_at",
+    "notes": "Returns borrowed +0 object; null preserves upstream optional absence."
+  },
+  {
+    "rust": "VertexBufferLayoutDescriptorArrayRef.set_object_at",
+    "silk": "resources.VertexBufferLayoutDescriptorArray.set_object_at",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "VertexAttributeDescriptorArrayRef.object_at",
+    "silk": "resources.VertexAttributeDescriptorArray.object_at",
+    "notes": "Returns borrowed +0 object; null preserves upstream optional absence."
+  },
+  {
+    "rust": "VertexAttributeDescriptorArrayRef.set_object_at",
+    "silk": "resources.VertexAttributeDescriptorArray.set_object_at",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  },
+  {
+    "rust": "VertexDescriptor.new",
+    "silk": "resources.VertexDescriptor.new",
+    "notes": "Returns +1 owned object; caller releases."
+  },
+  {
+    "rust": "VertexDescriptorRef.layouts",
+    "silk": "resources.VertexDescriptor.layouts",
+    "notes": "Returns borrowed +0 object; null preserves upstream optional absence."
+  },
+  {
+    "rust": "VertexDescriptorRef.attributes",
+    "silk": "resources.VertexDescriptor.attributes",
+    "notes": "Returns borrowed +0 object; null preserves upstream optional absence."
+  },
+  {
+    "rust": "VertexDescriptorRef.serialize_descriptor",
+    "silk": "resources.VertexDescriptor.serialize_descriptor",
+    "notes": "Private upstream feature: caller must ensure selector exists. Returns +1 owned serialized object; caller releases."
+  },
+  {
+    "rust": "VertexDescriptorRef.reset",
+    "silk": "resources.VertexDescriptor.reset",
+    "notes": "Direct Metal selector; OS availability and receiver validity are caller obligations."
+  }
+]

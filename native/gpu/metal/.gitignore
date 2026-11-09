@@ -1,0 +1,4 @@
+/build/
+/examples/*/build/
+__pycache__/
+.DS_Store

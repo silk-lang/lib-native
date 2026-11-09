@@ -1,0 +1,672 @@
+[
+  {
+    "rust": "VertexAttributeRef.name",
+    "silk": "library.VertexAttribute.name",
+    "notes": "Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive."
+  },
+  {
+    "rust": "VertexAttributeRef.attribute_index",
+    "silk": "library.VertexAttribute.attribute_index",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "VertexAttributeRef.attribute_type",
+    "silk": "library.VertexAttribute.attribute_type",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "VertexAttributeRef.is_active",
+    "silk": "library.VertexAttribute.is_active",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "VertexAttributeRef.is_patch_data",
+    "silk": "library.VertexAttribute.is_patch_data",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "VertexAttributeRef.is_patch_control_point_data",
+    "silk": "library.VertexAttribute.is_patch_control_point_data",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "AttributeRef.name",
+    "silk": "library.Attribute.name",
+    "notes": "Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive."
+  },
+  {
+    "rust": "AttributeRef.attribute_index",
+    "silk": "library.Attribute.attribute_index",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "AttributeRef.attribute_type",
+    "silk": "library.Attribute.attribute_type",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "AttributeRef.is_active",
+    "silk": "library.Attribute.is_active",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "AttributeRef.is_patch_data",
+    "silk": "library.Attribute.is_patch_data",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "AttributeRef.is_patch_control_point_data",
+    "silk": "library.Attribute.is_patch_control_point_data",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "FunctionConstantRef.name",
+    "silk": "library.FunctionConstant.name",
+    "notes": "Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive."
+  },
+  {
+    "rust": "FunctionConstantRef.data_type",
+    "silk": "library.FunctionConstant.data_type",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "FunctionConstantRef.index",
+    "silk": "library.FunctionConstant.index",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "FunctionConstantRef.required",
+    "silk": "library.FunctionConstant.required",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "FunctionDescriptor.new",
+    "silk": "library.FunctionDescriptor.new",
+    "notes": "Returns an owned +1 object; release exactly once."
+  },
+  {
+    "rust": "FunctionDescriptorRef.name",
+    "silk": "library.FunctionDescriptor.name",
+    "notes": "Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive."
+  },
+  {
+    "rust": "FunctionDescriptorRef.set_name",
+    "silk": "library.FunctionDescriptor.set_name",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "FunctionDescriptorRef.specialized_name",
+    "silk": "library.FunctionDescriptor.specialized_name",
+    "notes": "Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive."
+  },
+  {
+    "rust": "FunctionDescriptorRef.set_specialized_name",
+    "silk": "library.FunctionDescriptor.set_specialized_name",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "FunctionDescriptorRef.constant_values",
+    "silk": "library.FunctionDescriptor.constant_values",
+    "notes": "Borrowed +0 Objective-C object; retain explicitly if needed."
+  },
+  {
+    "rust": "FunctionDescriptorRef.set_constant_values",
+    "silk": "library.FunctionDescriptor.set_constant_values",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "FunctionDescriptorRef.options",
+    "silk": "library.FunctionDescriptor.options",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "FunctionDescriptorRef.set_options",
+    "silk": "library.FunctionDescriptor.set_options",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "FunctionHandleRef.device",
+    "silk": "library.FunctionHandle.device",
+    "notes": "Borrowed +0 Objective-C object; retain explicitly if needed."
+  },
+  {
+    "rust": "FunctionHandleRef.name",
+    "silk": "library.FunctionHandle.name",
+    "notes": "Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive."
+  },
+  {
+    "rust": "FunctionHandleRef.function_type",
+    "silk": "library.FunctionHandle.function_type",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "FunctionRef.device",
+    "silk": "library.Function.device",
+    "notes": "Borrowed +0 Objective-C object; retain explicitly if needed."
+  },
+  {
+    "rust": "FunctionRef.name",
+    "silk": "library.Function.name",
+    "notes": "Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive."
+  },
+  {
+    "rust": "FunctionRef.function_type",
+    "silk": "library.Function.function_type",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "FunctionRef.label",
+    "silk": "library.Function.label",
+    "notes": "Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive."
+  },
+  {
+    "rust": "FunctionRef.set_label",
+    "silk": "library.Function.set_label",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "FunctionRef.patch_type",
+    "silk": "library.Function.patch_type",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "FunctionRef.patch_control_point_count",
+    "silk": "library.Function.patch_control_point_count",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "FunctionRef.vertex_attributes",
+    "silk": "library.Function.vertex_attributes",
+    "notes": "Borrowed +0 NSArray of MTLVertexAttribute objects."
+  },
+  {
+    "rust": "FunctionRef.stage_input_attributes",
+    "silk": "library.Function.stage_input_attributes",
+    "notes": "Borrowed +0 NSArray of MTLAttribute objects."
+  },
+  {
+    "rust": "FunctionRef.new_argument_encoder",
+    "silk": "library.Function.new_argument_encoder",
+    "notes": "Returns an owned +1 argument encoder."
+  },
+  {
+    "rust": "FunctionRef.function_constants_dictionary",
+    "silk": "library.Function.function_constants_dictionary",
+    "notes": "Borrowed +0 NSDictionary mapping NSString names to MTLFunctionConstant objects."
+  },
+  {
+    "rust": "FunctionRef.options",
+    "silk": "library.Function.options",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "FunctionConstantValues.new",
+    "silk": "library.FunctionConstantValues.new",
+    "notes": "Returns an owned +1 object; release exactly once."
+  },
+  {
+    "rust": "FunctionConstantValuesRef.set_constant_value_at_index",
+    "silk": "library.FunctionConstantValues.set_constant_value_at_index",
+    "notes": "Value must point to a live value matching the Metal data type during this call."
+  },
+  {
+    "rust": "FunctionConstantValuesRef.set_constant_values_with_range",
+    "silk": "library.FunctionConstantValues.set_constant_values_with_range",
+    "notes": "Range is passed by value. Values must address range.length values matching the Metal data type during this call."
+  },
+  {
+    "rust": "FunctionConstantValuesRef.set_constant_value_with_name",
+    "silk": "library.FunctionConstantValues.set_constant_value_with_name",
+    "notes": "Value must point to a live value matching the Metal data type during this call."
+  },
+  {
+    "rust": "CompileOptions.new",
+    "silk": "library.CompileOptions.new",
+    "notes": "Returns an owned +1 object; release exactly once."
+  },
+  {
+    "rust": "CompileOptionsRef.preprocessor_macros",
+    "silk": "library.CompileOptions.preprocessor_macros",
+    "notes": "Borrowed +0 NSDictionary of NSString keys and NSString or NSNumber values."
+  },
+  {
+    "rust": "CompileOptionsRef.set_preprocessor_macros",
+    "silk": "library.CompileOptions.set_preprocessor_macros",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "CompileOptionsRef.is_fast_math_enabled",
+    "silk": "library.CompileOptions.is_fast_math_enabled",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "CompileOptionsRef.set_fast_math_enabled",
+    "silk": "library.CompileOptions.set_fast_math_enabled",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "CompileOptionsRef.language_version",
+    "silk": "library.CompileOptions.language_version",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "CompileOptionsRef.set_language_version",
+    "silk": "library.CompileOptions.set_language_version",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "CompileOptionsRef.library_type",
+    "silk": "library.CompileOptions.library_type",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "CompileOptionsRef.set_library_type",
+    "silk": "library.CompileOptions.set_library_type",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "CompileOptionsRef.install_name",
+    "silk": "library.CompileOptions.install_name",
+    "notes": "Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive."
+  },
+  {
+    "rust": "CompileOptionsRef.set_install_name",
+    "silk": "library.CompileOptions.set_install_name",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "CompileOptionsRef.libraries",
+    "silk": "library.CompileOptions.libraries",
+    "notes": "Borrowed +0 NSArray of MTLDynamicLibrary objects; replaces the Rust Vec with its source NSArray."
+  },
+  {
+    "rust": "CompileOptionsRef.libraries_as_nsarray",
+    "silk": "library.CompileOptions.libraries_as_nsarray",
+    "notes": "Borrowed +0 NSArray of MTLDynamicLibrary objects; replaces the Rust Vec with its source NSArray."
+  },
+  {
+    "rust": "CompileOptionsRef.set_libraries",
+    "silk": "library.CompileOptions.set_libraries",
+    "notes": "Pointer addresses count nonnull library objects; null pointer permitted only for count zero."
+  },
+  {
+    "rust": "CompileOptionsRef.set_libraries_nsarray",
+    "silk": "library.CompileOptions.set_libraries_nsarray",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "CompileOptionsRef.preserve_invariance",
+    "silk": "library.CompileOptions.preserve_invariance",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "CompileOptionsRef.set_preserve_invariance",
+    "silk": "library.CompileOptions.set_preserve_invariance",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "LibraryRef.device",
+    "silk": "library.Library.device",
+    "notes": "Borrowed +0 Objective-C object; retain explicitly if needed."
+  },
+  {
+    "rust": "LibraryRef.label",
+    "silk": "library.Library.label",
+    "notes": "Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive."
+  },
+  {
+    "rust": "LibraryRef.set_label",
+    "silk": "library.Library.set_label",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "LibraryRef.get_function",
+    "silk": "library.Library.get_function",
+    "notes": "Returns owned +1 function or null. Null constants selects the unspecialized Metal overload; nonnull selects specialization. NSError is borrowed +0; missing-function convenience errors retain the upstream message."
+  },
+  {
+    "rust": "LibraryRef.function_names",
+    "silk": "library.Library.function_names",
+    "notes": "Borrowed +0 NSArray of NSString names; replaces the Rust Vec<String>."
+  },
+  {
+    "rust": "LibraryRef.library_type",
+    "silk": "library.Library.library_type",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "LibraryRef.install_name",
+    "silk": "library.Library.install_name",
+    "notes": "Borrowed UTF-8 install name; null represents upstream None."
+  },
+  {
+    "rust": "LibraryRef.new_function_with_descriptor",
+    "silk": "library.Library.new_function_with_descriptor",
+    "notes": "Result is owned +1 or null. NSError output is borrowed +0; fallback error preserves the upstream convenience failure message."
+  },
+  {
+    "rust": "LibraryRef.new_intersection_function_with_descriptor",
+    "silk": "library.Library.new_intersection_function_with_descriptor",
+    "notes": "Result is owned +1 or null. NSError output is borrowed +0; fallback error preserves the upstream convenience failure message."
+  },
+  {
+    "rust": "DynamicLibraryRef.device",
+    "silk": "library.DynamicLibrary.device",
+    "notes": "Borrowed +0 Objective-C object; retain explicitly if needed."
+  },
+  {
+    "rust": "DynamicLibraryRef.label",
+    "silk": "library.DynamicLibrary.label",
+    "notes": "Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive."
+  },
+  {
+    "rust": "DynamicLibraryRef.set_label",
+    "silk": "library.DynamicLibrary.set_label",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "DynamicLibraryRef.install_name",
+    "silk": "library.DynamicLibrary.install_name",
+    "notes": "Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive."
+  },
+  {
+    "rust": "DynamicLibraryRef.serialize_to_url",
+    "silk": "library.DynamicLibrary.serialize_to_url",
+    "notes": "NSError output is borrowed +0 and cleared on success. Returns the Metal BOOL result."
+  },
+  {
+    "rust": "BinaryArchiveDescriptor.new",
+    "silk": "library.BinaryArchiveDescriptor.new",
+    "notes": "Returns an owned +1 object; release exactly once."
+  },
+  {
+    "rust": "BinaryArchiveDescriptorRef.url",
+    "silk": "library.BinaryArchiveDescriptor.url",
+    "notes": "Borrowed +0 Objective-C object; retain explicitly if needed."
+  },
+  {
+    "rust": "BinaryArchiveDescriptorRef.set_url",
+    "silk": "library.BinaryArchiveDescriptor.set_url",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "BinaryArchiveRef.device",
+    "silk": "library.BinaryArchive.device",
+    "notes": "Borrowed +0 Objective-C object; retain explicitly if needed."
+  },
+  {
+    "rust": "BinaryArchiveRef.label",
+    "silk": "library.BinaryArchive.label",
+    "notes": "Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive."
+  },
+  {
+    "rust": "BinaryArchiveRef.set_label",
+    "silk": "library.BinaryArchive.set_label",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "BinaryArchiveRef.add_compute_pipeline_functions_with_descriptor",
+    "silk": "library.BinaryArchive.add_compute_pipeline_functions_with_descriptor",
+    "notes": "NSError output is borrowed +0 and cleared on success. Returns the Metal BOOL result."
+  },
+  {
+    "rust": "BinaryArchiveRef.add_render_pipeline_functions_with_descriptor",
+    "silk": "library.BinaryArchive.add_render_pipeline_functions_with_descriptor",
+    "notes": "NSError output is borrowed +0 and cleared on success. Returns the Metal BOOL result."
+  },
+  {
+    "rust": "BinaryArchiveRef.serialize_to_url",
+    "silk": "library.BinaryArchive.serialize_to_url",
+    "notes": "NSError output is borrowed +0 and cleared on success. Returns the Metal BOOL result."
+  },
+  {
+    "rust": "LinkedFunctions.new",
+    "silk": "library.LinkedFunctions.new",
+    "notes": "Returns an owned +1 object; release exactly once."
+  },
+  {
+    "rust": "LinkedFunctionsRef.functions",
+    "silk": "library.LinkedFunctions.functions",
+    "notes": "Borrowed +0 NSArray of MTLFunction objects; replaces the Rust Vec."
+  },
+  {
+    "rust": "LinkedFunctionsRef.set_functions",
+    "silk": "library.LinkedFunctions.set_functions",
+    "notes": "Pointer addresses count nonnull functions; null pointer permitted only for count zero."
+  },
+  {
+    "rust": "LinkedFunctionsRef.binary_functions",
+    "silk": "library.LinkedFunctions.binary_functions",
+    "notes": "Borrowed +0 NSArray of MTLFunction objects; replaces the Rust Vec."
+  },
+  {
+    "rust": "LinkedFunctionsRef.set_binary_functions",
+    "silk": "library.LinkedFunctions.set_binary_functions",
+    "notes": "Pointer addresses count nonnull functions; null pointer permitted only for count zero."
+  },
+  {
+    "rust": "StructMemberRef.name",
+    "silk": "library.StructMember.name",
+    "notes": "Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive."
+  },
+  {
+    "rust": "StructMemberRef.offset",
+    "silk": "library.StructMember.offset",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "StructMemberRef.data_type",
+    "silk": "library.StructMember.data_type",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "StructMemberRef.struct_type",
+    "silk": "library.StructMember.struct_type",
+    "notes": "Borrowed +0 Objective-C object; retain explicitly if needed."
+  },
+  {
+    "rust": "StructMemberRef.array_type",
+    "silk": "library.StructMember.array_type",
+    "notes": "Borrowed +0 Objective-C object; retain explicitly if needed."
+  },
+  {
+    "rust": "StructMemberArrayRef.object_at",
+    "silk": "library.StructMemberArray.object_at",
+    "notes": "Borrowed +0 member. Index must be within the NSArray bounds."
+  },
+  {
+    "rust": "StructMemberArrayRef.count",
+    "silk": "library.StructMemberArray.count",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "StructTypeRef.members",
+    "silk": "library.StructType.members",
+    "notes": "Borrowed +0 Objective-C object; retain explicitly if needed."
+  },
+  {
+    "rust": "StructTypeRef.member_from_name",
+    "silk": "library.StructType.member_from_name",
+    "notes": "Borrowed +0 member, or null when absent."
+  },
+  {
+    "rust": "ArrayTypeRef.array_length",
+    "silk": "library.ArrayType.array_length",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "ArrayTypeRef.stride",
+    "silk": "library.ArrayType.stride",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "ArrayTypeRef.element_type",
+    "silk": "library.ArrayType.element_type",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "ArrayTypeRef.element_struct_type",
+    "silk": "library.ArrayType.element_struct_type",
+    "notes": "Borrowed +0 Objective-C object; retain explicitly if needed."
+  },
+  {
+    "rust": "ArrayTypeRef.element_array_type",
+    "silk": "library.ArrayType.element_array_type",
+    "notes": "Borrowed +0 Objective-C object; retain explicitly if needed."
+  },
+  {
+    "rust": "ArgumentRef.name",
+    "silk": "library.Argument.name",
+    "notes": "Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive."
+  },
+  {
+    "rust": "ArgumentRef.type_",
+    "silk": "library.Argument.type_",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "ArgumentRef.access",
+    "silk": "library.Argument.access",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "ArgumentRef.index",
+    "silk": "library.Argument.index",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "ArgumentRef.is_active",
+    "silk": "library.Argument.is_active",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "ArgumentRef.buffer_alignment",
+    "silk": "library.Argument.buffer_alignment",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "ArgumentRef.buffer_data_size",
+    "silk": "library.Argument.buffer_data_size",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "ArgumentRef.buffer_data_type",
+    "silk": "library.Argument.buffer_data_type",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "ArgumentRef.threadgroup_memory_alignment",
+    "silk": "library.Argument.threadgroup_memory_alignment",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "ArgumentRef.threadgroup_memory_data_size",
+    "silk": "library.Argument.threadgroup_memory_data_size",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "ArgumentRef.texture_type",
+    "silk": "library.Argument.texture_type",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "ArgumentRef.texture_data_type",
+    "silk": "library.Argument.texture_data_type",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "ArgumentRef.buffer_struct_type",
+    "silk": "library.Argument.buffer_struct_type",
+    "notes": "Borrowed +0 Objective-C object; retain explicitly if needed."
+  },
+  {
+    "rust": "ArgumentDescriptor.new",
+    "silk": "library.ArgumentDescriptor.new",
+    "notes": "Returns owned +1; explicitly retains the upstream autoreleased factory result."
+  },
+  {
+    "rust": "ArgumentDescriptorRef.set_data_type",
+    "silk": "library.ArgumentDescriptor.set_data_type",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "ArgumentDescriptorRef.set_index",
+    "silk": "library.ArgumentDescriptor.set_index",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "ArgumentDescriptorRef.set_access",
+    "silk": "library.ArgumentDescriptor.set_access",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "ArgumentDescriptorRef.set_array_length",
+    "silk": "library.ArgumentDescriptor.set_array_length",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "ArgumentDescriptorRef.set_texture_type",
+    "silk": "library.ArgumentDescriptor.set_texture_type",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "CounterSampleBufferDescriptor.new",
+    "silk": "library.CounterSampleBufferDescriptor.new",
+    "notes": "Returns an owned +1 object; release exactly once."
+  },
+  {
+    "rust": "CounterSampleBufferDescriptorRef.counter_set",
+    "silk": "library.CounterSampleBufferDescriptor.counter_set",
+    "notes": "Borrowed +0 Objective-C object; retain explicitly if needed."
+  },
+  {
+    "rust": "CounterSampleBufferDescriptorRef.set_counter_set",
+    "silk": "library.CounterSampleBufferDescriptor.set_counter_set",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "CounterSampleBufferDescriptorRef.label",
+    "silk": "library.CounterSampleBufferDescriptor.label",
+    "notes": "Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive."
+  },
+  {
+    "rust": "CounterSampleBufferDescriptorRef.set_label",
+    "silk": "library.CounterSampleBufferDescriptor.set_label",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "CounterSampleBufferDescriptorRef.sample_count",
+    "silk": "library.CounterSampleBufferDescriptor.sample_count",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "CounterSampleBufferDescriptorRef.set_sample_count",
+    "silk": "library.CounterSampleBufferDescriptor.set_sample_count",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "CounterSampleBufferDescriptorRef.storage_mode",
+    "silk": "library.CounterSampleBufferDescriptor.storage_mode",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "CounterSampleBufferDescriptorRef.set_storage_mode",
+    "silk": "library.CounterSampleBufferDescriptor.set_storage_mode",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "CounterSampleBufferRef.sample_count",
+    "silk": "library.CounterSampleBuffer.sample_count",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations."
+  },
+  {
+    "rust": "CounterSampleBufferRef.resolve_counter_range",
+    "silk": "library.CounterSampleBuffer.resolve_counter_range",
+    "notes": "Range is passed by value. Writes range.length u64 samples into caller-owned output, matching the upstream Vec<NSUInteger> helper. Range must be valid and range.length * 8 must not overflow; output must hold that many bytes."
+  },
+  {
+    "rust": "CounterSetRef.name",
+    "silk": "library.CounterSet.name",
+    "notes": "Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive."
+  }
+]

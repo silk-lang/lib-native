@@ -1,0 +1,115 @@
+// Copyright GFX developers. SPDX-License-Identifier: MIT OR Apache-2.0
+import silk.core.ownership { Drop }
+import silk.mem.pointer { Pointer }
+
+/// Owns one Objective-C retain. Use adopt only for +1 results, retain for borrowed results.
+/// The raw binding API is unsafe: this owner does not validate object types or GPU lifetimes.
+pub struct Object {
+  raw: ?*mut u8
+}
+
+impl Object {
+  pub unsafe fn adopt(raw: ?*mut u8) -> Object {
+    return Object { raw: raw }
+  }
+
+  pub unsafe fn retain(raw: ?*mut u8) -> Object {
+    return Object { raw: unsafe metal_retain(raw) }
+  }
+
+  pub fn get(self: &Object) -> ?*mut u8 {
+    return self.raw
+  }
+
+  pub fn is_null(self: &Object) -> bool {
+    return Pointer.isNull(self.raw)
+  }
+
+  pub fn clone(self: &Object) -> Object {
+    return Object { raw: unsafe metal_retain(self.raw) }
+  }
+
+  /// Transfers the +1 reference to the caller; this owner becomes empty.
+  pub fn into_raw(self: &mut Object) -> ?*mut u8 {
+    let raw = self.raw
+    self.raw = Pointer.null<u8>()
+    return raw
+  }
+}
+
+impl Drop for Object {
+  fn drop(self: &mut Object) -> () {
+    unsafe metal_release(self.raw)
+    return ()
+  }
+}
+
+/// A thread-local pool. Create and drop on the same thread, in last-in-first-out order.
+/// Borrowed/autoreleased results must not be used after the enclosing pool drains.
+pub struct AutoreleasePool {
+  raw: ?*mut u8
+}
+
+impl AutoreleasePool {
+  pub unsafe fn new() -> AutoreleasePool {
+    return AutoreleasePool { raw: unsafe metal_pool_new() }
+  }
+}
+
+impl Drop for AutoreleasePool {
+  fn drop(self: &mut AutoreleasePool) -> () {
+    unsafe metal_pool_drain(self.raw)
+    return ()
+  }
+}
+
+pub struct Native {}
+impl Native {
+  pub unsafe fn retain(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_retain(object)
+  }
+  pub unsafe fn release(object: ?*mut u8) -> () {
+    return unsafe metal_release(object)
+  }
+  /// Checks an OS-version-dependent selector without sending the unavailable message.
+  pub unsafe fn responds_to(object: ?*mut u8, selector: ?[*]const u8) -> bool {
+    return unsafe metal_responds_to(object, selector) != 0
+  }
+  /// Borrowed UTF-8; retain error if the text must outlive its autorelease pool.
+  pub unsafe fn error_description(error: ?*mut u8) -> ?[*]const u8 {
+    return unsafe metal_error_description(error)
+  }
+  pub unsafe fn error_code(error: ?*mut u8) -> i64 {
+    return unsafe metal_error_code(error)
+  }
+  pub unsafe fn data_bytes(data: ?*mut u8) -> ?[*]const u8 {
+    return unsafe metal_data_bytes(data)
+  }
+  pub unsafe fn data_length(data: ?*mut u8) -> u64 {
+    return unsafe metal_data_length(data)
+  }
+  /// Creates an owned NSString from UTF-8 bytes, including embedded NULs. Nil on invalid UTF-8.
+  pub unsafe fn string_new(bytes: ?[*]const u8, length: usize) -> ?*mut u8 {
+    return unsafe metal_string_new(bytes, length)
+  }
+  pub unsafe fn string_bytes(string: ?*mut u8) -> ?[*]const u8 {
+    return unsafe metal_string_bytes(string)
+  }
+  /// UTF-8 byte length, not NSString's UTF-16 code-unit count.
+  pub unsafe fn string_length(string: ?*mut u8) -> usize {
+    return unsafe metal_string_length(string)
+  }
+}
+
+unsafe extern "C" fn metal_retain(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_release(object: ?*mut u8) -> ()
+unsafe extern "C" fn metal_pool_new() -> ?*mut u8
+unsafe extern "C" fn metal_pool_drain(pool: ?*mut u8) -> ()
+unsafe extern "C" fn metal_responds_to(object: ?*mut u8, selector: ?[*]const u8) -> u8
+unsafe extern "C" fn metal_error_description(error: ?*mut u8) -> ?[*]const u8
+unsafe extern "C" fn metal_error_code(error: ?*mut u8) -> i64
+unsafe extern "C" fn metal_data_bytes(data: ?*mut u8) -> ?[*]const u8
+unsafe extern "C" fn metal_data_length(data: ?*mut u8) -> u64
+unsafe extern "C" fn metal_string_new(bytes: ?[*]const u8, length: usize) -> ?*mut u8
+unsafe extern "C" fn metal_string_bytes(string: ?*mut u8) -> ?[*]const u8
+unsafe extern "C" fn metal_string_length(string: ?*mut u8) -> usize

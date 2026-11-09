@@ -1,0 +1,223 @@
+//! The frame and event rules every backend follows, checked on the headless backend.
+import event { Event, Modifiers }
+import headless { HeadlessPlatform, HeadlessWindow }
+import silk.num.u16
+import keys { KeyCode, NamedKey, keyCodeFromValue, namedKeyFromValue }
+import menu { MenuBar, OpenDialog, SaveDialog, Shortcut, SystemItem }
+import platform { Platform }
+import types { WindowId, WindowOptions, WindowError, Wait, Cursor, ImeState }
+import silk.collections.list { List }
+import silk.core.effect { Effect }
+import silk.core.option { Option }
+import silk.geometry.rect { Rect }
+import silk.geometry.size { Size2 }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.testing.testing { AssertionError, Testing }
+import silk.text.string { String }
+import silk.core.order { Order }
+
+/// What an app saw while draining the queue: frames and resizes per window.
+struct Seen {
+  frames: u32,
+  resizes: u32,
+  lastWidth: f64,
+  lastScale: f64,
+  other: u32,
+}
+
+/// Drains every event the way an app loop would, generic over the backend.
+effect fn drain<P: Platform>(platform: &mut P) -> Seen
+  ! OutOfMemoryError
+  ? &mut Allocator {
+  let mut seen = Seen { frames: 0, resizes: 0, lastWidth: 0.0, lastScale: 0.0, other: 0 }
+  while true {
+    match move run platform.nextEvent(Wait.Poll) {
+      Option<Event>.Some { value } => {
+        match &value {
+          Event.RequestFrame { window, targetTime } => {
+            seen.frames = seen.frames + 1
+          }
+          Event.Resized { window, size, scaleFactor } => {
+            seen.resizes = seen.resizes + 1
+            seen.lastWidth = size.width
+            seen.lastScale = scaleFactor
+          }
+          _ => {
+            seen.other = seen.other + 1
+          }
+        }
+      }
+      _ => {
+        break
+      }
+    }
+  }
+  return move seen
+}
+
+effect fn opened(platform: &mut HeadlessPlatform) -> WindowId
+  ! WindowError | OutOfMemoryError
+  ? &mut Allocator {
+  let options = WindowOptions.make("Test", 640.0, 480.0)
+  return run platform.openWindow(&options)
+}
+
+test effect fn firstFrameFollowsOpen() -> ()
+  ! AssertionError<'static> | WindowError | OutOfMemoryError {
+  let mut allocator = Allocator.systemAllocatorProvider()
+  let mut platform = HeadlessPlatform.make()
+  let window = run opened(&mut platform) |> Effect.provideMut<Allocator>(&mut allocator)
+  let seen = run drain(&mut platform) |> Effect.provideMut<Allocator>(&mut allocator)
+  run Testing.expect(seen.resizes == 1 && seen.lastWidth == 640.0, "initial size")
+  run Testing.expect(seen.frames == 1, "one first frame")
+}
+
+test effect fn framesOnlyWhenRequested() -> ()
+  ! AssertionError<'static> | WindowError | OutOfMemoryError {
+  let mut allocator = Allocator.systemAllocatorProvider()
+  let mut platform = HeadlessPlatform.make()
+  let window = run opened(&mut platform) |> Effect.provideMut<Allocator>(&mut allocator)
+  drop run drain(&mut platform) |> Effect.provideMut<Allocator>(&mut allocator)
+  let idle = run drain(&mut platform) |> Effect.provideMut<Allocator>(&mut allocator)
+  run Testing.expect(idle.frames == 0, "no frame without a request")
+  platform.requestFrame(window)
+  platform.requestFrame(window)
+  platform.requestFrame(window)
+  let requested = run drain(&mut platform) |> Effect.provideMut<Allocator>(&mut allocator)
+  run Testing.expect(requested.frames == 1, "requests coalesce into one frame")
+}
+
+test effect fn resizeAndScaleRedraw() -> ()
+  ! AssertionError<'static> | WindowError | OutOfMemoryError {
+  let mut allocator = Allocator.systemAllocatorProvider()
+  let mut platform = HeadlessPlatform.make()
+  let window = run opened(&mut platform) |> Effect.provideMut<Allocator>(&mut allocator)
+  drop run drain(&mut platform) |> Effect.provideMut<Allocator>(&mut allocator)
+  run platform.resize(window, Size2<f64>.new(800.0, 600.0))
+    |> Effect.provideMut<Allocator>(&mut allocator)
+  let resized = run drain(&mut platform) |> Effect.provideMut<Allocator>(&mut allocator)
+  run Testing.expect(resized.resizes == 1 && resized.lastWidth == 800.0, "resize event")
+  run Testing.expect(resized.frames == 1, "resize redraws")
+  run platform.changeScaleFactor(window, 2.0) |> Effect.provideMut<Allocator>(&mut allocator)
+  let scaled = run drain(&mut platform) |> Effect.provideMut<Allocator>(&mut allocator)
+  run Testing.expect(scaled.other == 1 && scaled.lastScale == 2.0, "scale event")
+  run Testing.expect(scaled.frames == 1 && platform.scaleFactor(window) == 2.0, "scale redraws")
+  run Testing.expect(platform.contentSize(window).width == 800.0, "logical size kept")
+}
+
+test effect fn hiddenWindowsDoNotDraw() -> ()
+  ! AssertionError<'static> | WindowError | OutOfMemoryError {
+  let mut allocator = Allocator.systemAllocatorProvider()
+  let mut platform = HeadlessPlatform.make()
+  let window = run opened(&mut platform) |> Effect.provideMut<Allocator>(&mut allocator)
+  drop run drain(&mut platform) |> Effect.provideMut<Allocator>(&mut allocator)
+  platform.setVisible(window, false)
+  platform.requestFrame(window)
+  let hidden = run drain(&mut platform) |> Effect.provideMut<Allocator>(&mut allocator)
+  run Testing.expect(hidden.frames == 0, "hidden window gets no frame")
+  platform.setVisible(window, true)
+  let shown = run drain(&mut platform) |> Effect.provideMut<Allocator>(&mut allocator)
+  run Testing.expect(shown.frames == 1, "showing redraws")
+  platform.closeWindow(window)
+  platform.requestFrame(window)
+  let closed = run drain(&mut platform) |> Effect.provideMut<Allocator>(&mut allocator)
+  run Testing.expect(
+    closed.frames == 0 && Option<&HeadlessWindow>.isNone(&platform.window(window)),
+    "closed",
+  )
+}
+
+test effect fn recordsWindowState() -> ()
+  ! AssertionError<'static> | WindowError | OutOfMemoryError {
+  let mut allocator = Allocator.systemAllocatorProvider()
+  let mut platform = HeadlessPlatform.make()
+  let window = run opened(&mut platform) |> Effect.provideMut<Allocator>(&mut allocator)
+  run platform.setTitle(window, "Renamed") |> Effect.provideMut<Allocator>(&mut allocator)
+  platform.setCursor(window, Cursor.IBeam)
+  platform.setIme(window, ImeState.at(Rect<f64>.new(10.0, 20.0, 11.0, 38.0)))
+  match platform.window(window) {
+    Option<&HeadlessWindow>.Some { value } => {
+      run Testing.expect(value.title.view() == "Renamed", "title")
+      run Testing.expect(value.cursor == Cursor.IBeam, "cursor")
+      run Testing.expect(value.ime.enabled && value.ime.cursorArea.yMax == 38.0, "ime")
+    }
+    _ => {
+      run Testing.expect(false, "window open")
+    }
+  }
+  run platform.writeClipboard("copied") |> Effect.provideMut<Allocator>(&mut allocator)
+  match move run platform.readClipboard() |> Effect.provideMut<Allocator>(&mut allocator) {
+    Option<String>.Some { value } => {
+      run Testing.expect(value.view() == "copied", "clipboard")
+    }
+    _ => {
+      run Testing.expect(false, "clipboard text")
+    }
+  }
+}
+
+effect fn buildMenu(bar: &mut MenuBar) -> ()
+  ! OutOfMemoryError
+  ? &mut Allocator {
+  run bar.begin("App")
+  run bar.system(SystemItem.Quit)
+  run bar.end()
+  run bar.begin("File")
+  run bar.action("Open", 1, Option<Shortcut>.some(Shortcut.command('o')))
+  run bar.separator()
+  run bar.begin("Recent")
+  run bar.action("a.svg", 2, Option<Shortcut>.None)
+  run bar.end()
+  run bar.end()
+  run bar.end()
+}
+
+test effect fn menusAndDialogs() -> ()
+  ! AssertionError<'static> | WindowError | OutOfMemoryError {
+  let mut allocator = Allocator.systemAllocatorProvider()
+  let mut platform = HeadlessPlatform.make()
+  let mut bar = MenuBar.make()
+  run buildMenu(&mut bar) |> Effect.provideMut<Allocator>(&mut allocator)
+  run Testing.expect(bar.isClosed(), "balanced")
+  run platform.setMenuBar(&bar) |> Effect.provideMut<Allocator>(&mut allocator)
+  run Testing.expect(platform.menuItems == 7, "menus and items through submenus")
+  let openOptions = OpenDialog.file("Open", "svg")
+  let open = run platform.openFileDialog(&openOptions)
+    |> Effect.provideMut<Allocator>(&mut allocator)
+  let save = run platform.saveFileDialog(&SaveDialog.named("Save", "a.svg", "svg"))
+    |> Effect.provideMut<Allocator>(&mut allocator)
+  run Testing.expect(open.value != save.value, "dialog ids differ")
+  let mut paths = List<String>.make()
+  let path = run String.copy("/tmp/a.svg") |> Effect.provideMut<Allocator>(&mut allocator)
+  run paths.append(move path) |> Effect.provideMut<Allocator>(&mut allocator)
+  run platform.closeDialog(open, move paths) |> Effect.provideMut<Allocator>(&mut allocator)
+  match move run platform.nextEvent(Wait.Poll) |> Effect.provideMut<Allocator>(&mut allocator) {
+    Option<Event>.Some { value: Event.DialogClosed { dialog, paths: chosen } } => {
+      run Testing.expect(dialog.value == open.value && chosen.length() == 1, "dialog result")
+    }
+    _ => {
+      run Testing.expect(false, "dialog closed event")
+    }
+  }
+}
+
+test effect fn keyTables() -> ()
+  ! AssertionError<'static> {
+  run Testing.expect(keyCodeFromValue(0) == KeyCode.Unidentified, "unidentified code")
+  run Testing.expect(keyCodeFromValue(1) == KeyCode.KeyA, "first letter")
+  run Testing.expect(
+    keyCodeFromValue(u16.toU32(KeyCode.value(KeyCode.Pause))) == KeyCode.Pause,
+    "last code",
+  )
+  run Testing.expect(keyCodeFromValue(60000) == KeyCode.Unidentified, "out of range")
+  run Testing.expect(
+    namedKeyFromValue(u16.toU32(NamedKey.value(NamedKey.F24))) == NamedKey.F24,
+    "named",
+  )
+  let modifiers = Modifiers.fromBits(1 | 8 | 32)
+  run Testing.expect(
+    modifiers.shift && modifiers.meta && modifiers.function && !modifiers.alt,
+    "bits",
+  )
+  run Testing.expect(modifiers.bits() == 41, "bits round trip")
+}

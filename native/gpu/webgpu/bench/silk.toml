@@ -1,0 +1,44 @@
+[package]
+name = "gpu-webgpu-bench"
+version = "0.1.0"
+silk-version = "0.1.0-dev.61+91f335268900"
+kind = "executable"
+
+[dependencies]
+webgpu = { path = "..", package = "gpu-webgpu" }
+webgpu_sys = { path = "../sys", package = "gpu-webgpu-sys" }
+
+# The benchmark's C half (the shared fixture and timers). The C baseline, built by
+# scripts/bench, links the same file. Only the declaring manifest may name an archive, so this one
+# pins the same Dawn release as ../sys/silk.toml under its own name; both share one download.
+[native]
+sources = [
+  { c = "support.c", include = ["dawn-headers:include"], flags = ["-std=c11", "-O3", "-g"], os = ["macos", "linux"] },
+]
+# Windows links the same file compiled by scripts/prepare-windows.ps1 into the Dawn override: Silk's
+# \\?\ include paths do not find Dawn's headers there.
+link = [{ static-archive = "dawn-headers:lib/nonstd_bench_support.lib", os = "windows" }]
+
+[[generate]]
+run = ["scripts/rect-shader"]
+outputs = ["rect_shader.h"]
+
+[native.archive.dawn-headers.targets.aarch64-apple-darwin]
+url = "https://github.com/google/dawn/releases/download/v20261027.184652/Dawn-106704a9ac3fc21b1580ea85aea302ac17d416f1-macos-latest-Release.tar.gz"
+sha256 = "d4f419dcbe81de4b86e6fbf172b647f41c67820a925efca55dae3bd43248d8e2"
+strip = 1
+
+[native.archive.dawn-headers.targets.x86_64-apple-darwin]
+url = "https://github.com/google/dawn/releases/download/v20261027.184652/Dawn-106704a9ac3fc21b1580ea85aea302ac17d416f1-macos-15-intel-Release.tar.gz"
+sha256 = "164ac7094b8b453a704a727fcd1d77b461b1143f4f4dedb5daf04c5a53f075bd"
+strip = 1
+
+[native.archive.dawn-headers.targets.x86_64-unknown-linux-gnu]
+url = "https://github.com/google/dawn/releases/download/v20261027.184652/Dawn-106704a9ac3fc21b1580ea85aea302ac17d416f1-ubuntu-latest-Release.tar.gz"
+sha256 = "24fb115dc55b1e5acc169e3d2558eeda5f1b0d149af4a46f10602b900103cbd3"
+strip = 1
+
+[native.archive.dawn-headers.targets.x86_64-pc-windows-msvc]
+url = "https://github.com/google/dawn/releases/download/v20261027.184652/Dawn-106704a9ac3fc21b1580ea85aea302ac17d416f1-windows-latest-Release.tar.gz"
+sha256 = "2b082c284f078b9f91a91a6b2cf805fa42c18f60b8dcaab70476a5e5e24b74ee"
+strip = 1

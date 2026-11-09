@@ -1,0 +1,622 @@
+[
+  {
+    "rust": "PrimitiveAccelerationStructureDescriptor.descriptor",
+    "silk": "raytracing.PrimitiveAccelerationStructureDescriptor.descriptor",
+    "notes": "Returns +1 owned object; release when finished."
+  },
+  {
+    "rust": "PrimitiveAccelerationStructureDescriptor.set_geometry_descriptors",
+    "silk": "raytracing.PrimitiveAccelerationStructureDescriptor.set_geometry_descriptors",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "AccelerationStructure.gpu_resource_id",
+    "silk": "raytracing.AccelerationStructure.gpu_resource_id",
+    "notes": "Returns the resource identifier record by value."
+  },
+  {
+    "rust": "AccelerationStructureGeometryDescriptor.set_opaque",
+    "silk": "raytracing.AccelerationStructureGeometryDescriptor.set_opaque",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "AccelerationStructureGeometryDescriptor.set_primitive_data_buffer",
+    "silk": "raytracing.AccelerationStructureGeometryDescriptor.set_primitive_data_buffer",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "AccelerationStructureGeometryDescriptor.set_primitive_data_stride",
+    "silk": "raytracing.AccelerationStructureGeometryDescriptor.set_primitive_data_stride",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "AccelerationStructureGeometryDescriptor.set_primitive_data_element_size",
+    "silk": "raytracing.AccelerationStructureGeometryDescriptor.set_primitive_data_element_size",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "AccelerationStructureGeometryDescriptor.set_intersection_function_table_offset",
+    "silk": "raytracing.AccelerationStructureGeometryDescriptor.set_intersection_function_table_offset",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "AccelerationStructureTriangleGeometryDescriptor.descriptor",
+    "silk": "raytracing.AccelerationStructureTriangleGeometryDescriptor.descriptor",
+    "notes": "Returns +1 owned object; release when finished."
+  },
+  {
+    "rust": "AccelerationStructureTriangleGeometryDescriptor.set_index_buffer",
+    "silk": "raytracing.AccelerationStructureTriangleGeometryDescriptor.set_index_buffer",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "AccelerationStructureTriangleGeometryDescriptor.set_index_buffer_offset",
+    "silk": "raytracing.AccelerationStructureTriangleGeometryDescriptor.set_index_buffer_offset",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "AccelerationStructureTriangleGeometryDescriptor.set_index_type",
+    "silk": "raytracing.AccelerationStructureTriangleGeometryDescriptor.set_index_type",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "AccelerationStructureTriangleGeometryDescriptor.set_vertex_buffer",
+    "silk": "raytracing.AccelerationStructureTriangleGeometryDescriptor.set_vertex_buffer",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "AccelerationStructureTriangleGeometryDescriptor.set_vertex_buffer_offset",
+    "silk": "raytracing.AccelerationStructureTriangleGeometryDescriptor.set_vertex_buffer_offset",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "AccelerationStructureTriangleGeometryDescriptor.set_vertex_stride",
+    "silk": "raytracing.AccelerationStructureTriangleGeometryDescriptor.set_vertex_stride",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "AccelerationStructureTriangleGeometryDescriptor.set_triangle_count",
+    "silk": "raytracing.AccelerationStructureTriangleGeometryDescriptor.set_triangle_count",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "AccelerationStructureTriangleGeometryDescriptor.set_vertex_format",
+    "silk": "raytracing.AccelerationStructureTriangleGeometryDescriptor.set_vertex_format",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "AccelerationStructureTriangleGeometryDescriptor.set_transformation_matrix_buffer",
+    "silk": "raytracing.AccelerationStructureTriangleGeometryDescriptor.set_transformation_matrix_buffer",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "AccelerationStructureTriangleGeometryDescriptor.set_transformation_matrix_buffer_offset",
+    "silk": "raytracing.AccelerationStructureTriangleGeometryDescriptor.set_transformation_matrix_buffer_offset",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "AccelerationStructureBoundingBoxGeometryDescriptor.descriptor",
+    "silk": "raytracing.AccelerationStructureBoundingBoxGeometryDescriptor.descriptor",
+    "notes": "Returns +1 owned object; release when finished."
+  },
+  {
+    "rust": "AccelerationStructureBoundingBoxGeometryDescriptor.set_bounding_box_buffer",
+    "silk": "raytracing.AccelerationStructureBoundingBoxGeometryDescriptor.set_bounding_box_buffer",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "AccelerationStructureBoundingBoxGeometryDescriptor.set_bounding_box_count",
+    "silk": "raytracing.AccelerationStructureBoundingBoxGeometryDescriptor.set_bounding_box_count",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "AccelerationStructureBoundingBoxGeometryDescriptor.set_bounding_box_stride",
+    "silk": "raytracing.AccelerationStructureBoundingBoxGeometryDescriptor.set_bounding_box_stride",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "AccelerationStructureBoundingBoxGeometryDescriptor.set_bounding_box_buffer_offset",
+    "silk": "raytracing.AccelerationStructureBoundingBoxGeometryDescriptor.set_bounding_box_buffer_offset",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "InstanceAccelerationStructureDescriptor.descriptor",
+    "silk": "raytracing.InstanceAccelerationStructureDescriptor.descriptor",
+    "notes": "Returns +1 owned object; release when finished."
+  },
+  {
+    "rust": "InstanceAccelerationStructureDescriptor.set_instance_descriptor_type",
+    "silk": "raytracing.InstanceAccelerationStructureDescriptor.set_instance_descriptor_type",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "InstanceAccelerationStructureDescriptor.set_instanced_acceleration_structures",
+    "silk": "raytracing.InstanceAccelerationStructureDescriptor.set_instanced_acceleration_structures",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "InstanceAccelerationStructureDescriptor.set_instance_count",
+    "silk": "raytracing.InstanceAccelerationStructureDescriptor.set_instance_count",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "InstanceAccelerationStructureDescriptor.set_instance_descriptor_buffer",
+    "silk": "raytracing.InstanceAccelerationStructureDescriptor.set_instance_descriptor_buffer",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "InstanceAccelerationStructureDescriptor.set_instance_descriptor_buffer_offset",
+    "silk": "raytracing.InstanceAccelerationStructureDescriptor.set_instance_descriptor_buffer_offset",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "InstanceAccelerationStructureDescriptor.set_instance_descriptor_stride",
+    "silk": "raytracing.InstanceAccelerationStructureDescriptor.set_instance_descriptor_stride",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "IndirectInstanceAccelerationStructureDescriptor.descriptor",
+    "silk": "raytracing.IndirectInstanceAccelerationStructureDescriptor.descriptor",
+    "notes": "Returns +1 owned object; release when finished."
+  },
+  {
+    "rust": "IndirectInstanceAccelerationStructureDescriptor.set_instance_descriptor_buffer",
+    "silk": "raytracing.IndirectInstanceAccelerationStructureDescriptor.set_instance_descriptor_buffer",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "IndirectInstanceAccelerationStructureDescriptor.set_instance_descriptor_buffer_offset",
+    "silk": "raytracing.IndirectInstanceAccelerationStructureDescriptor.set_instance_descriptor_buffer_offset",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "IndirectInstanceAccelerationStructureDescriptor.set_instance_descriptor_stride",
+    "silk": "raytracing.IndirectInstanceAccelerationStructureDescriptor.set_instance_descriptor_stride",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "IndirectInstanceAccelerationStructureDescriptor.set_max_instance_count",
+    "silk": "raytracing.IndirectInstanceAccelerationStructureDescriptor.set_max_instance_count",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "IndirectInstanceAccelerationStructureDescriptor.set_instance_count_buffer",
+    "silk": "raytracing.IndirectInstanceAccelerationStructureDescriptor.set_instance_count_buffer",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "IndirectInstanceAccelerationStructureDescriptor.set_instance_count_buffer_offset",
+    "silk": "raytracing.IndirectInstanceAccelerationStructureDescriptor.set_instance_count_buffer_offset",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "IndirectInstanceAccelerationStructureDescriptor.set_instance_descriptor_type",
+    "silk": "raytracing.IndirectInstanceAccelerationStructureDescriptor.set_instance_descriptor_type",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "IndirectInstanceAccelerationStructureDescriptor.set_motion_transform_buffer",
+    "silk": "raytracing.IndirectInstanceAccelerationStructureDescriptor.set_motion_transform_buffer",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "IndirectInstanceAccelerationStructureDescriptor.set_motion_transform_buffer_offset",
+    "silk": "raytracing.IndirectInstanceAccelerationStructureDescriptor.set_motion_transform_buffer_offset",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "IndirectInstanceAccelerationStructureDescriptor.set_max_motion_transform_count",
+    "silk": "raytracing.IndirectInstanceAccelerationStructureDescriptor.set_max_motion_transform_count",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "IndirectInstanceAccelerationStructureDescriptor.set_motion_transform_count_buffer",
+    "silk": "raytracing.IndirectInstanceAccelerationStructureDescriptor.set_motion_transform_count_buffer",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "IndirectInstanceAccelerationStructureDescriptor.set_motion_transform_count_buffer_offset",
+    "silk": "raytracing.IndirectInstanceAccelerationStructureDescriptor.set_motion_transform_count_buffer_offset",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "AccelerationStructureCommandEncoder.build_acceleration_structure",
+    "silk": "raytracing.AccelerationStructureCommandEncoder.build_acceleration_structure",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "AccelerationStructureCommandEncoder.copy_acceleration_structure",
+    "silk": "raytracing.AccelerationStructureCommandEncoder.copy_acceleration_structure",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "AccelerationStructureCommandEncoder.write_compacted_acceleration_structure_size",
+    "silk": "raytracing.AccelerationStructureCommandEncoder.write_compacted_acceleration_structure_size",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "AccelerationStructureCommandEncoder.write_compacted_acceleration_structure_size_with_type",
+    "silk": "raytracing.AccelerationStructureCommandEncoder.write_compacted_acceleration_structure_size_with_type",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "AccelerationStructureCommandEncoder.copy_and_compact_acceleration_structure",
+    "silk": "raytracing.AccelerationStructureCommandEncoder.copy_and_compact_acceleration_structure",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "AccelerationStructureCommandEncoder.refit_acceleration_structure",
+    "silk": "raytracing.AccelerationStructureCommandEncoder.refit_acceleration_structure",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "AccelerationStructureCommandEncoder.update_fence",
+    "silk": "raytracing.AccelerationStructureCommandEncoder.update_fence",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "AccelerationStructureCommandEncoder.wait_for_fence",
+    "silk": "raytracing.AccelerationStructureCommandEncoder.wait_for_fence",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "AccelerationStructureCommandEncoder.use_heap",
+    "silk": "raytracing.AccelerationStructureCommandEncoder.use_heap",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "AccelerationStructureCommandEncoder.use_heaps",
+    "silk": "raytracing.AccelerationStructureCommandEncoder.use_heaps",
+    "notes": "Pointer/count inputs must describe initialized storage valid for the call; counts are element counts."
+  },
+  {
+    "rust": "AccelerationStructureCommandEncoder.use_resource",
+    "silk": "raytracing.AccelerationStructureCommandEncoder.use_resource",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "AccelerationStructureCommandEncoder.use_resources",
+    "silk": "raytracing.AccelerationStructureCommandEncoder.use_resources",
+    "notes": "Pointer/count inputs must describe initialized storage valid for the call; counts are element counts."
+  },
+  {
+    "rust": "AccelerationStructureCommandEncoder.sample_counters_in_buffer",
+    "silk": "raytracing.AccelerationStructureCommandEncoder.sample_counters_in_buffer",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "IntersectionFunctionTableDescriptor.new",
+    "silk": "raytracing.IntersectionFunctionTableDescriptor.new",
+    "notes": "Returns +1 owned object; release when finished."
+  },
+  {
+    "rust": "IntersectionFunctionTableDescriptor.set_function_count",
+    "silk": "raytracing.IntersectionFunctionTableDescriptor.set_function_count",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "IntersectionFunctionTable.set_function",
+    "silk": "raytracing.IntersectionFunctionTable.set_function",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "IntersectionFunctionTable.set_functions",
+    "silk": "raytracing.IntersectionFunctionTable.set_functions",
+    "notes": "Pointer/count inputs must describe initialized storage valid for the call; counts are element counts."
+  },
+  {
+    "rust": "IntersectionFunctionTable.set_buffer",
+    "silk": "raytracing.IntersectionFunctionTable.set_buffer",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "IntersectionFunctionTable.set_buffers",
+    "silk": "raytracing.IntersectionFunctionTable.set_buffers",
+    "notes": "offsets must contain at least data_count entries; data entries may be null. Pointer/count inputs must describe initialized storage valid for the call; counts are element counts."
+  },
+  {
+    "rust": "IntersectionFunctionTable.set_visible_function_table",
+    "silk": "raytracing.IntersectionFunctionTable.set_visible_function_table",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "IntersectionFunctionTable.set_visible_function_tables",
+    "silk": "raytracing.IntersectionFunctionTable.set_visible_function_tables",
+    "notes": "Pointer/count inputs must describe initialized storage valid for the call; counts are element counts."
+  },
+  {
+    "rust": "IntersectionFunctionTable.gpu_resource_id",
+    "silk": "raytracing.IntersectionFunctionTable.gpu_resource_id",
+    "notes": "Returns the resource identifier record by value."
+  },
+  {
+    "rust": "VisibleFunctionTableDescriptor.new",
+    "silk": "raytracing.VisibleFunctionTableDescriptor.new",
+    "notes": "Returns +1 owned object; release when finished."
+  },
+  {
+    "rust": "VisibleFunctionTableDescriptor.set_function_count",
+    "silk": "raytracing.VisibleFunctionTableDescriptor.set_function_count",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "VisibleFunctionTable.set_functions",
+    "silk": "raytracing.VisibleFunctionTable.set_functions",
+    "notes": "functions contains MTLFunctionHandle objects, not MTLFunction objects. Uses the SDK setFunctions:withRange: selector over indices 0..<functions_count, correcting upstream unsupported setFunctions: NSArray invocation. Pointer/count inputs must describe initialized storage valid for the call; counts are element counts."
+  },
+  {
+    "rust": "VisibleFunctionTable.set_function",
+    "silk": "raytracing.VisibleFunctionTable.set_function",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "VisibleFunctionTable.gpu_resource_id",
+    "silk": "raytracing.VisibleFunctionTable.gpu_resource_id",
+    "notes": "Returns the resource identifier record by value."
+  },
+  {
+    "rust": "mps::RayIntersector.from_device",
+    "silk": "raytracing.RayIntersector.from_device",
+    "notes": "Returns +1 owned object; release when finished. Null indicates initialization failure."
+  },
+  {
+    "rust": "mps::RayIntersector.set_cull_mode",
+    "silk": "raytracing.RayIntersector.set_cull_mode",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "mps::RayIntersector.set_front_facing_winding",
+    "silk": "raytracing.RayIntersector.set_front_facing_winding",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "mps::RayIntersector.set_intersection_data_type",
+    "silk": "raytracing.RayIntersector.set_intersection_data_type",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "mps::RayIntersector.set_intersection_stride",
+    "silk": "raytracing.RayIntersector.set_intersection_stride",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "mps::RayIntersector.set_ray_data_type",
+    "silk": "raytracing.RayIntersector.set_ray_data_type",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "mps::RayIntersector.set_ray_index_data_type",
+    "silk": "raytracing.RayIntersector.set_ray_index_data_type",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "mps::RayIntersector.set_ray_mask",
+    "silk": "raytracing.RayIntersector.set_ray_mask",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "mps::RayIntersector.set_ray_mask_operator",
+    "silk": "raytracing.RayIntersector.set_ray_mask_operator",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "mps::RayIntersector.set_ray_mask_options",
+    "silk": "raytracing.RayIntersector.set_ray_mask_options",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "mps::RayIntersector.set_ray_stride",
+    "silk": "raytracing.RayIntersector.set_ray_stride",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "mps::RayIntersector.set_triangle_intersection_test_type",
+    "silk": "raytracing.RayIntersector.set_triangle_intersection_test_type",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "mps::RayIntersector.encode_intersection_to_command_buffer",
+    "silk": "raytracing.RayIntersector.encode_intersection_to_command_buffer",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "mps::RayIntersector.recommended_minimum_ray_batch_size_for_ray_count",
+    "silk": "raytracing.RayIntersector.recommended_minimum_ray_batch_size_for_ray_count",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "mps::AccelerationStructureGroup.new_with_device",
+    "silk": "raytracing.AccelerationStructureGroup.new_with_device",
+    "notes": "Returns +1 owned object; release when finished. Null indicates initialization failure."
+  },
+  {
+    "rust": "mps::AccelerationStructureGroup.device",
+    "silk": "raytracing.AccelerationStructureGroup.device",
+    "notes": "Returns borrowed +0 object; keep its owner alive or retain the result."
+  },
+  {
+    "rust": "mps::AccelerationStructure.status",
+    "silk": "raytracing.MPSAccelerationStructure.status",
+    "notes": "MPSAccelerationStructure namespace disambiguates the Metal AccelerationStructure namespace."
+  },
+  {
+    "rust": "mps::AccelerationStructure.usage",
+    "silk": "raytracing.MPSAccelerationStructure.usage",
+    "notes": "MPSAccelerationStructure namespace disambiguates the Metal AccelerationStructure namespace."
+  },
+  {
+    "rust": "mps::AccelerationStructure.set_usage",
+    "silk": "raytracing.MPSAccelerationStructure.set_usage",
+    "notes": "MPSAccelerationStructure namespace disambiguates the Metal AccelerationStructure namespace."
+  },
+  {
+    "rust": "mps::AccelerationStructure.group",
+    "silk": "raytracing.MPSAccelerationStructure.group",
+    "notes": "Returns borrowed +0 object; keep its owner alive or retain the result. MPSAccelerationStructure namespace disambiguates the Metal AccelerationStructure namespace."
+  },
+  {
+    "rust": "mps::AccelerationStructure.encode_refit_to_command_buffer",
+    "silk": "raytracing.MPSAccelerationStructure.encode_refit_to_command_buffer",
+    "notes": "MPSAccelerationStructure namespace disambiguates the Metal AccelerationStructure namespace."
+  },
+  {
+    "rust": "mps::AccelerationStructure.rebuild",
+    "silk": "raytracing.MPSAccelerationStructure.rebuild",
+    "notes": "MPSAccelerationStructure namespace disambiguates the Metal AccelerationStructure namespace."
+  },
+  {
+    "rust": "mps::PolygonAccelerationStructure.set_index_buffer",
+    "silk": "raytracing.PolygonAccelerationStructure.set_index_buffer",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "mps::PolygonAccelerationStructure.set_index_buffer_offset",
+    "silk": "raytracing.PolygonAccelerationStructure.set_index_buffer_offset",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "mps::PolygonAccelerationStructure.set_index_type",
+    "silk": "raytracing.PolygonAccelerationStructure.set_index_type",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "mps::PolygonAccelerationStructure.set_mask_buffer",
+    "silk": "raytracing.PolygonAccelerationStructure.set_mask_buffer",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "mps::PolygonAccelerationStructure.set_mask_buffer_offset",
+    "silk": "raytracing.PolygonAccelerationStructure.set_mask_buffer_offset",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "mps::PolygonAccelerationStructure.set_vertex_buffer",
+    "silk": "raytracing.PolygonAccelerationStructure.set_vertex_buffer",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "mps::PolygonAccelerationStructure.set_vertex_buffer_offset",
+    "silk": "raytracing.PolygonAccelerationStructure.set_vertex_buffer_offset",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "mps::PolygonAccelerationStructure.set_vertex_stride",
+    "silk": "raytracing.PolygonAccelerationStructure.set_vertex_stride",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "mps::TriangleAccelerationStructure.from_device",
+    "silk": "raytracing.TriangleAccelerationStructure.from_device",
+    "notes": "Returns +1 owned object; release when finished. Null indicates initialization failure."
+  },
+  {
+    "rust": "mps::TriangleAccelerationStructure.triangle_count",
+    "silk": "raytracing.TriangleAccelerationStructure.triangle_count",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "mps::TriangleAccelerationStructure.set_triangle_count",
+    "silk": "raytracing.TriangleAccelerationStructure.set_triangle_count",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "mps::InstanceAccelerationStructure.init_with_group",
+    "silk": "raytracing.InstanceAccelerationStructure.init_with_group",
+    "notes": "Returns +1 owned object; release when finished. Null indicates initialization failure."
+  },
+  {
+    "rust": "mps::InstanceAccelerationStructure.acceleration_structures",
+    "silk": "raytracing.InstanceAccelerationStructure.acceleration_structures",
+    "notes": "Returns borrowed +0 NSArray of MPSPolygonAccelerationStructure objects rather than a Rust Vec; owner must remain alive."
+  },
+  {
+    "rust": "mps::InstanceAccelerationStructure.set_acceleration_structures",
+    "silk": "raytracing.InstanceAccelerationStructure.set_acceleration_structures",
+    "notes": "Pointer/count inputs must describe initialized storage valid for the call; counts are element counts."
+  },
+  {
+    "rust": "mps::InstanceAccelerationStructure.instance_buffer",
+    "silk": "raytracing.InstanceAccelerationStructure.instance_buffer",
+    "notes": "Returns borrowed +0 object; keep its owner alive or retain the result."
+  },
+  {
+    "rust": "mps::InstanceAccelerationStructure.set_instance_buffer",
+    "silk": "raytracing.InstanceAccelerationStructure.set_instance_buffer",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "mps::InstanceAccelerationStructure.instance_buffer_offset",
+    "silk": "raytracing.InstanceAccelerationStructure.instance_buffer_offset",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "mps::InstanceAccelerationStructure.set_instance_buffer_offset",
+    "silk": "raytracing.InstanceAccelerationStructure.set_instance_buffer_offset",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "mps::InstanceAccelerationStructure.transform_buffer",
+    "silk": "raytracing.InstanceAccelerationStructure.transform_buffer",
+    "notes": "Returns borrowed +0 object; keep its owner alive or retain the result."
+  },
+  {
+    "rust": "mps::InstanceAccelerationStructure.set_transform_buffer",
+    "silk": "raytracing.InstanceAccelerationStructure.set_transform_buffer",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "mps::InstanceAccelerationStructure.transform_buffer_offset",
+    "silk": "raytracing.InstanceAccelerationStructure.transform_buffer_offset",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "mps::InstanceAccelerationStructure.set_transform_buffer_offset",
+    "silk": "raytracing.InstanceAccelerationStructure.set_transform_buffer_offset",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "mps::InstanceAccelerationStructure.transform_type",
+    "silk": "raytracing.InstanceAccelerationStructure.transform_type",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "mps::InstanceAccelerationStructure.set_transform_type",
+    "silk": "raytracing.InstanceAccelerationStructure.set_transform_type",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "mps::InstanceAccelerationStructure.mask_buffer",
+    "silk": "raytracing.InstanceAccelerationStructure.mask_buffer",
+    "notes": "Returns borrowed +0 object; keep its owner alive or retain the result."
+  },
+  {
+    "rust": "mps::InstanceAccelerationStructure.set_mask_buffer",
+    "silk": "raytracing.InstanceAccelerationStructure.set_mask_buffer",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "mps::InstanceAccelerationStructure.mask_buffer_offset",
+    "silk": "raytracing.InstanceAccelerationStructure.mask_buffer_offset",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "mps::InstanceAccelerationStructure.set_mask_buffer_offset",
+    "silk": "raytracing.InstanceAccelerationStructure.set_mask_buffer_offset",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "mps::InstanceAccelerationStructure.instance_count",
+    "silk": "raytracing.InstanceAccelerationStructure.instance_count",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "mps::InstanceAccelerationStructure.set_instance_count",
+    "silk": "raytracing.InstanceAccelerationStructure.set_instance_count",
+    "notes": "Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements."
+  },
+  {
+    "rust": "mps::mps_supports_device",
+    "silk": "raytracing.mps_supports_device",
+    "notes": "Direct MPSSupportsMTLDevice query; native BOOL converted to Silk bool."
+  }
+]

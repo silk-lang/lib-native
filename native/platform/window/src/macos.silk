@@ -1,0 +1,708 @@
+//! The AppKit backend: one `NSWindow` per window, a layer-backed view whose layer is a
+//! `CAMetalLayer`, frames paced by the view's `CADisplayLink`, and `NSTextInputClient` for
+//! input methods. The Objective-C side is native/macos/bridge.m; programs link the archive
+//! scripts/build-native makes and the AppKit, QuartzCore and UniformTypeIdentifiers
+//! frameworks (see the README).
+//!
+//! AppKit's own loops (live resize, menu tracking) run on a second stack of the main thread,
+//! so `nextEvent` keeps returning events and frames while they run. See the README.
+import event { Event, Key, Modifiers, MouseButton, Phase, ScrollDelta }
+import keys { keyCodeFromValue, namedKeyFromValue, NamedKey }
+import macos_sys as sys
+import macos_sys { RawEvent }
+import menu { MenuBar, MenuEntry, OpenDialog, SaveDialog, Shortcut, ShortcutKey, SystemItem }
+import platform { Platform }
+import types {
+  WindowId,
+  DialogId,
+  WindowOptions,
+  WindowError,
+  TitleBar,
+  Wait,
+  Cursor,
+  ImeState,
+  Appearance,
+  RawSurface,
+}
+import silk.collections.list { List }
+import silk.core.option { Option }
+import silk.core.result { Result }
+import silk.geometry.point { Point2 }
+import silk.geometry.rect { Rect }
+import silk.geometry.size { Size2 }
+import silk.geometry.vector { Vector2 }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.mem.pointer { Pointer }
+import silk.num.u16
+import silk.num.u64
+import silk.num.u8
+import silk.num.u32
+import silk.text.char as chars
+import silk.text.string { String, InvalidUtf8 }
+
+const BUTTONS: [MouseButton; 6] = [
+  MouseButton.Left,
+  MouseButton.Right,
+  MouseButton.Middle,
+  MouseButton.Back,
+  MouseButton.Forward,
+  MouseButton.Other,
+]
+
+const PHASES: [Phase; 7] = [
+  Phase.None,
+  Phase.Began,
+  Phase.Changed,
+  Phase.Ended,
+  Phase.Cancelled,
+  Phase.Momentum,
+  Phase.MomentumEnded,
+]
+
+/// The AppKit platform. There is one per process, created on the main thread.
+pub struct MacPlatform {
+  started: bool,
+}
+
+impl MacPlatform {
+  /// Starts AppKit as a regular app with a default menu bar holding Quit. Fails with
+  /// `Unsupported` off macOS or off the main thread, and `AlreadyCreated` the second time.
+  pub effect fn start() -> MacPlatform
+    ! WindowError {
+    let status = unsafe sys.silk_macos_start()
+    if status == 1 {
+      fail WindowError.AlreadyCreated
+    }
+    if status != 0 {
+      fail WindowError.Unsupported
+    }
+    return MacPlatform { started: true }
+  }
+
+  /// Whether AppKit runs on its own stack (the default) rather than the caller's. Set
+  /// `SILK_WINDOW_FIBER=0` to turn it off when diagnosing a problem.
+  pub fn usesFiber(self: &Self) -> bool {
+    return unsafe sys.silk_macos_test_uses_fiber() != 0
+  }
+
+  // Test hooks: drive AppKit the way a user would, for the smoke test.
+
+  /// Posts a key press and release to the window's event queue.
+  pub fn simulateKey(
+    self: &mut Self,
+    window: WindowId,
+    keyCode: u16,
+    characters: string,
+    modifiers: Modifiers,
+  ) -> () {
+    unsafe sys.silk_macos_test_post_key(
+      window.value,
+      keyCode,
+      Pointer.fromSlice(String.utf8Bytes(characters)),
+      String.byteLength(characters),
+      modifiers.bits(),
+    )
+  }
+
+  /// Sends composition text to the view as an input method would. Offsets are UTF-16.
+  pub fn simulateMarkedText(
+    self: &mut Self,
+    window: WindowId,
+    text: string,
+    start: u64,
+    length: u64,
+  ) -> () {
+    unsafe sys.silk_macos_test_set_marked_text(
+      window.value,
+      Pointer.fromSlice(String.utf8Bytes(text)),
+      String.byteLength(text),
+      start,
+      length,
+    )
+  }
+
+  /// Commits text to the view as an input method would.
+  pub fn simulateInsertText(self: &mut Self, window: WindowId, text: string) -> () {
+    unsafe sys.silk_macos_test_insert_text(
+      window.value,
+      Pointer.fromSlice(String.utf8Bytes(text)),
+      String.byteLength(text),
+    )
+  }
+
+  /// Resizes the content area through AppKit, as a drag of the window edge does.
+  pub fn simulateResize(self: &mut Self, window: WindowId, size: Size2<f64>) -> () {
+    unsafe sys.silk_macos_test_set_frame_size(window.value, size.width, size.height)
+  }
+
+  /// Where the input method would open its candidate window, in screen points with the
+  /// origin at the bottom left (AppKit's convention).
+  pub fn imeCandidateRect(self: &Self, window: WindowId) -> Rect<f64> {
+    let mut x: f64 = 0.0
+    let mut y: f64 = 0.0
+    let mut width: f64 = 0.0
+    let mut height: f64 = 0.0
+    unsafe sys.silk_macos_test_ime_rect(
+      window.value,
+      Pointer.fromMutRef(&mut x),
+      Pointer.fromMutRef(&mut y),
+      Pointer.fromMutRef(&mut width),
+      Pointer.fromMutRef(&mut height),
+    )
+    return Rect<f64>.new(x, y, x + width, y + height)
+  }
+
+  /// The `index`th string of the event `nextEvent` last received from the bridge.
+  effect fn text(self: &Self, index: usize) -> String
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let mut length: usize = 0
+    let bytes = unsafe sys.silk_macos_event_text(index, Pointer.fromMutRef(&mut length))
+    return run MacPlatform.copyBytes(self, bytes, length)
+  }
+
+  effect fn copyBytes(anchor: &Self, bytes: ?[*]const u8, length: usize) -> String
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    match Pointer.nonNullMany(bytes) {
+      Option<[*]const u8>.Some { value } => {
+        let view = unsafe Pointer.borrowMany(anchor, value, length)
+        match move run String.copyUtf8(view) {
+          Result<String, InvalidUtf8>.Success { value: copied } => {
+            return move copied
+          }
+          _ => {
+            return String.make()
+          }
+        }
+      }
+      _ => {
+        return String.make()
+      }
+    }
+  }
+
+  effect fn key(self: &Self, raw: &RawEvent) -> Key
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let text = run self.text(0)
+    if raw.named != 0 || String.byteLength(text.view()) == 0 {
+      return Key.Named { key: namedKeyFromValue(raw.named) }
+    }
+    return Key.Character { text: move text }
+  }
+
+  effect fn decode(self: &Self, raw: &RawEvent) -> Option<Event>
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let window = WindowId { value: raw.window }
+    let position = Point2<f64>.new(raw.x, raw.y)
+    let modifiers = Modifiers.fromBits(raw.modifiers)
+    let on = (raw.flags & sys.FLAG_ON) != 0
+    let kind = raw.kind
+    if kind == sys.REQUEST_FRAME {
+      return Option<Event>.some(Event.RequestFrame { window: window, targetTime: raw.value })
+    }
+    if kind == sys.RESIZED {
+      return Option<Event>.some(
+        Event.Resized {
+          window: window,
+          size: Size2<f64>.new(raw.x, raw.y),
+          scaleFactor: raw.value,
+        },
+      )
+    }
+    if kind == sys.SCALE_FACTOR_CHANGED {
+      return Option<Event>.some(Event.ScaleFactorChanged { window: window, scaleFactor: raw.value })
+    }
+    if kind == sys.MOVED {
+      return Option<Event>.some(Event.Moved { window: window, position: position })
+    }
+    if kind == sys.FOCUSED {
+      return Option<Event>.some(Event.Focused { window: window, focused: on })
+    }
+    if kind == sys.OCCLUDED {
+      return Option<Event>.some(Event.Occluded { window: window, occluded: on })
+    }
+    if kind == sys.CLOSE_REQUESTED {
+      return Option<Event>.some(Event.CloseRequested { window: window })
+    }
+    if kind == sys.FULL_SCREEN_CHANGED {
+      return Option<Event>.some(Event.FullScreenChanged { window: window, fullScreen: on })
+    }
+    if kind == sys.KEY_DOWN {
+      let key = run self.key(raw)
+      return Option<Event>.some(
+        Event.KeyDown {
+          window: window,
+          key: move key,
+          code: keyCodeFromValue(raw.code),
+          modifiers: modifiers,
+          repeat: (raw.flags & sys.FLAG_REPEAT) != 0,
+          imeHandled: (raw.flags & sys.FLAG_IME_HANDLED) != 0,
+        },
+      )
+    }
+    if kind == sys.KEY_UP {
+      let key = run self.key(raw)
+      return Option<Event>.some(
+        Event.KeyUp {
+          window: window,
+          key: move key,
+          code: keyCodeFromValue(raw.code),
+          modifiers: modifiers,
+        },
+      )
+    }
+    if kind == sys.MODIFIERS_CHANGED {
+      return Option<Event>.some(Event.ModifiersChanged { window: window, modifiers: modifiers })
+    }
+    if kind == sys.TEXT_INPUT {
+      let text = run self.text(0)
+      return Option<Event>.some(Event.TextInput { window: window, text: move text })
+    }
+    if kind == sys.IME_PREEDIT {
+      let text = run self.text(0)
+      return Option<Event>.some(
+        Event.ImePreedit {
+          window: window,
+          text: move text,
+          selectionStart: u64.toUsize(raw.start),
+          selectionEnd: u64.toUsize(raw.end),
+        },
+      )
+    }
+    if kind == sys.MOUSE_MOVED {
+      return Option<Event>.some(
+        Event.MouseMoved { window: window, position: position, modifiers: modifiers },
+      )
+    }
+    if kind == sys.MOUSE_DOWN {
+      return Option<Event>.some(
+        Event.MouseDown {
+          window: window,
+          button: MacPlatform.button(raw.code),
+          position: position,
+          modifiers: modifiers,
+          clickCount: raw.count,
+        },
+      )
+    }
+    if kind == sys.MOUSE_UP {
+      return Option<Event>.some(
+        Event.MouseUp {
+          window: window,
+          button: MacPlatform.button(raw.code),
+          position: position,
+          modifiers: modifiers,
+        },
+      )
+    }
+    if kind == sys.MOUSE_ENTERED {
+      return Option<Event>.some(Event.MouseEntered { window: window, position: position })
+    }
+    if kind == sys.MOUSE_EXITED {
+      return Option<Event>.some(Event.MouseExited { window: window })
+    }
+    if kind == sys.SCROLL {
+      let delta = Vector2<f64>.new(raw.dx, raw.dy)
+      let mut scroll = ScrollDelta.Lines { delta: delta }
+      if (raw.flags & sys.FLAG_PRECISE) != 0 {
+        scroll = ScrollDelta.Points { delta: delta }
+      }
+      return Option<Event>.some(
+        Event.Scroll {
+          window: window,
+          position: position,
+          delta: scroll,
+          phase: MacPlatform.phase(raw.phase),
+          modifiers: modifiers,
+        },
+      )
+    }
+    if kind == sys.PINCH {
+      return Option<Event>.some(
+        Event.Pinch {
+          window: window,
+          position: position,
+          delta: raw.dx,
+          phase: MacPlatform.phase(raw.phase),
+        },
+      )
+    }
+    if kind == sys.MENU_ACTION {
+      return Option<Event>.some(Event.MenuAction { action: raw.code })
+    }
+    if kind == sys.DIALOG_CLOSED {
+      let mut paths = run List<String>.makeWithCapacity(u32ToUsize(raw.count))
+      let mut i: usize = 0
+      while i < u32ToUsize(raw.count) {
+        let path = run self.text(i)
+        run paths.append(move path)
+        i = i + 1
+      }
+      return Option<Event>.some(
+        Event.DialogClosed { dialog: DialogId { value: raw.code }, paths: move paths },
+      )
+    }
+    if kind == sys.APPEARANCE_CHANGED {
+      return Option<Event>.some(
+        Event.AppearanceChanged { appearance: MacPlatform.appearanceOf(raw.code) },
+      )
+    }
+    if kind == sys.QUIT_REQUESTED {
+      return Option<Event>.some(Event.QuitRequested)
+    }
+    return Option<Event>.None
+  }
+
+  fn button(code: u32) -> MouseButton {
+    if code >= 6 {
+      return MouseButton.Other
+    }
+    return BUTTONS[u32ToUsize(code)]
+  }
+
+  fn phase(code: u32) -> Phase {
+    if code >= 7 {
+      return Phase.None
+    }
+    return PHASES[u32ToUsize(code)]
+  }
+
+  fn appearanceOf(code: u32) -> Appearance {
+    if code == 1 {
+      return Appearance.Dark
+    }
+    return Appearance.Light
+  }
+
+  fn bytes(text: string) -> ?[*]const u8 {
+    return Pointer.fromSlice(String.utf8Bytes(text))
+  }
+
+  fn optionalBytes<'a>(text: Option<string<'a>>) -> string<'a> {
+    match text {
+      Option<string<'a>>.Some { value } => {
+        return value
+      }
+      _ => {
+        return ""
+      }
+    }
+  }
+
+  fn parent(parent: Option<WindowId>) -> u32 {
+    match parent {
+      Option<WindowId>.Some { value } => {
+        return value.value
+      }
+      _ => {
+        return 0
+      }
+    }
+  }
+}
+
+fn u32ToUsize(value: u32) -> usize {
+  return u32.toUsize(value)
+}
+
+fn bool8(value: bool) -> u8 {
+  if value {
+    return 1
+  }
+  return 0
+}
+
+impl Platform for MacPlatform {
+  effect fn openWindow(self: &mut Self, options: &WindowOptions<'_>) -> WindowId
+    ! WindowError | OutOfMemoryError
+    ? &mut Allocator {
+    let mut flags: u32 = 0
+    if options.resizable {
+      flags = flags | sys.WINDOW_RESIZABLE
+    }
+    if options.visible {
+      flags = flags | sys.WINDOW_VISIBLE
+    }
+    if options.transparent {
+      flags = flags | sys.WINDOW_TRANSPARENT
+    }
+    if options.titleBar == TitleBar.Transparent {
+      flags = flags | sys.WINDOW_TITLE_TRANSPARENT
+    }
+    if options.titleBar == TitleBar.Hidden {
+      flags = flags | sys.WINDOW_TITLE_HIDDEN
+    }
+    let minSize = match options.minSize {
+      Option<Size2<f64>>.Some { value } => value
+      _ => Size2<f64>.zero()
+    }
+    let id = unsafe sys.silk_macos_open_window(
+      MacPlatform.bytes(options.title),
+      String.byteLength(options.title),
+      options.size.width,
+      options.size.height,
+      minSize.width,
+      minSize.height,
+      flags,
+    )
+    if id == 0 {
+      fail WindowError.CreationFailed
+    }
+    return WindowId { value: id }
+  }
+
+  fn closeWindow(self: &mut Self, window: WindowId) -> () {
+    unsafe sys.silk_macos_close_window(window.value)
+  }
+
+  effect fn nextEvent(self: &mut Self, wait: Wait) -> Option<Event>
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let timeout = match wait {
+      Wait.Poll => 0.0
+      Wait.Forever => -1.0
+      Wait.Seconds { seconds } => if seconds < 0.0 {
+        0.0
+      } else {
+        seconds
+      }
+    }
+    while true {
+      let mut raw = RawEvent.zero()
+      if unsafe sys.silk_macos_next_event(timeout, Pointer.fromMutRef(&mut raw)) == 0 {
+        return Option<Event>.None
+      }
+      let decoded = run self.decode(&raw)
+      if Option<Event>.isSome(&decoded) {
+        return move decoded
+      }
+    }
+    return Option<Event>.None
+  }
+
+  fn requestFrame(self: &mut Self, window: WindowId) -> () {
+    unsafe sys.silk_macos_request_frame(window.value)
+  }
+
+  fn contentSize(self: &Self, window: WindowId) -> Size2<f64> {
+    let mut width: f64 = 0.0
+    let mut height: f64 = 0.0
+    unsafe sys.silk_macos_content_size(
+      window.value,
+      Pointer.fromMutRef(&mut width),
+      Pointer.fromMutRef(&mut height),
+    )
+    return Size2<f64>.new(width, height)
+  }
+
+  fn scaleFactor(self: &Self, window: WindowId) -> f64 {
+    return unsafe sys.silk_macos_scale_factor(window.value)
+  }
+
+  fn rawSurface(self: &Self, window: WindowId) -> RawSurface {
+    let layer = unsafe sys.silk_macos_metal_layer(window.value)
+    if Pointer.isNull(layer) {
+      return RawSurface.None
+    }
+    return RawSurface.MetalLayer { layer: layer }
+  }
+
+  effect fn setTitle(self: &mut Self, window: WindowId, title: string) -> ()
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    unsafe sys.silk_macos_set_title(
+      window.value,
+      MacPlatform.bytes(title),
+      String.byteLength(title),
+    )
+  }
+
+  fn setContentSize(self: &mut Self, window: WindowId, size: Size2<f64>) -> () {
+    unsafe sys.silk_macos_set_content_size(window.value, size.width, size.height)
+  }
+
+  fn setMinContentSize(self: &mut Self, window: WindowId, size: Size2<f64>) -> () {
+    unsafe sys.silk_macos_set_min_content_size(window.value, size.width, size.height)
+  }
+
+  fn setVisible(self: &mut Self, window: WindowId, visible: bool) -> () {
+    unsafe sys.silk_macos_set_visible(window.value, bool8(visible))
+  }
+
+  fn focus(self: &mut Self, window: WindowId) -> () {
+    unsafe sys.silk_macos_focus(window.value)
+  }
+
+  fn minimize(self: &mut Self, window: WindowId) -> () {
+    unsafe sys.silk_macos_minimize(window.value)
+  }
+
+  fn toggleFullScreen(self: &mut Self, window: WindowId) -> () {
+    unsafe sys.silk_macos_toggle_full_screen(window.value)
+  }
+
+  fn startWindowDrag(self: &mut Self, window: WindowId) -> () {
+    unsafe sys.silk_macos_start_window_drag(window.value)
+  }
+
+  fn setCursor(self: &mut Self, window: WindowId, cursor: Cursor) -> () {
+    unsafe sys.silk_macos_set_cursor(window.value, u8.toU32(Cursor.value(cursor)))
+  }
+
+  fn setIme(self: &mut Self, window: WindowId, ime: ImeState) -> () {
+    let area = ime.cursorArea
+    unsafe sys.silk_macos_set_ime(
+      window.value,
+      bool8(ime.enabled),
+      area.xMin,
+      area.yMin,
+      area.width(),
+      area.height(),
+    )
+  }
+
+  effect fn setMenuBar(self: &mut Self, bar: &MenuBar) -> ()
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    unsafe sys.silk_macos_menu_begin_bar()
+    let entries = bar.entries.asSlice()
+    let mut i: usize = 0
+    while i < entries.length {
+      match &entries[i] {
+        MenuEntry.Begin { title } => {
+          unsafe sys.silk_macos_menu_begin(
+            MacPlatform.bytes(title.view()),
+            String.byteLength(title.view()),
+          )
+        }
+        MenuEntry.End => {
+          unsafe sys.silk_macos_menu_end()
+        }
+        MenuEntry.Action { title, action, shortcut, enabled, checked } => {
+          let mut keyKind: u32 = 0
+          let mut keyValue: u32 = 0
+          let mut modifiers: u32 = 0
+          match shortcut {
+            Option<Shortcut>.Some { value } => {
+              modifiers = value.modifiers.bits()
+              match value.key {
+                ShortcutKey.Character { character } => {
+                  keyKind = 1
+                  keyValue = chars.toU32(character)
+                }
+                ShortcutKey.Named { key } => {
+                  keyKind = 2
+                  keyValue = u16.toU32(NamedKey.value(key))
+                }
+              }
+            }
+            _ => {}
+          }
+          unsafe sys.silk_macos_menu_action(
+            MacPlatform.bytes(title.view()),
+            String.byteLength(title.view()),
+            action,
+            keyKind,
+            keyValue,
+            modifiers,
+            bool8(enabled),
+            bool8(checked),
+          )
+        }
+        MenuEntry.Separator => {
+          unsafe sys.silk_macos_menu_separator()
+        }
+        MenuEntry.System { item } => {
+          unsafe sys.silk_macos_menu_system(u8.toU32(SystemItem.value(item)))
+        }
+      }
+      i = i + 1
+    }
+    unsafe sys.silk_macos_menu_commit()
+  }
+
+  effect fn openFileDialog(self: &mut Self, options: &OpenDialog<'_>) -> DialogId
+    ! WindowError | OutOfMemoryError
+    ? &mut Allocator {
+    let mut flags: u32 = 0
+    if options.files {
+      flags = flags | 1
+    }
+    if options.directories {
+      flags = flags | 2
+    }
+    if options.multiple {
+      flags = flags | 4
+    }
+    if Option<string>.isSome(&options.directory) {
+      flags = flags | 8
+    }
+    let directory = MacPlatform.optionalBytes(options.directory)
+    let id = unsafe sys.silk_macos_open_dialog(
+      MacPlatform.bytes(options.title),
+      String.byteLength(options.title),
+      MacPlatform.bytes(directory),
+      String.byteLength(directory),
+      MacPlatform.bytes(options.extensions),
+      String.byteLength(options.extensions),
+      flags,
+      MacPlatform.parent(options.parent),
+    )
+    if id == 0 {
+      fail WindowError.CreationFailed
+    }
+    return DialogId { value: id }
+  }
+
+  effect fn saveFileDialog(self: &mut Self, options: &SaveDialog<'_>) -> DialogId
+    ! WindowError | OutOfMemoryError
+    ? &mut Allocator {
+    let mut flags: u32 = 0
+    if Option<string>.isSome(&options.directory) {
+      flags = flags | 8
+    }
+    let directory = MacPlatform.optionalBytes(options.directory)
+    let id = unsafe sys.silk_macos_save_dialog(
+      MacPlatform.bytes(options.title),
+      String.byteLength(options.title),
+      MacPlatform.bytes(directory),
+      String.byteLength(directory),
+      MacPlatform.bytes(options.name),
+      String.byteLength(options.name),
+      MacPlatform.bytes(options.extensions),
+      String.byteLength(options.extensions),
+      flags,
+      MacPlatform.parent(options.parent),
+    )
+    if id == 0 {
+      fail WindowError.CreationFailed
+    }
+    return DialogId { value: id }
+  }
+
+  effect fn readClipboard(self: &mut Self) -> Option<String>
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let mut length: usize = 0
+    let bytes = unsafe sys.silk_macos_clipboard_read(Pointer.fromMutRef(&mut length))
+    if Pointer.isNullMany(bytes) {
+      return Option<String>.None
+    }
+    let anchor = &self.*
+    let text = run MacPlatform.copyBytes(anchor, bytes, length)
+    return Option<String>.some(move text)
+  }
+
+  effect fn writeClipboard(self: &mut Self, text: string) -> ()
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    unsafe sys.silk_macos_clipboard_write(MacPlatform.bytes(text), String.byteLength(text))
+  }
+
+  fn appearance(self: &Self) -> Appearance {
+    return MacPlatform.appearanceOf(unsafe sys.silk_macos_appearance())
+  }
+}

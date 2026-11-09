@@ -1,0 +1,21 @@
+//! Where the smoke test's lines go: stderr natively, and the page's console in the
+//! browser (browser/test.mjs supplies `smoke#print`).
+static if Intrinsic.targetArchitecture() == "wasm32" {
+  import silk.mem.pointer { Pointer }
+  import silk.text.string { String }
+
+  @foreign(noCapture: .("bytes"))
+  unsafe extern "C" fn hostPrint(bytes: ?[*]const u8, length: usize) -> () as "smoke#print"
+
+  /// Writes `text` without a line break.
+  pub fn write(text: string<'static>) -> () {
+    unsafe hostPrint(Pointer.fromSlice(String.utf8Bytes(text)), String.byteLength(text))
+  }
+} else {
+  import silk.io.writer_native { StderrWriter }
+
+  /// Writes `text` without a line break.
+  pub fn write(text: string<'static>) -> () {
+    StderrWriter.print("{}", &.(text))
+  }
+}

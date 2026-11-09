@@ -1,0 +1,49 @@
+#!/usr/bin/env python3
+"""Build or run the macOS smoke test or demo.
+
+  scripts/macos smoke [--build-only] [--release]
+  scripts/macos demo [--build-only] [--release]
+
+Needs macOS. native/platform/window/silk.toml compiles the AppKit bridge and links its frameworks, so
+these are plain `silk build` and `silk run` of the two packages. The demo also needs the WebGPU
+prerequisites from the repository README.
+"""
+import argparse
+from pathlib import Path
+import subprocess
+import sys
+
+PACKAGE = Path(__file__).resolve().parent.parent
+REPO = PACKAGE.parents[2]
+sys.path.insert(0, str(REPO / "native/gpu/webgpu/scripts"))
+from _build import build, silk_command  # noqa: E402
+
+
+def smoke(build_only, release):
+    command, env = silk_command("build" if build_only else "run", PACKAGE / "tests/macos/silk.toml", release)
+    return subprocess.run(command, cwd=REPO, env=env).returncode
+
+
+def demo(build_only, release):
+    program = build(PACKAGE / "examples/demo", release=release)
+    if build_only:
+        print(program)
+        return 0
+    return subprocess.run([str(program)], cwd=REPO).returncode
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("target", choices=["smoke", "demo"])
+    parser.add_argument("--build-only", action="store_true")
+    parser.add_argument("--release", action="store_true")
+    args = parser.parse_args()
+    if sys.platform != "darwin":
+        raise SystemExit("The AppKit smoke test and demo run only on macOS.")
+    if args.target == "smoke":
+        return smoke(args.build_only, args.release)
+    return demo(args.build_only, args.release)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

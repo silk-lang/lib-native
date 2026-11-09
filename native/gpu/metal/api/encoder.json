@@ -1,0 +1,912 @@
+[
+  {
+    "rust": "CommandEncoderRef.label",
+    "silk": "encoder.CommandEncoder.label",
+    "notes": "Returned UTF-8 storage is borrowed from the encoder label NSString."
+  },
+  {
+    "rust": "CommandEncoderRef.set_label",
+    "silk": "encoder.CommandEncoder.set_label",
+    "notes": "label is a non-null NUL-terminated UTF-8 string."
+  },
+  {
+    "rust": "CommandEncoderRef.end_encoding",
+    "silk": "encoder.CommandEncoder.end_encoding",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "CommandEncoderRef.insert_debug_signpost",
+    "silk": "encoder.CommandEncoder.insert_debug_signpost",
+    "notes": "name is a non-null NUL-terminated UTF-8 string."
+  },
+  {
+    "rust": "CommandEncoderRef.push_debug_group",
+    "silk": "encoder.CommandEncoder.push_debug_group",
+    "notes": "name is a non-null NUL-terminated UTF-8 string."
+  },
+  {
+    "rust": "CommandEncoderRef.pop_debug_group",
+    "silk": "encoder.CommandEncoder.pop_debug_group",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "ParallelRenderCommandEncoderRef.render_command_encoder",
+    "silk": "encoder.ParallelRenderCommandEncoder.render_command_encoder",
+    "notes": "Returned object is borrowed (+0)."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_render_pipeline_state",
+    "silk": "encoder.RenderCommandEncoder.set_render_pipeline_state",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_viewport",
+    "silk": "encoder.RenderCommandEncoder.set_viewport",
+    "notes": "viewport is passed by value."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_viewports",
+    "silk": "encoder.RenderCommandEncoder.set_viewports",
+    "notes": "viewports points to viewports_count entries; null is allowed only for a zero count."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_front_facing_winding",
+    "silk": "encoder.RenderCommandEncoder.set_front_facing_winding",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_cull_mode",
+    "silk": "encoder.RenderCommandEncoder.set_cull_mode",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_depth_clip_mode",
+    "silk": "encoder.RenderCommandEncoder.set_depth_clip_mode",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_depth_bias",
+    "silk": "encoder.RenderCommandEncoder.set_depth_bias",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_scissor_rect",
+    "silk": "encoder.RenderCommandEncoder.set_scissor_rect",
+    "notes": "rect is passed by value."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_scissor_rects",
+    "silk": "encoder.RenderCommandEncoder.set_scissor_rects",
+    "notes": "rects points to rects_count entries; null is allowed only for a zero count."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_triangle_fill_mode",
+    "silk": "encoder.RenderCommandEncoder.set_triangle_fill_mode",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_blend_color",
+    "silk": "encoder.RenderCommandEncoder.set_blend_color",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_depth_stencil_state",
+    "silk": "encoder.RenderCommandEncoder.set_depth_stencil_state",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_stencil_reference_value",
+    "silk": "encoder.RenderCommandEncoder.set_stencil_reference_value",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_stencil_front_back_reference_value",
+    "silk": "encoder.RenderCommandEncoder.set_stencil_front_back_reference_value",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_visibility_result_mode",
+    "silk": "encoder.RenderCommandEncoder.set_visibility_result_mode",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_vertex_amplification_count",
+    "silk": "encoder.RenderCommandEncoder.set_vertex_amplification_count",
+    "notes": "view_mappings is null or points to count entries."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_vertex_bytes",
+    "silk": "encoder.RenderCommandEncoder.set_vertex_bytes",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_vertex_buffer",
+    "silk": "encoder.RenderCommandEncoder.set_vertex_buffer",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_vertex_buffer_offset",
+    "silk": "encoder.RenderCommandEncoder.set_vertex_buffer_offset",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_vertex_buffers",
+    "silk": "encoder.RenderCommandEncoder.set_vertex_buffers",
+    "notes": "data points to data_count entries; null is allowed only for a zero count. offsets and data each contain data_count elements."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_vertex_texture",
+    "silk": "encoder.RenderCommandEncoder.set_vertex_texture",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_vertex_textures",
+    "silk": "encoder.RenderCommandEncoder.set_vertex_textures",
+    "notes": "data points to data_count entries; null is allowed only for a zero count."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_vertex_sampler_state",
+    "silk": "encoder.RenderCommandEncoder.set_vertex_sampler_state",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_vertex_sampler_states",
+    "silk": "encoder.RenderCommandEncoder.set_vertex_sampler_states",
+    "notes": "data points to data_count entries; null is allowed only for a zero count."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_vertex_sampler_state_with_lod",
+    "silk": "encoder.RenderCommandEncoder.set_vertex_sampler_state_with_lod",
+    "notes": "lod_clamp is flattened into start/end scalars."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_vertex_acceleration_structure",
+    "silk": "encoder.RenderCommandEncoder.set_vertex_acceleration_structure",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_vertex_intersection_function_table",
+    "silk": "encoder.RenderCommandEncoder.set_vertex_intersection_function_table",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_vertex_visible_function_table",
+    "silk": "encoder.RenderCommandEncoder.set_vertex_visible_function_table",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_vertex_visible_function_tables",
+    "silk": "encoder.RenderCommandEncoder.set_vertex_visible_function_tables",
+    "notes": "visible_function_tables points to visible_function_tables_count entries; null is allowed only for a zero count."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_object_buffer",
+    "silk": "encoder.RenderCommandEncoder.set_object_buffer",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_object_buffer_offset",
+    "silk": "encoder.RenderCommandEncoder.set_object_buffer_offset",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_object_bytes",
+    "silk": "encoder.RenderCommandEncoder.set_object_bytes",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_object_sampler_state",
+    "silk": "encoder.RenderCommandEncoder.set_object_sampler_state",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_object_sampler_state_with_lod",
+    "silk": "encoder.RenderCommandEncoder.set_object_sampler_state_with_lod",
+    "notes": "lod_clamp is flattened into start/end scalars."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_object_texture",
+    "silk": "encoder.RenderCommandEncoder.set_object_texture",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_object_threadgroup_memory_length",
+    "silk": "encoder.RenderCommandEncoder.set_object_threadgroup_memory_length",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_object_buffers",
+    "silk": "encoder.RenderCommandEncoder.set_object_buffers",
+    "notes": "data points to data_count entries; null is allowed only for a zero count. offsets and data each contain data_count elements."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_object_sampler_states",
+    "silk": "encoder.RenderCommandEncoder.set_object_sampler_states",
+    "notes": "data points to data_count entries; null is allowed only for a zero count."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_object_textures",
+    "silk": "encoder.RenderCommandEncoder.set_object_textures",
+    "notes": "data points to data_count entries; null is allowed only for a zero count."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_mesh_buffer",
+    "silk": "encoder.RenderCommandEncoder.set_mesh_buffer",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_mesh_buffer_offset",
+    "silk": "encoder.RenderCommandEncoder.set_mesh_buffer_offset",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_mesh_bytes",
+    "silk": "encoder.RenderCommandEncoder.set_mesh_bytes",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_mesh_sampler_state",
+    "silk": "encoder.RenderCommandEncoder.set_mesh_sampler_state",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_mesh_sampler_state_with_lod",
+    "silk": "encoder.RenderCommandEncoder.set_mesh_sampler_state_with_lod",
+    "notes": "lod_clamp is flattened into start/end scalars."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_mesh_texture",
+    "silk": "encoder.RenderCommandEncoder.set_mesh_texture",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_mesh_buffers",
+    "silk": "encoder.RenderCommandEncoder.set_mesh_buffers",
+    "notes": "data points to data_count entries; null is allowed only for a zero count. offsets and data each contain data_count elements."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_mesh_sampler_states",
+    "silk": "encoder.RenderCommandEncoder.set_mesh_sampler_states",
+    "notes": "data points to data_count entries; null is allowed only for a zero count."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_mesh_textures",
+    "silk": "encoder.RenderCommandEncoder.set_mesh_textures",
+    "notes": "data points to data_count entries; null is allowed only for a zero count."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_fragment_bytes",
+    "silk": "encoder.RenderCommandEncoder.set_fragment_bytes",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_fragment_buffer",
+    "silk": "encoder.RenderCommandEncoder.set_fragment_buffer",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_fragment_buffer_offset",
+    "silk": "encoder.RenderCommandEncoder.set_fragment_buffer_offset",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_fragment_buffers",
+    "silk": "encoder.RenderCommandEncoder.set_fragment_buffers",
+    "notes": "data points to data_count entries; null is allowed only for a zero count. offsets and data each contain data_count elements."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_fragment_texture",
+    "silk": "encoder.RenderCommandEncoder.set_fragment_texture",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_fragment_textures",
+    "silk": "encoder.RenderCommandEncoder.set_fragment_textures",
+    "notes": "data points to data_count entries; null is allowed only for a zero count."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_fragment_sampler_state",
+    "silk": "encoder.RenderCommandEncoder.set_fragment_sampler_state",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_fragment_sampler_states",
+    "silk": "encoder.RenderCommandEncoder.set_fragment_sampler_states",
+    "notes": "data points to data_count entries; null is allowed only for a zero count."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_fragment_sampler_state_with_lod",
+    "silk": "encoder.RenderCommandEncoder.set_fragment_sampler_state_with_lod",
+    "notes": "lod_clamp is flattened into start/end scalars."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_fragment_acceleration_structure",
+    "silk": "encoder.RenderCommandEncoder.set_fragment_acceleration_structure",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_fragment_intersection_function_table",
+    "silk": "encoder.RenderCommandEncoder.set_fragment_intersection_function_table",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_fragment_visible_function_table",
+    "silk": "encoder.RenderCommandEncoder.set_fragment_visible_function_table",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.set_fragment_visible_function_tables",
+    "silk": "encoder.RenderCommandEncoder.set_fragment_visible_function_tables",
+    "notes": "visible_function_tables points to visible_function_tables_count entries; null is allowed only for a zero count."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.draw_primitives",
+    "silk": "encoder.RenderCommandEncoder.draw_primitives",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.draw_primitives_instanced",
+    "silk": "encoder.RenderCommandEncoder.draw_primitives_instanced",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.draw_primitives_instanced_base_instance",
+    "silk": "encoder.RenderCommandEncoder.draw_primitives_instanced_base_instance",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.draw_primitives_indirect",
+    "silk": "encoder.RenderCommandEncoder.draw_primitives_indirect",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.draw_indexed_primitives",
+    "silk": "encoder.RenderCommandEncoder.draw_indexed_primitives",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.draw_indexed_primitives_instanced",
+    "silk": "encoder.RenderCommandEncoder.draw_indexed_primitives_instanced",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.draw_indexed_primitives_instanced_base_instance",
+    "silk": "encoder.RenderCommandEncoder.draw_indexed_primitives_instanced_base_instance",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.draw_indexed_primitives_indirect",
+    "silk": "encoder.RenderCommandEncoder.draw_indexed_primitives_indirect",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.draw_mesh_threadgroups",
+    "silk": "encoder.RenderCommandEncoder.draw_mesh_threadgroups",
+    "notes": "threadgroups_per_grid is passed by value. threads_per_object_threadgroup is passed by value. threads_per_mesh_threadgroup is passed by value."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.draw_mesh_threadgroups_with_indirect_buffer",
+    "silk": "encoder.RenderCommandEncoder.draw_mesh_threadgroups_with_indirect_buffer",
+    "notes": "threads_per_object_threadgroup is passed by value. threads_per_mesh_threadgroup is passed by value."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.draw_mesh_threads",
+    "silk": "encoder.RenderCommandEncoder.draw_mesh_threads",
+    "notes": "threads_per_grid is passed by value. threads_per_object_threadgroup is passed by value. threads_per_mesh_threadgroup is passed by value."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.use_resource",
+    "silk": "encoder.RenderCommandEncoder.use_resource",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.use_resource_at",
+    "silk": "encoder.RenderCommandEncoder.use_resource_at",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.use_resources",
+    "silk": "encoder.RenderCommandEncoder.use_resources",
+    "notes": "resources points to resources_count entries; null is allowed only for a zero count."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.use_heap",
+    "silk": "encoder.RenderCommandEncoder.use_heap",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.use_heap_at",
+    "silk": "encoder.RenderCommandEncoder.use_heap_at",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.use_heaps",
+    "silk": "encoder.RenderCommandEncoder.use_heaps",
+    "notes": "heaps points to heaps_count entries; null is allowed only for a zero count."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.execute_commands_in_buffer",
+    "silk": "encoder.RenderCommandEncoder.execute_commands_in_buffer",
+    "notes": "with_range is passed by value."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.update_fence",
+    "silk": "encoder.RenderCommandEncoder.update_fence",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.wait_for_fence",
+    "silk": "encoder.RenderCommandEncoder.wait_for_fence",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "RenderCommandEncoderRef.sample_counters_in_buffer",
+    "silk": "encoder.RenderCommandEncoder.sample_counters_in_buffer",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "BlitCommandEncoderRef.synchronize_resource",
+    "silk": "encoder.BlitCommandEncoder.synchronize_resource",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "BlitCommandEncoderRef.fill_buffer",
+    "silk": "encoder.BlitCommandEncoder.fill_buffer",
+    "notes": "range is passed by value."
+  },
+  {
+    "rust": "BlitCommandEncoderRef.generate_mipmaps",
+    "silk": "encoder.BlitCommandEncoder.generate_mipmaps",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "BlitCommandEncoderRef.copy_from_buffer",
+    "silk": "encoder.BlitCommandEncoder.copy_from_buffer",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "BlitCommandEncoderRef.copy_from_texture",
+    "silk": "encoder.BlitCommandEncoder.copy_from_texture",
+    "notes": "source_origin is passed by value. source_size is passed by value. destination_origin is passed by value."
+  },
+  {
+    "rust": "BlitCommandEncoderRef.copy_from_buffer_to_texture",
+    "silk": "encoder.BlitCommandEncoder.copy_from_buffer_to_texture",
+    "notes": "source_size is passed by value. destination_origin is passed by value."
+  },
+  {
+    "rust": "BlitCommandEncoderRef.copy_from_texture_to_buffer",
+    "silk": "encoder.BlitCommandEncoder.copy_from_texture_to_buffer",
+    "notes": "source_origin is passed by value. source_size is passed by value."
+  },
+  {
+    "rust": "BlitCommandEncoderRef.optimize_contents_for_gpu_access",
+    "silk": "encoder.BlitCommandEncoder.optimize_contents_for_gpu_access",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "BlitCommandEncoderRef.optimize_contents_for_gpu_access_slice_level",
+    "silk": "encoder.BlitCommandEncoder.optimize_contents_for_gpu_access_slice_level",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "BlitCommandEncoderRef.optimize_contents_for_cpu_access",
+    "silk": "encoder.BlitCommandEncoder.optimize_contents_for_cpu_access",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "BlitCommandEncoderRef.optimize_contents_for_cpu_access_slice_level",
+    "silk": "encoder.BlitCommandEncoder.optimize_contents_for_cpu_access_slice_level",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "BlitCommandEncoderRef.update_fence",
+    "silk": "encoder.BlitCommandEncoder.update_fence",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "BlitCommandEncoderRef.wait_for_fence",
+    "silk": "encoder.BlitCommandEncoder.wait_for_fence",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "BlitCommandEncoderRef.copy_indirect_command_buffer",
+    "silk": "encoder.BlitCommandEncoder.copy_indirect_command_buffer",
+    "notes": "source_range is passed by value."
+  },
+  {
+    "rust": "BlitCommandEncoderRef.reset_commands_in_buffer",
+    "silk": "encoder.BlitCommandEncoder.reset_commands_in_buffer",
+    "notes": "range is passed by value."
+  },
+  {
+    "rust": "BlitCommandEncoderRef.optimize_indirect_command_buffer",
+    "silk": "encoder.BlitCommandEncoder.optimize_indirect_command_buffer",
+    "notes": "range is passed by value."
+  },
+  {
+    "rust": "BlitCommandEncoderRef.sample_counters_in_buffer",
+    "silk": "encoder.BlitCommandEncoder.sample_counters_in_buffer",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "BlitCommandEncoderRef.resolve_counters",
+    "silk": "encoder.BlitCommandEncoder.resolve_counters",
+    "notes": "range is passed by value."
+  },
+  {
+    "rust": "ComputeCommandEncoderRef.set_compute_pipeline_state",
+    "silk": "encoder.ComputeCommandEncoder.set_compute_pipeline_state",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "ComputeCommandEncoderRef.set_buffer",
+    "silk": "encoder.ComputeCommandEncoder.set_buffer",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "ComputeCommandEncoderRef.set_buffers",
+    "silk": "encoder.ComputeCommandEncoder.set_buffers",
+    "notes": "data points to data_count entries; null is allowed only for a zero count. offsets and data each contain data_count elements."
+  },
+  {
+    "rust": "ComputeCommandEncoderRef.set_texture",
+    "silk": "encoder.ComputeCommandEncoder.set_texture",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "ComputeCommandEncoderRef.set_textures",
+    "silk": "encoder.ComputeCommandEncoder.set_textures",
+    "notes": "data points to data_count entries; null is allowed only for a zero count."
+  },
+  {
+    "rust": "ComputeCommandEncoderRef.set_sampler_state",
+    "silk": "encoder.ComputeCommandEncoder.set_sampler_state",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "ComputeCommandEncoderRef.set_sampler_states",
+    "silk": "encoder.ComputeCommandEncoder.set_sampler_states",
+    "notes": "data points to data_count entries; null is allowed only for a zero count."
+  },
+  {
+    "rust": "ComputeCommandEncoderRef.set_sampler_state_with_lod",
+    "silk": "encoder.ComputeCommandEncoder.set_sampler_state_with_lod",
+    "notes": "lod_clamp is flattened into start/end scalars."
+  },
+  {
+    "rust": "ComputeCommandEncoderRef.set_bytes",
+    "silk": "encoder.ComputeCommandEncoder.set_bytes",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "ComputeCommandEncoderRef.set_visible_function_table",
+    "silk": "encoder.ComputeCommandEncoder.set_visible_function_table",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "ComputeCommandEncoderRef.set_visible_function_tables",
+    "silk": "encoder.ComputeCommandEncoder.set_visible_function_tables",
+    "notes": "visible_function_tables points to visible_function_tables_count entries; null is allowed only for a zero count."
+  },
+  {
+    "rust": "ComputeCommandEncoderRef.dispatch_thread_groups",
+    "silk": "encoder.ComputeCommandEncoder.dispatch_thread_groups",
+    "notes": "thread_groups_count is passed by value. threads_per_threadgroup is passed by value."
+  },
+  {
+    "rust": "ComputeCommandEncoderRef.dispatch_threads",
+    "silk": "encoder.ComputeCommandEncoder.dispatch_threads",
+    "notes": "threads_per_grid is passed by value. threads_per_thread_group is passed by value."
+  },
+  {
+    "rust": "ComputeCommandEncoderRef.dispatch_thread_groups_indirect",
+    "silk": "encoder.ComputeCommandEncoder.dispatch_thread_groups_indirect",
+    "notes": "threads_per_threadgroup is passed by value."
+  },
+  {
+    "rust": "ComputeCommandEncoderRef.set_threadgroup_memory_length",
+    "silk": "encoder.ComputeCommandEncoder.set_threadgroup_memory_length",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "ComputeCommandEncoderRef.memory_barrier_with_resources",
+    "silk": "encoder.ComputeCommandEncoder.memory_barrier_with_resources",
+    "notes": "resources points to resources_count entries; null is allowed only for a zero count."
+  },
+  {
+    "rust": "ComputeCommandEncoderRef.use_resource",
+    "silk": "encoder.ComputeCommandEncoder.use_resource",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "ComputeCommandEncoderRef.use_resources",
+    "silk": "encoder.ComputeCommandEncoder.use_resources",
+    "notes": "resources points to resources_count entries; null is allowed only for a zero count."
+  },
+  {
+    "rust": "ComputeCommandEncoderRef.use_heap",
+    "silk": "encoder.ComputeCommandEncoder.use_heap",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "ComputeCommandEncoderRef.use_heaps",
+    "silk": "encoder.ComputeCommandEncoder.use_heaps",
+    "notes": "heaps points to heaps_count entries; null is allowed only for a zero count."
+  },
+  {
+    "rust": "ComputeCommandEncoderRef.update_fence",
+    "silk": "encoder.ComputeCommandEncoder.update_fence",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "ComputeCommandEncoderRef.wait_for_fence",
+    "silk": "encoder.ComputeCommandEncoder.wait_for_fence",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "ComputeCommandEncoderRef.set_acceleration_structure",
+    "silk": "encoder.ComputeCommandEncoder.set_acceleration_structure",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "ComputeCommandEncoderRef.set_intersection_function_table",
+    "silk": "encoder.ComputeCommandEncoder.set_intersection_function_table",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "ComputeCommandEncoderRef.sample_counters_in_buffer",
+    "silk": "encoder.ComputeCommandEncoder.sample_counters_in_buffer",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "ArgumentEncoderRef.encoded_length",
+    "silk": "encoder.ArgumentEncoder.encoded_length",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "ArgumentEncoderRef.alignment",
+    "silk": "encoder.ArgumentEncoder.alignment",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "ArgumentEncoderRef.set_argument_buffer",
+    "silk": "encoder.ArgumentEncoder.set_argument_buffer",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "ArgumentEncoderRef.set_argument_buffer_to_element",
+    "silk": "encoder.ArgumentEncoder.set_argument_buffer_to_element",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "ArgumentEncoderRef.set_buffer",
+    "silk": "encoder.ArgumentEncoder.set_buffer",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "ArgumentEncoderRef.set_buffers",
+    "silk": "encoder.ArgumentEncoder.set_buffers",
+    "notes": "data points to data_count entries; null is allowed only for a zero count. offsets and data each contain data_count elements."
+  },
+  {
+    "rust": "ArgumentEncoderRef.set_texture",
+    "silk": "encoder.ArgumentEncoder.set_texture",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "ArgumentEncoderRef.set_textures",
+    "silk": "encoder.ArgumentEncoder.set_textures",
+    "notes": "data points to data_count entries; null is allowed only for a zero count."
+  },
+  {
+    "rust": "ArgumentEncoderRef.set_sampler_state",
+    "silk": "encoder.ArgumentEncoder.set_sampler_state",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "ArgumentEncoderRef.set_sampler_states",
+    "silk": "encoder.ArgumentEncoder.set_sampler_states",
+    "notes": "data points to data_count entries; null is allowed only for a zero count."
+  },
+  {
+    "rust": "ArgumentEncoderRef.set_render_pipeline_state",
+    "silk": "encoder.ArgumentEncoder.set_render_pipeline_state",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "ArgumentEncoderRef.set_render_pipeline_states",
+    "silk": "encoder.ArgumentEncoder.set_render_pipeline_states",
+    "notes": "pipelines points to pipelines_count entries; null is allowed only for a zero count."
+  },
+  {
+    "rust": "ArgumentEncoderRef.constant_data",
+    "silk": "encoder.ArgumentEncoder.constant_data",
+    "notes": "Returned mutable storage is borrowed from the argument buffer."
+  },
+  {
+    "rust": "ArgumentEncoderRef.set_indirect_command_buffer",
+    "silk": "encoder.ArgumentEncoder.set_indirect_command_buffer",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "ArgumentEncoderRef.set_indirect_command_buffers",
+    "silk": "encoder.ArgumentEncoder.set_indirect_command_buffers",
+    "notes": "data points to data_count entries; null is allowed only for a zero count."
+  },
+  {
+    "rust": "ArgumentEncoderRef.new_argument_encoder_for_buffer",
+    "silk": "encoder.ArgumentEncoder.new_argument_encoder_for_buffer",
+    "notes": "Returned object is owned (+1); release it exactly once."
+  },
+  {
+    "rust": "IndirectCommandBufferDescriptor.new",
+    "silk": "encoder.IndirectCommandBufferDescriptor.new",
+    "notes": "Returned object is owned (+1); release it exactly once."
+  },
+  {
+    "rust": "IndirectCommandBufferDescriptorRef.command_types",
+    "silk": "encoder.IndirectCommandBufferDescriptor.command_types",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "IndirectCommandBufferDescriptorRef.set_command_types",
+    "silk": "encoder.IndirectCommandBufferDescriptor.set_command_types",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "IndirectCommandBufferDescriptorRef.inherit_buffers",
+    "silk": "encoder.IndirectCommandBufferDescriptor.inherit_buffers",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "IndirectCommandBufferDescriptorRef.set_inherit_buffers",
+    "silk": "encoder.IndirectCommandBufferDescriptor.set_inherit_buffers",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "IndirectCommandBufferDescriptorRef.inherit_pipeline_state",
+    "silk": "encoder.IndirectCommandBufferDescriptor.inherit_pipeline_state",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "IndirectCommandBufferDescriptorRef.set_inherit_pipeline_state",
+    "silk": "encoder.IndirectCommandBufferDescriptor.set_inherit_pipeline_state",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "IndirectCommandBufferDescriptorRef.max_vertex_buffer_bind_count",
+    "silk": "encoder.IndirectCommandBufferDescriptor.max_vertex_buffer_bind_count",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "IndirectCommandBufferDescriptorRef.set_max_vertex_buffer_bind_count",
+    "silk": "encoder.IndirectCommandBufferDescriptor.set_max_vertex_buffer_bind_count",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "IndirectCommandBufferDescriptorRef.max_fragment_buffer_bind_count",
+    "silk": "encoder.IndirectCommandBufferDescriptor.max_fragment_buffer_bind_count",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "IndirectCommandBufferDescriptorRef.set_max_fragment_buffer_bind_count",
+    "silk": "encoder.IndirectCommandBufferDescriptor.set_max_fragment_buffer_bind_count",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "IndirectCommandBufferDescriptorRef.max_kernel_buffer_bind_count",
+    "silk": "encoder.IndirectCommandBufferDescriptor.max_kernel_buffer_bind_count",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "IndirectCommandBufferDescriptorRef.set_max_kernel_buffer_bind_count",
+    "silk": "encoder.IndirectCommandBufferDescriptor.set_max_kernel_buffer_bind_count",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "IndirectCommandBufferRef.size",
+    "silk": "encoder.IndirectCommandBuffer.size",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "IndirectCommandBufferRef.indirect_render_command_at_index",
+    "silk": "encoder.IndirectCommandBuffer.indirect_render_command_at_index",
+    "notes": "Returned object is borrowed (+0)."
+  },
+  {
+    "rust": "IndirectCommandBufferRef.indirect_compute_command_at_index",
+    "silk": "encoder.IndirectCommandBuffer.indirect_compute_command_at_index",
+    "notes": "Returned object is borrowed (+0)."
+  },
+  {
+    "rust": "IndirectCommandBufferRef.reset_with_range",
+    "silk": "encoder.IndirectCommandBuffer.reset_with_range",
+    "notes": "range is passed by value."
+  },
+  {
+    "rust": "IndirectRenderCommandRef.set_render_pipeline_state",
+    "silk": "encoder.IndirectRenderCommand.set_render_pipeline_state",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "IndirectRenderCommandRef.set_vertex_buffer",
+    "silk": "encoder.IndirectRenderCommand.set_vertex_buffer",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "IndirectRenderCommandRef.set_fragment_buffer",
+    "silk": "encoder.IndirectRenderCommand.set_fragment_buffer",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "IndirectRenderCommandRef.draw_primitives",
+    "silk": "encoder.IndirectRenderCommand.draw_primitives",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "IndirectRenderCommandRef.draw_indexed_primitives",
+    "silk": "encoder.IndirectRenderCommand.draw_indexed_primitives",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "IndirectRenderCommandRef.draw_patches",
+    "silk": "encoder.IndirectRenderCommand.draw_patches",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "IndirectRenderCommandRef.draw_indexed_patches",
+    "silk": "encoder.IndirectRenderCommand.draw_indexed_patches",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "IndirectRenderCommandRef.reset",
+    "silk": "encoder.IndirectRenderCommand.reset",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "IndirectComputeCommandRef.set_compute_pipeline_state",
+    "silk": "encoder.IndirectComputeCommand.set_compute_pipeline_state",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "IndirectComputeCommandRef.set_kernel_buffer",
+    "silk": "encoder.IndirectComputeCommand.set_kernel_buffer",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "IndirectComputeCommandRef.set_threadgroup_memory_length",
+    "silk": "encoder.IndirectComputeCommand.set_threadgroup_memory_length",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "IndirectComputeCommandRef.set_stage_in_region",
+    "silk": "encoder.IndirectComputeCommand.set_stage_in_region",
+    "notes": "region is passed by value."
+  },
+  {
+    "rust": "IndirectComputeCommandRef.set_barrier",
+    "silk": "encoder.IndirectComputeCommand.set_barrier",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "IndirectComputeCommandRef.clear_barrier",
+    "silk": "encoder.IndirectComputeCommand.clear_barrier",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  },
+  {
+    "rust": "IndirectComputeCommandRef.concurrent_dispatch_threadgroups",
+    "silk": "encoder.IndirectComputeCommand.concurrent_dispatch_threadgroups",
+    "notes": "thread_groups_per_grid is passed by value. threads_per_threadgroup is passed by value."
+  },
+  {
+    "rust": "IndirectComputeCommandRef.concurrent_dispatch_threads",
+    "silk": "encoder.IndirectComputeCommand.concurrent_dispatch_threads",
+    "notes": "thread_groups_per_grid is passed by value. threads_per_threadgroup is passed by value."
+  },
+  {
+    "rust": "IndirectComputeCommandRef.reset",
+    "silk": "encoder.IndirectComputeCommand.reset",
+    "notes": "Direct Metal selector binding; receiver and resource arguments are borrowed."
+  }
+]

@@ -1,0 +1,450 @@
+//! The AppKit bridge's C ABI (native/macos/bridge.h). On other targets the same names are
+//! stubs, so `macos` type-checks everywhere and `MacPlatform.start` reports `Unsupported`.
+import silk.core.ownership { Copy }
+import silk.mem.pointer { Pointer }
+
+/// `SilkWindowEvent` in bridge.h.
+pub extern "C" struct RawEvent {
+  pub kind: u32,
+  pub window: u32,
+  pub code: u32,
+  pub named: u32,
+  pub modifiers: u32,
+  pub flags: u32,
+  pub count: u32,
+  pub phase: u32,
+  pub x: f64,
+  pub y: f64,
+  pub dx: f64,
+  pub dy: f64,
+  pub value: f64,
+  pub start: u64,
+  pub end: u64,
+}
+
+impl Copy for RawEvent {}
+
+impl RawEvent {
+  pub fn zero() -> RawEvent {
+    return RawEvent {
+      kind: 0,
+      window: 0,
+      code: 0,
+      named: 0,
+      modifiers: 0,
+      flags: 0,
+      count: 0,
+      phase: 0,
+      x: 0.0,
+      y: 0.0,
+      dx: 0.0,
+      dy: 0.0,
+      value: 0.0,
+      start: 0,
+      end: 0,
+    }
+  }
+}
+
+pub const REQUEST_FRAME: u32 = 1
+
+pub const RESIZED: u32 = 2
+
+pub const SCALE_FACTOR_CHANGED: u32 = 3
+
+pub const MOVED: u32 = 4
+
+pub const FOCUSED: u32 = 5
+
+pub const OCCLUDED: u32 = 6
+
+pub const CLOSE_REQUESTED: u32 = 7
+
+pub const FULL_SCREEN_CHANGED: u32 = 8
+
+pub const KEY_DOWN: u32 = 9
+
+pub const KEY_UP: u32 = 10
+
+pub const MODIFIERS_CHANGED: u32 = 11
+
+pub const TEXT_INPUT: u32 = 12
+
+pub const IME_PREEDIT: u32 = 13
+
+pub const MOUSE_MOVED: u32 = 14
+
+pub const MOUSE_DOWN: u32 = 15
+
+pub const MOUSE_UP: u32 = 16
+
+pub const MOUSE_ENTERED: u32 = 17
+
+pub const MOUSE_EXITED: u32 = 18
+
+pub const SCROLL: u32 = 19
+
+pub const PINCH: u32 = 20
+
+pub const MENU_ACTION: u32 = 21
+
+pub const DIALOG_CLOSED: u32 = 22
+
+pub const APPEARANCE_CHANGED: u32 = 23
+
+pub const QUIT_REQUESTED: u32 = 24
+
+pub const FLAG_REPEAT: u32 = 1
+
+pub const FLAG_IME_HANDLED: u32 = 2
+
+pub const FLAG_ON: u32 = 4
+
+pub const FLAG_PRECISE: u32 = 8
+
+pub const WINDOW_RESIZABLE: u32 = 1
+
+pub const WINDOW_VISIBLE: u32 = 2
+
+pub const WINDOW_TRANSPARENT: u32 = 4
+
+pub const WINDOW_TITLE_TRANSPARENT: u32 = 8
+
+pub const WINDOW_TITLE_HIDDEN: u32 = 16
+
+static if Intrinsic.targetOperatingSystem() == "darwin" {
+  pub unsafe extern "C" fn silk_macos_start() -> i32
+  pub unsafe extern "C" fn silk_macos_open_window(
+    title: ?[*]const u8,
+    titleLength: usize,
+    width: f64,
+    height: f64,
+    minWidth: f64,
+    minHeight: f64,
+    flags: u32,
+  ) -> u32
+  pub unsafe extern "C" fn silk_macos_close_window(window: u32) -> ()
+  pub unsafe extern "C" fn silk_macos_next_event(timeout: f64, event: *mut RawEvent) -> u8
+  pub unsafe extern "C" fn silk_macos_event_text(index: usize, length: *mut usize) -> ?[*]const u8
+  pub unsafe extern "C" fn silk_macos_wake() -> ()
+  pub unsafe extern "C" fn silk_macos_request_frame(window: u32) -> ()
+  pub unsafe extern "C" fn silk_macos_content_size(
+    window: u32,
+    width: *mut f64,
+    height: *mut f64,
+  ) -> ()
+  pub unsafe extern "C" fn silk_macos_scale_factor(window: u32) -> f64
+  pub unsafe extern "C" fn silk_macos_metal_layer(window: u32) -> ?*mut u8
+  pub unsafe extern "C" fn silk_macos_set_title(
+    window: u32,
+    title: ?[*]const u8,
+    length: usize,
+  ) -> ()
+  pub unsafe extern "C" fn silk_macos_set_content_size(window: u32, width: f64, height: f64) -> ()
+  pub unsafe extern "C" fn silk_macos_set_min_content_size(
+    window: u32,
+    width: f64,
+    height: f64,
+  ) -> ()
+  pub unsafe extern "C" fn silk_macos_set_visible(window: u32, visible: u8) -> ()
+  pub unsafe extern "C" fn silk_macos_focus(window: u32) -> ()
+  pub unsafe extern "C" fn silk_macos_minimize(window: u32) -> ()
+  pub unsafe extern "C" fn silk_macos_toggle_full_screen(window: u32) -> ()
+  pub unsafe extern "C" fn silk_macos_start_window_drag(window: u32) -> ()
+  pub unsafe extern "C" fn silk_macos_set_cursor(window: u32, cursor: u32) -> ()
+  pub unsafe extern "C" fn silk_macos_set_ime(
+    window: u32,
+    enabled: u8,
+    x: f64,
+    y: f64,
+    width: f64,
+    height: f64,
+  ) -> ()
+  pub unsafe extern "C" fn silk_macos_menu_begin_bar() -> ()
+  pub unsafe extern "C" fn silk_macos_menu_begin(title: ?[*]const u8, length: usize) -> ()
+  pub unsafe extern "C" fn silk_macos_menu_end() -> ()
+  pub unsafe extern "C" fn silk_macos_menu_action(
+    title: ?[*]const u8,
+    length: usize,
+    action: u32,
+    keyKind: u32,
+    keyValue: u32,
+    modifiers: u32,
+    enabled: u8,
+    checked: u8,
+  ) -> ()
+  pub unsafe extern "C" fn silk_macos_menu_separator() -> ()
+  pub unsafe extern "C" fn silk_macos_menu_system(item: u32) -> ()
+  pub unsafe extern "C" fn silk_macos_menu_commit() -> ()
+  pub unsafe extern "C" fn silk_macos_open_dialog(
+    title: ?[*]const u8,
+    titleLength: usize,
+    directory: ?[*]const u8,
+    directoryLength: usize,
+    extensions: ?[*]const u8,
+    extensionsLength: usize,
+    flags: u32,
+    parent: u32,
+  ) -> u32
+  pub unsafe extern "C" fn silk_macos_save_dialog(
+    title: ?[*]const u8,
+    titleLength: usize,
+    directory: ?[*]const u8,
+    directoryLength: usize,
+    name: ?[*]const u8,
+    nameLength: usize,
+    extensions: ?[*]const u8,
+    extensionsLength: usize,
+    flags: u32,
+    parent: u32,
+  ) -> u32
+  pub unsafe extern "C" fn silk_macos_clipboard_read(length: *mut usize) -> ?[*]const u8
+  pub unsafe extern "C" fn silk_macos_clipboard_write(text: ?[*]const u8, length: usize) -> ()
+  pub unsafe extern "C" fn silk_macos_appearance() -> u32
+  pub unsafe extern "C" fn silk_macos_test_post_key(
+    window: u32,
+    keyCode: u16,
+    characters: ?[*]const u8,
+    length: usize,
+    modifiers: u32,
+  ) -> ()
+  pub unsafe extern "C" fn silk_macos_test_set_marked_text(
+    window: u32,
+    text: ?[*]const u8,
+    length: usize,
+    selectionStart: u64,
+    selectionLength: u64,
+  ) -> ()
+  pub unsafe extern "C" fn silk_macos_test_insert_text(
+    window: u32,
+    text: ?[*]const u8,
+    length: usize,
+  ) -> ()
+  pub unsafe extern "C" fn silk_macos_test_set_frame_size(
+    window: u32,
+    width: f64,
+    height: f64,
+  ) -> ()
+  pub unsafe extern "C" fn silk_macos_test_ime_rect(
+    window: u32,
+    x: *mut f64,
+    y: *mut f64,
+    width: *mut f64,
+    height: *mut f64,
+  ) -> ()
+  pub unsafe extern "C" fn silk_macos_test_uses_fiber() -> u8
+} else {
+  pub unsafe fn silk_macos_start() -> i32 {
+    return 2
+  }
+
+  pub unsafe fn silk_macos_open_window(
+    title: ?[*]const u8,
+    titleLength: usize,
+    width: f64,
+    height: f64,
+    minWidth: f64,
+    minHeight: f64,
+    flags: u32,
+  ) -> u32 {
+    return 0
+  }
+
+  pub unsafe fn silk_macos_close_window(window: u32) -> () {
+    return ()
+  }
+
+  pub unsafe fn silk_macos_next_event(timeout: f64, event: *mut RawEvent) -> u8 {
+    return 0
+  }
+
+  pub unsafe fn silk_macos_wake() -> () {
+    return ()
+  }
+
+  pub unsafe fn silk_macos_event_text(index: usize, length: *mut usize) -> ?[*]const u8 {
+    return unsafe Intrinsic.pointerRequalify<?*mut u8, ?[*]const u8>(Pointer.null<u8>())
+  }
+
+  pub unsafe fn silk_macos_request_frame(window: u32) -> () {
+    return ()
+  }
+
+  pub unsafe fn silk_macos_content_size(window: u32, width: *mut f64, height: *mut f64) -> () {
+    return ()
+  }
+
+  pub unsafe fn silk_macos_scale_factor(window: u32) -> f64 {
+    return 1.0
+  }
+
+  pub unsafe fn silk_macos_metal_layer(window: u32) -> ?*mut u8 {
+    return Pointer.null<u8>()
+  }
+
+  pub unsafe fn silk_macos_set_title(window: u32, title: ?[*]const u8, length: usize) -> () {
+    return ()
+  }
+
+  pub unsafe fn silk_macos_set_content_size(window: u32, width: f64, height: f64) -> () {
+    return ()
+  }
+
+  pub unsafe fn silk_macos_set_min_content_size(window: u32, width: f64, height: f64) -> () {
+    return ()
+  }
+
+  pub unsafe fn silk_macos_set_visible(window: u32, visible: u8) -> () {
+    return ()
+  }
+
+  pub unsafe fn silk_macos_focus(window: u32) -> () {
+    return ()
+  }
+
+  pub unsafe fn silk_macos_minimize(window: u32) -> () {
+    return ()
+  }
+
+  pub unsafe fn silk_macos_toggle_full_screen(window: u32) -> () {
+    return ()
+  }
+
+  pub unsafe fn silk_macos_start_window_drag(window: u32) -> () {
+    return ()
+  }
+
+  pub unsafe fn silk_macos_set_cursor(window: u32, cursor: u32) -> () {
+    return ()
+  }
+
+  pub unsafe fn silk_macos_set_ime(
+    window: u32,
+    enabled: u8,
+    x: f64,
+    y: f64,
+    width: f64,
+    height: f64,
+  ) -> () {
+    return ()
+  }
+
+  pub unsafe fn silk_macos_menu_begin_bar() -> () {
+    return ()
+  }
+
+  pub unsafe fn silk_macos_menu_begin(title: ?[*]const u8, length: usize) -> () {
+    return ()
+  }
+
+  pub unsafe fn silk_macos_menu_end() -> () {
+    return ()
+  }
+
+  pub unsafe fn silk_macos_menu_action(
+    title: ?[*]const u8,
+    length: usize,
+    action: u32,
+    keyKind: u32,
+    keyValue: u32,
+    modifiers: u32,
+    enabled: u8,
+    checked: u8,
+  ) -> () {
+    return ()
+  }
+
+  pub unsafe fn silk_macos_menu_separator() -> () {
+    return ()
+  }
+
+  pub unsafe fn silk_macos_menu_system(item: u32) -> () {
+    return ()
+  }
+
+  pub unsafe fn silk_macos_menu_commit() -> () {
+    return ()
+  }
+
+  pub unsafe fn silk_macos_open_dialog(
+    title: ?[*]const u8,
+    titleLength: usize,
+    directory: ?[*]const u8,
+    directoryLength: usize,
+    extensions: ?[*]const u8,
+    extensionsLength: usize,
+    flags: u32,
+    parent: u32,
+  ) -> u32 {
+    return 0
+  }
+
+  pub unsafe fn silk_macos_save_dialog(
+    title: ?[*]const u8,
+    titleLength: usize,
+    directory: ?[*]const u8,
+    directoryLength: usize,
+    name: ?[*]const u8,
+    nameLength: usize,
+    extensions: ?[*]const u8,
+    extensionsLength: usize,
+    flags: u32,
+    parent: u32,
+  ) -> u32 {
+    return 0
+  }
+
+  pub unsafe fn silk_macos_clipboard_read(length: *mut usize) -> ?[*]const u8 {
+    return unsafe Intrinsic.pointerRequalify<?*mut u8, ?[*]const u8>(Pointer.null<u8>())
+  }
+
+  pub unsafe fn silk_macos_clipboard_write(text: ?[*]const u8, length: usize) -> () {
+    return ()
+  }
+
+  pub unsafe fn silk_macos_appearance() -> u32 {
+    return 0
+  }
+
+  pub unsafe fn silk_macos_test_post_key(
+    window: u32,
+    keyCode: u16,
+    characters: ?[*]const u8,
+    length: usize,
+    modifiers: u32,
+  ) -> () {
+    return ()
+  }
+
+  pub unsafe fn silk_macos_test_set_marked_text(
+    window: u32,
+    text: ?[*]const u8,
+    length: usize,
+    selectionStart: u64,
+    selectionLength: u64,
+  ) -> () {
+    return ()
+  }
+
+  pub unsafe fn silk_macos_test_insert_text(window: u32, text: ?[*]const u8, length: usize) -> () {
+    return ()
+  }
+
+  pub unsafe fn silk_macos_test_set_frame_size(window: u32, width: f64, height: f64) -> () {
+    return ()
+  }
+
+  pub unsafe fn silk_macos_test_ime_rect(
+    window: u32,
+    x: *mut f64,
+    y: *mut f64,
+    width: *mut f64,
+    height: *mut f64,
+  ) -> () {
+    return ()
+  }
+
+  pub unsafe fn silk_macos_test_uses_fiber() -> u8 {
+    return 0
+  }
+}

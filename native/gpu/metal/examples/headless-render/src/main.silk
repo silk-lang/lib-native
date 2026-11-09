@@ -1,0 +1,208 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+import metal.runtime { Object, AutoreleasePool, Native }
+import metal.device { Device }
+import metal.core { CommandQueue, CommandBuffer }
+import metal.library { CompileOptions, Library }
+import metal.encoder { RenderCommandEncoder, CommandEncoder }
+import metal.resources { Texture, TextureDescriptor }
+import metal.pipeline {
+  RenderPipelineDescriptor,
+  RenderPipelineColorAttachmentDescriptorArray,
+  RenderPipelineColorAttachmentDescriptor,
+  RenderPassDescriptor,
+  RenderPassColorAttachmentDescriptorArray,
+  RenderPassAttachmentDescriptor,
+  RenderPassColorAttachmentDescriptor
+}
+import metal.types {
+  MTLSize,
+  MTLOrigin,
+  MTLRegion,
+  MTLClearColor,
+  MTLViewport,
+  MTLScissorRect,
+  MTLPixelFormat_RGBA8Unorm,
+  MTLTextureUsage_RenderTarget,
+  MTLStorageMode_Shared,
+  MTLLoadAction_Clear,
+  MTLStoreAction_Store,
+  MTLPrimitiveType_Triangle,
+  MTLCommandBufferStatus_Completed
+}
+import silk.mem.pointer { Pointer }
+
+// Metal exists only on macOS; elsewhere the example builds and says so.
+static if Intrinsic.targetOperatingSystem() == "darwin" {
+  unsafe extern "C" fn puts(text: ?[*]const u8) -> i32
+
+  fn failure(message: &[u8], error: ?*mut u8, code: i32) -> i32 {
+    drop unsafe puts(Pointer.fromSlice(message))
+    if !Pointer.isNull(error) {
+      drop unsafe puts(unsafe Native.error_description(error))
+    }
+    return code
+  }
+
+  pub fn main() -> i32 {
+    unsafe {
+      let pool = AutoreleasePool.new()
+      let device = Object.adopt(Device.system_default())
+      if Object.is_null(&device) {
+        return failure(b"No Metal device\0", Pointer.null<u8>(), 1)
+      }
+      let options = Object.adopt(CompileOptions.new())
+      let mut error: ?*mut u8 = Pointer.null<u8>()
+      let source = b"#include <metal_stdlib>\nusing namespace metal;\nvertex float4 triangle_vertex(uint id [[vertex_id]]) { const float2 positions[3] = {float2(-0.8,-0.8),float2(0.8,-0.8),float2(0,0.8)}; return float4(positions[id],0,1); }\nfragment float4 triangle_fragment() { return float4(0.25,0.5,0.75,1); }\0"
+      let library = Object.adopt(
+        Device.new_library_with_source(
+          Object.get(&device),
+          Pointer.fromSlice(source),
+          Object.get(&options),
+          Pointer.fromMutRef(&mut error),
+        ),
+      )
+      if Object.is_null(&library) {
+        return failure(b"Render shader compilation failed\0", error, 2)
+      }
+      let vertex = Object.adopt(
+        Library.get_function(
+          Object.get(&library),
+          Pointer.fromSlice(b"triangle_vertex\0"),
+          Pointer.null<u8>(),
+          Pointer.fromMutRef(&mut error),
+        ),
+      )
+      let fragment = Object.adopt(
+        Library.get_function(
+          Object.get(&library),
+          Pointer.fromSlice(b"triangle_fragment\0"),
+          Pointer.null<u8>(),
+          Pointer.fromMutRef(&mut error),
+        ),
+      )
+      if Object.is_null(&vertex) || Object.is_null(&fragment) {
+        return failure(b"Render function lookup failed\0", error, 3)
+      }
+      let descriptor = Object.adopt(RenderPipelineDescriptor.new())
+      RenderPipelineDescriptor.set_vertex_function(Object.get(&descriptor), Object.get(&vertex))
+      RenderPipelineDescriptor.set_fragment_function(Object.get(&descriptor), Object.get(&fragment))
+      let pipeline_attachment = RenderPipelineColorAttachmentDescriptorArray.object_at(
+        RenderPipelineDescriptor.color_attachments(Object.get(&descriptor)),
+        0,
+      )
+      RenderPipelineColorAttachmentDescriptor.set_pixel_format(
+        pipeline_attachment,
+        MTLPixelFormat_RGBA8Unorm,
+      )
+      let pipeline = Object.adopt(
+        Device.new_render_pipeline_state(
+          Object.get(&device),
+          Object.get(&descriptor),
+          Pointer.fromMutRef(&mut error),
+        ),
+      )
+      if Object.is_null(&pipeline) {
+        return failure(b"Render pipeline creation failed\0", error, 4)
+      }
+      let texture_descriptor = Object.adopt(TextureDescriptor.new())
+      TextureDescriptor.set_width(Object.get(&texture_descriptor), 32)
+      TextureDescriptor.set_height(Object.get(&texture_descriptor), 32)
+      TextureDescriptor.set_pixel_format(Object.get(&texture_descriptor), MTLPixelFormat_RGBA8Unorm)
+      TextureDescriptor.set_usage(Object.get(&texture_descriptor), MTLTextureUsage_RenderTarget)
+      TextureDescriptor.set_storage_mode(Object.get(&texture_descriptor), MTLStorageMode_Shared)
+      let texture = Object.adopt(
+        Device.new_texture(Object.get(&device), Object.get(&texture_descriptor)),
+      )
+      if Object.is_null(&texture) {
+        return failure(b"Render texture allocation failed\0", error, 5)
+      }
+      let pass = Object.adopt(RenderPassDescriptor.new())
+      let attachment = RenderPassColorAttachmentDescriptorArray.object_at(
+        RenderPassDescriptor.color_attachments(Object.get(&pass)),
+        0,
+      )
+      RenderPassAttachmentDescriptor.set_texture(attachment, Object.get(&texture))
+      RenderPassAttachmentDescriptor.set_load_action(attachment, MTLLoadAction_Clear)
+      RenderPassAttachmentDescriptor.set_store_action(attachment, MTLStoreAction_Store)
+      let clear = MTLClearColor { red: 0.125, green: 0.25, blue: 0.5, alpha: 1.0 }
+      RenderPassColorAttachmentDescriptor.set_clear_color(attachment, clear)
+      let stored_clear = RenderPassColorAttachmentDescriptor.clear_color(attachment)
+      if stored_clear.red != 0.125 || stored_clear.green != 0.25 || stored_clear.blue != 0.5
+        || stored_clear.alpha != 1.0 {
+        return failure(b"By-value clear color mismatch\0", error, 12)
+      }
+      let queue = Object.adopt(Device.new_command_queue(Object.get(&device)))
+      let command = CommandQueue.new_command_buffer(Object.get(&queue))
+      let encoder = CommandBuffer.new_render_command_encoder(command, Object.get(&pass))
+      if Pointer.isNull(encoder) {
+        return failure(b"Render encoder creation failed\0", error, 6)
+      }
+      RenderCommandEncoder.set_render_pipeline_state(encoder, Object.get(&pipeline))
+      RenderCommandEncoder.set_viewport(
+        encoder,
+        MTLViewport {
+          originX: 1.0,
+          originY: 2.0,
+          width: 30.0,
+          height: 28.0,
+          znear: 0.0,
+          zfar: 1.0,
+        },
+      )
+      RenderCommandEncoder.set_scissor_rect(
+        encoder,
+        MTLScissorRect { x: 2, y: 3, width: 28, height: 26 },
+      )
+      RenderCommandEncoder.draw_primitives(encoder, MTLPrimitiveType_Triangle, 0, 3)
+      CommandEncoder.end_encoding(encoder)
+      CommandBuffer.commit(command)
+      CommandBuffer.wait_until_completed(command)
+      if CommandBuffer.status(command) != MTLCommandBufferStatus_Completed {
+        return failure(b"Render command failed\0", error, 7)
+      }
+      let mut pixels: [u8; 4096] = [0; 4096]
+      let region = MTLRegion {
+        origin: MTLOrigin { x: 0, y: 0, z: 0 },
+        size: MTLSize { width: 32, height: 32, depth: 1 },
+      }
+      Texture.get_bytes(Object.get(&texture), Pointer.fromMutSlice(&mut pixels), 128, region, 0)
+      if pixels[0] != 32 || pixels[1] != 64 || pixels[2] != 128 || pixels[3] != 255 {
+        return failure(b"Clear pixel mismatch\0", error, 8)
+      }
+      let center: usize = 2112
+      if pixels[center] < 63 || pixels[center] > 64 || pixels[center + 1] < 127
+        || pixels[center + 1] > 128
+        || pixels[center + 2] < 191
+        || pixels[center + 2] > 192
+        || pixels[center + 3] != 255 {
+        return failure(b"Triangle fragment pixel mismatch\0", error, 9)
+      }
+      let mut pixel: usize = 0
+      let mut drawn: usize = 0
+      while pixel < 4096 {
+        if pixels[pixel + 3] != 255 {
+          return failure(b"Texture store/readback mismatch\0", error, 10)
+        }
+        if pixels[pixel] >= 63 {
+          drawn = drawn + 1
+        }
+        pixel = pixel + 4
+      }
+      if drawn < 250 || drawn > 400 {
+        return failure(b"Triangle coverage mismatch\0", error, 11)
+      }
+      drop puts(
+        Pointer.fromSlice(
+          b"PASS: 32x32 headless triangle, clear/store actions, texture readback\0",
+        ),
+      )
+    }
+    return 0
+  }
+} else {
+  // Metal exists only on macOS. Elsewhere the example builds, so a workspace build covers it, and
+  // does nothing.
+  pub fn main() -> i32 {
+    return 0
+  }
+}

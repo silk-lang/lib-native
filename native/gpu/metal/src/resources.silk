@@ -1,0 +1,1336 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Port of metal-rs; Copyright 2016 GFX developers and metal-rs contributors.
+
+// Unsafe raw Metal API. Objects must be live, correctly typed, and supported on the running OS.
+// Object getters are borrowed (+0); new/serialized objects are owned (+1), released by the caller.
+// String inputs must be non-null NUL-terminated UTF-8; outputs borrow their NSString storage.
+// Buffer and texture byte pointers must cover all accessed bytes; caller synchronizes GPU/CPU access.
+// C-layout record inputs and results cross the native boundary by value.
+import types { NSRange, MTLSize, MTLRegion, MTLResourceID }
+
+unsafe extern "C" fn metal_Resource_device(object: ?*mut u8) -> ?*mut u8
+
+unsafe extern "C" fn metal_Resource_label(object: ?*mut u8) -> ?[*]const u8
+
+unsafe extern "C" fn metal_Resource_set_label(object: ?*mut u8, label: ?[*]const u8) -> ()
+
+unsafe extern "C" fn metal_Resource_cpu_cache_mode(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_Resource_storage_mode(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_Resource_allocated_size(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_Resource_hazard_tracking_mode(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_Resource_resource_options(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_Resource_heap_offset(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_Resource_set_purgeable_state(object: ?*mut u8, state: u64) -> u64
+
+unsafe extern "C" fn metal_Resource_heap(object: ?*mut u8) -> ?*mut u8
+
+unsafe extern "C" fn metal_Resource_make_aliasable(object: ?*mut u8) -> ()
+
+unsafe extern "C" fn metal_Resource_is_aliasable(object: ?*mut u8) -> u8
+
+unsafe extern "C" fn metal_Buffer_length(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_Buffer_contents(object: ?*mut u8) -> ?[*]mut u8
+
+unsafe extern "C" fn metal_Buffer_did_modify_range(object: ?*mut u8, range: NSRange) -> ()
+
+unsafe extern "C" fn metal_Buffer_new_texture_with_descriptor(object: ?*mut u8, descriptor: ?*mut u8, offset: u64, bytes_per_row: u64) -> ?*mut u8
+
+unsafe extern "C" fn metal_Buffer_remote_storage_buffer(object: ?*mut u8) -> ?*mut u8
+
+unsafe extern "C" fn metal_Buffer_new_remote_buffer_view_for_device(object: ?*mut u8, device: ?*mut u8) -> ?*mut u8
+
+unsafe extern "C" fn metal_Buffer_add_debug_marker(object: ?*mut u8, name: ?[*]const u8, range: NSRange) -> ()
+
+unsafe extern "C" fn metal_Buffer_remove_all_debug_markers(object: ?*mut u8) -> ()
+
+unsafe extern "C" fn metal_Buffer_gpu_address(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_Buffer_gpu_resource_id(object: ?*mut u8) -> MTLResourceID
+
+unsafe extern "C" fn metal_TextureDescriptor_new() -> ?*mut u8
+
+unsafe extern "C" fn metal_TextureDescriptor_texture_type(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_TextureDescriptor_set_texture_type(object: ?*mut u8, value: u64) -> ()
+
+unsafe extern "C" fn metal_TextureDescriptor_pixel_format(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_TextureDescriptor_set_pixel_format(object: ?*mut u8, value: u64) -> ()
+
+unsafe extern "C" fn metal_TextureDescriptor_width(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_TextureDescriptor_set_width(object: ?*mut u8, value: u64) -> ()
+
+unsafe extern "C" fn metal_TextureDescriptor_height(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_TextureDescriptor_set_height(object: ?*mut u8, value: u64) -> ()
+
+unsafe extern "C" fn metal_TextureDescriptor_depth(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_TextureDescriptor_set_depth(object: ?*mut u8, value: u64) -> ()
+
+unsafe extern "C" fn metal_TextureDescriptor_mipmap_level_count(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_TextureDescriptor_set_mipmap_level_count(object: ?*mut u8, value: u64) -> ()
+
+unsafe extern "C" fn metal_TextureDescriptor_sample_count(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_TextureDescriptor_set_sample_count(object: ?*mut u8, value: u64) -> ()
+
+unsafe extern "C" fn metal_TextureDescriptor_array_length(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_TextureDescriptor_set_array_length(object: ?*mut u8, value: u64) -> ()
+
+unsafe extern "C" fn metal_TextureDescriptor_resource_options(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_TextureDescriptor_set_resource_options(object: ?*mut u8, value: u64) -> ()
+
+unsafe extern "C" fn metal_TextureDescriptor_cpu_cache_mode(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_TextureDescriptor_set_cpu_cache_mode(object: ?*mut u8, value: u64) -> ()
+
+unsafe extern "C" fn metal_TextureDescriptor_storage_mode(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_TextureDescriptor_set_storage_mode(object: ?*mut u8, value: u64) -> ()
+
+unsafe extern "C" fn metal_TextureDescriptor_usage(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_TextureDescriptor_set_usage(object: ?*mut u8, value: u64) -> ()
+
+unsafe extern "C" fn metal_TextureDescriptor_compression_type(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_TextureDescriptor_set_compression_type(object: ?*mut u8, value: u64) -> ()
+
+unsafe extern "C" fn metal_TextureDescriptor_set_mipmap_level_count_for_size(object: ?*mut u8, size: MTLSize) -> ()
+
+unsafe extern "C" fn metal_Texture_root_resource(object: ?*mut u8) -> ?*mut u8
+
+unsafe extern "C" fn metal_Texture_parent_texture(object: ?*mut u8) -> ?*mut u8
+
+unsafe extern "C" fn metal_Texture_parent_relative_level(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_Texture_parent_relative_slice(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_Texture_buffer(object: ?*mut u8) -> ?*mut u8
+
+unsafe extern "C" fn metal_Texture_buffer_offset(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_Texture_buffer_stride(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_Texture_texture_type(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_Texture_pixel_format(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_Texture_width(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_Texture_height(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_Texture_depth(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_Texture_mipmap_level_count(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_Texture_sample_count(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_Texture_array_length(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_Texture_usage(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_Texture_framebuffer_only(object: ?*mut u8) -> u8
+
+unsafe extern "C" fn metal_Texture_get_bytes(object: ?*mut u8, bytes: ?[*]mut u8, stride: u64, region: MTLRegion, mipmap_level: u64) -> ()
+
+unsafe extern "C" fn metal_Texture_get_bytes_in_slice(object: ?*mut u8, bytes: ?[*]mut u8, stride: u64, image_stride: u64, region: MTLRegion, mipmap_level: u64, slice: u64) -> ()
+
+unsafe extern "C" fn metal_Texture_replace_region(object: ?*mut u8, region: MTLRegion, mipmap_level: u64, bytes: ?[*]const u8, stride: u64) -> ()
+
+unsafe extern "C" fn metal_Texture_replace_region_in_slice(object: ?*mut u8, region: MTLRegion, mipmap_level: u64, slice: u64, bytes: ?[*]const u8, stride: u64, image_stride: u64) -> ()
+
+unsafe extern "C" fn metal_Texture_new_texture_view(object: ?*mut u8, pixel_format: u64) -> ?*mut u8
+
+unsafe extern "C" fn metal_Texture_new_texture_view_from_slice(object: ?*mut u8, pixel_format: u64, texture_type: u64, mipmap_levels: NSRange, slices: NSRange) -> ?*mut u8
+
+unsafe extern "C" fn metal_Texture_gpu_resource_id(object: ?*mut u8) -> MTLResourceID
+
+unsafe extern "C" fn metal_Heap_device(object: ?*mut u8) -> ?*mut u8
+
+unsafe extern "C" fn metal_Heap_label(object: ?*mut u8) -> ?[*]const u8
+
+unsafe extern "C" fn metal_Heap_set_label(object: ?*mut u8, label: ?[*]const u8) -> ()
+
+unsafe extern "C" fn metal_Heap_cpu_cache_mode(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_Heap_storage_mode(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_Heap_hazard_tracking_mode(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_Heap_resource_options(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_Heap_size(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_Heap_used_size(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_Heap_heap_type(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_Heap_current_allocated_size(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_Heap_set_purgeable_state(object: ?*mut u8, state: u64) -> u64
+
+unsafe extern "C" fn metal_Heap_max_available_size_with_alignment(object: ?*mut u8, alignment: u64) -> u64
+
+unsafe extern "C" fn metal_Heap_new_buffer(object: ?*mut u8, length: u64, options: u64) -> ?*mut u8
+
+unsafe extern "C" fn metal_Heap_new_texture(object: ?*mut u8, descriptor: ?*mut u8) -> ?*mut u8
+
+unsafe extern "C" fn metal_Heap_new_buffer_with_offset(object: ?*mut u8, length: u64, options: u64, offset: u64) -> ?*mut u8
+
+unsafe extern "C" fn metal_Heap_new_texture_with_offset(object: ?*mut u8, descriptor: ?*mut u8, offset: u64) -> ?*mut u8
+
+unsafe extern "C" fn metal_Heap_new_acceleration_structure_with_descriptor(object: ?*mut u8, descriptor: ?*mut u8) -> ?*mut u8
+
+unsafe extern "C" fn metal_Heap_new_acceleration_structure_with_descriptor_offset(object: ?*mut u8, descriptor: ?*mut u8, offset: u64) -> ?*mut u8
+
+unsafe extern "C" fn metal_Heap_new_acceleration_structure_with_size(object: ?*mut u8, size: u64) -> ?*mut u8
+
+unsafe extern "C" fn metal_Heap_new_acceleration_structure_with_size_offset(object: ?*mut u8, size: u64, offset: u64) -> ?*mut u8
+
+unsafe extern "C" fn metal_HeapDescriptor_new() -> ?*mut u8
+
+unsafe extern "C" fn metal_HeapDescriptor_cpu_cache_mode(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_HeapDescriptor_set_cpu_cache_mode(object: ?*mut u8, value: u64) -> ()
+
+unsafe extern "C" fn metal_HeapDescriptor_storage_mode(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_HeapDescriptor_set_storage_mode(object: ?*mut u8, value: u64) -> ()
+
+unsafe extern "C" fn metal_HeapDescriptor_size(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_HeapDescriptor_set_size(object: ?*mut u8, value: u64) -> ()
+
+unsafe extern "C" fn metal_HeapDescriptor_hazard_tracking_mode(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_HeapDescriptor_set_hazard_tracking_mode(object: ?*mut u8, value: u64) -> ()
+
+unsafe extern "C" fn metal_HeapDescriptor_heap_type(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_HeapDescriptor_set_heap_type(object: ?*mut u8, value: u64) -> ()
+
+unsafe extern "C" fn metal_HeapDescriptor_resource_options(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_SamplerDescriptor_new() -> ?*mut u8
+
+unsafe extern "C" fn metal_SamplerDescriptor_set_min_filter(object: ?*mut u8, value: u64) -> ()
+
+unsafe extern "C" fn metal_SamplerDescriptor_set_mag_filter(object: ?*mut u8, value: u64) -> ()
+
+unsafe extern "C" fn metal_SamplerDescriptor_set_mip_filter(object: ?*mut u8, value: u64) -> ()
+
+unsafe extern "C" fn metal_SamplerDescriptor_set_address_mode_s(object: ?*mut u8, value: u64) -> ()
+
+unsafe extern "C" fn metal_SamplerDescriptor_set_address_mode_t(object: ?*mut u8, value: u64) -> ()
+
+unsafe extern "C" fn metal_SamplerDescriptor_set_address_mode_r(object: ?*mut u8, value: u64) -> ()
+
+unsafe extern "C" fn metal_SamplerDescriptor_set_max_anisotropy(object: ?*mut u8, value: u64) -> ()
+
+unsafe extern "C" fn metal_SamplerDescriptor_set_compare_function(object: ?*mut u8, value: u64) -> ()
+
+unsafe extern "C" fn metal_SamplerDescriptor_set_border_color(object: ?*mut u8, value: u64) -> ()
+
+unsafe extern "C" fn metal_SamplerDescriptor_set_lod_bias(object: ?*mut u8, value: f32) -> ()
+
+unsafe extern "C" fn metal_SamplerDescriptor_set_lod_min_clamp(object: ?*mut u8, value: f32) -> ()
+
+unsafe extern "C" fn metal_SamplerDescriptor_set_lod_max_clamp(object: ?*mut u8, value: f32) -> ()
+
+unsafe extern "C" fn metal_SamplerDescriptor_set_lod_average(object: ?*mut u8, value: u8) -> ()
+
+unsafe extern "C" fn metal_SamplerDescriptor_set_normalized_coordinates(object: ?*mut u8, value: u8) -> ()
+
+unsafe extern "C" fn metal_SamplerDescriptor_set_support_argument_buffers(object: ?*mut u8, value: u8) -> ()
+
+unsafe extern "C" fn metal_SamplerDescriptor_label(object: ?*mut u8) -> ?[*]const u8
+
+unsafe extern "C" fn metal_SamplerDescriptor_set_label(object: ?*mut u8, label: ?[*]const u8) -> ()
+
+unsafe extern "C" fn metal_SamplerState_device(object: ?*mut u8) -> ?*mut u8
+
+unsafe extern "C" fn metal_SamplerState_label(object: ?*mut u8) -> ?[*]const u8
+
+unsafe extern "C" fn metal_SamplerState_gpu_resource_id(object: ?*mut u8) -> MTLResourceID
+
+unsafe extern "C" fn metal_StencilDescriptor_new() -> ?*mut u8
+
+unsafe extern "C" fn metal_StencilDescriptor_stencil_compare_function(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_StencilDescriptor_set_stencil_compare_function(object: ?*mut u8, value: u64) -> ()
+
+unsafe extern "C" fn metal_StencilDescriptor_stencil_failure_operation(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_StencilDescriptor_set_stencil_failure_operation(object: ?*mut u8, value: u64) -> ()
+
+unsafe extern "C" fn metal_StencilDescriptor_depth_failure_operation(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_StencilDescriptor_set_depth_failure_operation(object: ?*mut u8, value: u64) -> ()
+
+unsafe extern "C" fn metal_StencilDescriptor_depth_stencil_pass_operation(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_StencilDescriptor_set_depth_stencil_pass_operation(object: ?*mut u8, value: u64) -> ()
+
+unsafe extern "C" fn metal_StencilDescriptor_read_mask(object: ?*mut u8) -> u32
+
+unsafe extern "C" fn metal_StencilDescriptor_set_read_mask(object: ?*mut u8, value: u32) -> ()
+
+unsafe extern "C" fn metal_StencilDescriptor_write_mask(object: ?*mut u8) -> u32
+
+unsafe extern "C" fn metal_StencilDescriptor_set_write_mask(object: ?*mut u8, value: u32) -> ()
+
+unsafe extern "C" fn metal_DepthStencilDescriptor_new() -> ?*mut u8
+
+unsafe extern "C" fn metal_DepthStencilDescriptor_depth_compare_function(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_DepthStencilDescriptor_set_depth_compare_function(object: ?*mut u8, value: u64) -> ()
+
+unsafe extern "C" fn metal_DepthStencilDescriptor_depth_write_enabled(object: ?*mut u8) -> u8
+
+unsafe extern "C" fn metal_DepthStencilDescriptor_set_depth_write_enabled(object: ?*mut u8, value: u8) -> ()
+
+unsafe extern "C" fn metal_DepthStencilDescriptor_front_face_stencil(object: ?*mut u8) -> ?*mut u8
+
+unsafe extern "C" fn metal_DepthStencilDescriptor_set_front_face_stencil(object: ?*mut u8, value: ?*mut u8) -> ()
+
+unsafe extern "C" fn metal_DepthStencilDescriptor_back_face_stencil(object: ?*mut u8) -> ?*mut u8
+
+unsafe extern "C" fn metal_DepthStencilDescriptor_set_back_face_stencil(object: ?*mut u8, value: ?*mut u8) -> ()
+
+unsafe extern "C" fn metal_DepthStencilDescriptor_label(object: ?*mut u8) -> ?[*]const u8
+
+unsafe extern "C" fn metal_DepthStencilDescriptor_set_label(object: ?*mut u8, label: ?[*]const u8) -> ()
+
+unsafe extern "C" fn metal_DepthStencilState_device(object: ?*mut u8) -> ?*mut u8
+
+unsafe extern "C" fn metal_DepthStencilState_label(object: ?*mut u8) -> ?[*]const u8
+
+unsafe extern "C" fn metal_VertexBufferLayoutDescriptor_new() -> ?*mut u8
+
+unsafe extern "C" fn metal_VertexBufferLayoutDescriptor_stride(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_VertexBufferLayoutDescriptor_set_stride(object: ?*mut u8, value: u64) -> ()
+
+unsafe extern "C" fn metal_VertexBufferLayoutDescriptor_step_function(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_VertexBufferLayoutDescriptor_set_step_function(object: ?*mut u8, value: u64) -> ()
+
+unsafe extern "C" fn metal_VertexBufferLayoutDescriptor_step_rate(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_VertexBufferLayoutDescriptor_set_step_rate(object: ?*mut u8, value: u64) -> ()
+
+unsafe extern "C" fn metal_VertexAttributeDescriptor_new() -> ?*mut u8
+
+unsafe extern "C" fn metal_VertexAttributeDescriptor_format(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_VertexAttributeDescriptor_set_format(object: ?*mut u8, value: u64) -> ()
+
+unsafe extern "C" fn metal_VertexAttributeDescriptor_offset(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_VertexAttributeDescriptor_set_offset(object: ?*mut u8, value: u64) -> ()
+
+unsafe extern "C" fn metal_VertexAttributeDescriptor_buffer_index(object: ?*mut u8) -> u64
+
+unsafe extern "C" fn metal_VertexAttributeDescriptor_set_buffer_index(object: ?*mut u8, value: u64) -> ()
+
+unsafe extern "C" fn metal_VertexBufferLayoutDescriptorArray_object_at(object: ?*mut u8, index: u64) -> ?*mut u8
+
+unsafe extern "C" fn metal_VertexBufferLayoutDescriptorArray_set_object_at(object: ?*mut u8, index: u64, layout: ?*mut u8) -> ()
+
+unsafe extern "C" fn metal_VertexAttributeDescriptorArray_object_at(object: ?*mut u8, index: u64) -> ?*mut u8
+
+unsafe extern "C" fn metal_VertexAttributeDescriptorArray_set_object_at(object: ?*mut u8, index: u64, attribute: ?*mut u8) -> ()
+
+unsafe extern "C" fn metal_VertexDescriptor_new() -> ?*mut u8
+
+unsafe extern "C" fn metal_VertexDescriptor_layouts(object: ?*mut u8) -> ?*mut u8
+
+unsafe extern "C" fn metal_VertexDescriptor_attributes(object: ?*mut u8) -> ?*mut u8
+
+unsafe extern "C" fn metal_VertexDescriptor_serialize_descriptor(object: ?*mut u8) -> ?*mut u8
+
+unsafe extern "C" fn metal_VertexDescriptor_reset(object: ?*mut u8) -> ()
+
+
+pub struct Resource {}
+impl Resource {
+    // Returns borrowed +0 object; null preserves upstream optional absence.
+    pub unsafe fn device(object: ?*mut u8) -> ?*mut u8 {
+        return unsafe metal_Resource_device(object)
+    }
+
+    // Returns borrowed NUL-terminated UTF-8 from the owning NSString; may be null for no label.
+    pub unsafe fn label(object: ?*mut u8) -> ?[*]const u8 {
+        return unsafe metal_Resource_label(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_label(object: ?*mut u8, label: ?[*]const u8) -> () {
+        unsafe metal_Resource_set_label(object, label)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn cpu_cache_mode(object: ?*mut u8) -> u64 {
+        return unsafe metal_Resource_cpu_cache_mode(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn storage_mode(object: ?*mut u8) -> u64 {
+        return unsafe metal_Resource_storage_mode(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn allocated_size(object: ?*mut u8) -> u64 {
+        return unsafe metal_Resource_allocated_size(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn hazard_tracking_mode(object: ?*mut u8) -> u64 {
+        return unsafe metal_Resource_hazard_tracking_mode(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn resource_options(object: ?*mut u8) -> u64 {
+        return unsafe metal_Resource_resource_options(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn heap_offset(object: ?*mut u8) -> u64 {
+        return unsafe metal_Resource_heap_offset(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_purgeable_state(object: ?*mut u8, state: u64) -> u64 {
+        return unsafe metal_Resource_set_purgeable_state(object, state)
+    }
+
+    // Returns borrowed +0 object; null preserves upstream optional absence.
+    pub unsafe fn heap(object: ?*mut u8) -> ?*mut u8 {
+        return unsafe metal_Resource_heap(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn make_aliasable(object: ?*mut u8) -> () {
+        unsafe metal_Resource_make_aliasable(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn is_aliasable(object: ?*mut u8) -> bool {
+        return unsafe metal_Resource_is_aliasable(object) != 0
+    }
+}
+
+
+pub struct Buffer {}
+impl Buffer {
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn length(object: ?*mut u8) -> u64 {
+        return unsafe metal_Buffer_length(object)
+    }
+
+    // Returns borrowed mutable storage; caller guarantees CPU accessibility and synchronization.
+    pub unsafe fn contents(object: ?*mut u8) -> ?[*]mut u8 {
+        return unsafe metal_Buffer_contents(object)
+    }
+
+    // Takes the range record by value.
+    pub unsafe fn did_modify_range(object: ?*mut u8, range: NSRange) -> () {
+        unsafe metal_Buffer_did_modify_range(object, range)
+    }
+
+    // Returns +1 owned object, or null on allocation failure.
+    pub unsafe fn new_texture_with_descriptor(object: ?*mut u8, descriptor: ?*mut u8, offset: u64, bytes_per_row: u64) -> ?*mut u8 {
+        return unsafe metal_Buffer_new_texture_with_descriptor(object, descriptor, offset, bytes_per_row)
+    }
+
+    // Returns borrowed +0 object; null preserves upstream optional absence.
+    pub unsafe fn remote_storage_buffer(object: ?*mut u8) -> ?*mut u8 {
+        return unsafe metal_Buffer_remote_storage_buffer(object)
+    }
+
+    // Returns +1 owned object, or null on allocation failure.
+    pub unsafe fn new_remote_buffer_view_for_device(object: ?*mut u8, device: ?*mut u8) -> ?*mut u8 {
+        return unsafe metal_Buffer_new_remote_buffer_view_for_device(object, device)
+    }
+
+    // Takes the range record by value.
+    pub unsafe fn add_debug_marker(object: ?*mut u8, name: ?[*]const u8, range: NSRange) -> () {
+        unsafe metal_Buffer_add_debug_marker(object, name, range)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn remove_all_debug_markers(object: ?*mut u8) -> () {
+        unsafe metal_Buffer_remove_all_debug_markers(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn gpu_address(object: ?*mut u8) -> u64 {
+        return unsafe metal_Buffer_gpu_address(object)
+    }
+
+    // Upstream non-SDK selector: first check Native.responds_to(object, b"gpuResourceID\\0").
+    // Prefer gpu_address for public buffer addressing. Returns the record by value.
+    pub unsafe fn gpu_resource_id(object: ?*mut u8) -> MTLResourceID {
+        return unsafe metal_Buffer_gpu_resource_id(object)
+    }
+}
+
+
+pub struct TextureDescriptor {}
+impl TextureDescriptor {
+    // Returns +1 owned object; caller releases.
+    pub unsafe fn new() -> ?*mut u8 {
+        return unsafe metal_TextureDescriptor_new()
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn texture_type(object: ?*mut u8) -> u64 {
+        return unsafe metal_TextureDescriptor_texture_type(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_texture_type(object: ?*mut u8, value: u64) -> () {
+        unsafe metal_TextureDescriptor_set_texture_type(object, value)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn pixel_format(object: ?*mut u8) -> u64 {
+        return unsafe metal_TextureDescriptor_pixel_format(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_pixel_format(object: ?*mut u8, value: u64) -> () {
+        unsafe metal_TextureDescriptor_set_pixel_format(object, value)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn width(object: ?*mut u8) -> u64 {
+        return unsafe metal_TextureDescriptor_width(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_width(object: ?*mut u8, value: u64) -> () {
+        unsafe metal_TextureDescriptor_set_width(object, value)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn height(object: ?*mut u8) -> u64 {
+        return unsafe metal_TextureDescriptor_height(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_height(object: ?*mut u8, value: u64) -> () {
+        unsafe metal_TextureDescriptor_set_height(object, value)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn depth(object: ?*mut u8) -> u64 {
+        return unsafe metal_TextureDescriptor_depth(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_depth(object: ?*mut u8, value: u64) -> () {
+        unsafe metal_TextureDescriptor_set_depth(object, value)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn mipmap_level_count(object: ?*mut u8) -> u64 {
+        return unsafe metal_TextureDescriptor_mipmap_level_count(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_mipmap_level_count(object: ?*mut u8, value: u64) -> () {
+        unsafe metal_TextureDescriptor_set_mipmap_level_count(object, value)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn sample_count(object: ?*mut u8) -> u64 {
+        return unsafe metal_TextureDescriptor_sample_count(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_sample_count(object: ?*mut u8, value: u64) -> () {
+        unsafe metal_TextureDescriptor_set_sample_count(object, value)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn array_length(object: ?*mut u8) -> u64 {
+        return unsafe metal_TextureDescriptor_array_length(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_array_length(object: ?*mut u8, value: u64) -> () {
+        unsafe metal_TextureDescriptor_set_array_length(object, value)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn resource_options(object: ?*mut u8) -> u64 {
+        return unsafe metal_TextureDescriptor_resource_options(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_resource_options(object: ?*mut u8, value: u64) -> () {
+        unsafe metal_TextureDescriptor_set_resource_options(object, value)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn cpu_cache_mode(object: ?*mut u8) -> u64 {
+        return unsafe metal_TextureDescriptor_cpu_cache_mode(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_cpu_cache_mode(object: ?*mut u8, value: u64) -> () {
+        unsafe metal_TextureDescriptor_set_cpu_cache_mode(object, value)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn storage_mode(object: ?*mut u8) -> u64 {
+        return unsafe metal_TextureDescriptor_storage_mode(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_storage_mode(object: ?*mut u8, value: u64) -> () {
+        unsafe metal_TextureDescriptor_set_storage_mode(object, value)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn usage(object: ?*mut u8) -> u64 {
+        return unsafe metal_TextureDescriptor_usage(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_usage(object: ?*mut u8, value: u64) -> () {
+        unsafe metal_TextureDescriptor_set_usage(object, value)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn compression_type(object: ?*mut u8) -> u64 {
+        return unsafe metal_TextureDescriptor_compression_type(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_compression_type(object: ?*mut u8, value: u64) -> () {
+        unsafe metal_TextureDescriptor_set_compression_type(object, value)
+    }
+
+    // Takes size by value. Matches upstream ceil(log2(maximum dimension)), including zero count for dimensions zero or one.
+    pub unsafe fn set_mipmap_level_count_for_size(object: ?*mut u8, size: MTLSize) -> () {
+        unsafe metal_TextureDescriptor_set_mipmap_level_count_for_size(object, size)
+    }
+}
+
+
+pub struct Texture {}
+impl Texture {
+    // Returns borrowed +0 object; null preserves upstream optional absence.
+    pub unsafe fn root_resource(object: ?*mut u8) -> ?*mut u8 {
+        return unsafe metal_Texture_root_resource(object)
+    }
+
+    // Returns borrowed +0 object; null preserves upstream optional absence.
+    pub unsafe fn parent_texture(object: ?*mut u8) -> ?*mut u8 {
+        return unsafe metal_Texture_parent_texture(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn parent_relative_level(object: ?*mut u8) -> u64 {
+        return unsafe metal_Texture_parent_relative_level(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn parent_relative_slice(object: ?*mut u8) -> u64 {
+        return unsafe metal_Texture_parent_relative_slice(object)
+    }
+
+    // Returns borrowed +0 object; null preserves upstream optional absence.
+    pub unsafe fn buffer(object: ?*mut u8) -> ?*mut u8 {
+        return unsafe metal_Texture_buffer(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn buffer_offset(object: ?*mut u8) -> u64 {
+        return unsafe metal_Texture_buffer_offset(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn buffer_stride(object: ?*mut u8) -> u64 {
+        return unsafe metal_Texture_buffer_stride(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn texture_type(object: ?*mut u8) -> u64 {
+        return unsafe metal_Texture_texture_type(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn pixel_format(object: ?*mut u8) -> u64 {
+        return unsafe metal_Texture_pixel_format(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn width(object: ?*mut u8) -> u64 {
+        return unsafe metal_Texture_width(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn height(object: ?*mut u8) -> u64 {
+        return unsafe metal_Texture_height(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn depth(object: ?*mut u8) -> u64 {
+        return unsafe metal_Texture_depth(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn mipmap_level_count(object: ?*mut u8) -> u64 {
+        return unsafe metal_Texture_mipmap_level_count(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn sample_count(object: ?*mut u8) -> u64 {
+        return unsafe metal_Texture_sample_count(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn array_length(object: ?*mut u8) -> u64 {
+        return unsafe metal_Texture_array_length(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn usage(object: ?*mut u8) -> u64 {
+        return unsafe metal_Texture_usage(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn framebuffer_only(object: ?*mut u8) -> bool {
+        return unsafe metal_Texture_framebuffer_only(object) != 0
+    }
+
+    // Takes the region record by value.
+    pub unsafe fn get_bytes(object: ?*mut u8, bytes: ?[*]mut u8, stride: u64, region: MTLRegion, mipmap_level: u64) -> () {
+        unsafe metal_Texture_get_bytes(object, bytes, stride, region, mipmap_level)
+    }
+
+    // Takes the region record by value.
+    pub unsafe fn get_bytes_in_slice(object: ?*mut u8, bytes: ?[*]mut u8, stride: u64, image_stride: u64, region: MTLRegion, mipmap_level: u64, slice: u64) -> () {
+        unsafe metal_Texture_get_bytes_in_slice(object, bytes, stride, image_stride, region, mipmap_level, slice)
+    }
+
+    // Takes the region record by value.
+    pub unsafe fn replace_region(object: ?*mut u8, region: MTLRegion, mipmap_level: u64, bytes: ?[*]const u8, stride: u64) -> () {
+        unsafe metal_Texture_replace_region(object, region, mipmap_level, bytes, stride)
+    }
+
+    // Takes the region record by value.
+    pub unsafe fn replace_region_in_slice(object: ?*mut u8, region: MTLRegion, mipmap_level: u64, slice: u64, bytes: ?[*]const u8, stride: u64, image_stride: u64) -> () {
+        unsafe metal_Texture_replace_region_in_slice(object, region, mipmap_level, slice, bytes, stride, image_stride)
+    }
+
+    // Returns +1 owned object, or null on allocation failure.
+    pub unsafe fn new_texture_view(object: ?*mut u8, pixel_format: u64) -> ?*mut u8 {
+        return unsafe metal_Texture_new_texture_view(object, pixel_format)
+    }
+
+    // Takes range records by value. Returns +1 owned object, or null on allocation failure.
+    pub unsafe fn new_texture_view_from_slice(object: ?*mut u8, pixel_format: u64, texture_type: u64, mipmap_levels: NSRange, slices: NSRange) -> ?*mut u8 {
+        return unsafe metal_Texture_new_texture_view_from_slice(object, pixel_format, texture_type, mipmap_levels, slices)
+    }
+
+    // Returns the resource identifier record by value.
+    pub unsafe fn gpu_resource_id(object: ?*mut u8) -> MTLResourceID {
+        return unsafe metal_Texture_gpu_resource_id(object)
+    }
+}
+
+
+pub struct Heap {}
+impl Heap {
+    // Returns borrowed +0 object; null preserves upstream optional absence.
+    pub unsafe fn device(object: ?*mut u8) -> ?*mut u8 {
+        return unsafe metal_Heap_device(object)
+    }
+
+    // Returns borrowed NUL-terminated UTF-8 from the owning NSString; may be null for no label.
+    pub unsafe fn label(object: ?*mut u8) -> ?[*]const u8 {
+        return unsafe metal_Heap_label(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_label(object: ?*mut u8, label: ?[*]const u8) -> () {
+        unsafe metal_Heap_set_label(object, label)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn cpu_cache_mode(object: ?*mut u8) -> u64 {
+        return unsafe metal_Heap_cpu_cache_mode(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn storage_mode(object: ?*mut u8) -> u64 {
+        return unsafe metal_Heap_storage_mode(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn hazard_tracking_mode(object: ?*mut u8) -> u64 {
+        return unsafe metal_Heap_hazard_tracking_mode(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn resource_options(object: ?*mut u8) -> u64 {
+        return unsafe metal_Heap_resource_options(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn size(object: ?*mut u8) -> u64 {
+        return unsafe metal_Heap_size(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn used_size(object: ?*mut u8) -> u64 {
+        return unsafe metal_Heap_used_size(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn heap_type(object: ?*mut u8) -> u64 {
+        return unsafe metal_Heap_heap_type(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn current_allocated_size(object: ?*mut u8) -> u64 {
+        return unsafe metal_Heap_current_allocated_size(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_purgeable_state(object: ?*mut u8, state: u64) -> u64 {
+        return unsafe metal_Heap_set_purgeable_state(object, state)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn max_available_size_with_alignment(object: ?*mut u8, alignment: u64) -> u64 {
+        return unsafe metal_Heap_max_available_size_with_alignment(object, alignment)
+    }
+
+    // Returns +1 owned object, or null on allocation failure.
+    pub unsafe fn new_buffer(object: ?*mut u8, length: u64, options: u64) -> ?*mut u8 {
+        return unsafe metal_Heap_new_buffer(object, length, options)
+    }
+
+    // Returns +1 owned object, or null on allocation failure.
+    pub unsafe fn new_texture(object: ?*mut u8, descriptor: ?*mut u8) -> ?*mut u8 {
+        return unsafe metal_Heap_new_texture(object, descriptor)
+    }
+
+    // Returns +1 owned object, or null on allocation failure.
+    pub unsafe fn new_buffer_with_offset(object: ?*mut u8, length: u64, options: u64, offset: u64) -> ?*mut u8 {
+        return unsafe metal_Heap_new_buffer_with_offset(object, length, options, offset)
+    }
+
+    // Returns +1 owned object, or null on allocation failure.
+    pub unsafe fn new_texture_with_offset(object: ?*mut u8, descriptor: ?*mut u8, offset: u64) -> ?*mut u8 {
+        return unsafe metal_Heap_new_texture_with_offset(object, descriptor, offset)
+    }
+
+    // Returns +1 owned object, or null on allocation failure.
+    pub unsafe fn new_acceleration_structure_with_descriptor(object: ?*mut u8, descriptor: ?*mut u8) -> ?*mut u8 {
+        return unsafe metal_Heap_new_acceleration_structure_with_descriptor(object, descriptor)
+    }
+
+    // Returns +1 owned object, or null on allocation failure.
+    pub unsafe fn new_acceleration_structure_with_descriptor_offset(object: ?*mut u8, descriptor: ?*mut u8, offset: u64) -> ?*mut u8 {
+        return unsafe metal_Heap_new_acceleration_structure_with_descriptor_offset(object, descriptor, offset)
+    }
+
+    // Returns +1 owned object, or null on allocation failure.
+    pub unsafe fn new_acceleration_structure_with_size(object: ?*mut u8, size: u64) -> ?*mut u8 {
+        return unsafe metal_Heap_new_acceleration_structure_with_size(object, size)
+    }
+
+    // Returns +1 owned object, or null on allocation failure.
+    pub unsafe fn new_acceleration_structure_with_size_offset(object: ?*mut u8, size: u64, offset: u64) -> ?*mut u8 {
+        return unsafe metal_Heap_new_acceleration_structure_with_size_offset(object, size, offset)
+    }
+}
+
+
+pub struct HeapDescriptor {}
+impl HeapDescriptor {
+    // Returns +1 owned object; caller releases.
+    pub unsafe fn new() -> ?*mut u8 {
+        return unsafe metal_HeapDescriptor_new()
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn cpu_cache_mode(object: ?*mut u8) -> u64 {
+        return unsafe metal_HeapDescriptor_cpu_cache_mode(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_cpu_cache_mode(object: ?*mut u8, value: u64) -> () {
+        unsafe metal_HeapDescriptor_set_cpu_cache_mode(object, value)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn storage_mode(object: ?*mut u8) -> u64 {
+        return unsafe metal_HeapDescriptor_storage_mode(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_storage_mode(object: ?*mut u8, value: u64) -> () {
+        unsafe metal_HeapDescriptor_set_storage_mode(object, value)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn size(object: ?*mut u8) -> u64 {
+        return unsafe metal_HeapDescriptor_size(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_size(object: ?*mut u8, value: u64) -> () {
+        unsafe metal_HeapDescriptor_set_size(object, value)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn hazard_tracking_mode(object: ?*mut u8) -> u64 {
+        return unsafe metal_HeapDescriptor_hazard_tracking_mode(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_hazard_tracking_mode(object: ?*mut u8, value: u64) -> () {
+        unsafe metal_HeapDescriptor_set_hazard_tracking_mode(object, value)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn heap_type(object: ?*mut u8) -> u64 {
+        return unsafe metal_HeapDescriptor_heap_type(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_heap_type(object: ?*mut u8, value: u64) -> () {
+        unsafe metal_HeapDescriptor_set_heap_type(object, value)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn resource_options(object: ?*mut u8) -> u64 {
+        return unsafe metal_HeapDescriptor_resource_options(object)
+    }
+}
+
+
+pub struct SamplerDescriptor {}
+impl SamplerDescriptor {
+    // Returns +1 owned object; caller releases.
+    pub unsafe fn new() -> ?*mut u8 {
+        return unsafe metal_SamplerDescriptor_new()
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_min_filter(object: ?*mut u8, value: u64) -> () {
+        unsafe metal_SamplerDescriptor_set_min_filter(object, value)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_mag_filter(object: ?*mut u8, value: u64) -> () {
+        unsafe metal_SamplerDescriptor_set_mag_filter(object, value)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_mip_filter(object: ?*mut u8, value: u64) -> () {
+        unsafe metal_SamplerDescriptor_set_mip_filter(object, value)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_address_mode_s(object: ?*mut u8, value: u64) -> () {
+        unsafe metal_SamplerDescriptor_set_address_mode_s(object, value)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_address_mode_t(object: ?*mut u8, value: u64) -> () {
+        unsafe metal_SamplerDescriptor_set_address_mode_t(object, value)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_address_mode_r(object: ?*mut u8, value: u64) -> () {
+        unsafe metal_SamplerDescriptor_set_address_mode_r(object, value)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_max_anisotropy(object: ?*mut u8, value: u64) -> () {
+        unsafe metal_SamplerDescriptor_set_max_anisotropy(object, value)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_compare_function(object: ?*mut u8, value: u64) -> () {
+        unsafe metal_SamplerDescriptor_set_compare_function(object, value)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_border_color(object: ?*mut u8, value: u64) -> () {
+        unsafe metal_SamplerDescriptor_set_border_color(object, value)
+    }
+
+    // Private upstream feature: caller must ensure setLodBias: exists on the runtime descriptor.
+    pub unsafe fn set_lod_bias(object: ?*mut u8, value: f32) -> () {
+        unsafe metal_SamplerDescriptor_set_lod_bias(object, value)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_lod_min_clamp(object: ?*mut u8, value: f32) -> () {
+        unsafe metal_SamplerDescriptor_set_lod_min_clamp(object, value)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_lod_max_clamp(object: ?*mut u8, value: f32) -> () {
+        unsafe metal_SamplerDescriptor_set_lod_max_clamp(object, value)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_lod_average(object: ?*mut u8, value: bool) -> () {
+        let mut value_abi: u8 = 0
+        if value {
+            value_abi = 1
+        }
+        unsafe metal_SamplerDescriptor_set_lod_average(object, value_abi)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_normalized_coordinates(object: ?*mut u8, value: bool) -> () {
+        let mut value_abi: u8 = 0
+        if value {
+            value_abi = 1
+        }
+        unsafe metal_SamplerDescriptor_set_normalized_coordinates(object, value_abi)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_support_argument_buffers(object: ?*mut u8, value: bool) -> () {
+        let mut value_abi: u8 = 0
+        if value {
+            value_abi = 1
+        }
+        unsafe metal_SamplerDescriptor_set_support_argument_buffers(object, value_abi)
+    }
+
+    // Returns borrowed NUL-terminated UTF-8 from the owning NSString; may be null for no label.
+    pub unsafe fn label(object: ?*mut u8) -> ?[*]const u8 {
+        return unsafe metal_SamplerDescriptor_label(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_label(object: ?*mut u8, label: ?[*]const u8) -> () {
+        unsafe metal_SamplerDescriptor_set_label(object, label)
+    }
+}
+
+
+pub struct SamplerState {}
+impl SamplerState {
+    // Returns borrowed +0 object; null preserves upstream optional absence.
+    pub unsafe fn device(object: ?*mut u8) -> ?*mut u8 {
+        return unsafe metal_SamplerState_device(object)
+    }
+
+    // Returns borrowed NUL-terminated UTF-8 from the owning NSString; may be null for no label.
+    pub unsafe fn label(object: ?*mut u8) -> ?[*]const u8 {
+        return unsafe metal_SamplerState_label(object)
+    }
+
+    // Returns the resource identifier record by value.
+    pub unsafe fn gpu_resource_id(object: ?*mut u8) -> MTLResourceID {
+        return unsafe metal_SamplerState_gpu_resource_id(object)
+    }
+}
+
+
+pub struct StencilDescriptor {}
+impl StencilDescriptor {
+    // Returns +1 owned object; caller releases.
+    pub unsafe fn new() -> ?*mut u8 {
+        return unsafe metal_StencilDescriptor_new()
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn stencil_compare_function(object: ?*mut u8) -> u64 {
+        return unsafe metal_StencilDescriptor_stencil_compare_function(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_stencil_compare_function(object: ?*mut u8, value: u64) -> () {
+        unsafe metal_StencilDescriptor_set_stencil_compare_function(object, value)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn stencil_failure_operation(object: ?*mut u8) -> u64 {
+        return unsafe metal_StencilDescriptor_stencil_failure_operation(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_stencil_failure_operation(object: ?*mut u8, value: u64) -> () {
+        unsafe metal_StencilDescriptor_set_stencil_failure_operation(object, value)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn depth_failure_operation(object: ?*mut u8) -> u64 {
+        return unsafe metal_StencilDescriptor_depth_failure_operation(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_depth_failure_operation(object: ?*mut u8, value: u64) -> () {
+        unsafe metal_StencilDescriptor_set_depth_failure_operation(object, value)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn depth_stencil_pass_operation(object: ?*mut u8) -> u64 {
+        return unsafe metal_StencilDescriptor_depth_stencil_pass_operation(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_depth_stencil_pass_operation(object: ?*mut u8, value: u64) -> () {
+        unsafe metal_StencilDescriptor_set_depth_stencil_pass_operation(object, value)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn read_mask(object: ?*mut u8) -> u32 {
+        return unsafe metal_StencilDescriptor_read_mask(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_read_mask(object: ?*mut u8, value: u32) -> () {
+        unsafe metal_StencilDescriptor_set_read_mask(object, value)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn write_mask(object: ?*mut u8) -> u32 {
+        return unsafe metal_StencilDescriptor_write_mask(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_write_mask(object: ?*mut u8, value: u32) -> () {
+        unsafe metal_StencilDescriptor_set_write_mask(object, value)
+    }
+}
+
+
+pub struct DepthStencilDescriptor {}
+impl DepthStencilDescriptor {
+    // Returns +1 owned object; caller releases.
+    pub unsafe fn new() -> ?*mut u8 {
+        return unsafe metal_DepthStencilDescriptor_new()
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn depth_compare_function(object: ?*mut u8) -> u64 {
+        return unsafe metal_DepthStencilDescriptor_depth_compare_function(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_depth_compare_function(object: ?*mut u8, value: u64) -> () {
+        unsafe metal_DepthStencilDescriptor_set_depth_compare_function(object, value)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn depth_write_enabled(object: ?*mut u8) -> bool {
+        return unsafe metal_DepthStencilDescriptor_depth_write_enabled(object) != 0
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_depth_write_enabled(object: ?*mut u8, value: bool) -> () {
+        let mut value_abi: u8 = 0
+        if value {
+            value_abi = 1
+        }
+        unsafe metal_DepthStencilDescriptor_set_depth_write_enabled(object, value_abi)
+    }
+
+    // Returns borrowed +0 object; null preserves upstream optional absence.
+    pub unsafe fn front_face_stencil(object: ?*mut u8) -> ?*mut u8 {
+        return unsafe metal_DepthStencilDescriptor_front_face_stencil(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_front_face_stencil(object: ?*mut u8, value: ?*mut u8) -> () {
+        unsafe metal_DepthStencilDescriptor_set_front_face_stencil(object, value)
+    }
+
+    // Returns borrowed +0 object; null preserves upstream optional absence.
+    pub unsafe fn back_face_stencil(object: ?*mut u8) -> ?*mut u8 {
+        return unsafe metal_DepthStencilDescriptor_back_face_stencil(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_back_face_stencil(object: ?*mut u8, value: ?*mut u8) -> () {
+        unsafe metal_DepthStencilDescriptor_set_back_face_stencil(object, value)
+    }
+
+    // Returns borrowed NUL-terminated UTF-8 from the owning NSString; may be null for no label.
+    pub unsafe fn label(object: ?*mut u8) -> ?[*]const u8 {
+        return unsafe metal_DepthStencilDescriptor_label(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_label(object: ?*mut u8, label: ?[*]const u8) -> () {
+        unsafe metal_DepthStencilDescriptor_set_label(object, label)
+    }
+}
+
+
+pub struct DepthStencilState {}
+impl DepthStencilState {
+    // Returns borrowed +0 object; null preserves upstream optional absence.
+    pub unsafe fn device(object: ?*mut u8) -> ?*mut u8 {
+        return unsafe metal_DepthStencilState_device(object)
+    }
+
+    // Returns borrowed NUL-terminated UTF-8 from the owning NSString; may be null for no label.
+    pub unsafe fn label(object: ?*mut u8) -> ?[*]const u8 {
+        return unsafe metal_DepthStencilState_label(object)
+    }
+}
+
+
+pub struct VertexBufferLayoutDescriptor {}
+impl VertexBufferLayoutDescriptor {
+    // Returns +1 owned object; caller releases.
+    pub unsafe fn new() -> ?*mut u8 {
+        return unsafe metal_VertexBufferLayoutDescriptor_new()
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn stride(object: ?*mut u8) -> u64 {
+        return unsafe metal_VertexBufferLayoutDescriptor_stride(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_stride(object: ?*mut u8, value: u64) -> () {
+        unsafe metal_VertexBufferLayoutDescriptor_set_stride(object, value)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn step_function(object: ?*mut u8) -> u64 {
+        return unsafe metal_VertexBufferLayoutDescriptor_step_function(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_step_function(object: ?*mut u8, value: u64) -> () {
+        unsafe metal_VertexBufferLayoutDescriptor_set_step_function(object, value)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn step_rate(object: ?*mut u8) -> u64 {
+        return unsafe metal_VertexBufferLayoutDescriptor_step_rate(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_step_rate(object: ?*mut u8, value: u64) -> () {
+        unsafe metal_VertexBufferLayoutDescriptor_set_step_rate(object, value)
+    }
+}
+
+
+pub struct VertexAttributeDescriptor {}
+impl VertexAttributeDescriptor {
+    // Returns +1 owned object; caller releases.
+    pub unsafe fn new() -> ?*mut u8 {
+        return unsafe metal_VertexAttributeDescriptor_new()
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn format(object: ?*mut u8) -> u64 {
+        return unsafe metal_VertexAttributeDescriptor_format(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_format(object: ?*mut u8, value: u64) -> () {
+        unsafe metal_VertexAttributeDescriptor_set_format(object, value)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn offset(object: ?*mut u8) -> u64 {
+        return unsafe metal_VertexAttributeDescriptor_offset(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_offset(object: ?*mut u8, value: u64) -> () {
+        unsafe metal_VertexAttributeDescriptor_set_offset(object, value)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn buffer_index(object: ?*mut u8) -> u64 {
+        return unsafe metal_VertexAttributeDescriptor_buffer_index(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_buffer_index(object: ?*mut u8, value: u64) -> () {
+        unsafe metal_VertexAttributeDescriptor_set_buffer_index(object, value)
+    }
+}
+
+
+pub struct VertexBufferLayoutDescriptorArray {}
+impl VertexBufferLayoutDescriptorArray {
+    // Returns borrowed +0 object; null preserves upstream optional absence.
+    pub unsafe fn object_at(object: ?*mut u8, index: u64) -> ?*mut u8 {
+        return unsafe metal_VertexBufferLayoutDescriptorArray_object_at(object, index)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_object_at(object: ?*mut u8, index: u64, layout: ?*mut u8) -> () {
+        unsafe metal_VertexBufferLayoutDescriptorArray_set_object_at(object, index, layout)
+    }
+}
+
+
+pub struct VertexAttributeDescriptorArray {}
+impl VertexAttributeDescriptorArray {
+    // Returns borrowed +0 object; null preserves upstream optional absence.
+    pub unsafe fn object_at(object: ?*mut u8, index: u64) -> ?*mut u8 {
+        return unsafe metal_VertexAttributeDescriptorArray_object_at(object, index)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn set_object_at(object: ?*mut u8, index: u64, attribute: ?*mut u8) -> () {
+        unsafe metal_VertexAttributeDescriptorArray_set_object_at(object, index, attribute)
+    }
+}
+
+
+pub struct VertexDescriptor {}
+impl VertexDescriptor {
+    // Returns +1 owned object; caller releases.
+    pub unsafe fn new() -> ?*mut u8 {
+        return unsafe metal_VertexDescriptor_new()
+    }
+
+    // Returns borrowed +0 object; null preserves upstream optional absence.
+    pub unsafe fn layouts(object: ?*mut u8) -> ?*mut u8 {
+        return unsafe metal_VertexDescriptor_layouts(object)
+    }
+
+    // Returns borrowed +0 object; null preserves upstream optional absence.
+    pub unsafe fn attributes(object: ?*mut u8) -> ?*mut u8 {
+        return unsafe metal_VertexDescriptor_attributes(object)
+    }
+
+    // Private upstream feature: caller must ensure selector exists. Returns +1 owned serialized object; caller releases.
+    pub unsafe fn serialize_descriptor(object: ?*mut u8) -> ?*mut u8 {
+        return unsafe metal_VertexDescriptor_serialize_descriptor(object)
+    }
+
+    // Direct Metal selector; OS availability and receiver validity are caller obligations.
+    pub unsafe fn reset(object: ?*mut u8) -> () {
+        unsafe metal_VertexDescriptor_reset(object)
+    }
+}

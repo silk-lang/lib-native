@@ -1,0 +1,73 @@
+#!/usr/bin/env python3
+"""Build the browser smoke test for wasm and run it in the installed Chromium.
+
+  scripts/browser smoke [--build-only] [--release]
+
+Needs Node and an existing Playwright installation (PLAYWRIGHT_MODULE, as set by
+native/gpu/webgpu/scripts/setup-ci --browser); it never downloads a browser. The test calls the
+module through JSPI, so the shared smoke test's waits suspend instead of spinning.
+"""
+import argparse
+import re
+import os
+from pathlib import Path
+import subprocess
+import sys
+
+PACKAGE = Path(__file__).resolve().parent.parent
+REPO = PACKAGE.parents[2]
+sys.path.insert(0, str(REPO / "native/gpu/webgpu/scripts"))
+from _build import command_path, executable  # noqa: E402
+
+TARGET = "wasm32-unknown-unknown"
+
+
+def built_executable(output, cwd):
+    """The executable silkc reports on its "Finished <path> in <time>" line."""
+    for line in reversed(output.splitlines()):
+        match = re.match(r"\s*Finished (.+) in [0-9.]+s$", line)
+        if match:
+            text = match.group(1)
+            # silkc prints Windows paths as /D:/...
+            if re.match(r"/[A-Za-z]:/", text):
+                text = text[1:]
+            path = Path(text)
+            return path if path.is_absolute() else cwd / path
+    raise SystemExit("silkc did not report the executable it built")
+
+
+def build(release):
+    compiler_bin = command_path("install-silk")
+    clang = os.environ.get("SILK_CLANG") or str(command_path("install-llvm"))
+    command = [str(compiler_bin / executable("silkc")), "build", "--manifest-path",
+               str(PACKAGE / "tests/browser/silk.toml"), "--stdlib",
+               str(compiler_bin.parent / "lib/silk/stdlib"), "--clang", clang, "--target", TARGET]
+    if release:
+        command.append("--release")
+    cwd = PACKAGE / "tests/browser"
+    output = subprocess.run(command, cwd=cwd, env=dict(os.environ, SILK_CLANG=clang),
+                            capture_output=True, text=True)
+    sys.stdout.write(output.stdout)
+    sys.stderr.write(output.stderr)
+    if output.returncode != 0:
+        raise SystemExit(output.returncode)
+    return built_executable(output.stdout + output.stderr, cwd)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__,
+                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("target", choices=["smoke"])
+    parser.add_argument("--build-only", action="store_true")
+    parser.add_argument("--release", action="store_true")
+    args = parser.parse_args()
+    module = build(args.release)
+    if args.build_only:
+        print(module)
+        return 0
+    return subprocess.run(["node", str(PACKAGE / "browser/test.mjs"), "--wasm", str(module)],
+                          timeout=180).returncode
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,0 +1,203 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+import metal.runtime { Object, AutoreleasePool, Native }
+import metal.device { Device }
+import metal.core { CommandQueue, CommandBuffer }
+import metal.library { CompileOptions, Library }
+import metal.encoder { ComputeCommandEncoder, CommandEncoder, BlitCommandEncoder }
+import metal.resources { Buffer, Resource }
+import metal.types {
+  MTLSize,
+  MTLResourceOptions_StorageModeShared,
+  MTLCommandBufferStatus_Completed
+}
+import silk.mem.pointer { Pointer }
+
+// Metal exists only on macOS; elsewhere the example builds and says so.
+static if Intrinsic.targetOperatingSystem() == "darwin" {
+  unsafe extern "C" fn puts(text: ?[*]const u8) -> i32
+  unsafe extern "C" fn strcmp(a: ?[*]const u8, b: ?[*]const u8) -> i32
+
+  export "C" fn completed(context: ?*mut u8, command: ?*mut u8) -> () {
+    unsafe {
+      let pointer = Intrinsic.pointerRequalify<?*mut u8, *mut u8>(context)
+      let value = Intrinsic.pointerReinterpret<*mut u8, *mut u32>(pointer)
+      Pointer.write(value, CommandBuffer.status(command))
+    }
+  }
+
+  fn failure(message: &[u8], error: ?*mut u8, code: i32) -> i32 {
+    drop unsafe puts(Pointer.fromSlice(message))
+    if !Pointer.isNull(error) {
+      drop unsafe puts(unsafe Native.error_description(error))
+    }
+    return code
+  }
+
+  pub fn main() -> i32 {
+    unsafe {
+      let pool = AutoreleasePool.new()
+      let device = Object.adopt(Device.system_default())
+      if Object.is_null(&device) {
+        return failure(b"No Metal device\0", Pointer.null<u8>(), 1)
+      }
+      drop puts(Device.name(Object.get(&device)))
+      let options = Object.adopt(CompileOptions.new())
+      let mut error: ?*mut u8 = Pointer.null<u8>()
+      let invalid = Object.adopt(
+        Device.new_library_with_source(
+          Object.get(&device),
+          Pointer.fromSlice(b"this is not a Metal shader\0"),
+          Object.get(&options),
+          Pointer.fromMutRef(&mut error),
+        ),
+      )
+      if !Object.is_null(&invalid) || Pointer.isNull(error) {
+        return failure(b"Invalid shader did not report NSError\0", error, 2)
+      }
+      error = Pointer.null<u8>()
+      let source = b"#include <metal_stdlib>\nusing namespace metal;\nkernel void transform(device const uint *input [[buffer(0)]], device uint *output [[buffer(1)]], uint id [[thread_position_in_grid]]) { if (id < 257) output[id] = input[id] * 3 + 7; }\0"
+      let library = Object.adopt(
+        Device.new_library_with_source(
+          Object.get(&device),
+          Pointer.fromSlice(source),
+          Object.get(&options),
+          Pointer.fromMutRef(&mut error),
+        ),
+      )
+      if Object.is_null(&library) {
+        return failure(b"Shader compilation failed\0", error, 3)
+      }
+      let missing = Object.adopt(
+        Library.get_function(
+          Object.get(&library),
+          Pointer.fromSlice(b"absent\0"),
+          Pointer.null<u8>(),
+          Pointer.fromMutRef(&mut error),
+        ),
+      )
+      if !Object.is_null(&missing) || Pointer.isNull(error) {
+        return failure(b"Missing function did not report an error\0", error, 4)
+      }
+      error = Pointer.null<u8>()
+      let function = Object.adopt(
+        Library.get_function(
+          Object.get(&library),
+          Pointer.fromSlice(b"transform\0"),
+          Pointer.null<u8>(),
+          Pointer.fromMutRef(&mut error),
+        ),
+      )
+      if Object.is_null(&function) {
+        return failure(b"Function lookup failed\0", error, 5)
+      }
+      let pipeline = Object.adopt(
+        Device.new_compute_pipeline_state_with_function(
+          Object.get(&device),
+          Object.get(&function),
+          Pointer.fromMutRef(&mut error),
+        ),
+      )
+      if Object.is_null(&pipeline) {
+        return failure(b"Compute pipeline failed\0", error, 6)
+      }
+      let mut input: [u32; 257] = [0; 257]
+      let mut index: usize = 0
+      let mut value: u32 = 0
+      while index < 257 {
+        input[index] = value
+        index = index + 1
+        value = value + 1
+      }
+      let input_bytes = Intrinsic.pointerReinterpret<*const u32, *const u8>(
+        Pointer.fromRef(&input[0]),
+      )
+      let input_buffer = Object.adopt(
+        Device.new_buffer_with_data(
+          Object.get(&device),
+          Pointer.assumeMany(input_bytes),
+          1028,
+          MTLResourceOptions_StorageModeShared,
+        ),
+      )
+      let output_buffer = Object.adopt(
+        Device.new_buffer(Object.get(&device), 1028, MTLResourceOptions_StorageModeShared),
+      )
+      let readback = Object.adopt(
+        Device.new_buffer(Object.get(&device), 1028, MTLResourceOptions_StorageModeShared),
+      )
+      if Object.is_null(&input_buffer) || Object.is_null(&output_buffer)
+        || Object.is_null(&readback) {
+        return failure(b"Buffer allocation failed\0", error, 7)
+      }
+      let label = b"Silk Metal: caf\xc3\xa9 \xf0\x9f\x8e\xa8\0"
+      Resource.set_label(Object.get(&input_buffer), Pointer.fromSlice(label))
+      if strcmp(Resource.label(Object.get(&input_buffer)), Pointer.fromSlice(label)) != 0 {
+        return failure(b"UTF-8 label round trip failed\0", error, 8)
+      }
+      let queue = Object.adopt(Device.new_command_queue(Object.get(&device)))
+      if Object.is_null(&queue) {
+        return failure(b"Queue allocation failed\0", error, 9)
+      }
+      let command = CommandQueue.new_command_buffer(Object.get(&queue))
+      let encoder = CommandBuffer.new_compute_command_encoder(command)
+      if Pointer.isNull(command) || Pointer.isNull(encoder) {
+        return failure(b"Command encoding failed\0", error, 10)
+      }
+      ComputeCommandEncoder.set_compute_pipeline_state(encoder, Object.get(&pipeline))
+      ComputeCommandEncoder.set_buffer(encoder, 0, Object.get(&input_buffer), 0)
+      ComputeCommandEncoder.set_buffer(encoder, 1, Object.get(&output_buffer), 0)
+      let grid = MTLSize { width: 257, height: 1, depth: 1 }
+      let group = MTLSize { width: 32, height: 1, depth: 1 }
+      ComputeCommandEncoder.dispatch_threads(encoder, grid, group)
+      CommandEncoder.end_encoding(encoder)
+      let blit = CommandBuffer.new_blit_command_encoder(command)
+      BlitCommandEncoder.copy_from_buffer(
+        blit,
+        Object.get(&output_buffer),
+        0,
+        Object.get(&readback),
+        0,
+        1028,
+      )
+      CommandEncoder.end_encoding(blit)
+      let mut completed_status: u32 = 0
+      let context = Intrinsic.pointerReinterpret<*mut u32, *mut u8>(
+        Pointer.fromMutRef(&mut completed_status),
+      )
+      CommandBuffer.add_completed_handler(command, completed, context)
+      CommandBuffer.commit(command)
+      CommandBuffer.wait_until_completed(command)
+      if CommandBuffer.status(command) != MTLCommandBufferStatus_Completed
+        || completed_status != MTLCommandBufferStatus_Completed {
+        return failure(b"GPU command or completion callback failed\0", error, 11)
+      }
+      let raw = Buffer.contents(Object.get(&readback))
+      if Pointer.isNullMany(raw) {
+        return failure(b"Readback mapping failed\0", error, 12)
+      }
+      let words = Intrinsic.pointerReinterpret<?[*]mut u8, ?[*]mut u32>(raw)
+      let readable = Intrinsic.pointerRequalify<?[*]mut u32, [*]const u32>(words)
+      index = 0
+      value = 0
+      while index < 257 {
+        if Pointer.read(Pointer.at(readable, index)) != value * 3 + 7 {
+          return failure(b"GPU result mismatch\0", error, 13)
+        }
+        index = index + 1
+        value = value + 1
+      }
+      drop puts(
+        Pointer.fromSlice(
+          b"PASS: 257 GPU results, blit readback, completion callback, UTF-8, shader errors\0",
+        ),
+      )
+    }
+    return 0
+  }
+} else {
+  // Metal exists only on macOS. Elsewhere the example builds, so a workspace build covers it, and
+  // does nothing.
+  pub fn main() -> i32 {
+    return 0
+  }
+}

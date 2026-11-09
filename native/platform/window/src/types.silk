@@ -1,0 +1,171 @@
+//! Values every backend shares: window ids and options, waiting, cursors, IME state, the
+//! raw handles a GPU surface needs, and errors.
+//!
+//! Positions and sizes are logical points with the origin at the top left of the content
+//! area, y down. Multiply by the window's scale factor for device pixels.
+import silk.core.equal { Equal }
+import silk.core.option { Option }
+import silk.core.ownership { Copy }
+import silk.geometry.rect { Rect }
+import silk.geometry.size { Size2 }
+
+/// Identifies one window of a platform. Ids are never reused while the platform lives.
+pub struct WindowId {
+  pub value: u32,
+}
+
+impl Copy for WindowId {}
+
+impl Equal for WindowId {
+  fn equals(left: &Self, right: &Self) -> bool {
+    return left.value == right.value
+  }
+}
+
+/// Identifies one pending file dialog. Its result arrives as `Event.DialogClosed`.
+pub struct DialogId {
+  pub value: u32,
+}
+
+impl Copy for DialogId {}
+
+impl Equal for DialogId {
+  fn equals(left: &Self, right: &Self) -> bool {
+    return left.value == right.value
+  }
+}
+
+/// How the title bar is drawn.
+pub enum TitleBar {
+  /// The system title bar above the content.
+  Standard,
+  /// The content extends under a transparent title bar; the window controls stay.
+  Transparent,
+  /// No title bar or window controls. The app draws its own and calls `startWindowDrag`.
+  Hidden,
+}
+
+/// What a new window looks like. Sizes are logical points of the content area.
+pub struct WindowOptions<'a> {
+  pub title: string<'a>,
+  pub size: Size2<f64>,
+  pub minSize: Option<Size2<f64>>,
+  pub resizable: bool,
+  pub titleBar: TitleBar,
+  /// Show the window as soon as it is created. A hidden window appears on `setVisible`.
+  pub visible: bool,
+  /// Whether the drawing surface may be transparent where the app draws nothing.
+  pub transparent: bool,
+}
+
+impl<'a> WindowOptions<'a> {
+  /// A visible, resizable window with a standard title bar.
+  pub fn make(title: string<'a>, width: f64, height: f64) -> WindowOptions<'a> {
+    return WindowOptions {
+      title: title,
+      size: Size2<f64>.new(width, height),
+      minSize: Option<Size2<f64>>.None,
+      resizable: true,
+      titleBar: TitleBar.Standard,
+      visible: true,
+      transparent: false,
+    }
+  }
+}
+
+/// How long `Platform.nextEvent` may block when no event is queued.
+pub union Wait {
+  /// Return at once, with `None` when nothing is queued.
+  Poll,
+  /// Block until an event arrives.
+  Forever,
+  /// Block at most this many seconds, then return `None`.
+  Seconds { pub seconds: f64 },
+}
+
+impl Copy for Wait {}
+
+/// The mouse cursor shown over a window's content area.
+pub enum Cursor {
+  Arrow,
+  IBeam,
+  PointingHand,
+  Crosshair,
+  ClosedHand,
+  OpenHand,
+  NotAllowed,
+  ResizeLeftRight,
+  ResizeUpDown,
+  ResizeLeft,
+  ResizeRight,
+  ResizeUp,
+  ResizeDown,
+  ResizeNorthWestSouthEast,
+  ResizeNorthEastSouthWest,
+  ResizeColumn,
+  ResizeRow,
+  IBeamVertical,
+  DragCopy,
+  DragLink,
+  ContextualMenu,
+  /// Hidden while it is over the content area.
+  None,
+}
+
+/// What the input method needs from the focused text field.
+pub struct ImeState {
+  /// Route key presses through the input method. When false, keys still produce
+  /// `Event.TextInput` for the characters they type, without composition.
+  pub enabled: bool,
+  /// The text caret or the selection, in logical points of the content area. The
+  /// candidate window opens next to it.
+  pub cursorArea: Rect<f64>,
+}
+
+impl Copy for ImeState {}
+
+impl ImeState {
+  pub fn disabled() -> ImeState {
+    return ImeState { enabled: false, cursorArea: Rect<f64>.new(0.0, 0.0, 0.0, 0.0) }
+  }
+
+  pub fn at(cursorArea: Rect<f64>) -> ImeState {
+    return ImeState { enabled: true, cursorArea: cursorArea }
+  }
+}
+
+/// The system's light or dark appearance.
+pub enum Appearance {
+  Light,
+  Dark,
+}
+
+/// The native objects a GPU surface is created from. They stay valid until the window is
+/// closed, and only on the thread that runs the platform.
+pub union RawSurface {
+  /// A `CAMetalLayer` that fills the content area (macOS).
+  MetalLayer { pub layer: ?*mut u8 },
+  /// A Win32 window and its module instance.
+  Win32 { pub hwnd: ?*mut u8, pub hinstance: ?*mut u8 },
+  /// A Wayland display and `wl_surface`.
+  Wayland { pub display: ?*mut u8, pub surface: ?*mut u8 },
+  /// An Xlib display and window.
+  Xlib { pub display: ?*mut u8, pub window: u64 },
+  /// A browser canvas, by the id the host page registered it under.
+  Canvas { pub handle: u32 },
+  /// No surface, as from the headless backend.
+  None,
+}
+
+impl Copy for RawSurface {}
+
+pub enum WindowError {
+  /// The backend does not run on this target or in this session (no display server).
+  Unsupported,
+  /// The platform was already created once in this process.
+  AlreadyCreated,
+  /// The system refused to create the window or dialog.
+  CreationFailed,
+  /// The window id names no open window.
+  InvalidWindow,
+}

@@ -1,0 +1,859 @@
+//! The Windows, Linux and browser backends: one Silk platform over the C ABI in
+//! native/bridge.h, implemented by a different native library per target.
+//!
+//! - Windows: native/windows/bridge.c, Win32 with IMM for input methods and DWM pacing.
+//! - Linux: native/linux, Wayland (xdg-shell, text-input-v3, frame callbacks) when
+//!   `WAYLAND_DISPLAY` is set, X11 otherwise.
+//! - Browser (wasm32): browser/window-host.js, a canvas with a hidden text field for input
+//!   methods, paced by `requestAnimationFrame`.
+//!
+//! `backend()` says which one is running. See the README for how each behaves.
+import bridge_sys as sys
+import bridge_sys { RawEvent }
+import event { Event, Key, Modifiers, MouseButton, Phase, ScrollDelta }
+import keys { keyCodeFromValue, namedKeyFromValue, KeyCode, NamedKey }
+import menu { MenuBar, MenuEntry, OpenDialog, SaveDialog, Shortcut, ShortcutKey, SystemItem }
+import platform { Platform }
+import types {
+  WindowId,
+  DialogId,
+  WindowOptions,
+  WindowError,
+  TitleBar,
+  Wait,
+  Cursor,
+  ImeState,
+  Appearance,
+  RawSurface,
+}
+import silk.collections.list { List }
+import silk.core.option { Option }
+import silk.core.result { Result }
+import silk.geometry.point { Point2 }
+import silk.geometry.rect { Rect }
+import silk.geometry.size { Size2 }
+import silk.geometry.vector { Vector2 }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.mem.pointer { Pointer }
+import silk.num.i64
+import silk.num.u16
+import silk.num.u32
+import silk.num.u64
+import silk.num.u8
+import silk.text.char as chars
+import silk.text.string { String, InvalidUtf8 }
+
+// Event kinds in bridge.h.
+const REQUEST_FRAME: u32 = 1
+
+const RESIZED: u32 = 2
+
+const SCALE_FACTOR_CHANGED: u32 = 3
+
+const MOVED: u32 = 4
+
+const FOCUSED: u32 = 5
+
+const OCCLUDED: u32 = 6
+
+const CLOSE_REQUESTED: u32 = 7
+
+const FULL_SCREEN_CHANGED: u32 = 8
+
+const KEY_DOWN: u32 = 9
+
+const KEY_UP: u32 = 10
+
+const MODIFIERS_CHANGED: u32 = 11
+
+const TEXT_INPUT: u32 = 12
+
+const IME_PREEDIT: u32 = 13
+
+const MOUSE_MOVED: u32 = 14
+
+const MOUSE_DOWN: u32 = 15
+
+const MOUSE_UP: u32 = 16
+
+const MOUSE_ENTERED: u32 = 17
+
+const MOUSE_EXITED: u32 = 18
+
+const SCROLL: u32 = 19
+
+const PINCH: u32 = 20
+
+const MENU_ACTION: u32 = 21
+
+const DIALOG_CLOSED: u32 = 22
+
+const APPEARANCE_CHANGED: u32 = 23
+
+const QUIT_REQUESTED: u32 = 24
+
+const FLAG_REPEAT: u32 = 1
+
+const FLAG_IME_HANDLED: u32 = 2
+
+const FLAG_ON: u32 = 4
+
+const FLAG_PRECISE: u32 = 8
+
+const WINDOW_RESIZABLE: u32 = 1
+
+const WINDOW_VISIBLE: u32 = 2
+
+const WINDOW_TRANSPARENT: u32 = 4
+
+const WINDOW_TITLE_TRANSPARENT: u32 = 8
+
+const WINDOW_TITLE_HIDDEN: u32 = 16
+
+const BUTTONS: [MouseButton; 6] = [
+  MouseButton.Left,
+  MouseButton.Right,
+  MouseButton.Middle,
+  MouseButton.Back,
+  MouseButton.Forward,
+  MouseButton.Other,
+]
+
+const PHASES: [Phase; 7] = [
+  Phase.None,
+  Phase.Began,
+  Phase.Changed,
+  Phase.Ended,
+  Phase.Cancelled,
+  Phase.Momentum,
+  Phase.MomentumEnded,
+]
+
+/// Which native library is behind a `BridgePlatform`.
+pub enum Backend {
+  /// Not started, or a target without a backend.
+  None,
+  Win32,
+  Wayland,
+  X11,
+  Browser,
+}
+
+/// A mouse action for `BridgePlatform.simulateMouse`.
+pub enum MouseAction {
+  Move,
+  Press,
+  Release,
+  /// A wheel turn by `delta` lines.
+  Wheel,
+}
+
+/// The Windows, Linux or browser platform. There is one per process (one per page in the
+/// browser), used from the thread that started it.
+pub struct BridgePlatform {
+  kind: Backend,
+}
+
+impl BridgePlatform {
+  /// Connects to the window system: Win32 on Windows; Wayland, then X11, on Linux; the host
+  /// page in a browser. Fails with `Unsupported` when there is none (no display server, or a
+  /// target without a backend), and `AlreadyCreated` the second time.
+  pub effect fn start() -> BridgePlatform
+    ! WindowError {
+    let status = unsafe sys.silk_window_start()
+    if status == 1 {
+      fail WindowError.AlreadyCreated
+    }
+    if status != 0 {
+      fail WindowError.Unsupported
+    }
+    return BridgePlatform { kind: BridgePlatform.backendOf(unsafe sys.silk_window_backend()) }
+  }
+
+  /// Which window system this platform talks to.
+  pub fn backend(self: &Self) -> Backend {
+    return self.kind
+  }
+
+  fn backendOf(value: u32) -> Backend {
+    if value == 1 {
+      return Backend.Win32
+    }
+    if value == 2 {
+      return Backend.Wayland
+    }
+    if value == 3 {
+      return Backend.X11
+    }
+    if value == 4 {
+      return Backend.Browser
+    }
+    return Backend.None
+  }
+
+  // Test hooks: drive the window system the way a user would, for the smoke tests. Each
+  // returns false when the backend cannot simulate that input.
+
+  /// A press and release of the physical key `code`, typing `text` (empty for keys that
+  /// type nothing), with `modifiers` held.
+  pub fn simulateKey(
+    self: &mut Self,
+    window: WindowId,
+    code: KeyCode,
+    text: string,
+    modifiers: Modifiers,
+  ) -> bool {
+    return unsafe sys.silk_window_test_key(
+      window.value,
+      u16.toU32(KeyCode.value(code)),
+      BridgePlatform.bytes(text),
+      String.byteLength(text),
+      modifiers.bits(),
+    )
+      != 0
+  }
+
+  /// A pointer action at `position` in points of the content area.
+  pub fn simulateMouse(
+    self: &mut Self,
+    window: WindowId,
+    action: MouseAction,
+    button: MouseButton,
+    position: Point2<f64>,
+    delta: Vector2<f64>,
+  ) -> bool {
+    return unsafe sys.silk_window_test_mouse(
+      window.value,
+      u8.toU32(MouseAction.value(action)),
+      u8.toU32(MouseButton.value(button)),
+      position.x,
+      position.y,
+      delta.x,
+      delta.y,
+    )
+      != 0
+  }
+
+  /// Composition text as an input method sends it; offsets are UTF-8 bytes.
+  pub fn simulatePreedit(
+    self: &mut Self,
+    window: WindowId,
+    text: string,
+    selectionStart: u64,
+    selectionEnd: u64,
+  ) -> bool {
+    return unsafe sys.silk_window_test_preedit(
+      window.value,
+      BridgePlatform.bytes(text),
+      String.byteLength(text),
+      selectionStart,
+      selectionEnd,
+    )
+      != 0
+  }
+
+  /// Text an input method commits.
+  pub fn simulateCommit(self: &mut Self, window: WindowId, text: string) -> bool {
+    return unsafe sys.silk_window_test_commit(
+      window.value,
+      BridgePlatform.bytes(text),
+      String.byteLength(text),
+    )
+      != 0
+  }
+
+  /// Resizes the content area as the window manager or a drag of the edge would.
+  pub fn simulateResize(self: &mut Self, window: WindowId, size: Size2<f64>) -> bool {
+    return unsafe sys.silk_window_test_resize(window.value, size.width, size.height) != 0
+  }
+
+  /// Where the backend last told the input method the caret is, in points of the content
+  /// area.
+  pub fn imeCursorArea(self: &Self, window: WindowId) -> Rect<f64> {
+    let mut x: f64 = 0.0
+    let mut y: f64 = 0.0
+    let mut width: f64 = 0.0
+    let mut height: f64 = 0.0
+    unsafe sys.silk_window_test_ime_rect(
+      window.value,
+      Pointer.fromMutRef(&mut x),
+      Pointer.fromMutRef(&mut y),
+      Pointer.fromMutRef(&mut width),
+      Pointer.fromMutRef(&mut height),
+    )
+    return Rect<f64>.new(x, y, x + width, y + height)
+  }
+
+  /// The `index`th string of the event `nextEvent` last received from the bridge.
+  effect fn text(self: &Self, index: usize) -> String
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let length = unsafe sys.silk_window_event_text(index, BridgePlatform.noBytes(), 0)
+    if length == 0 {
+      return String.make()
+    }
+    let mut bytes = run List<u8>.makeWithCapacity(length)
+    run bytes.appendRepeated(0, length)
+    drop unsafe sys.silk_window_event_text(index, Pointer.fromMutSlice(bytes.asMutSlice()), length)
+    return run BridgePlatform.utf8(bytes.asSlice())
+  }
+
+  effect fn utf8(bytes: &[u8]) -> String
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    match move run String.copyUtf8(bytes) {
+      Result<String, InvalidUtf8>.Success { value } => {
+        return move value
+      }
+      _ => {
+        return String.make()
+      }
+    }
+  }
+
+  fn noBytes() -> ?[*]mut u8 {
+    return unsafe Intrinsic.pointerRequalify<?*mut u8, ?[*]mut u8>(Pointer.null<u8>())
+  }
+
+  effect fn key(self: &Self, raw: &RawEvent) -> Key
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let text = run self.text(0)
+    if raw.named != 0 || String.byteLength(text.view()) == 0 {
+      return Key.Named { key: namedKeyFromValue(raw.named) }
+    }
+    return Key.Character { text: move text }
+  }
+
+  effect fn decode(self: &Self, raw: &RawEvent) -> Option<Event>
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let window = WindowId { value: raw.window }
+    let position = Point2<f64>.new(raw.x, raw.y)
+    let modifiers = Modifiers.fromBits(raw.modifiers)
+    let on = (raw.flags & FLAG_ON) != 0
+    let kind = raw.kind
+    if kind == REQUEST_FRAME {
+      return Option<Event>.some(Event.RequestFrame { window: window, targetTime: raw.value })
+    }
+    if kind == RESIZED {
+      return Option<Event>.some(
+        Event.Resized {
+          window: window,
+          size: Size2<f64>.new(raw.x, raw.y),
+          scaleFactor: raw.value,
+        },
+      )
+    }
+    if kind == SCALE_FACTOR_CHANGED {
+      return Option<Event>.some(Event.ScaleFactorChanged { window: window, scaleFactor: raw.value })
+    }
+    if kind == MOVED {
+      return Option<Event>.some(Event.Moved { window: window, position: position })
+    }
+    if kind == FOCUSED {
+      return Option<Event>.some(Event.Focused { window: window, focused: on })
+    }
+    if kind == OCCLUDED {
+      return Option<Event>.some(Event.Occluded { window: window, occluded: on })
+    }
+    if kind == CLOSE_REQUESTED {
+      return Option<Event>.some(Event.CloseRequested { window: window })
+    }
+    if kind == FULL_SCREEN_CHANGED {
+      return Option<Event>.some(Event.FullScreenChanged { window: window, fullScreen: on })
+    }
+    if kind == KEY_DOWN {
+      let key = run self.key(raw)
+      return Option<Event>.some(
+        Event.KeyDown {
+          window: window,
+          key: move key,
+          code: keyCodeFromValue(raw.code),
+          modifiers: modifiers,
+          repeat: (raw.flags & FLAG_REPEAT) != 0,
+          imeHandled: (raw.flags & FLAG_IME_HANDLED) != 0,
+        },
+      )
+    }
+    if kind == KEY_UP {
+      let key = run self.key(raw)
+      return Option<Event>.some(
+        Event.KeyUp {
+          window: window,
+          key: move key,
+          code: keyCodeFromValue(raw.code),
+          modifiers: modifiers,
+        },
+      )
+    }
+    if kind == MODIFIERS_CHANGED {
+      return Option<Event>.some(Event.ModifiersChanged { window: window, modifiers: modifiers })
+    }
+    if kind == TEXT_INPUT {
+      let text = run self.text(0)
+      return Option<Event>.some(Event.TextInput { window: window, text: move text })
+    }
+    if kind == IME_PREEDIT {
+      let text = run self.text(0)
+      return Option<Event>.some(
+        Event.ImePreedit {
+          window: window,
+          text: move text,
+          selectionStart: u64.toUsize(raw.start),
+          selectionEnd: u64.toUsize(raw.end),
+        },
+      )
+    }
+    if kind == MOUSE_MOVED {
+      return Option<Event>.some(
+        Event.MouseMoved { window: window, position: position, modifiers: modifiers },
+      )
+    }
+    if kind == MOUSE_DOWN {
+      return Option<Event>.some(
+        Event.MouseDown {
+          window: window,
+          button: BridgePlatform.button(raw.code),
+          position: position,
+          modifiers: modifiers,
+          clickCount: raw.count,
+        },
+      )
+    }
+    if kind == MOUSE_UP {
+      return Option<Event>.some(
+        Event.MouseUp {
+          window: window,
+          button: BridgePlatform.button(raw.code),
+          position: position,
+          modifiers: modifiers,
+        },
+      )
+    }
+    if kind == MOUSE_ENTERED {
+      return Option<Event>.some(Event.MouseEntered { window: window, position: position })
+    }
+    if kind == MOUSE_EXITED {
+      return Option<Event>.some(Event.MouseExited { window: window })
+    }
+    if kind == SCROLL {
+      let delta = Vector2<f64>.new(raw.dx, raw.dy)
+      let mut scroll = ScrollDelta.Lines { delta: delta }
+      if (raw.flags & FLAG_PRECISE) != 0 {
+        scroll = ScrollDelta.Points { delta: delta }
+      }
+      return Option<Event>.some(
+        Event.Scroll {
+          window: window,
+          position: position,
+          delta: scroll,
+          phase: BridgePlatform.phase(raw.phase),
+          modifiers: modifiers,
+        },
+      )
+    }
+    if kind == PINCH {
+      return Option<Event>.some(
+        Event.Pinch {
+          window: window,
+          position: position,
+          delta: raw.dx,
+          phase: BridgePlatform.phase(raw.phase),
+        },
+      )
+    }
+    if kind == MENU_ACTION {
+      return Option<Event>.some(Event.MenuAction { action: raw.code })
+    }
+    if kind == DIALOG_CLOSED {
+      let count = u32.toUsize(raw.count)
+      let mut paths = run List<String>.makeWithCapacity(count)
+      let mut i: usize = 0
+      while i < count {
+        let path = run self.text(i)
+        run paths.append(move path)
+        i = i + 1
+      }
+      return Option<Event>.some(
+        Event.DialogClosed { dialog: DialogId { value: raw.code }, paths: move paths },
+      )
+    }
+    if kind == APPEARANCE_CHANGED {
+      return Option<Event>.some(
+        Event.AppearanceChanged { appearance: BridgePlatform.appearanceOf(raw.code) },
+      )
+    }
+    if kind == QUIT_REQUESTED {
+      return Option<Event>.some(Event.QuitRequested)
+    }
+    return Option<Event>.None
+  }
+
+  fn button(code: u32) -> MouseButton {
+    if code >= 6 {
+      return MouseButton.Other
+    }
+    return BUTTONS[u32.toUsize(code)]
+  }
+
+  fn phase(code: u32) -> Phase {
+    if code >= 7 {
+      return Phase.None
+    }
+    return PHASES[u32.toUsize(code)]
+  }
+
+  fn appearanceOf(code: u32) -> Appearance {
+    if code == 1 {
+      return Appearance.Dark
+    }
+    return Appearance.Light
+  }
+
+  fn bytes(text: string) -> ?[*]const u8 {
+    return Pointer.fromSlice(String.utf8Bytes(text))
+  }
+
+  fn optionalText<'a>(text: Option<string<'a>>) -> string<'a> {
+    match text {
+      Option<string<'a>>.Some { value } => {
+        return value
+      }
+      _ => {
+        return ""
+      }
+    }
+  }
+
+  fn parent(parent: Option<WindowId>) -> u32 {
+    match parent {
+      Option<WindowId>.Some { value } => {
+        return value.value
+      }
+      _ => {
+        return 0
+      }
+    }
+  }
+}
+
+fn bool8(value: bool) -> u8 {
+  if value {
+    return 1
+  }
+  return 0
+}
+
+impl Platform for BridgePlatform {
+  effect fn openWindow(self: &mut Self, options: &WindowOptions<'_>) -> WindowId
+    ! WindowError | OutOfMemoryError
+    ? &mut Allocator {
+    let mut flags: u32 = 0
+    if options.resizable {
+      flags = flags | WINDOW_RESIZABLE
+    }
+    if options.visible {
+      flags = flags | WINDOW_VISIBLE
+    }
+    if options.transparent {
+      flags = flags | WINDOW_TRANSPARENT
+    }
+    if options.titleBar == TitleBar.Transparent {
+      flags = flags | WINDOW_TITLE_TRANSPARENT
+    }
+    if options.titleBar == TitleBar.Hidden {
+      flags = flags | WINDOW_TITLE_HIDDEN
+    }
+    let minSize = match options.minSize {
+      Option<Size2<f64>>.Some { value } => value
+      _ => Size2<f64>.zero()
+    }
+    let id = unsafe sys.silk_window_open(
+      BridgePlatform.bytes(options.title),
+      String.byteLength(options.title),
+      options.size.width,
+      options.size.height,
+      minSize.width,
+      minSize.height,
+      flags,
+    )
+    if id == 0 {
+      fail WindowError.CreationFailed
+    }
+    return WindowId { value: id }
+  }
+
+  fn closeWindow(self: &mut Self, window: WindowId) -> () {
+    unsafe sys.silk_window_close(window.value)
+  }
+
+  effect fn nextEvent(self: &mut Self, wait: Wait) -> Option<Event>
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let timeout = match wait {
+      Wait.Poll => 0.0
+      Wait.Forever => -1.0
+      Wait.Seconds { seconds } => if seconds < 0.0 {
+        0.0
+      } else {
+        seconds
+      }
+    }
+    while true {
+      let mut raw = RawEvent.zero()
+      if unsafe sys.silk_window_next_event(timeout, Pointer.fromMutRef(&mut raw)) == 0 {
+        return Option<Event>.None
+      }
+      let decoded = run self.decode(&raw)
+      if Option<Event>.isSome(&decoded) {
+        return move decoded
+      }
+    }
+    return Option<Event>.None
+  }
+
+  fn requestFrame(self: &mut Self, window: WindowId) -> () {
+    unsafe sys.silk_window_request_frame(window.value)
+  }
+
+  fn contentSize(self: &Self, window: WindowId) -> Size2<f64> {
+    let mut width: f64 = 0.0
+    let mut height: f64 = 0.0
+    unsafe sys.silk_window_content_size(
+      window.value,
+      Pointer.fromMutRef(&mut width),
+      Pointer.fromMutRef(&mut height),
+    )
+    return Size2<f64>.new(width, height)
+  }
+
+  fn scaleFactor(self: &Self, window: WindowId) -> f64 {
+    return unsafe sys.silk_window_scale_factor(window.value)
+  }
+
+  fn rawSurface(self: &Self, window: WindowId) -> RawSurface {
+    let mut first = Pointer.null<u8>()
+    let mut second = Pointer.null<u8>()
+    let mut id: u64 = 0
+    let kind = unsafe sys.silk_window_raw_surface(
+      window.value,
+      Pointer.fromMutRef(&mut first),
+      Pointer.fromMutRef(&mut second),
+      Pointer.fromMutRef(&mut id),
+    )
+    if kind == 2 {
+      return RawSurface.Wayland { display: first, surface: second }
+    }
+    if kind == 3 {
+      return RawSurface.Xlib { display: first, window: id }
+    }
+    if kind == 4 {
+      return RawSurface.Win32 { hwnd: first, hinstance: second }
+    }
+    if kind == 5 {
+      return RawSurface.Canvas { handle: u64.toU32(id) }
+    }
+    return RawSurface.None
+  }
+
+  effect fn setTitle(self: &mut Self, window: WindowId, title: string) -> ()
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    unsafe sys.silk_window_set_title(
+      window.value,
+      BridgePlatform.bytes(title),
+      String.byteLength(title),
+    )
+  }
+
+  fn setContentSize(self: &mut Self, window: WindowId, size: Size2<f64>) -> () {
+    unsafe sys.silk_window_set_content_size(window.value, size.width, size.height)
+  }
+
+  fn setMinContentSize(self: &mut Self, window: WindowId, size: Size2<f64>) -> () {
+    unsafe sys.silk_window_set_min_content_size(window.value, size.width, size.height)
+  }
+
+  fn setVisible(self: &mut Self, window: WindowId, visible: bool) -> () {
+    unsafe sys.silk_window_set_visible(window.value, bool8(visible))
+  }
+
+  fn focus(self: &mut Self, window: WindowId) -> () {
+    unsafe sys.silk_window_focus(window.value)
+  }
+
+  fn minimize(self: &mut Self, window: WindowId) -> () {
+    unsafe sys.silk_window_minimize(window.value)
+  }
+
+  fn toggleFullScreen(self: &mut Self, window: WindowId) -> () {
+    unsafe sys.silk_window_toggle_full_screen(window.value)
+  }
+
+  fn startWindowDrag(self: &mut Self, window: WindowId) -> () {
+    unsafe sys.silk_window_start_window_drag(window.value)
+  }
+
+  fn setCursor(self: &mut Self, window: WindowId, cursor: Cursor) -> () {
+    unsafe sys.silk_window_set_cursor(window.value, u8.toU32(Cursor.value(cursor)))
+  }
+
+  fn setIme(self: &mut Self, window: WindowId, ime: ImeState) -> () {
+    let area = ime.cursorArea
+    unsafe sys.silk_window_set_ime(
+      window.value,
+      bool8(ime.enabled),
+      area.xMin,
+      area.yMin,
+      area.width(),
+      area.height(),
+    )
+  }
+
+  effect fn setMenuBar(self: &mut Self, bar: &MenuBar) -> ()
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    unsafe sys.silk_window_menu_begin_bar()
+    let entries = bar.entries.asSlice()
+    let mut i: usize = 0
+    while i < entries.length {
+      match &entries[i] {
+        MenuEntry.Begin { title } => {
+          unsafe sys.silk_window_menu_begin(
+            BridgePlatform.bytes(title.view()),
+            String.byteLength(title.view()),
+          )
+        }
+        MenuEntry.End => {
+          unsafe sys.silk_window_menu_end()
+        }
+        MenuEntry.Action { title, action, shortcut, enabled, checked } => {
+          let mut keyKind: u32 = 0
+          let mut keyValue: u32 = 0
+          let mut modifiers: u32 = 0
+          match shortcut {
+            Option<Shortcut>.Some { value } => {
+              modifiers = value.modifiers.bits()
+              match value.key {
+                ShortcutKey.Character { character } => {
+                  keyKind = 1
+                  keyValue = chars.toU32(character)
+                }
+                ShortcutKey.Named { key } => {
+                  keyKind = 2
+                  keyValue = u16.toU32(NamedKey.value(key))
+                }
+              }
+            }
+            _ => {}
+          }
+          unsafe sys.silk_window_menu_action(
+            BridgePlatform.bytes(title.view()),
+            String.byteLength(title.view()),
+            action,
+            keyKind,
+            keyValue,
+            modifiers,
+            bool8(enabled),
+            bool8(checked),
+          )
+        }
+        MenuEntry.Separator => {
+          unsafe sys.silk_window_menu_separator()
+        }
+        MenuEntry.System { item } => {
+          unsafe sys.silk_window_menu_system(u8.toU32(SystemItem.value(item)))
+        }
+      }
+      i = i + 1
+    }
+    unsafe sys.silk_window_menu_commit()
+  }
+
+  effect fn openFileDialog(self: &mut Self, options: &OpenDialog<'_>) -> DialogId
+    ! WindowError | OutOfMemoryError
+    ? &mut Allocator {
+    let mut flags: u32 = 0
+    if options.files {
+      flags = flags | 1
+    }
+    if options.directories {
+      flags = flags | 2
+    }
+    if options.multiple {
+      flags = flags | 4
+    }
+    if Option<string>.isSome(&options.directory) {
+      flags = flags | 8
+    }
+    let directory = BridgePlatform.optionalText(options.directory)
+    let id = unsafe sys.silk_window_open_dialog(
+      BridgePlatform.bytes(options.title),
+      String.byteLength(options.title),
+      BridgePlatform.bytes(directory),
+      String.byteLength(directory),
+      BridgePlatform.bytes(options.extensions),
+      String.byteLength(options.extensions),
+      flags,
+      BridgePlatform.parent(options.parent),
+    )
+    if id == 0 {
+      fail WindowError.CreationFailed
+    }
+    return DialogId { value: id }
+  }
+
+  effect fn saveFileDialog(self: &mut Self, options: &SaveDialog<'_>) -> DialogId
+    ! WindowError | OutOfMemoryError
+    ? &mut Allocator {
+    let mut flags: u32 = 0
+    if Option<string>.isSome(&options.directory) {
+      flags = flags | 8
+    }
+    let directory = BridgePlatform.optionalText(options.directory)
+    let id = unsafe sys.silk_window_save_dialog(
+      BridgePlatform.bytes(options.title),
+      String.byteLength(options.title),
+      BridgePlatform.bytes(directory),
+      String.byteLength(directory),
+      BridgePlatform.bytes(options.name),
+      String.byteLength(options.name),
+      BridgePlatform.bytes(options.extensions),
+      String.byteLength(options.extensions),
+      flags,
+      BridgePlatform.parent(options.parent),
+    )
+    if id == 0 {
+      fail WindowError.CreationFailed
+    }
+    return DialogId { value: id }
+  }
+
+  effect fn readClipboard(self: &mut Self) -> Option<String>
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let length = unsafe sys.silk_window_clipboard_read(BridgePlatform.noBytes(), 0)
+    if length < 0 {
+      return Option<String>.None
+    }
+    let size = i64.toUsize(length)
+    let mut bytes = run List<u8>.makeWithCapacity(size)
+    run bytes.appendRepeated(0, size)
+    if size != 0 {
+      drop unsafe sys.silk_window_clipboard_read(Pointer.fromMutSlice(bytes.asMutSlice()), size)
+    }
+    let text = run BridgePlatform.utf8(bytes.asSlice())
+    return Option<String>.some(move text)
+  }
+
+  effect fn writeClipboard(self: &mut Self, text: string) -> ()
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    unsafe sys.silk_window_clipboard_write(BridgePlatform.bytes(text), String.byteLength(text))
+  }
+
+  fn appearance(self: &Self) -> Appearance {
+    return BridgePlatform.appearanceOf(unsafe sys.silk_window_appearance())
+  }
+}

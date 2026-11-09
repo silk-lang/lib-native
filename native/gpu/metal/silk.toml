@@ -1,0 +1,22 @@
+[package]
+name = "gpu-metal"
+description = "Metal bindings for programs that talk to Apple GPUs directly; a port of metal-rs"
+version = "0.1.0"
+silk-version = "0.1.0-dev.61+91f335268900"
+source = "src"
+main = "runtime.silk"
+kind = "static-library"
+exports = ["runtime", "types", "core", "device", "encoder", "resources", "pipeline", "library", "raytracing"]
+
+# The Objective-C half of the bindings. It and the frameworks reach every executable that
+# depends on this package; other hosts skip both.
+[native]
+sources = [
+  { objc = "native/*.m", include = ["native"], flags = ["-fno-objc-arc", "-fblocks", "-O2", "-Wall", "-Wextra", "-Wno-deprecated-declarations", "-mmacosx-version-min=14.0"], os = "macos" },
+]
+link = [
+  { framework = "Foundation", os = "macos" },
+  { framework = "Metal", os = "macos" },
+  { framework = "QuartzCore", os = "macos" },
+  { framework = "MetalPerformanceShaders", os = "macos" },
+]

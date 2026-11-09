@@ -1,0 +1,449 @@
+//! The smoke test of the Windows, Linux and browser backends, against the real window
+//! system: frames only on request, resize, input method composition and commit, typed keys,
+//! pointer input, menu shortcuts, clipboard, dialogs and closing.
+//!
+//! `run` returns 0 when every hard check passed. Checks the window system may refuse in a
+//! virtual session (focus, a dialog program) are reported as skipped.
+import window.bridge { BridgePlatform, Backend, MouseAction }
+import window.event { Event, Key, Modifiers, MouseButton, ScrollDelta }
+import window.keys { KeyCode, NamedKey }
+import window.menu { MenuBar, OpenDialog, Shortcut, SystemItem }
+import window.platform { Platform }
+import window.types { WindowId, WindowOptions, WindowError, Wait, ImeState, RawSurface }
+import silk.collections.list { List }
+import silk.core.effect { Effect }
+import silk.core.option { Option }
+import silk.geometry.point { Point2 }
+import silk.geometry.rect { Rect }
+import silk.geometry.size { Size2 }
+import silk.geometry.vector { Vector2 }
+import report { write }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.text.string { String }
+
+/// What arrived while the test waited.
+struct Tally {
+  frames: u32,
+  resizes: u32,
+  width: f64,
+  preedit: String,
+  preeditStart: usize,
+  preeditEvents: u32,
+  text: String,
+  keyDowns: u32,
+  keyUps: u32,
+  keyA: bool,
+  shiftedA: bool,
+  enter: bool,
+  menuActions: u32,
+  lastAction: u32,
+  moves: u32,
+  lastX: f64,
+  downs: u32,
+  ups: u32,
+  rightDown: bool,
+  scrollY: f64,
+  dialogs: u32,
+  dialogPaths: u32,
+  dialogPath: String,
+  closeRequests: u32,
+  quits: u32,
+}
+
+impl Tally {
+  fn make() -> Tally {
+    return Tally {
+      frames: 0,
+      resizes: 0,
+      width: 0.0,
+      preedit: String.make(),
+      preeditStart: 0,
+      preeditEvents: 0,
+      text: String.make(),
+      keyDowns: 0,
+      keyUps: 0,
+      keyA: false,
+      shiftedA: false,
+      enter: false,
+      menuActions: 0,
+      lastAction: 0,
+      moves: 0,
+      lastX: 0.0,
+      downs: 0,
+      ups: 0,
+      rightDown: false,
+      scrollY: 0.0,
+      dialogs: 0,
+      dialogPaths: 0,
+      dialogPath: String.make(),
+      closeRequests: 0,
+      quits: 0,
+    }
+  }
+}
+
+/// Collects events for about `seconds`.
+effect fn collect(platform: &mut BridgePlatform, seconds: f64) -> Tally
+  ! OutOfMemoryError
+  ? &mut Allocator {
+  let mut tally = Tally.make()
+  let mut waited: f64 = 0.0
+  while waited < seconds {
+    match move run platform.nextEvent(Wait.Seconds { seconds: 0.02 }) {
+      Option<Event>.Some { value } => {
+        match &value {
+          Event.RequestFrame { window, targetTime } => {
+            tally.frames = tally.frames + 1
+          }
+          Event.Resized { window, size, scaleFactor } => {
+            tally.resizes = tally.resizes + 1
+            tally.width = size.width
+          }
+          Event.ImePreedit { window, text, selectionStart, selectionEnd } => {
+            tally.preeditEvents = tally.preeditEvents + 1
+            tally.preedit.clear()
+            run tally.preedit.append(text.view())
+            tally.preeditStart = selectionStart
+          }
+          Event.TextInput { window, text } => {
+            run tally.text.append(text.view())
+          }
+          Event.KeyDown { window, key, code, modifiers, repeat, imeHandled } => {
+            tally.keyDowns = tally.keyDowns + 1
+            match &key {
+              Key.Character { text } => {
+                if code == KeyCode.KeyA && text.view() == "a" {
+                  tally.keyA = true
+                }
+                if code == KeyCode.KeyA && text.view() == "A" && modifiers.shift {
+                  tally.shiftedA = true
+                }
+              }
+              Key.Named { key: named } => {
+                if named == NamedKey.Enter && code == KeyCode.Enter {
+                  tally.enter = true
+                }
+              }
+            }
+          }
+          Event.KeyUp { window, key, code, modifiers } => {
+            tally.keyUps = tally.keyUps + 1
+          }
+          Event.MenuAction { action } => {
+            tally.menuActions = tally.menuActions + 1
+            tally.lastAction = action
+          }
+          Event.MouseMoved { window, position, modifiers } => {
+            tally.moves = tally.moves + 1
+            tally.lastX = position.x
+          }
+          Event.MouseDown { window, button, position, modifiers, clickCount } => {
+            tally.downs = tally.downs + 1
+            if button == MouseButton.Right {
+              tally.rightDown = true
+            }
+          }
+          Event.MouseUp { window, button, position, modifiers } => {
+            tally.ups = tally.ups + 1
+          }
+          Event.Scroll { window, position, delta, phase, modifiers } => {
+            match delta {
+              ScrollDelta.Lines { delta: lines } => {
+                tally.scrollY = tally.scrollY + lines.y
+              }
+              ScrollDelta.Points { delta: points } => {
+                tally.scrollY = tally.scrollY + points.y
+              }
+            }
+          }
+          Event.DialogClosed { dialog, paths } => {
+            tally.dialogs = tally.dialogs + 1
+            tally.dialogPaths = tally.dialogPaths + 1
+            if paths.length() != 0 {
+              tally.dialogPath.clear()
+              run tally.dialogPath.append(paths.asSlice()[0].view())
+            }
+          }
+          Event.CloseRequested { window } => {
+            tally.closeRequests = tally.closeRequests + 1
+          }
+          Event.QuitRequested => {
+            tally.quits = tally.quits + 1
+          }
+          _ => {}
+        }
+      }
+      _ => {
+        waited = waited + 0.02
+      }
+    }
+  }
+  return move tally
+}
+
+struct Checks {
+  failed: u32,
+}
+
+impl Checks {
+  fn check(self: &mut Self, ok: bool, what: string<'static>) -> () {
+    if ok {
+      write("ok    ")
+      write(what)
+      write("\n")
+    } else {
+      write("FAIL  ")
+      write(what)
+      write("\n")
+      self.failed = self.failed + 1
+    }
+  }
+
+  fn soft(self: &mut Self, ok: bool, what: string<'static>, why: string<'static>) -> () {
+    if ok {
+      write("ok    ")
+      write(what)
+      write("\n")
+    } else {
+      write("skip  ")
+      write(what)
+      write(" (")
+      write(why)
+      write(")\n")
+    }
+  }
+
+  fn skip(self: &mut Self, what: string<'static>, why: string<'static>) -> () {
+    write("skip  ")
+    write(what)
+    write(" (")
+    write(why)
+    write(")\n")
+  }
+}
+
+fn backendName(backend: Backend) -> string<'static> {
+  return match backend {
+    Backend.Win32 => "Win32"
+    Backend.Wayland => "Wayland"
+    Backend.X11 => "X11"
+    Backend.Browser => "browser"
+    Backend.None => "none"
+  }
+}
+
+fn surfaceMatches(backend: Backend, surface: RawSurface) -> bool {
+  return match surface {
+    RawSurface.Win32 { hwnd, hinstance } => backend == Backend.Win32
+    RawSurface.Wayland { display, surface: wlSurface } => backend == Backend.Wayland
+    RawSurface.Xlib { display, window } => backend == Backend.X11 && window != 0
+    RawSurface.Canvas { handle } => backend == Backend.Browser
+    _ => false
+  }
+}
+
+effect fn smoke(checks: &mut Checks) -> ()
+  ! WindowError | OutOfMemoryError
+  ? &mut Allocator {
+  let mut platform = run BridgePlatform.start()
+  let backend = platform.backend()
+  write("backend ")
+  write(backendName(backend))
+  write("\n")
+  checks.check(backend != Backend.None, "the platform names its window system")
+  let options = WindowOptions.make("platform-window smoke test", 400.0, 300.0)
+  let window = run platform.openWindow(&options)
+  platform.focus(window)
+
+  let opened = run collect(&mut platform, 0.5)
+  checks.check(opened.resizes >= 1 && opened.width == 400.0, "first Resized has the content width")
+  checks.check(opened.frames >= 1, "a new window gets a first frame")
+  checks.check(platform.scaleFactor(window) >= 1.0, "scale factor")
+  checks.check(
+    surfaceMatches(backend, platform.rawSurface(window)),
+    "raw surface handles for the window system",
+  )
+
+  let idle = run collect(&mut platform, 0.3)
+  checks.check(idle.frames == 0, "no frames without a request")
+  platform.requestFrame(window)
+  platform.requestFrame(window)
+  platform.requestFrame(window)
+  let requested = run collect(&mut platform, 0.3)
+  checks.check(requested.frames == 1, "requests coalesce into one display-paced frame")
+
+  let mut animated: u32 = 0
+  let mut waited: u32 = 0
+  platform.requestFrame(window)
+  while animated < 10 && waited < 200 {
+    match move run platform.nextEvent(Wait.Seconds { seconds: 0.05 }) {
+      Option<Event>.Some { value: Event.RequestFrame { window: framed, targetTime } } => {
+        animated = animated + 1
+        platform.requestFrame(window)
+      }
+      _ => {
+        waited = waited + 1
+      }
+    }
+  }
+  checks.check(animated == 10, "requesting from each frame animates")
+  drop run collect(&mut platform, 0.1)
+
+  if platform.simulateResize(window, Size2<f64>.new(500.0, 350.0)) {
+    let resized = run collect(&mut platform, 0.5)
+    checks.check(resized.resizes >= 1 && resized.width == 500.0, "resize delivers Resized")
+    checks.check(resized.frames >= 1, "resize delivers a frame")
+    checks.check(platform.contentSize(window).width == 500.0, "content size follows")
+  } else {
+    checks.skip("resize", "the backend cannot simulate it")
+  }
+
+  platform.setIme(window, ImeState.at(Rect<f64>.new(10.0, 20.0, 12.0, 38.0)))
+  let area = platform.imeCursorArea(window)
+  checks.check(
+    area.xMin == 10.0 && area.yMin == 20.0 && area.width() == 2.0 && area.height() == 18.0,
+    "the input method is told where the caret is",
+  )
+  if platform.simulatePreedit(window, "にほん", 9, 9) {
+    let composing = run collect(&mut platform, 0.2)
+    checks.check(composing.preedit.view() == "にほん", "preedit text")
+    checks.check(composing.preeditStart == 9, "preedit caret in UTF-8 bytes")
+    drop platform.simulateCommit(window, "日本")
+    let committed = run collect(&mut platform, 0.2)
+    checks.check(
+      committed.preeditEvents >= 1 && committed.preedit.view() == "",
+      "commit ends the preedit",
+    )
+    checks.check(committed.text.view() == "日本", "commit delivers TextInput")
+  } else {
+    checks.skip("input method composition", "the backend cannot simulate it")
+  }
+
+  platform.setIme(window, ImeState.disabled())
+  drop platform.simulateKey(window, KeyCode.KeyA, "a", Modifiers.none())
+  let typed = run collect(&mut platform, 0.3)
+  checks.check(typed.keyA && typed.keyUps >= 1, "KeyDown and KeyUp for A")
+  checks.check(typed.text.view() == "a", "typing A delivers TextInput")
+
+  let mut shift = Modifiers.none()
+  shift.shift = true
+  drop platform.simulateKey(window, KeyCode.KeyA, "A", shift)
+  let shifted = run collect(&mut platform, 0.3)
+  checks.check(shifted.shiftedA, "Shift+A reports the key as A")
+  checks.check(shifted.text.view() == "A", "Shift+A types A")
+
+  drop platform.simulateKey(window, KeyCode.Enter, "\r", Modifiers.none())
+  let entered = run collect(&mut platform, 0.3)
+  checks.check(entered.enter, "Enter is a named key")
+  checks.check(entered.text.view() == "", "Enter types no text")
+
+  let mut bar = MenuBar.make()
+  run bar.begin("App")
+  run bar.system(SystemItem.Quit)
+  run bar.end()
+  run bar.begin("Test")
+  run bar.action("Run", 7, Option<Shortcut>.some(Shortcut.command('r')))
+  run bar.end()
+  run platform.setMenuBar(&bar)
+  let mut control = Modifiers.none()
+  control.control = true
+  drop platform.simulateKey(window, KeyCode.KeyR, "r", control)
+  let shortcut = run collect(&mut platform, 0.3)
+  checks.check(
+    shortcut.menuActions == 1 && shortcut.lastAction == 7,
+    "a menu shortcut delivers MenuAction",
+  )
+  checks.check(shortcut.text.view() == "", "a shortcut types no text")
+  drop platform.simulateKey(window, KeyCode.KeyQ, "q", control)
+  let quit = run collect(&mut platform, 0.3)
+  checks.check(quit.quits == 1, "the Quit item's shortcut delivers QuitRequested")
+
+  let moved = platform.simulateMouse(
+    window,
+    MouseAction.Move,
+    MouseButton.Left,
+    Point2<f64>.new(30.0, 40.0),
+    Vector2<f64>.new(0.0, 0.0),
+  )
+  drop platform.simulateMouse(
+    window,
+    MouseAction.Press,
+    MouseButton.Right,
+    Point2<f64>.new(30.0, 40.0),
+    Vector2<f64>.new(0.0, 0.0),
+  )
+  drop platform.simulateMouse(
+    window,
+    MouseAction.Release,
+    MouseButton.Right,
+    Point2<f64>.new(30.0, 40.0),
+    Vector2<f64>.new(0.0, 0.0),
+  )
+  drop platform.simulateMouse(
+    window,
+    MouseAction.Wheel,
+    MouseButton.Left,
+    Point2<f64>.new(30.0, 40.0),
+    Vector2<f64>.new(0.0, 2.0),
+  )
+  if moved {
+    let pointer = run collect(&mut platform, 0.3)
+    checks.check(pointer.moves >= 1 && pointer.lastX == 30.0, "MouseMoved in points")
+    checks.check(pointer.rightDown && pointer.downs == 1 && pointer.ups == 1, "right click")
+    checks.check(pointer.scrollY == 2.0, "wheel scrolls up by two lines")
+  } else {
+    checks.skip("pointer input", "the backend cannot simulate it")
+  }
+
+  run platform.writeClipboard("silk ✓")
+  match move run platform.readClipboard() {
+    Option<String>.Some { value } => {
+      checks.check(value.view() == "silk ✓", "clipboard round trip")
+    }
+    _ => {
+      checks.check(false, "clipboard round trip")
+    }
+  }
+
+  if backend == Backend.X11 || backend == Backend.Wayland {
+    // scripts/linux points SILK_WINDOW_DIALOG at a command that prints a path.
+    let dialogOptions = OpenDialog.file("Open", "svg,png")
+    let dialog = run platform.openFileDialog(&dialogOptions)
+    let closedDialog = run collect(&mut platform, 1.0)
+    checks.check(
+      closedDialog.dialogs == 1 && closedDialog.dialogPath.view() == "/tmp/open-Open.svg",
+      "a file dialog runs without blocking and returns its path",
+    )
+  }
+
+  platform.closeWindow(window)
+  platform.requestFrame(window)
+  let closed = run collect(&mut platform, 0.2)
+  checks.check(
+    closed.frames == 0 && platform.contentSize(window).width == 0.0,
+    "a closed window is gone",
+  )
+}
+
+/// Runs every check and returns the process exit code.
+pub fn runSmoke() -> i32 {
+  return run Effect.catchAll(program(), failed)
+}
+
+effect fn program() -> i32
+  ! WindowError | OutOfMemoryError {
+  let mut allocator = Allocator.systemAllocatorProvider()
+  let mut checks = Checks { failed: 0 }
+  run smoke(&mut checks) |> Effect.provideMut<Allocator>(&mut allocator)
+  if checks.failed != 0 {
+    write("some checks failed\n")
+    return 1
+  }
+  return 0
+}
+
+effect fn failed<E>(error: E) -> i32 {
+  drop error
+  write("FAIL  the platform did not start or a window was refused\n")
+  return 2
+}

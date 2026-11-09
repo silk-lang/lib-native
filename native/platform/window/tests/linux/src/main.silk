@@ -1,0 +1,6 @@
+//! Runs the shared smoke test (tests/smoke) against the real window system.
+import smoke.smoke { runSmoke }
+
+pub fn main() -> i32 {
+  return runSmoke()
+}

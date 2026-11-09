@@ -1,0 +1,146 @@
+#!/usr/bin/env python3
+"""Build or run the Linux (Wayland and X11) smoke test.
+
+native/platform/window/silk.toml compiles the bridge and links its libraries, so building the test is
+plain `silk build`.
+
+  scripts/linux smoke [--backend x11|wayland|all] [--build-only] [--release]
+
+The smoke test needs a display. `--backend x11` runs it under Xvfb, `--backend wayland`
+under a headless Weston, and `all` (the default) under both, starting each server itself.
+Without those programs it uses the session's own display.
+
+Needs the development packages of libX11, libxkbcommon and libwayland-client (Debian and
+Ubuntu: libx11-dev libxkbcommon-dev libwayland-dev; for the smoke test also xvfb and weston).
+"""
+import argparse
+import re
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+import tempfile
+import time
+
+PACKAGE = Path(__file__).resolve().parent.parent
+REPO = PACKAGE.parents[2]
+sys.path.insert(0, str(REPO / "native/gpu/webgpu/scripts"))
+from _build import command_path, executable  # noqa: E402
+
+def built_executable(output, cwd):
+    """The executable silkc reports on its "Finished <path> in <time>" line."""
+    for line in reversed(output.splitlines()):
+        match = re.match(r"\s*Finished (.+) in [0-9.]+s$", line)
+        if match:
+            text = match.group(1)
+            # silkc prints Windows paths as /D:/...
+            if re.match(r"/[A-Za-z]:/", text):
+                text = text[1:]
+            path = Path(text)
+            return path if path.is_absolute() else cwd / path
+    raise SystemExit("silkc did not report the executable it built")
+
+
+def silk_command(subcommand, manifest, release):
+    compiler_bin = command_path("install-silk")
+    clang = os.environ.get("SILK_CLANG") or command_path("install-llvm")
+    command = [str(compiler_bin / executable("silkc")), subcommand, "--manifest-path",
+               str(manifest), "--stdlib", str(compiler_bin.parent / "lib/silk/stdlib"),
+               "--clang", str(clang)]
+    if release:
+        command.append("--release")
+    return command, dict(os.environ, SILK_CLANG=str(clang))
+
+
+def wait_for(path, seconds=10.0):
+    deadline = time.monotonic() + seconds
+    while time.monotonic() < deadline:
+        if path.exists():
+            return True
+        time.sleep(0.05)
+    return False
+
+
+def run_under_x11(program, env):
+    xvfb = shutil.which("Xvfb")
+    if not xvfb:
+        print("Xvfb not found; using the session's display", flush=True)
+        return subprocess.run([str(program)], env=env).returncode
+    for number in range(90, 140):
+        if not Path(f"/tmp/.X11-unix/X{number}").exists() and not Path(f"/tmp/.X{number}-lock").exists():
+            break
+    server = subprocess.Popen([xvfb, f":{number}", "-screen", "0", "1280x800x24", "-nolisten", "tcp"],
+                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try:
+        if not wait_for(Path(f"/tmp/.X11-unix/X{number}")):
+            raise SystemExit("Xvfb did not start")
+        child = dict(env, DISPLAY=f":{number}", SILK_WINDOW_BACKEND="x11")
+        child.pop("WAYLAND_DISPLAY", None)
+        return subprocess.run([str(program)], env=child, timeout=120).returncode
+    finally:
+        server.terminate()
+        server.wait()
+
+
+def run_under_wayland(program, env):
+    weston = shutil.which("weston")
+    if not weston:
+        print("weston not found; using the session's Wayland display", flush=True)
+        return subprocess.run([str(program)], env=dict(env, SILK_WINDOW_BACKEND="wayland")).returncode
+    runtime = Path(tempfile.mkdtemp(prefix="silk-wayland-"))
+    os.chmod(runtime, 0o700)
+    socket = "silk-smoke"
+    server = subprocess.Popen([weston, "--backend=headless", "--socket", socket, "--idle-time=0",
+                               "--width=1280", "--height=800"],
+                              env=dict(env, XDG_RUNTIME_DIR=str(runtime)),
+                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try:
+        if not wait_for(runtime / socket):
+            raise SystemExit("weston did not start")
+        child = dict(env, XDG_RUNTIME_DIR=str(runtime), WAYLAND_DISPLAY=socket,
+                     SILK_WINDOW_BACKEND="wayland")
+        child.pop("DISPLAY", None)
+        return subprocess.run([str(program)], env=child, timeout=120).returncode
+    finally:
+        server.terminate()
+        server.wait()
+        shutil.rmtree(runtime, ignore_errors=True)
+
+
+def smoke(backend, build_only, release):
+    command, env = silk_command("build", PACKAGE / "tests/linux/silk.toml", release)
+    output = subprocess.run(command, cwd=PACKAGE / "tests/linux", env=env, capture_output=True, text=True)
+    sys.stdout.write(output.stdout)
+    sys.stderr.write(output.stderr)
+    if output.returncode != 0:
+        return output.returncode
+    program = built_executable(output.stdout + output.stderr, PACKAGE / "tests/linux")
+    if build_only:
+        print(program)
+        return 0
+    # The dialog check runs this instead of zenity: it prints one path from its arguments.
+    env = dict(env, SILK_WINDOW_DIALOG='printf "/tmp/%s-%s.svg\\n" "$1" "$2"',
+               SILK_WINDOW_SCALE="1")
+    status = 0
+    for name in (["x11", "wayland"] if backend == "all" else [backend]):
+        print(f"--- {name}", flush=True)
+        runner = run_under_x11 if name == "x11" else run_under_wayland
+        code = runner(program, env)
+        print(f"--- {name}: {'passed' if code == 0 else f'failed ({code})'}", flush=True)
+        status = status or code
+    return status
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("target", choices=["smoke"])
+    parser.add_argument("--backend", choices=["x11", "wayland", "all"], default="all")
+    parser.add_argument("--build-only", action="store_true")
+    parser.add_argument("--release", action="store_true")
+    args = parser.parse_args()
+    return smoke(args.backend, args.build_only, args.release)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

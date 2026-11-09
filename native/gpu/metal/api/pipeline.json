@@ -1,0 +1,1342 @@
+[
+  {
+    "rust": "PipelineBufferDescriptorArrayRef.object_at",
+    "silk": "pipeline.PipelineBufferDescriptorArray.object_at",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "PipelineBufferDescriptorArrayRef.set_object_at",
+    "silk": "pipeline.PipelineBufferDescriptorArray.set_object_at",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "PipelineBufferDescriptorRef.mutability",
+    "silk": "pipeline.PipelineBufferDescriptor.mutability",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "PipelineBufferDescriptorRef.set_mutability",
+    "silk": "pipeline.PipelineBufferDescriptor.set_mutability",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineColorAttachmentDescriptorRef.pixel_format",
+    "silk": "pipeline.RenderPipelineColorAttachmentDescriptor.pixel_format",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineColorAttachmentDescriptorRef.set_pixel_format",
+    "silk": "pipeline.RenderPipelineColorAttachmentDescriptor.set_pixel_format",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineColorAttachmentDescriptorRef.is_blending_enabled",
+    "silk": "pipeline.RenderPipelineColorAttachmentDescriptor.is_blending_enabled",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineColorAttachmentDescriptorRef.set_blending_enabled",
+    "silk": "pipeline.RenderPipelineColorAttachmentDescriptor.set_blending_enabled",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineColorAttachmentDescriptorRef.source_rgb_blend_factor",
+    "silk": "pipeline.RenderPipelineColorAttachmentDescriptor.source_rgb_blend_factor",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineColorAttachmentDescriptorRef.set_source_rgb_blend_factor",
+    "silk": "pipeline.RenderPipelineColorAttachmentDescriptor.set_source_rgb_blend_factor",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineColorAttachmentDescriptorRef.destination_rgb_blend_factor",
+    "silk": "pipeline.RenderPipelineColorAttachmentDescriptor.destination_rgb_blend_factor",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineColorAttachmentDescriptorRef.set_destination_rgb_blend_factor",
+    "silk": "pipeline.RenderPipelineColorAttachmentDescriptor.set_destination_rgb_blend_factor",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineColorAttachmentDescriptorRef.rgb_blend_operation",
+    "silk": "pipeline.RenderPipelineColorAttachmentDescriptor.rgb_blend_operation",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineColorAttachmentDescriptorRef.set_rgb_blend_operation",
+    "silk": "pipeline.RenderPipelineColorAttachmentDescriptor.set_rgb_blend_operation",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineColorAttachmentDescriptorRef.source_alpha_blend_factor",
+    "silk": "pipeline.RenderPipelineColorAttachmentDescriptor.source_alpha_blend_factor",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineColorAttachmentDescriptorRef.set_source_alpha_blend_factor",
+    "silk": "pipeline.RenderPipelineColorAttachmentDescriptor.set_source_alpha_blend_factor",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineColorAttachmentDescriptorRef.destination_alpha_blend_factor",
+    "silk": "pipeline.RenderPipelineColorAttachmentDescriptor.destination_alpha_blend_factor",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineColorAttachmentDescriptorRef.set_destination_alpha_blend_factor",
+    "silk": "pipeline.RenderPipelineColorAttachmentDescriptor.set_destination_alpha_blend_factor",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineColorAttachmentDescriptorRef.alpha_blend_operation",
+    "silk": "pipeline.RenderPipelineColorAttachmentDescriptor.alpha_blend_operation",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineColorAttachmentDescriptorRef.set_alpha_blend_operation",
+    "silk": "pipeline.RenderPipelineColorAttachmentDescriptor.set_alpha_blend_operation",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineColorAttachmentDescriptorRef.write_mask",
+    "silk": "pipeline.RenderPipelineColorAttachmentDescriptor.write_mask",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineColorAttachmentDescriptorRef.set_write_mask",
+    "silk": "pipeline.RenderPipelineColorAttachmentDescriptor.set_write_mask",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineReflection.new",
+    "silk": "pipeline.RenderPipelineReflection.new",
+    "notes": "Returns +1 owned object; caller must release. Private upstream API: caller must establish selector availability and argument validity; null indicates initialization failure."
+  },
+  {
+    "rust": "RenderPipelineReflectionRef.fragment_arguments",
+    "silk": "pipeline.RenderPipelineReflection.fragment_arguments",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "RenderPipelineReflectionRef.vertex_arguments",
+    "silk": "pipeline.RenderPipelineReflection.vertex_arguments",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "RenderPipelineReflectionRef.tile_arguments",
+    "silk": "pipeline.RenderPipelineReflection.tile_arguments",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "ArgumentArrayRef.object_at",
+    "silk": "pipeline.ArgumentArray.object_at",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "ArgumentArrayRef.count",
+    "silk": "pipeline.ArgumentArray.count",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "ComputePipelineReflectionRef.arguments",
+    "silk": "pipeline.ComputePipelineReflection.arguments",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptor.new",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.new",
+    "notes": "Returns +1 owned object; caller must release."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptorRef.color_attachments",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.color_attachments",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptorRef.depth_attachment_pixel_format",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.depth_attachment_pixel_format",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptorRef.set_depth_attachment_pixel_format",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.set_depth_attachment_pixel_format",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptorRef.fragment_buffers",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.fragment_buffers",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptorRef.fragment_function",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.fragment_function",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptorRef.set_fragment_function",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.set_fragment_function",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptorRef.is_alpha_to_coverage_enabled",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.is_alpha_to_coverage_enabled",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptorRef.set_alpha_to_coverage_enabled",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.set_alpha_to_coverage_enabled",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptorRef.is_alpha_to_one_enabled",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.is_alpha_to_one_enabled",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptorRef.set_alpha_to_one_enabled",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.set_alpha_to_one_enabled",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptorRef.is_rasterization_enabled",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.is_rasterization_enabled",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptorRef.set_rasterization_enabled",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.set_rasterization_enabled",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptorRef.label",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.label",
+    "notes": "Returns borrowed NUL-terminated UTF-8; owner must remain alive and unchanged."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptorRef.set_label",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.set_label",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptorRef.max_total_threadgroups_per_mesh_grid",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.max_total_threadgroups_per_mesh_grid",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptorRef.set_max_total_threadgroups_per_mesh_grid",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.set_max_total_threadgroups_per_mesh_grid",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptorRef.max_total_threads_per_mesh_threadgroup",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.max_total_threads_per_mesh_threadgroup",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptorRef.set_max_total_threads_per_mesh_threadgroup",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.set_max_total_threads_per_mesh_threadgroup",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptorRef.max_total_threads_per_object_threadgroup",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.max_total_threads_per_object_threadgroup",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptorRef.set_max_total_threads_per_object_threadgroup",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.set_max_total_threads_per_object_threadgroup",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptorRef.max_vertex_amplification_count",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.max_vertex_amplification_count",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptorRef.set_max_vertex_amplification_count",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.set_max_vertex_amplification_count",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptorRef.mesh_buffers",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.mesh_buffers",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptorRef.mesh_function",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.mesh_function",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptorRef.set_mesh_function",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.set_mesh_function",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptorRef.mesh_threadgroup_size_is_multiple_of_thread_execution_width",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.mesh_threadgroup_size_is_multiple_of_thread_execution_width",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptorRef.set_mesh_threadgroup_size_is_multiple_of_thread_execution_width",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.set_mesh_threadgroup_size_is_multiple_of_thread_execution_width",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptorRef.object_buffers",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.object_buffers",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptorRef.object_function",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.object_function",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptorRef.set_object_function",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.set_object_function",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptorRef.object_threadgroup_size_is_multiple_of_thread_execution_width",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.object_threadgroup_size_is_multiple_of_thread_execution_width",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptorRef.set_object_threadgroup_size_is_multiple_of_thread_execution_width",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.set_object_threadgroup_size_is_multiple_of_thread_execution_width",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptorRef.payload_memory_length",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.payload_memory_length",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptorRef.set_payload_memory_length",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.set_payload_memory_length",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptorRef.raster_sample_count",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.raster_sample_count",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptorRef.set_raster_sample_count",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.set_raster_sample_count",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptorRef.stencil_attachment_pixel_format",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.stencil_attachment_pixel_format",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptorRef.set_stencil_attachment_pixel_format",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.set_stencil_attachment_pixel_format",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "MeshRenderPipelineDescriptorRef.reset",
+    "silk": "pipeline.MeshRenderPipelineDescriptor.reset",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineDescriptor.new",
+    "silk": "pipeline.RenderPipelineDescriptor.new",
+    "notes": "Returns +1 owned object; caller must release."
+  },
+  {
+    "rust": "RenderPipelineDescriptorRef.label",
+    "silk": "pipeline.RenderPipelineDescriptor.label",
+    "notes": "Returns borrowed NUL-terminated UTF-8; owner must remain alive and unchanged."
+  },
+  {
+    "rust": "RenderPipelineDescriptorRef.set_label",
+    "silk": "pipeline.RenderPipelineDescriptor.set_label",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineDescriptorRef.vertex_function",
+    "silk": "pipeline.RenderPipelineDescriptor.vertex_function",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "RenderPipelineDescriptorRef.set_vertex_function",
+    "silk": "pipeline.RenderPipelineDescriptor.set_vertex_function",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineDescriptorRef.fragment_function",
+    "silk": "pipeline.RenderPipelineDescriptor.fragment_function",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "RenderPipelineDescriptorRef.set_fragment_function",
+    "silk": "pipeline.RenderPipelineDescriptor.set_fragment_function",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineDescriptorRef.vertex_descriptor",
+    "silk": "pipeline.RenderPipelineDescriptor.vertex_descriptor",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "RenderPipelineDescriptorRef.set_vertex_descriptor",
+    "silk": "pipeline.RenderPipelineDescriptor.set_vertex_descriptor",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineDescriptorRef.sample_count",
+    "silk": "pipeline.RenderPipelineDescriptor.sample_count",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineDescriptorRef.set_sample_count",
+    "silk": "pipeline.RenderPipelineDescriptor.set_sample_count",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineDescriptorRef.raster_sample_count",
+    "silk": "pipeline.RenderPipelineDescriptor.raster_sample_count",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineDescriptorRef.set_raster_sample_count",
+    "silk": "pipeline.RenderPipelineDescriptor.set_raster_sample_count",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineDescriptorRef.max_vertex_amplification_count",
+    "silk": "pipeline.RenderPipelineDescriptor.max_vertex_amplification_count",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineDescriptorRef.set_max_vertex_amplification_count",
+    "silk": "pipeline.RenderPipelineDescriptor.set_max_vertex_amplification_count",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineDescriptorRef.is_alpha_to_coverage_enabled",
+    "silk": "pipeline.RenderPipelineDescriptor.is_alpha_to_coverage_enabled",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineDescriptorRef.set_alpha_to_coverage_enabled",
+    "silk": "pipeline.RenderPipelineDescriptor.set_alpha_to_coverage_enabled",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineDescriptorRef.is_alpha_to_one_enabled",
+    "silk": "pipeline.RenderPipelineDescriptor.is_alpha_to_one_enabled",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineDescriptorRef.set_alpha_to_one_enabled",
+    "silk": "pipeline.RenderPipelineDescriptor.set_alpha_to_one_enabled",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineDescriptorRef.is_rasterization_enabled",
+    "silk": "pipeline.RenderPipelineDescriptor.is_rasterization_enabled",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineDescriptorRef.set_rasterization_enabled",
+    "silk": "pipeline.RenderPipelineDescriptor.set_rasterization_enabled",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineDescriptorRef.color_attachments",
+    "silk": "pipeline.RenderPipelineDescriptor.color_attachments",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "RenderPipelineDescriptorRef.depth_attachment_pixel_format",
+    "silk": "pipeline.RenderPipelineDescriptor.depth_attachment_pixel_format",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineDescriptorRef.set_depth_attachment_pixel_format",
+    "silk": "pipeline.RenderPipelineDescriptor.set_depth_attachment_pixel_format",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineDescriptorRef.stencil_attachment_pixel_format",
+    "silk": "pipeline.RenderPipelineDescriptor.stencil_attachment_pixel_format",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineDescriptorRef.set_stencil_attachment_pixel_format",
+    "silk": "pipeline.RenderPipelineDescriptor.set_stencil_attachment_pixel_format",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineDescriptorRef.input_primitive_topology",
+    "silk": "pipeline.RenderPipelineDescriptor.input_primitive_topology",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineDescriptorRef.set_input_primitive_topology",
+    "silk": "pipeline.RenderPipelineDescriptor.set_input_primitive_topology",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineDescriptorRef.serialize_vertex_data",
+    "silk": "pipeline.RenderPipelineDescriptor.serialize_vertex_data",
+    "notes": "Private upstream API, flags fixed to zero as upstream; returns +1 serialized data. Optional error receives borrowed +0 NSError."
+  },
+  {
+    "rust": "RenderPipelineDescriptorRef.serialize_fragment_data",
+    "silk": "pipeline.RenderPipelineDescriptor.serialize_fragment_data",
+    "notes": "Returns borrowed +0 object handle. Private upstream API: caller must establish selector availability."
+  },
+  {
+    "rust": "RenderPipelineDescriptorRef.support_indirect_command_buffers",
+    "silk": "pipeline.RenderPipelineDescriptor.support_indirect_command_buffers",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineDescriptorRef.set_support_indirect_command_buffers",
+    "silk": "pipeline.RenderPipelineDescriptor.set_support_indirect_command_buffers",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineDescriptorRef.vertex_buffers",
+    "silk": "pipeline.RenderPipelineDescriptor.vertex_buffers",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "RenderPipelineDescriptorRef.fragment_buffers",
+    "silk": "pipeline.RenderPipelineDescriptor.fragment_buffers",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "RenderPipelineDescriptorRef.binary_archives",
+    "silk": "pipeline.RenderPipelineDescriptor.binary_archives",
+    "notes": "Returns borrowed +0 NSArray handle rather than a Rust Vec."
+  },
+  {
+    "rust": "RenderPipelineDescriptorRef.set_binary_archives",
+    "silk": "pipeline.RenderPipelineDescriptor.set_binary_archives",
+    "notes": "Slice input uses pointer/count; elements are borrowed for this call."
+  },
+  {
+    "rust": "RenderPipelineDescriptorRef.fragment_linked_functions",
+    "silk": "pipeline.RenderPipelineDescriptor.fragment_linked_functions",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "RenderPipelineDescriptorRef.set_fragment_linked_functions",
+    "silk": "pipeline.RenderPipelineDescriptor.set_fragment_linked_functions",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineDescriptorRef.reset",
+    "silk": "pipeline.RenderPipelineDescriptor.reset",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPipelineStateRef.device",
+    "silk": "pipeline.RenderPipelineState.device",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "RenderPipelineStateRef.label",
+    "silk": "pipeline.RenderPipelineState.label",
+    "notes": "Returns borrowed NUL-terminated UTF-8; owner must remain alive and unchanged."
+  },
+  {
+    "rust": "RenderPipelineStateRef.new_intersection_function_table_with_descriptor",
+    "silk": "pipeline.RenderPipelineState.new_intersection_function_table_with_descriptor",
+    "notes": "Returns +1 owned object; caller must release."
+  },
+  {
+    "rust": "RenderPipelineStateRef.function_handle_with_function",
+    "silk": "pipeline.RenderPipelineState.function_handle_with_function",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "RenderPipelineStateRef.new_visible_function_table_with_descriptor",
+    "silk": "pipeline.RenderPipelineState.new_visible_function_table_with_descriptor",
+    "notes": "Returns +1 owned object; caller must release."
+  },
+  {
+    "rust": "RenderPipelineColorAttachmentDescriptorArrayRef.object_at",
+    "silk": "pipeline.RenderPipelineColorAttachmentDescriptorArray.object_at",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "RenderPipelineColorAttachmentDescriptorArrayRef.set_object_at",
+    "silk": "pipeline.RenderPipelineColorAttachmentDescriptorArray.set_object_at",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "ComputePipelineDescriptor.new",
+    "silk": "pipeline.ComputePipelineDescriptor.new",
+    "notes": "Returns +1 owned object; caller must release."
+  },
+  {
+    "rust": "ComputePipelineDescriptorRef.label",
+    "silk": "pipeline.ComputePipelineDescriptor.label",
+    "notes": "Returns borrowed NUL-terminated UTF-8; owner must remain alive and unchanged."
+  },
+  {
+    "rust": "ComputePipelineDescriptorRef.set_label",
+    "silk": "pipeline.ComputePipelineDescriptor.set_label",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "ComputePipelineDescriptorRef.compute_function",
+    "silk": "pipeline.ComputePipelineDescriptor.compute_function",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "ComputePipelineDescriptorRef.set_compute_function",
+    "silk": "pipeline.ComputePipelineDescriptor.set_compute_function",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "ComputePipelineDescriptorRef.thread_group_size_is_multiple_of_thread_execution_width",
+    "silk": "pipeline.ComputePipelineDescriptor.thread_group_size_is_multiple_of_thread_execution_width",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "ComputePipelineDescriptorRef.set_thread_group_size_is_multiple_of_thread_execution_width",
+    "silk": "pipeline.ComputePipelineDescriptor.set_thread_group_size_is_multiple_of_thread_execution_width",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "ComputePipelineDescriptorRef.max_total_threads_per_threadgroup",
+    "silk": "pipeline.ComputePipelineDescriptor.max_total_threads_per_threadgroup",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "ComputePipelineDescriptorRef.set_max_total_threads_per_threadgroup",
+    "silk": "pipeline.ComputePipelineDescriptor.set_max_total_threads_per_threadgroup",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "ComputePipelineDescriptorRef.support_indirect_command_buffers",
+    "silk": "pipeline.ComputePipelineDescriptor.support_indirect_command_buffers",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "ComputePipelineDescriptorRef.set_support_indirect_command_buffers",
+    "silk": "pipeline.ComputePipelineDescriptor.set_support_indirect_command_buffers",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "ComputePipelineDescriptorRef.support_adding_binary_functions",
+    "silk": "pipeline.ComputePipelineDescriptor.support_adding_binary_functions",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "ComputePipelineDescriptorRef.set_support_adding_binary_functions",
+    "silk": "pipeline.ComputePipelineDescriptor.set_support_adding_binary_functions",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "ComputePipelineDescriptorRef.max_call_stack_depth",
+    "silk": "pipeline.ComputePipelineDescriptor.max_call_stack_depth",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "ComputePipelineDescriptorRef.set_max_call_stack_depth",
+    "silk": "pipeline.ComputePipelineDescriptor.set_max_call_stack_depth",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "ComputePipelineDescriptorRef.insert_libraries",
+    "silk": "pipeline.ComputePipelineDescriptor.insert_libraries",
+    "notes": "Returns borrowed +0 NSArray handle rather than a Rust Vec."
+  },
+  {
+    "rust": "ComputePipelineDescriptorRef.set_insert_libraries",
+    "silk": "pipeline.ComputePipelineDescriptor.set_insert_libraries",
+    "notes": "Slice input uses pointer/count; elements are borrowed for this call."
+  },
+  {
+    "rust": "ComputePipelineDescriptorRef.binary_archives",
+    "silk": "pipeline.ComputePipelineDescriptor.binary_archives",
+    "notes": "Returns borrowed +0 NSArray handle rather than a Rust Vec."
+  },
+  {
+    "rust": "ComputePipelineDescriptorRef.set_binary_archives",
+    "silk": "pipeline.ComputePipelineDescriptor.set_binary_archives",
+    "notes": "Slice input uses pointer/count; elements are borrowed for this call."
+  },
+  {
+    "rust": "ComputePipelineDescriptorRef.linked_functions",
+    "silk": "pipeline.ComputePipelineDescriptor.linked_functions",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "ComputePipelineDescriptorRef.set_linked_functions",
+    "silk": "pipeline.ComputePipelineDescriptor.set_linked_functions",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "ComputePipelineDescriptorRef.stage_input_descriptor",
+    "silk": "pipeline.ComputePipelineDescriptor.stage_input_descriptor",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "ComputePipelineDescriptorRef.set_stage_input_descriptor",
+    "silk": "pipeline.ComputePipelineDescriptor.set_stage_input_descriptor",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "ComputePipelineDescriptorRef.buffers",
+    "silk": "pipeline.ComputePipelineDescriptor.buffers",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "ComputePipelineDescriptorRef.reset",
+    "silk": "pipeline.ComputePipelineDescriptor.reset",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "ComputePipelineStateRef.label",
+    "silk": "pipeline.ComputePipelineState.label",
+    "notes": "Returns borrowed NUL-terminated UTF-8; owner must remain alive and unchanged."
+  },
+  {
+    "rust": "ComputePipelineStateRef.max_total_threads_per_threadgroup",
+    "silk": "pipeline.ComputePipelineState.max_total_threads_per_threadgroup",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "ComputePipelineStateRef.thread_execution_width",
+    "silk": "pipeline.ComputePipelineState.thread_execution_width",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "ComputePipelineStateRef.static_threadgroup_memory_length",
+    "silk": "pipeline.ComputePipelineState.static_threadgroup_memory_length",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "ComputePipelineStateRef.imageblock_memory_length_for_dimensions",
+    "silk": "pipeline.ComputePipelineState.imageblock_memory_length_for_dimensions",
+    "notes": "Aggregate inputs are passed by value."
+  },
+  {
+    "rust": "ComputePipelineStateRef.support_indirect_command_buffers",
+    "silk": "pipeline.ComputePipelineState.support_indirect_command_buffers",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "ComputePipelineStateRef.function_handle_with_function",
+    "silk": "pipeline.ComputePipelineState.function_handle_with_function",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "ComputePipelineStateRef.new_visible_function_table_with_descriptor",
+    "silk": "pipeline.ComputePipelineState.new_visible_function_table_with_descriptor",
+    "notes": "Returns +1 owned object; caller must release."
+  },
+  {
+    "rust": "ComputePipelineStateRef.new_intersection_function_table_with_descriptor",
+    "silk": "pipeline.ComputePipelineState.new_intersection_function_table_with_descriptor",
+    "notes": "Returns +1 owned object; caller must release."
+  },
+  {
+    "rust": "StageInputOutputDescriptor.new",
+    "silk": "pipeline.StageInputOutputDescriptor.new",
+    "notes": "Returns +1 owned object; caller must release."
+  },
+  {
+    "rust": "StageInputOutputDescriptorRef.attributes",
+    "silk": "pipeline.StageInputOutputDescriptor.attributes",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "StageInputOutputDescriptorRef.index_buffer_index",
+    "silk": "pipeline.StageInputOutputDescriptor.index_buffer_index",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "StageInputOutputDescriptorRef.set_index_buffer_index",
+    "silk": "pipeline.StageInputOutputDescriptor.set_index_buffer_index",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "StageInputOutputDescriptorRef.index_type",
+    "silk": "pipeline.StageInputOutputDescriptor.index_type",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "StageInputOutputDescriptorRef.set_index_type",
+    "silk": "pipeline.StageInputOutputDescriptor.set_index_type",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "StageInputOutputDescriptorRef.layouts",
+    "silk": "pipeline.StageInputOutputDescriptor.layouts",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "StageInputOutputDescriptorRef.reset",
+    "silk": "pipeline.StageInputOutputDescriptor.reset",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "AttributeDescriptorArrayRef.object_at",
+    "silk": "pipeline.AttributeDescriptorArray.object_at",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "AttributeDescriptorArrayRef.set_object_at",
+    "silk": "pipeline.AttributeDescriptorArray.set_object_at",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "AttributeDescriptorRef.buffer_index",
+    "silk": "pipeline.AttributeDescriptor.buffer_index",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "AttributeDescriptorRef.set_buffer_index",
+    "silk": "pipeline.AttributeDescriptor.set_buffer_index",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "AttributeDescriptorRef.format",
+    "silk": "pipeline.AttributeDescriptor.format",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "AttributeDescriptorRef.set_format",
+    "silk": "pipeline.AttributeDescriptor.set_format",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "AttributeDescriptorRef.offset",
+    "silk": "pipeline.AttributeDescriptor.offset",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "AttributeDescriptorRef.set_offset",
+    "silk": "pipeline.AttributeDescriptor.set_offset",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "BufferLayoutDescriptorArrayRef.object_at",
+    "silk": "pipeline.BufferLayoutDescriptorArray.object_at",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "BufferLayoutDescriptorArrayRef.set_object_at",
+    "silk": "pipeline.BufferLayoutDescriptorArray.set_object_at",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "BufferLayoutDescriptorRef.step_function",
+    "silk": "pipeline.BufferLayoutDescriptor.step_function",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "BufferLayoutDescriptorRef.set_step_function",
+    "silk": "pipeline.BufferLayoutDescriptor.set_step_function",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "BufferLayoutDescriptorRef.step_rate",
+    "silk": "pipeline.BufferLayoutDescriptor.step_rate",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "BufferLayoutDescriptorRef.set_step_rate",
+    "silk": "pipeline.BufferLayoutDescriptor.set_step_rate",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "BufferLayoutDescriptorRef.stride",
+    "silk": "pipeline.BufferLayoutDescriptor.stride",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "BufferLayoutDescriptorRef.set_stride",
+    "silk": "pipeline.BufferLayoutDescriptor.set_stride",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassAttachmentDescriptorRef.texture",
+    "silk": "pipeline.RenderPassAttachmentDescriptor.texture",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "RenderPassAttachmentDescriptorRef.set_texture",
+    "silk": "pipeline.RenderPassAttachmentDescriptor.set_texture",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassAttachmentDescriptorRef.level",
+    "silk": "pipeline.RenderPassAttachmentDescriptor.level",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassAttachmentDescriptorRef.set_level",
+    "silk": "pipeline.RenderPassAttachmentDescriptor.set_level",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassAttachmentDescriptorRef.slice",
+    "silk": "pipeline.RenderPassAttachmentDescriptor.slice",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassAttachmentDescriptorRef.set_slice",
+    "silk": "pipeline.RenderPassAttachmentDescriptor.set_slice",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassAttachmentDescriptorRef.depth_plane",
+    "silk": "pipeline.RenderPassAttachmentDescriptor.depth_plane",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassAttachmentDescriptorRef.set_depth_plane",
+    "silk": "pipeline.RenderPassAttachmentDescriptor.set_depth_plane",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassAttachmentDescriptorRef.resolve_texture",
+    "silk": "pipeline.RenderPassAttachmentDescriptor.resolve_texture",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "RenderPassAttachmentDescriptorRef.set_resolve_texture",
+    "silk": "pipeline.RenderPassAttachmentDescriptor.set_resolve_texture",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassAttachmentDescriptorRef.resolve_level",
+    "silk": "pipeline.RenderPassAttachmentDescriptor.resolve_level",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassAttachmentDescriptorRef.set_resolve_level",
+    "silk": "pipeline.RenderPassAttachmentDescriptor.set_resolve_level",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassAttachmentDescriptorRef.resolve_slice",
+    "silk": "pipeline.RenderPassAttachmentDescriptor.resolve_slice",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassAttachmentDescriptorRef.set_resolve_slice",
+    "silk": "pipeline.RenderPassAttachmentDescriptor.set_resolve_slice",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassAttachmentDescriptorRef.resolve_depth_plane",
+    "silk": "pipeline.RenderPassAttachmentDescriptor.resolve_depth_plane",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassAttachmentDescriptorRef.set_resolve_depth_plane",
+    "silk": "pipeline.RenderPassAttachmentDescriptor.set_resolve_depth_plane",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassAttachmentDescriptorRef.load_action",
+    "silk": "pipeline.RenderPassAttachmentDescriptor.load_action",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassAttachmentDescriptorRef.set_load_action",
+    "silk": "pipeline.RenderPassAttachmentDescriptor.set_load_action",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassAttachmentDescriptorRef.store_action",
+    "silk": "pipeline.RenderPassAttachmentDescriptor.store_action",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassAttachmentDescriptorRef.set_store_action",
+    "silk": "pipeline.RenderPassAttachmentDescriptor.set_store_action",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassColorAttachmentDescriptor.new",
+    "silk": "pipeline.RenderPassColorAttachmentDescriptor.new",
+    "notes": "Returns +1 owned object; caller must release."
+  },
+  {
+    "rust": "RenderPassColorAttachmentDescriptorRef.clear_color",
+    "silk": "pipeline.RenderPassColorAttachmentDescriptor.clear_color",
+    "notes": "Returns the aggregate result by value."
+  },
+  {
+    "rust": "RenderPassColorAttachmentDescriptorRef.set_clear_color",
+    "silk": "pipeline.RenderPassColorAttachmentDescriptor.set_clear_color",
+    "notes": "Aggregate inputs are passed by value."
+  },
+  {
+    "rust": "RenderPassDepthAttachmentDescriptorRef.clear_depth",
+    "silk": "pipeline.RenderPassDepthAttachmentDescriptor.clear_depth",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassDepthAttachmentDescriptorRef.set_clear_depth",
+    "silk": "pipeline.RenderPassDepthAttachmentDescriptor.set_clear_depth",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassStencilAttachmentDescriptorRef.clear_stencil",
+    "silk": "pipeline.RenderPassStencilAttachmentDescriptor.clear_stencil",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassStencilAttachmentDescriptorRef.set_clear_stencil",
+    "silk": "pipeline.RenderPassStencilAttachmentDescriptor.set_clear_stencil",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassStencilAttachmentDescriptorRef.stencil_resolve_filter",
+    "silk": "pipeline.RenderPassStencilAttachmentDescriptor.stencil_resolve_filter",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassStencilAttachmentDescriptorRef.set_stencil_resolve_filter",
+    "silk": "pipeline.RenderPassStencilAttachmentDescriptor.set_stencil_resolve_filter",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassColorAttachmentDescriptorArrayRef.object_at",
+    "silk": "pipeline.RenderPassColorAttachmentDescriptorArray.object_at",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "RenderPassColorAttachmentDescriptorArrayRef.set_object_at",
+    "silk": "pipeline.RenderPassColorAttachmentDescriptorArray.set_object_at",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassSampleBufferAttachmentDescriptor.new",
+    "silk": "pipeline.RenderPassSampleBufferAttachmentDescriptor.new",
+    "notes": "Returns +1 owned object; caller must release."
+  },
+  {
+    "rust": "RenderPassSampleBufferAttachmentDescriptorRef.sample_buffer",
+    "silk": "pipeline.RenderPassSampleBufferAttachmentDescriptor.sample_buffer",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "RenderPassSampleBufferAttachmentDescriptorRef.set_sample_buffer",
+    "silk": "pipeline.RenderPassSampleBufferAttachmentDescriptor.set_sample_buffer",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassSampleBufferAttachmentDescriptorRef.start_of_vertex_sample_index",
+    "silk": "pipeline.RenderPassSampleBufferAttachmentDescriptor.start_of_vertex_sample_index",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassSampleBufferAttachmentDescriptorRef.set_start_of_vertex_sample_index",
+    "silk": "pipeline.RenderPassSampleBufferAttachmentDescriptor.set_start_of_vertex_sample_index",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassSampleBufferAttachmentDescriptorRef.end_of_vertex_sample_index",
+    "silk": "pipeline.RenderPassSampleBufferAttachmentDescriptor.end_of_vertex_sample_index",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassSampleBufferAttachmentDescriptorRef.set_end_of_vertex_sample_index",
+    "silk": "pipeline.RenderPassSampleBufferAttachmentDescriptor.set_end_of_vertex_sample_index",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassSampleBufferAttachmentDescriptorRef.start_of_fragment_sample_index",
+    "silk": "pipeline.RenderPassSampleBufferAttachmentDescriptor.start_of_fragment_sample_index",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassSampleBufferAttachmentDescriptorRef.set_start_of_fragment_sample_index",
+    "silk": "pipeline.RenderPassSampleBufferAttachmentDescriptor.set_start_of_fragment_sample_index",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassSampleBufferAttachmentDescriptorRef.end_of_fragment_sample_index",
+    "silk": "pipeline.RenderPassSampleBufferAttachmentDescriptor.end_of_fragment_sample_index",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassSampleBufferAttachmentDescriptorRef.set_end_of_fragment_sample_index",
+    "silk": "pipeline.RenderPassSampleBufferAttachmentDescriptor.set_end_of_fragment_sample_index",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassSampleBufferAttachmentDescriptorArrayRef.object_at",
+    "silk": "pipeline.RenderPassSampleBufferAttachmentDescriptorArray.object_at",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "RenderPassSampleBufferAttachmentDescriptorArrayRef.set_object_at",
+    "silk": "pipeline.RenderPassSampleBufferAttachmentDescriptorArray.set_object_at",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassDescriptor.new",
+    "silk": "pipeline.RenderPassDescriptor.new",
+    "notes": "Returns +1 owned object; caller must release."
+  },
+  {
+    "rust": "RenderPassDescriptorRef.color_attachments",
+    "silk": "pipeline.RenderPassDescriptor.color_attachments",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "RenderPassDescriptorRef.depth_attachment",
+    "silk": "pipeline.RenderPassDescriptor.depth_attachment",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "RenderPassDescriptorRef.set_depth_attachment",
+    "silk": "pipeline.RenderPassDescriptor.set_depth_attachment",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassDescriptorRef.stencil_attachment",
+    "silk": "pipeline.RenderPassDescriptor.stencil_attachment",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "RenderPassDescriptorRef.set_stencil_attachment",
+    "silk": "pipeline.RenderPassDescriptor.set_stencil_attachment",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassDescriptorRef.visibility_result_buffer",
+    "silk": "pipeline.RenderPassDescriptor.visibility_result_buffer",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "RenderPassDescriptorRef.set_visibility_result_buffer",
+    "silk": "pipeline.RenderPassDescriptor.set_visibility_result_buffer",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassDescriptorRef.render_target_array_length",
+    "silk": "pipeline.RenderPassDescriptor.render_target_array_length",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassDescriptorRef.set_render_target_array_length",
+    "silk": "pipeline.RenderPassDescriptor.set_render_target_array_length",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassDescriptorRef.render_target_width",
+    "silk": "pipeline.RenderPassDescriptor.render_target_width",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassDescriptorRef.set_render_target_width",
+    "silk": "pipeline.RenderPassDescriptor.set_render_target_width",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassDescriptorRef.render_target_height",
+    "silk": "pipeline.RenderPassDescriptor.render_target_height",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassDescriptorRef.set_render_target_height",
+    "silk": "pipeline.RenderPassDescriptor.set_render_target_height",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassDescriptorRef.default_raster_sample_count",
+    "silk": "pipeline.RenderPassDescriptor.default_raster_sample_count",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassDescriptorRef.set_default_raster_sample_count",
+    "silk": "pipeline.RenderPassDescriptor.set_default_raster_sample_count",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "RenderPassDescriptorRef.sample_buffer_attachments",
+    "silk": "pipeline.RenderPassDescriptor.sample_buffer_attachments",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "ComputePassDescriptor.new",
+    "silk": "pipeline.ComputePassDescriptor.new",
+    "notes": "Returns +1 owned object; caller must release."
+  },
+  {
+    "rust": "ComputePassDescriptorRef.sample_buffer_attachments",
+    "silk": "pipeline.ComputePassDescriptor.sample_buffer_attachments",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "ComputePassDescriptorRef.set_dispatch_type",
+    "silk": "pipeline.ComputePassDescriptor.set_dispatch_type",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "ComputePassSampleBufferAttachmentDescriptorArrayRef.object_at",
+    "silk": "pipeline.ComputePassSampleBufferAttachmentDescriptorArray.object_at",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "ComputePassSampleBufferAttachmentDescriptorArrayRef.set_object_at",
+    "silk": "pipeline.ComputePassSampleBufferAttachmentDescriptorArray.set_object_at",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "ComputePassSampleBufferAttachmentDescriptor.new",
+    "silk": "pipeline.ComputePassSampleBufferAttachmentDescriptor.new",
+    "notes": "Returns +1 owned object; caller must release."
+  },
+  {
+    "rust": "ComputePassSampleBufferAttachmentDescriptorRef.sample_buffer",
+    "silk": "pipeline.ComputePassSampleBufferAttachmentDescriptor.sample_buffer",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "ComputePassSampleBufferAttachmentDescriptorRef.set_sample_buffer",
+    "silk": "pipeline.ComputePassSampleBufferAttachmentDescriptor.set_sample_buffer",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "ComputePassSampleBufferAttachmentDescriptorRef.start_of_encoder_sample_index",
+    "silk": "pipeline.ComputePassSampleBufferAttachmentDescriptor.start_of_encoder_sample_index",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "ComputePassSampleBufferAttachmentDescriptorRef.set_start_of_encoder_sample_index",
+    "silk": "pipeline.ComputePassSampleBufferAttachmentDescriptor.set_start_of_encoder_sample_index",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "ComputePassSampleBufferAttachmentDescriptorRef.end_of_encoder_sample_index",
+    "silk": "pipeline.ComputePassSampleBufferAttachmentDescriptor.end_of_encoder_sample_index",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "ComputePassSampleBufferAttachmentDescriptorRef.set_end_of_encoder_sample_index",
+    "silk": "pipeline.ComputePassSampleBufferAttachmentDescriptor.set_end_of_encoder_sample_index",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "BlitPassDescriptor.new",
+    "silk": "pipeline.BlitPassDescriptor.new",
+    "notes": "Returns +1 owned object; caller must release."
+  },
+  {
+    "rust": "BlitPassDescriptorRef.sample_buffer_attachments",
+    "silk": "pipeline.BlitPassDescriptor.sample_buffer_attachments",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "BlitPassSampleBufferAttachmentDescriptorArrayRef.object_at",
+    "silk": "pipeline.BlitPassSampleBufferAttachmentDescriptorArray.object_at",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "BlitPassSampleBufferAttachmentDescriptorArrayRef.set_object_at",
+    "silk": "pipeline.BlitPassSampleBufferAttachmentDescriptorArray.set_object_at",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "BlitPassSampleBufferAttachmentDescriptor.new",
+    "silk": "pipeline.BlitPassSampleBufferAttachmentDescriptor.new",
+    "notes": "Returns +1 owned object; caller must release."
+  },
+  {
+    "rust": "BlitPassSampleBufferAttachmentDescriptorRef.sample_buffer",
+    "silk": "pipeline.BlitPassSampleBufferAttachmentDescriptor.sample_buffer",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "BlitPassSampleBufferAttachmentDescriptorRef.set_sample_buffer",
+    "silk": "pipeline.BlitPassSampleBufferAttachmentDescriptor.set_sample_buffer",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "BlitPassSampleBufferAttachmentDescriptorRef.start_of_encoder_sample_index",
+    "silk": "pipeline.BlitPassSampleBufferAttachmentDescriptor.start_of_encoder_sample_index",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "BlitPassSampleBufferAttachmentDescriptorRef.set_start_of_encoder_sample_index",
+    "silk": "pipeline.BlitPassSampleBufferAttachmentDescriptor.set_start_of_encoder_sample_index",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "BlitPassSampleBufferAttachmentDescriptorRef.end_of_encoder_sample_index",
+    "silk": "pipeline.BlitPassSampleBufferAttachmentDescriptor.end_of_encoder_sample_index",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "BlitPassSampleBufferAttachmentDescriptorRef.set_end_of_encoder_sample_index",
+    "silk": "pipeline.BlitPassSampleBufferAttachmentDescriptor.set_end_of_encoder_sample_index",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "AccelerationStructurePassDescriptor.new",
+    "silk": "pipeline.AccelerationStructurePassDescriptor.new",
+    "notes": "Returns +1 owned object; caller must release."
+  },
+  {
+    "rust": "AccelerationStructurePassDescriptorRef.sample_buffer_attachments",
+    "silk": "pipeline.AccelerationStructurePassDescriptor.sample_buffer_attachments",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "AccelerationStructurePassSampleBufferAttachmentDescriptorArrayRef.object_at",
+    "silk": "pipeline.AccelerationStructurePassSampleBufferAttachmentDescriptorArray.object_at",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "AccelerationStructurePassSampleBufferAttachmentDescriptorArrayRef.set_object_at",
+    "silk": "pipeline.AccelerationStructurePassSampleBufferAttachmentDescriptorArray.set_object_at",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "AccelerationStructurePassSampleBufferAttachmentDescriptor.new",
+    "silk": "pipeline.AccelerationStructurePassSampleBufferAttachmentDescriptor.new",
+    "notes": "Returns +1 owned object; caller must release."
+  },
+  {
+    "rust": "AccelerationStructurePassSampleBufferAttachmentDescriptorRef.sample_buffer",
+    "silk": "pipeline.AccelerationStructurePassSampleBufferAttachmentDescriptor.sample_buffer",
+    "notes": "Returns borrowed +0 object handle."
+  },
+  {
+    "rust": "AccelerationStructurePassSampleBufferAttachmentDescriptorRef.set_sample_buffer",
+    "silk": "pipeline.AccelerationStructurePassSampleBufferAttachmentDescriptor.set_sample_buffer",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "AccelerationStructurePassSampleBufferAttachmentDescriptorRef.start_of_encoder_sample_index",
+    "silk": "pipeline.AccelerationStructurePassSampleBufferAttachmentDescriptor.start_of_encoder_sample_index",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "AccelerationStructurePassSampleBufferAttachmentDescriptorRef.set_start_of_encoder_sample_index",
+    "silk": "pipeline.AccelerationStructurePassSampleBufferAttachmentDescriptor.set_start_of_encoder_sample_index",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "AccelerationStructurePassSampleBufferAttachmentDescriptorRef.end_of_encoder_sample_index",
+    "silk": "pipeline.AccelerationStructurePassSampleBufferAttachmentDescriptor.end_of_encoder_sample_index",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  },
+  {
+    "rust": "AccelerationStructurePassSampleBufferAttachmentDescriptorRef.set_end_of_encoder_sample_index",
+    "silk": "pipeline.AccelerationStructurePassSampleBufferAttachmentDescriptor.set_end_of_encoder_sample_index",
+    "notes": "Direct Metal selector binding; caller establishes object validity and API availability."
+  }
+]

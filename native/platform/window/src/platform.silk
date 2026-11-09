@@ -1,0 +1,123 @@
+//! The interface every window backend implements.
+//!
+//! Silk interfaces dispatch statically, so an app is generic over `P: Platform` and picks
+//! one backend type at its entry point, usually `native.NativePlatform`. Windows are named
+//! by `WindowId` rather than by separate window objects, which keeps one owner for all
+//! native state and lets the browser and native backends share one shape.
+//!
+//! The event loop belongs to the app:
+//!
+//! ```silk,ignore
+//! while true {
+//!   match move run platform.nextEvent(Wait.Forever) {
+//!     Option<Event>.Some { value } => {
+//!       match &value {
+//!         Event.RequestFrame { window, targetTime } => { draw(window) }
+//!         Event.QuitRequested => { break }
+//!         _ => {}
+//!       }
+//!     }
+//!     _ => {}
+//!   }
+//! }
+//! ```
+//!
+//! Backends must keep delivering events while the system runs its own loops, such as a live
+//! resize or an open menu, so `nextEvent` returns there too. The app draws inside that
+//! call sequence exactly as it does otherwise.
+import event { Event }
+import menu { MenuBar, OpenDialog, SaveDialog }
+import types {
+  WindowId,
+  DialogId,
+  WindowOptions,
+  WindowError,
+  Wait,
+  Cursor,
+  ImeState,
+  Appearance,
+  RawSurface,
+}
+import silk.core.option { Option }
+import silk.geometry.point { Point2 }
+import silk.geometry.size { Size2 }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.text.string { String }
+
+pub interface Platform {
+  // Windows.
+
+  effect fn openWindow(self: &mut Self, options: &WindowOptions<'_>) -> WindowId
+    ! WindowError | OutOfMemoryError
+    ? &mut Allocator
+
+  /// Closes the window at once. Later calls with its id do nothing.
+  fn closeWindow(self: &mut Self, window: WindowId) -> ()
+
+  /// The next event, waiting as `wait` allows. `None` when the wait ended without one.
+  effect fn nextEvent(self: &mut Self, wait: Wait) -> Option<Event>
+    ! OutOfMemoryError
+    ? &mut Allocator
+
+  /// Asks for one `Event.RequestFrame` for the window at the display's next refresh.
+  /// Requests before that frame coalesce. Request again from the frame to animate.
+  fn requestFrame(self: &mut Self, window: WindowId) -> ()
+
+  /// The content area in logical points.
+  fn contentSize(self: &Self, window: WindowId) -> Size2<f64>
+
+  /// Device pixels per logical point.
+  fn scaleFactor(self: &Self, window: WindowId) -> f64
+
+  /// The native objects to create a GPU surface from. Size the surface to
+  /// `contentSize * scaleFactor` device pixels.
+  fn rawSurface(self: &Self, window: WindowId) -> RawSurface
+
+  effect fn setTitle(self: &mut Self, window: WindowId, title: string) -> ()
+    ! OutOfMemoryError
+    ? &mut Allocator
+
+  fn setContentSize(self: &mut Self, window: WindowId, size: Size2<f64>) -> ()
+
+  fn setMinContentSize(self: &mut Self, window: WindowId, size: Size2<f64>) -> ()
+
+  fn setVisible(self: &mut Self, window: WindowId, visible: bool) -> ()
+
+  /// Brings the window to the front and gives it keyboard focus.
+  fn focus(self: &mut Self, window: WindowId) -> ()
+
+  fn minimize(self: &mut Self, window: WindowId) -> ()
+
+  fn toggleFullScreen(self: &mut Self, window: WindowId) -> ()
+
+  /// Moves the window with the mouse until the button is released; call it from the
+  /// `MouseDown` of a custom title bar.
+  fn startWindowDrag(self: &mut Self, window: WindowId) -> ()
+
+  fn setCursor(self: &mut Self, window: WindowId, cursor: Cursor) -> ()
+
+  /// What the input method needs. Call it when focus moves between text fields and when
+  /// the caret moves, so the candidate window follows the caret.
+  fn setIme(self: &mut Self, window: WindowId, ime: ImeState) -> ()
+
+  // App.
+
+  /// Replaces the menu bar.
+  effect fn setMenuBar(self: &mut Self, bar: &MenuBar) -> () ! OutOfMemoryError ? &mut Allocator
+
+  /// Opens a file dialog without blocking. `Event.DialogClosed` carries the result.
+  effect fn openFileDialog(self: &mut Self, options: &OpenDialog<'_>) -> DialogId
+    ! WindowError | OutOfMemoryError
+    ? &mut Allocator
+
+  effect fn saveFileDialog(self: &mut Self, options: &SaveDialog<'_>) -> DialogId
+    ! WindowError | OutOfMemoryError
+    ? &mut Allocator
+
+  /// The clipboard's text, if it holds any.
+  effect fn readClipboard(self: &mut Self) -> Option<String> ! OutOfMemoryError ? &mut Allocator
+
+  effect fn writeClipboard(self: &mut Self, text: string) -> () ! OutOfMemoryError ? &mut Allocator
+
+  fn appearance(self: &Self) -> Appearance
+}

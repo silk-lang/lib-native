@@ -1,0 +1,1142 @@
+[
+  {
+    "rust": "MTLFeatureSet.supports_metal_kit",
+    "silk": "device.FeatureSetCapabilities.supports_metal_kit",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_metal_performance_shaders",
+    "silk": "device.FeatureSetCapabilities.supports_metal_performance_shaders",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_programmable_blending",
+    "silk": "device.FeatureSetCapabilities.supports_programmable_blending",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_pvrtc_pixel_formats",
+    "silk": "device.FeatureSetCapabilities.supports_pvrtc_pixel_formats",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_eac_etc_pixel_formats",
+    "silk": "device.FeatureSetCapabilities.supports_eac_etc_pixel_formats",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_astc_pixel_formats",
+    "silk": "device.FeatureSetCapabilities.supports_astc_pixel_formats",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_linear_textures",
+    "silk": "device.FeatureSetCapabilities.supports_linear_textures",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_bc_pixel_formats",
+    "silk": "device.FeatureSetCapabilities.supports_bc_pixel_formats",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_msaa_depth_resolve",
+    "silk": "device.FeatureSetCapabilities.supports_msaa_depth_resolve",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_counting_occlusion_query",
+    "silk": "device.FeatureSetCapabilities.supports_counting_occlusion_query",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_base_vertex_instance_drawing",
+    "silk": "device.FeatureSetCapabilities.supports_base_vertex_instance_drawing",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_indirect_buffers",
+    "silk": "device.FeatureSetCapabilities.supports_indirect_buffers",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_cube_map_texture_arrays",
+    "silk": "device.FeatureSetCapabilities.supports_cube_map_texture_arrays",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_texture_barriers",
+    "silk": "device.FeatureSetCapabilities.supports_texture_barriers",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_layered_rendering",
+    "silk": "device.FeatureSetCapabilities.supports_layered_rendering",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_tessellation",
+    "silk": "device.FeatureSetCapabilities.supports_tessellation",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_resource_heaps",
+    "silk": "device.FeatureSetCapabilities.supports_resource_heaps",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_memoryless_render_targets",
+    "silk": "device.FeatureSetCapabilities.supports_memoryless_render_targets",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_function_specialization",
+    "silk": "device.FeatureSetCapabilities.supports_function_specialization",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_function_buffer_read_writes",
+    "silk": "device.FeatureSetCapabilities.supports_function_buffer_read_writes",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_function_texture_read_writes",
+    "silk": "device.FeatureSetCapabilities.supports_function_texture_read_writes",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_array_of_textures",
+    "silk": "device.FeatureSetCapabilities.supports_array_of_textures",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_array_of_samplers",
+    "silk": "device.FeatureSetCapabilities.supports_array_of_samplers",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_stencil_texture_views",
+    "silk": "device.FeatureSetCapabilities.supports_stencil_texture_views",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_depth_16_pixel_format",
+    "silk": "device.FeatureSetCapabilities.supports_depth_16_pixel_format",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_extended_range_pixel_formats",
+    "silk": "device.FeatureSetCapabilities.supports_extended_range_pixel_formats",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_wide_color_pixel_format",
+    "silk": "device.FeatureSetCapabilities.supports_wide_color_pixel_format",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_combined_msaa_store_and_resolve_action",
+    "silk": "device.FeatureSetCapabilities.supports_combined_msaa_store_and_resolve_action",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_deferred_store_action",
+    "silk": "device.FeatureSetCapabilities.supports_deferred_store_action",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_msaa_blits",
+    "silk": "device.FeatureSetCapabilities.supports_msaa_blits",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_srgb_writes",
+    "silk": "device.FeatureSetCapabilities.supports_srgb_writes",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_16_bit_unsigned_integer_coordinates",
+    "silk": "device.FeatureSetCapabilities.supports_16_bit_unsigned_integer_coordinates",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_extract_insert_and_reverse_bits",
+    "silk": "device.FeatureSetCapabilities.supports_extract_insert_and_reverse_bits",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_simd_barrier",
+    "silk": "device.FeatureSetCapabilities.supports_simd_barrier",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_sampler_max_anisotropy",
+    "silk": "device.FeatureSetCapabilities.supports_sampler_max_anisotropy",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_sampler_lod_clamp",
+    "silk": "device.FeatureSetCapabilities.supports_sampler_lod_clamp",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_border_color",
+    "silk": "device.FeatureSetCapabilities.supports_border_color",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_dual_source_blending",
+    "silk": "device.FeatureSetCapabilities.supports_dual_source_blending",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_argument_buffers",
+    "silk": "device.FeatureSetCapabilities.supports_argument_buffers",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_programmable_sample_positions",
+    "silk": "device.FeatureSetCapabilities.supports_programmable_sample_positions",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_uniform_type",
+    "silk": "device.FeatureSetCapabilities.supports_uniform_type",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_imageblocks",
+    "silk": "device.FeatureSetCapabilities.supports_imageblocks",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_tile_shaders",
+    "silk": "device.FeatureSetCapabilities.supports_tile_shaders",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_imageblock_sample_coverage_control",
+    "silk": "device.FeatureSetCapabilities.supports_imageblock_sample_coverage_control",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_threadgroup_sharing",
+    "silk": "device.FeatureSetCapabilities.supports_threadgroup_sharing",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_post_depth_coverage",
+    "silk": "device.FeatureSetCapabilities.supports_post_depth_coverage",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_quad_scoped_permute_operations",
+    "silk": "device.FeatureSetCapabilities.supports_quad_scoped_permute_operations",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_raster_order_groups",
+    "silk": "device.FeatureSetCapabilities.supports_raster_order_groups",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_non_uniform_threadgroup_size",
+    "silk": "device.FeatureSetCapabilities.supports_non_uniform_threadgroup_size",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_multiple_viewports",
+    "silk": "device.FeatureSetCapabilities.supports_multiple_viewports",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_device_notifications",
+    "silk": "device.FeatureSetCapabilities.supports_device_notifications",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_stencil_feedback",
+    "silk": "device.FeatureSetCapabilities.supports_stencil_feedback",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_stencil_resolve",
+    "silk": "device.FeatureSetCapabilities.supports_stencil_resolve",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.supports_binary_archive",
+    "silk": "device.FeatureSetCapabilities.supports_binary_archive",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.max_vertex_attributes",
+    "silk": "device.FeatureSetCapabilities.max_vertex_attributes",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.max_buffer_argument_entries",
+    "silk": "device.FeatureSetCapabilities.max_buffer_argument_entries",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.max_texture_argument_entries",
+    "silk": "device.FeatureSetCapabilities.max_texture_argument_entries",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.max_sampler_state_argument_entries",
+    "silk": "device.FeatureSetCapabilities.max_sampler_state_argument_entries",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.max_threadgroup_memory_argument_entries",
+    "silk": "device.FeatureSetCapabilities.max_threadgroup_memory_argument_entries",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.max_inlined_constant_data_buffers",
+    "silk": "device.FeatureSetCapabilities.max_inlined_constant_data_buffers",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.max_inline_constant_buffer_length",
+    "silk": "device.FeatureSetCapabilities.max_inline_constant_buffer_length",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.max_threads_per_threadgroup",
+    "silk": "device.FeatureSetCapabilities.max_threads_per_threadgroup",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.max_total_threadgroup_memory_allocation",
+    "silk": "device.FeatureSetCapabilities.max_total_threadgroup_memory_allocation",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.max_total_tile_memory_allocation",
+    "silk": "device.FeatureSetCapabilities.max_total_tile_memory_allocation",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.threadgroup_memory_length_alignment",
+    "silk": "device.FeatureSetCapabilities.threadgroup_memory_length_alignment",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.max_constant_buffer_function_memory_allocation",
+    "silk": "device.FeatureSetCapabilities.max_constant_buffer_function_memory_allocation",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table. Returns false for None without writing out; otherwise writes the Some value."
+  },
+  {
+    "rust": "MTLFeatureSet.max_fragment_inputs",
+    "silk": "device.FeatureSetCapabilities.max_fragment_inputs",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.max_fragment_input_components",
+    "silk": "device.FeatureSetCapabilities.max_fragment_input_components",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.max_function_constants",
+    "silk": "device.FeatureSetCapabilities.max_function_constants",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.max_tessellation_factor",
+    "silk": "device.FeatureSetCapabilities.max_tessellation_factor",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.max_viewports_and_scissor_rectangles",
+    "silk": "device.FeatureSetCapabilities.max_viewports_and_scissor_rectangles",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.max_raster_order_groups",
+    "silk": "device.FeatureSetCapabilities.max_raster_order_groups",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.max_buffer_length",
+    "silk": "device.FeatureSetCapabilities.max_buffer_length",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.min_buffer_offset_alignment",
+    "silk": "device.FeatureSetCapabilities.min_buffer_offset_alignment",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.max_1d_texture_size",
+    "silk": "device.FeatureSetCapabilities.max_1d_texture_size",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.max_2d_texture_size",
+    "silk": "device.FeatureSetCapabilities.max_2d_texture_size",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.max_cube_map_texture_size",
+    "silk": "device.FeatureSetCapabilities.max_cube_map_texture_size",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.max_3d_texture_size",
+    "silk": "device.FeatureSetCapabilities.max_3d_texture_size",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.max_array_layers",
+    "silk": "device.FeatureSetCapabilities.max_array_layers",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.copy_texture_buffer_alignment",
+    "silk": "device.FeatureSetCapabilities.copy_texture_buffer_alignment",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.new_texture_buffer_alignment",
+    "silk": "device.FeatureSetCapabilities.new_texture_buffer_alignment",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table. Returns false for None without writing out; otherwise writes the Some value."
+  },
+  {
+    "rust": "MTLFeatureSet.max_color_render_targets",
+    "silk": "device.FeatureSetCapabilities.max_color_render_targets",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.max_point_primitive_size",
+    "silk": "device.FeatureSetCapabilities.max_point_primitive_size",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.max_total_color_render_target_size",
+    "silk": "device.FeatureSetCapabilities.max_total_color_render_target_size",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table. Returns false for None without writing out; otherwise writes the Some value."
+  },
+  {
+    "rust": "MTLFeatureSet.max_visibility_query_offset",
+    "silk": "device.FeatureSetCapabilities.max_visibility_query_offset",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.a8_unorm_capabilities",
+    "silk": "device.FeatureSetCapabilities.a8_unorm_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.r8_unorm_capabilities",
+    "silk": "device.FeatureSetCapabilities.r8_unorm_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.r8_unorm_srgb_capabilities",
+    "silk": "device.FeatureSetCapabilities.r8_unorm_srgb_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.r8_snorm_capabilities",
+    "silk": "device.FeatureSetCapabilities.r8_snorm_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.r8_uint_capabilities",
+    "silk": "device.FeatureSetCapabilities.r8_uint_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.r8_sint_capabilities",
+    "silk": "device.FeatureSetCapabilities.r8_sint_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.r16_unorm_capabilities",
+    "silk": "device.FeatureSetCapabilities.r16_unorm_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.r16_snorm_capabilities",
+    "silk": "device.FeatureSetCapabilities.r16_snorm_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.r16_uint_capabilities",
+    "silk": "device.FeatureSetCapabilities.r16_uint_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.r16_sint_capabilities",
+    "silk": "device.FeatureSetCapabilities.r16_sint_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.r16_float_capabilities",
+    "silk": "device.FeatureSetCapabilities.r16_float_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.rg8_unorm_capabilities",
+    "silk": "device.FeatureSetCapabilities.rg8_unorm_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.rg8_unorm_srgb_capabilities",
+    "silk": "device.FeatureSetCapabilities.rg8_unorm_srgb_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.rg8_snorm_capabilities",
+    "silk": "device.FeatureSetCapabilities.rg8_snorm_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.rg8_uint_capabilities",
+    "silk": "device.FeatureSetCapabilities.rg8_uint_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.rg8_sint_capabilities",
+    "silk": "device.FeatureSetCapabilities.rg8_sint_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.b5_g6_r5_unorm_capabilities",
+    "silk": "device.FeatureSetCapabilities.b5_g6_r5_unorm_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.a1_bgr5_unorm_capabilities",
+    "silk": "device.FeatureSetCapabilities.a1_bgr5_unorm_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.abgr4_unorm_capabilities",
+    "silk": "device.FeatureSetCapabilities.abgr4_unorm_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.bgr5_a1_unorm_capabilities",
+    "silk": "device.FeatureSetCapabilities.bgr5_a1_unorm_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.r32_uint_capabilities",
+    "silk": "device.FeatureSetCapabilities.r32_uint_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.r32_sint_capabilities",
+    "silk": "device.FeatureSetCapabilities.r32_sint_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.r32_float_capabilities",
+    "silk": "device.FeatureSetCapabilities.r32_float_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.rg16_unorm_capabilities",
+    "silk": "device.FeatureSetCapabilities.rg16_unorm_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.rg16_snorm_capabilities",
+    "silk": "device.FeatureSetCapabilities.rg16_snorm_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.rg16_uint_capabilities",
+    "silk": "device.FeatureSetCapabilities.rg16_uint_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.rg16_sint_capabilities",
+    "silk": "device.FeatureSetCapabilities.rg16_sint_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.rg16_float_capabilities",
+    "silk": "device.FeatureSetCapabilities.rg16_float_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.rgba8_unorm_capabilities",
+    "silk": "device.FeatureSetCapabilities.rgba8_unorm_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.rgba8_unorm_srgb_capabilities",
+    "silk": "device.FeatureSetCapabilities.rgba8_unorm_srgb_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.rgba8_snorm_capabilities",
+    "silk": "device.FeatureSetCapabilities.rgba8_snorm_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.rgba8_uint_capabilities",
+    "silk": "device.FeatureSetCapabilities.rgba8_uint_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.rgba8_sint_capabilities",
+    "silk": "device.FeatureSetCapabilities.rgba8_sint_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.bgra8_unorm_capabilities",
+    "silk": "device.FeatureSetCapabilities.bgra8_unorm_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.bgra8_unorm_srgb_capabilities",
+    "silk": "device.FeatureSetCapabilities.bgra8_unorm_srgb_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.rgb10_a2_unorm_capabilities",
+    "silk": "device.FeatureSetCapabilities.rgb10_a2_unorm_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.rgb10_a2_uint_capabilities",
+    "silk": "device.FeatureSetCapabilities.rgb10_a2_uint_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.rg11_b10_float_capabilities",
+    "silk": "device.FeatureSetCapabilities.rg11_b10_float_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.rgb9_e5_float_capabilities",
+    "silk": "device.FeatureSetCapabilities.rgb9_e5_float_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.rg32_uint_capabilities",
+    "silk": "device.FeatureSetCapabilities.rg32_uint_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.rg32_sint_capabilities",
+    "silk": "device.FeatureSetCapabilities.rg32_sint_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.rg32_float_capabilities",
+    "silk": "device.FeatureSetCapabilities.rg32_float_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.rgba16_unorm_capabilities",
+    "silk": "device.FeatureSetCapabilities.rgba16_unorm_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.rgba16_snorm_capabilities",
+    "silk": "device.FeatureSetCapabilities.rgba16_snorm_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.rgba16_uint_capabilities",
+    "silk": "device.FeatureSetCapabilities.rgba16_uint_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.rgba16_sint_capabilities",
+    "silk": "device.FeatureSetCapabilities.rgba16_sint_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.rgba16_float_capabilities",
+    "silk": "device.FeatureSetCapabilities.rgba16_float_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.rgba32_uint_capabilities",
+    "silk": "device.FeatureSetCapabilities.rgba32_uint_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.rgba32_sint_capabilities",
+    "silk": "device.FeatureSetCapabilities.rgba32_sint_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.rgba32_float_capabilities",
+    "silk": "device.FeatureSetCapabilities.rgba32_float_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.pvrtc_pixel_formats_capabilities",
+    "silk": "device.FeatureSetCapabilities.pvrtc_pixel_formats_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.eac_etc_pixel_formats_capabilities",
+    "silk": "device.FeatureSetCapabilities.eac_etc_pixel_formats_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.astc_pixel_formats_capabilities",
+    "silk": "device.FeatureSetCapabilities.astc_pixel_formats_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.bc_pixel_formats_capabilities",
+    "silk": "device.FeatureSetCapabilities.bc_pixel_formats_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.gbgr422_capabilities",
+    "silk": "device.FeatureSetCapabilities.gbgr422_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.bgrg422_capabilities",
+    "silk": "device.FeatureSetCapabilities.bgrg422_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.depth16_unorm_capabilities",
+    "silk": "device.FeatureSetCapabilities.depth16_unorm_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.depth32_float_capabilities",
+    "silk": "device.FeatureSetCapabilities.depth32_float_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.stencil8_capabilities",
+    "silk": "device.FeatureSetCapabilities.stencil8_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.depth24_unorm_stencil8_capabilities",
+    "silk": "device.FeatureSetCapabilities.depth24_unorm_stencil8_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.depth32_float_stencil8_capabilities",
+    "silk": "device.FeatureSetCapabilities.depth32_float_stencil8_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.x24_stencil8_capabilities",
+    "silk": "device.FeatureSetCapabilities.x24_stencil8_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.x32_stencil8_capabilities",
+    "silk": "device.FeatureSetCapabilities.x32_stencil8_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.bgra10_xr_capabilities",
+    "silk": "device.FeatureSetCapabilities.bgra10_xr_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.bgra10_xr_srgb_capabilities",
+    "silk": "device.FeatureSetCapabilities.bgra10_xr_srgb_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.bgr10_xr_capabilities",
+    "silk": "device.FeatureSetCapabilities.bgr10_xr_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.bgr10_xr_srgb_capabilities",
+    "silk": "device.FeatureSetCapabilities.bgr10_xr_srgb_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "MTLFeatureSet.bgr10_a2_unorm_capabilities",
+    "silk": "device.FeatureSetCapabilities.bgr10_a2_unorm_capabilities",
+    "notes": "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+  },
+  {
+    "rust": "Device.system_default",
+    "silk": "device.Device.system_default",
+    "notes": "Returns an owned +1 device, or null if Metal is unavailable."
+  },
+  {
+    "rust": "Device.all",
+    "silk": "device.Device.all",
+    "notes": "Returns an owned +1 NSArray of devices. Elements are borrowed from the array; retain them to outlive it."
+  },
+  {
+    "rust": "DeviceRef.name",
+    "silk": "device.Device.name",
+    "notes": "Returns borrowed UTF-8 storage owned by the NSString property. Keep the device alive."
+  },
+  {
+    "rust": "DeviceRef.vendor",
+    "silk": "device.Device.vendor",
+    "notes": "Returns borrowed UTF-8 storage owned by the NSString property. Private vendor API; caller must ensure selector availability."
+  },
+  {
+    "rust": "DeviceRef.family_name",
+    "silk": "device.Device.family_name",
+    "notes": "Returns borrowed UTF-8 storage owned by the NSString property. Private vendor API; caller must ensure selector availability."
+  },
+  {
+    "rust": "DeviceRef.registry_id",
+    "silk": "device.Device.registry_id",
+    "notes": "Caller must ensure the device and selector are available."
+  },
+  {
+    "rust": "DeviceRef.location",
+    "silk": "device.Device.location",
+    "notes": "Caller must ensure the device and selector are available."
+  },
+  {
+    "rust": "DeviceRef.location_number",
+    "silk": "device.Device.location_number",
+    "notes": "Caller must ensure the device and selector are available."
+  },
+  {
+    "rust": "DeviceRef.max_threadgroup_memory_length",
+    "silk": "device.Device.max_threadgroup_memory_length",
+    "notes": "Caller must ensure the device and selector are available."
+  },
+  {
+    "rust": "DeviceRef.max_threads_per_threadgroup",
+    "silk": "device.Device.max_threads_per_threadgroup",
+    "notes": "Returns the threadgroup dimensions by value."
+  },
+  {
+    "rust": "DeviceRef.is_low_power",
+    "silk": "device.Device.is_low_power",
+    "notes": "Caller must ensure the device and selector are available."
+  },
+  {
+    "rust": "DeviceRef.is_headless",
+    "silk": "device.Device.is_headless",
+    "notes": "Caller must ensure the device and selector are available."
+  },
+  {
+    "rust": "DeviceRef.is_removable",
+    "silk": "device.Device.is_removable",
+    "notes": "Caller must ensure the device and selector are available."
+  },
+  {
+    "rust": "DeviceRef.supports_raytracing",
+    "silk": "device.Device.supports_raytracing",
+    "notes": "Caller must ensure the device and selector are available."
+  },
+  {
+    "rust": "DeviceRef.has_unified_memory",
+    "silk": "device.Device.has_unified_memory",
+    "notes": "Caller must ensure the device and selector are available."
+  },
+  {
+    "rust": "DeviceRef.recommended_max_working_set_size",
+    "silk": "device.Device.recommended_max_working_set_size",
+    "notes": "Caller must ensure the device and selector are available."
+  },
+  {
+    "rust": "DeviceRef.max_transfer_rate",
+    "silk": "device.Device.max_transfer_rate",
+    "notes": "Caller must ensure the device and selector are available."
+  },
+  {
+    "rust": "DeviceRef.supports_shader_barycentric_coordinates",
+    "silk": "device.Device.supports_shader_barycentric_coordinates",
+    "notes": "Caller must ensure the device and selector are available."
+  },
+  {
+    "rust": "DeviceRef.supports_function_pointers",
+    "silk": "device.Device.supports_function_pointers",
+    "notes": "Caller must ensure the device and selector are available."
+  },
+  {
+    "rust": "DeviceRef.supports_dynamic_libraries",
+    "silk": "device.Device.supports_dynamic_libraries",
+    "notes": "Caller must ensure the device and selector are available."
+  },
+  {
+    "rust": "DeviceRef.d24_s8_supported",
+    "silk": "device.Device.d24_s8_supported",
+    "notes": "Caller must ensure the device and selector are available."
+  },
+  {
+    "rust": "DeviceRef.new_fence",
+    "silk": "device.Device.new_fence",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements."
+  },
+  {
+    "rust": "DeviceRef.new_command_queue",
+    "silk": "device.Device.new_command_queue",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements."
+  },
+  {
+    "rust": "DeviceRef.new_default_library",
+    "silk": "device.Device.new_default_library",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements."
+  },
+  {
+    "rust": "DeviceRef.argument_buffers_support",
+    "silk": "device.Device.argument_buffers_support",
+    "notes": "Caller must ensure the device and selector are available."
+  },
+  {
+    "rust": "DeviceRef.read_write_texture_support",
+    "silk": "device.Device.read_write_texture_support",
+    "notes": "Caller must ensure the device and selector are available."
+  },
+  {
+    "rust": "DeviceRef.raster_order_groups_supported",
+    "silk": "device.Device.raster_order_groups_supported",
+    "notes": "Caller must ensure the device and selector are available."
+  },
+  {
+    "rust": "DeviceRef.supports_32bit_float_filtering",
+    "silk": "device.Device.supports_32bit_float_filtering",
+    "notes": "Caller must ensure the device and selector are available."
+  },
+  {
+    "rust": "DeviceRef.supports_32bit_MSAA",
+    "silk": "device.Device.supports_32bit_MSAA",
+    "notes": "Caller must ensure the device and selector are available."
+  },
+  {
+    "rust": "DeviceRef.supports_query_texture_LOD",
+    "silk": "device.Device.supports_query_texture_LOD",
+    "notes": "Caller must ensure the device and selector are available."
+  },
+  {
+    "rust": "DeviceRef.supports_BC_texture_compression",
+    "silk": "device.Device.supports_BC_texture_compression",
+    "notes": "Caller must ensure the device and selector are available."
+  },
+  {
+    "rust": "DeviceRef.supports_pull_model_interpolation",
+    "silk": "device.Device.supports_pull_model_interpolation",
+    "notes": "Caller must ensure the device and selector are available."
+  },
+  {
+    "rust": "DeviceRef.new_event",
+    "silk": "device.Device.new_event",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements."
+  },
+  {
+    "rust": "DeviceRef.new_shared_event",
+    "silk": "device.Device.new_shared_event",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements."
+  },
+  {
+    "rust": "DeviceRef.max_argument_buffer_sampler_count",
+    "silk": "device.Device.max_argument_buffer_sampler_count",
+    "notes": "Caller must ensure the device and selector are available."
+  },
+  {
+    "rust": "DeviceRef.current_allocated_size",
+    "silk": "device.Device.current_allocated_size",
+    "notes": "Caller must ensure the device and selector are available."
+  },
+  {
+    "rust": "DeviceRef.max_buffer_length",
+    "silk": "device.Device.max_buffer_length",
+    "notes": "Caller must ensure the device and selector are available."
+  },
+  {
+    "rust": "DeviceRef.counter_sets",
+    "silk": "device.Device.counter_sets",
+    "notes": "Returns a borrowed +0 NSArray of counter sets; retain the array or individual elements to extend their lifetimes."
+  },
+  {
+    "rust": "DeviceRef.supports_feature_set",
+    "silk": "device.Device.supports_feature_set",
+    "notes": "Caller must ensure the device and selector are available."
+  },
+  {
+    "rust": "DeviceRef.supports_family",
+    "silk": "device.Device.supports_family",
+    "notes": "Caller must ensure the device and selector are available."
+  },
+  {
+    "rust": "DeviceRef.supports_vertex_amplification_count",
+    "silk": "device.Device.supports_vertex_amplification_count",
+    "notes": "Caller must ensure the device and selector are available."
+  },
+  {
+    "rust": "DeviceRef.supports_texture_sample_count",
+    "silk": "device.Device.supports_texture_sample_count",
+    "notes": "Caller must ensure the device and selector are available."
+  },
+  {
+    "rust": "DeviceRef.supports_counter_sampling",
+    "silk": "device.Device.supports_counter_sampling",
+    "notes": "Caller must ensure the device and selector are available."
+  },
+  {
+    "rust": "DeviceRef.minimum_linear_texture_alignment_for_pixel_format",
+    "silk": "device.Device.minimum_linear_texture_alignment_for_pixel_format",
+    "notes": "Caller must ensure the device and selector are available."
+  },
+  {
+    "rust": "DeviceRef.minimum_texture_buffer_alignment_for_pixel_format",
+    "silk": "device.Device.minimum_texture_buffer_alignment_for_pixel_format",
+    "notes": "Caller must ensure the device and selector are available."
+  },
+  {
+    "rust": "DeviceRef.new_command_queue_with_max_command_buffer_count",
+    "silk": "device.Device.new_command_queue_with_max_command_buffer_count",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements."
+  },
+  {
+    "rust": "DeviceRef.new_texture",
+    "silk": "device.Device.new_texture",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements."
+  },
+  {
+    "rust": "DeviceRef.new_sampler",
+    "silk": "device.Device.new_sampler",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements."
+  },
+  {
+    "rust": "DeviceRef.new_depth_stencil_state",
+    "silk": "device.Device.new_depth_stencil_state",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements."
+  },
+  {
+    "rust": "DeviceRef.new_argument_encoder",
+    "silk": "device.Device.new_argument_encoder",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements."
+  },
+  {
+    "rust": "DeviceRef.new_heap",
+    "silk": "device.Device.new_heap",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements."
+  },
+  {
+    "rust": "DeviceRef.new_acceleration_structure_with_size",
+    "silk": "device.Device.new_acceleration_structure_with_size",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements."
+  },
+  {
+    "rust": "DeviceRef.new_dynamic_library",
+    "silk": "device.Device.new_dynamic_library",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore."
+  },
+  {
+    "rust": "DeviceRef.new_dynamic_library_with_url",
+    "silk": "device.Device.new_dynamic_library_with_url",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore."
+  },
+  {
+    "rust": "DeviceRef.new_binary_archive_with_descriptor",
+    "silk": "device.Device.new_binary_archive_with_descriptor",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore."
+  },
+  {
+    "rust": "DeviceRef.new_render_pipeline_state",
+    "silk": "device.Device.new_render_pipeline_state",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore."
+  },
+  {
+    "rust": "DeviceRef.new_compute_pipeline_state_with_function",
+    "silk": "device.Device.new_compute_pipeline_state_with_function",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore."
+  },
+  {
+    "rust": "DeviceRef.new_counter_sample_buffer_with_descriptor",
+    "silk": "device.Device.new_counter_sample_buffer_with_descriptor",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore."
+  },
+  {
+    "rust": "DeviceRef.new_render_pipeline_state_with_reflection",
+    "silk": "device.Device.new_render_pipeline_state_with_reflection",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore. reflection receives a separately owned +1 reflection object, or null, and must be released."
+  },
+  {
+    "rust": "DeviceRef.new_mesh_render_pipeline_state_with_reflection",
+    "silk": "device.Device.new_mesh_render_pipeline_state_with_reflection",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore. reflection receives a separately owned +1 reflection object, or null, and must be released."
+  },
+  {
+    "rust": "DeviceRef.new_compute_pipeline_state_with_reflection",
+    "silk": "device.Device.new_compute_pipeline_state_with_reflection",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore. reflection receives a separately owned +1 reflection object, or null, and must be released."
+  },
+  {
+    "rust": "DeviceRef.new_mesh_render_pipeline_state",
+    "silk": "device.Device.new_mesh_render_pipeline_state",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore. Uses the SDK descriptor selector with no reflection options."
+  },
+  {
+    "rust": "DeviceRef.new_compute_pipeline_state",
+    "silk": "device.Device.new_compute_pipeline_state",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore. Uses the SDK descriptor selector with no reflection options."
+  },
+  {
+    "rust": "DeviceRef.new_library_with_source",
+    "silk": "device.Device.new_library_with_source",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore. src is NUL-terminated UTF-8."
+  },
+  {
+    "rust": "DeviceRef.new_library_with_file",
+    "silk": "device.Device.new_library_with_file",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore. file is a NUL-terminated UTF-8 filesystem path."
+  },
+  {
+    "rust": "DeviceRef.new_library_with_data",
+    "silk": "device.Device.new_library_with_data",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore. library_data points to length readable bytes; dispatch copies the bytes before this returns."
+  },
+  {
+    "rust": "DeviceRef.new_buffer",
+    "silk": "device.Device.new_buffer",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements."
+  },
+  {
+    "rust": "DeviceRef.new_buffer_with_data",
+    "silk": "device.Device.new_buffer_with_data",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. bytes points to length readable bytes, copied by Metal."
+  },
+  {
+    "rust": "DeviceRef.new_buffer_with_bytes_no_copy",
+    "silk": "device.Device.new_buffer_with_bytes_no_copy",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. bytes must satisfy Metal no-copy alignment and lifetime requirements. When has_deallocator is true, the copied block captures the callback/context values; keep both valid until Metal invokes the callback, potentially on another thread. The callback receives context, bytes, and length. When false, deallocator is not called and the caller retains responsibility for storage lifetime."
+  },
+  {
+    "rust": "DeviceRef.new_indirect_command_buffer_with_descriptor",
+    "silk": "device.Device.new_indirect_command_buffer_with_descriptor",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements."
+  },
+  {
+    "rust": "DeviceRef.heap_buffer_size_and_align",
+    "silk": "device.Device.heap_buffer_size_and_align",
+    "notes": "Returns the aggregate by value; caller must ensure API availability and argument validity."
+  },
+  {
+    "rust": "DeviceRef.heap_acceleration_structure_size_and_align_with_size",
+    "silk": "device.Device.heap_acceleration_structure_size_and_align_with_size",
+    "notes": "Returns the aggregate by value; caller must ensure API availability and argument validity."
+  },
+  {
+    "rust": "DeviceRef.heap_texture_size_and_align",
+    "silk": "device.Device.heap_texture_size_and_align",
+    "notes": "Returns the aggregate by value; caller must ensure API availability and argument validity."
+  },
+  {
+    "rust": "DeviceRef.acceleration_structure_sizes_with_descriptor",
+    "silk": "device.Device.acceleration_structure_sizes_with_descriptor",
+    "notes": "Returns the aggregate by value; caller must ensure API availability and argument validity."
+  },
+  {
+    "rust": "DeviceRef.sample_timestamps",
+    "silk": "device.Device.sample_timestamps",
+    "notes": "Writes the paired CPU and GPU timestamps to the supplied outputs."
+  }
+]

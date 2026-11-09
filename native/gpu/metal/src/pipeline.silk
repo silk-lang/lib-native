@@ -1,0 +1,1591 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Port of metal-rs; Copyright 2016-2026 GFX developers.
+// Unsafe raw Metal bindings. Callers provide valid live objects and SDK availability.
+// All new/copy results are +1; release them through the runtime. Other objects,
+// arrays and UTF-8 strings are borrowed (+0), unless a method states otherwise.
+// Descriptor subclasses also accept the RenderPassAttachmentDescriptor operations.
+// Slice pointers must address count initialized, non-null Objective-C object handles.
+import types { MTLClearColor, MTLSize }
+
+unsafe extern "C" fn metal_PipelineBufferDescriptorArray_object_at(object: ?*mut u8, index: u64) -> ?*mut u8
+unsafe extern "C" fn metal_PipelineBufferDescriptorArray_set_object_at(object: ?*mut u8, index: u64, buffer_desc: ?*mut u8) -> ()
+unsafe extern "C" fn metal_PipelineBufferDescriptor_mutability(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_PipelineBufferDescriptor_set_mutability(object: ?*mut u8, new_mutability: u64) -> ()
+unsafe extern "C" fn metal_RenderPipelineColorAttachmentDescriptor_pixel_format(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_RenderPipelineColorAttachmentDescriptor_set_pixel_format(object: ?*mut u8, pixel_format: u64) -> ()
+unsafe extern "C" fn metal_RenderPipelineColorAttachmentDescriptor_is_blending_enabled(object: ?*mut u8) -> u8
+unsafe extern "C" fn metal_RenderPipelineColorAttachmentDescriptor_set_blending_enabled(object: ?*mut u8, enabled: u8) -> ()
+unsafe extern "C" fn metal_RenderPipelineColorAttachmentDescriptor_source_rgb_blend_factor(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_RenderPipelineColorAttachmentDescriptor_set_source_rgb_blend_factor(object: ?*mut u8, blend_factor: u64) -> ()
+unsafe extern "C" fn metal_RenderPipelineColorAttachmentDescriptor_destination_rgb_blend_factor(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_RenderPipelineColorAttachmentDescriptor_set_destination_rgb_blend_factor(object: ?*mut u8, blend_factor: u64) -> ()
+unsafe extern "C" fn metal_RenderPipelineColorAttachmentDescriptor_rgb_blend_operation(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_RenderPipelineColorAttachmentDescriptor_set_rgb_blend_operation(object: ?*mut u8, blend_operation: u64) -> ()
+unsafe extern "C" fn metal_RenderPipelineColorAttachmentDescriptor_source_alpha_blend_factor(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_RenderPipelineColorAttachmentDescriptor_set_source_alpha_blend_factor(object: ?*mut u8, blend_factor: u64) -> ()
+unsafe extern "C" fn metal_RenderPipelineColorAttachmentDescriptor_destination_alpha_blend_factor(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_RenderPipelineColorAttachmentDescriptor_set_destination_alpha_blend_factor(object: ?*mut u8, blend_factor: u64) -> ()
+unsafe extern "C" fn metal_RenderPipelineColorAttachmentDescriptor_alpha_blend_operation(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_RenderPipelineColorAttachmentDescriptor_set_alpha_blend_operation(object: ?*mut u8, blend_operation: u64) -> ()
+unsafe extern "C" fn metal_RenderPipelineColorAttachmentDescriptor_write_mask(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_RenderPipelineColorAttachmentDescriptor_set_write_mask(object: ?*mut u8, mask: u64) -> ()
+unsafe extern "C" fn metal_RenderPipelineReflection_new(vertex_data: ?*mut u8, fragment_data: ?*mut u8, vertex_desc: ?*mut u8, device: ?*mut u8, options: u64, flags: u64) -> ?*mut u8
+unsafe extern "C" fn metal_RenderPipelineReflection_fragment_arguments(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_RenderPipelineReflection_vertex_arguments(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_RenderPipelineReflection_tile_arguments(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_ArgumentArray_object_at(object: ?*mut u8, index: u64) -> ?*mut u8
+unsafe extern "C" fn metal_ArgumentArray_count(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_ComputePipelineReflection_arguments(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_new() -> ?*mut u8
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_color_attachments(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_depth_attachment_pixel_format(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_set_depth_attachment_pixel_format(object: ?*mut u8, pixel_format: u64) -> ()
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_fragment_buffers(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_fragment_function(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_set_fragment_function(object: ?*mut u8, function: ?*mut u8) -> ()
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_is_alpha_to_coverage_enabled(object: ?*mut u8) -> u8
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_set_alpha_to_coverage_enabled(object: ?*mut u8, enabled: u8) -> ()
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_is_alpha_to_one_enabled(object: ?*mut u8) -> u8
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_set_alpha_to_one_enabled(object: ?*mut u8, enabled: u8) -> ()
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_is_rasterization_enabled(object: ?*mut u8) -> u8
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_set_rasterization_enabled(object: ?*mut u8, enabled: u8) -> ()
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_label(object: ?*mut u8) -> ?[*]const u8
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_set_label(object: ?*mut u8, label: ?[*]const u8) -> ()
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_max_total_threadgroups_per_mesh_grid(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_set_max_total_threadgroups_per_mesh_grid(object: ?*mut u8, max_total_threadgroups_per_mesh_grid: u64) -> ()
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_max_total_threads_per_mesh_threadgroup(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_set_max_total_threads_per_mesh_threadgroup(object: ?*mut u8, max_total_threads_per_mesh_threadgroup: u64) -> ()
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_max_total_threads_per_object_threadgroup(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_set_max_total_threads_per_object_threadgroup(object: ?*mut u8, max_total_threads_per_object_threadgroup: u64) -> ()
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_max_vertex_amplification_count(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_set_max_vertex_amplification_count(object: ?*mut u8, max_vertex_amplification_count: u64) -> ()
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_mesh_buffers(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_mesh_function(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_set_mesh_function(object: ?*mut u8, function: ?*mut u8) -> ()
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_mesh_threadgroup_size_is_multiple_of_thread_execution_width(object: ?*mut u8) -> u8
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_set_mesh_threadgroup_size_is_multiple_of_thread_execution_width(object: ?*mut u8, mesh_threadgroup_size_is_multiple_of_thread_execution_width: u8) -> ()
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_object_buffers(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_object_function(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_set_object_function(object: ?*mut u8, function: ?*mut u8) -> ()
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_object_threadgroup_size_is_multiple_of_thread_execution_width(object: ?*mut u8) -> u8
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_set_object_threadgroup_size_is_multiple_of_thread_execution_width(object: ?*mut u8, object_threadgroup_size_is_multiple_of_thread_execution_width: u8) -> ()
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_payload_memory_length(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_set_payload_memory_length(object: ?*mut u8, payload_memory_length: u64) -> ()
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_raster_sample_count(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_set_raster_sample_count(object: ?*mut u8, raster_sample_count: u64) -> ()
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_stencil_attachment_pixel_format(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_set_stencil_attachment_pixel_format(object: ?*mut u8, pixel_format: u64) -> ()
+unsafe extern "C" fn metal_MeshRenderPipelineDescriptor_reset(object: ?*mut u8) -> ()
+unsafe extern "C" fn metal_RenderPipelineDescriptor_new() -> ?*mut u8
+unsafe extern "C" fn metal_RenderPipelineDescriptor_label(object: ?*mut u8) -> ?[*]const u8
+unsafe extern "C" fn metal_RenderPipelineDescriptor_set_label(object: ?*mut u8, label: ?[*]const u8) -> ()
+unsafe extern "C" fn metal_RenderPipelineDescriptor_vertex_function(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_RenderPipelineDescriptor_set_vertex_function(object: ?*mut u8, function: ?*mut u8) -> ()
+unsafe extern "C" fn metal_RenderPipelineDescriptor_fragment_function(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_RenderPipelineDescriptor_set_fragment_function(object: ?*mut u8, function: ?*mut u8) -> ()
+unsafe extern "C" fn metal_RenderPipelineDescriptor_vertex_descriptor(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_RenderPipelineDescriptor_set_vertex_descriptor(object: ?*mut u8, descriptor: ?*mut u8) -> ()
+unsafe extern "C" fn metal_RenderPipelineDescriptor_sample_count(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_RenderPipelineDescriptor_set_sample_count(object: ?*mut u8, count: u64) -> ()
+unsafe extern "C" fn metal_RenderPipelineDescriptor_raster_sample_count(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_RenderPipelineDescriptor_set_raster_sample_count(object: ?*mut u8, count: u64) -> ()
+unsafe extern "C" fn metal_RenderPipelineDescriptor_max_vertex_amplification_count(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_RenderPipelineDescriptor_set_max_vertex_amplification_count(object: ?*mut u8, count: u64) -> ()
+unsafe extern "C" fn metal_RenderPipelineDescriptor_is_alpha_to_coverage_enabled(object: ?*mut u8) -> u8
+unsafe extern "C" fn metal_RenderPipelineDescriptor_set_alpha_to_coverage_enabled(object: ?*mut u8, enabled: u8) -> ()
+unsafe extern "C" fn metal_RenderPipelineDescriptor_is_alpha_to_one_enabled(object: ?*mut u8) -> u8
+unsafe extern "C" fn metal_RenderPipelineDescriptor_set_alpha_to_one_enabled(object: ?*mut u8, enabled: u8) -> ()
+unsafe extern "C" fn metal_RenderPipelineDescriptor_is_rasterization_enabled(object: ?*mut u8) -> u8
+unsafe extern "C" fn metal_RenderPipelineDescriptor_set_rasterization_enabled(object: ?*mut u8, enabled: u8) -> ()
+unsafe extern "C" fn metal_RenderPipelineDescriptor_color_attachments(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_RenderPipelineDescriptor_depth_attachment_pixel_format(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_RenderPipelineDescriptor_set_depth_attachment_pixel_format(object: ?*mut u8, pixel_format: u64) -> ()
+unsafe extern "C" fn metal_RenderPipelineDescriptor_stencil_attachment_pixel_format(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_RenderPipelineDescriptor_set_stencil_attachment_pixel_format(object: ?*mut u8, pixel_format: u64) -> ()
+unsafe extern "C" fn metal_RenderPipelineDescriptor_input_primitive_topology(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_RenderPipelineDescriptor_set_input_primitive_topology(object: ?*mut u8, topology: u64) -> ()
+unsafe extern "C" fn metal_RenderPipelineDescriptor_serialize_vertex_data(object: ?*mut u8, error: ?*mut ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_RenderPipelineDescriptor_serialize_fragment_data(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_RenderPipelineDescriptor_support_indirect_command_buffers(object: ?*mut u8) -> u8
+unsafe extern "C" fn metal_RenderPipelineDescriptor_set_support_indirect_command_buffers(object: ?*mut u8, support: u8) -> ()
+unsafe extern "C" fn metal_RenderPipelineDescriptor_vertex_buffers(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_RenderPipelineDescriptor_fragment_buffers(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_RenderPipelineDescriptor_binary_archives(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_RenderPipelineDescriptor_set_binary_archives(object: ?*mut u8, archives: ?[*]const ?*mut u8, archives_count: u64) -> ()
+unsafe extern "C" fn metal_RenderPipelineDescriptor_fragment_linked_functions(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_RenderPipelineDescriptor_set_fragment_linked_functions(object: ?*mut u8, functions: ?*mut u8) -> ()
+unsafe extern "C" fn metal_RenderPipelineDescriptor_reset(object: ?*mut u8) -> ()
+unsafe extern "C" fn metal_RenderPipelineState_device(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_RenderPipelineState_label(object: ?*mut u8) -> ?[*]const u8
+unsafe extern "C" fn metal_RenderPipelineState_new_intersection_function_table_with_descriptor(object: ?*mut u8, descriptor: ?*mut u8, stage: u64) -> ?*mut u8
+unsafe extern "C" fn metal_RenderPipelineState_function_handle_with_function(object: ?*mut u8, function: ?*mut u8, stage: u64) -> ?*mut u8
+unsafe extern "C" fn metal_RenderPipelineState_new_visible_function_table_with_descriptor(object: ?*mut u8, descriptor: ?*mut u8, stage: u64) -> ?*mut u8
+unsafe extern "C" fn metal_RenderPipelineColorAttachmentDescriptorArray_object_at(object: ?*mut u8, index: u64) -> ?*mut u8
+unsafe extern "C" fn metal_RenderPipelineColorAttachmentDescriptorArray_set_object_at(object: ?*mut u8, index: u64, attachment: ?*mut u8) -> ()
+unsafe extern "C" fn metal_ComputePipelineDescriptor_new() -> ?*mut u8
+unsafe extern "C" fn metal_ComputePipelineDescriptor_label(object: ?*mut u8) -> ?[*]const u8
+unsafe extern "C" fn metal_ComputePipelineDescriptor_set_label(object: ?*mut u8, label: ?[*]const u8) -> ()
+unsafe extern "C" fn metal_ComputePipelineDescriptor_compute_function(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_ComputePipelineDescriptor_set_compute_function(object: ?*mut u8, function: ?*mut u8) -> ()
+unsafe extern "C" fn metal_ComputePipelineDescriptor_thread_group_size_is_multiple_of_thread_execution_width(object: ?*mut u8) -> u8
+unsafe extern "C" fn metal_ComputePipelineDescriptor_set_thread_group_size_is_multiple_of_thread_execution_width(object: ?*mut u8, size_is_multiple_of_width: u8) -> ()
+unsafe extern "C" fn metal_ComputePipelineDescriptor_max_total_threads_per_threadgroup(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_ComputePipelineDescriptor_set_max_total_threads_per_threadgroup(object: ?*mut u8, max_total_threads: u64) -> ()
+unsafe extern "C" fn metal_ComputePipelineDescriptor_support_indirect_command_buffers(object: ?*mut u8) -> u8
+unsafe extern "C" fn metal_ComputePipelineDescriptor_set_support_indirect_command_buffers(object: ?*mut u8, support: u8) -> ()
+unsafe extern "C" fn metal_ComputePipelineDescriptor_support_adding_binary_functions(object: ?*mut u8) -> u8
+unsafe extern "C" fn metal_ComputePipelineDescriptor_set_support_adding_binary_functions(object: ?*mut u8, support: u8) -> ()
+unsafe extern "C" fn metal_ComputePipelineDescriptor_max_call_stack_depth(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_ComputePipelineDescriptor_set_max_call_stack_depth(object: ?*mut u8, depth: u64) -> ()
+unsafe extern "C" fn metal_ComputePipelineDescriptor_insert_libraries(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_ComputePipelineDescriptor_set_insert_libraries(object: ?*mut u8, libraries: ?[*]const ?*mut u8, libraries_count: u64) -> ()
+unsafe extern "C" fn metal_ComputePipelineDescriptor_binary_archives(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_ComputePipelineDescriptor_set_binary_archives(object: ?*mut u8, archives: ?[*]const ?*mut u8, archives_count: u64) -> ()
+unsafe extern "C" fn metal_ComputePipelineDescriptor_linked_functions(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_ComputePipelineDescriptor_set_linked_functions(object: ?*mut u8, functions: ?*mut u8) -> ()
+unsafe extern "C" fn metal_ComputePipelineDescriptor_stage_input_descriptor(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_ComputePipelineDescriptor_set_stage_input_descriptor(object: ?*mut u8, descriptor: ?*mut u8) -> ()
+unsafe extern "C" fn metal_ComputePipelineDescriptor_buffers(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_ComputePipelineDescriptor_reset(object: ?*mut u8) -> ()
+unsafe extern "C" fn metal_ComputePipelineState_label(object: ?*mut u8) -> ?[*]const u8
+unsafe extern "C" fn metal_ComputePipelineState_max_total_threads_per_threadgroup(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_ComputePipelineState_thread_execution_width(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_ComputePipelineState_static_threadgroup_memory_length(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_ComputePipelineState_imageblock_memory_length_for_dimensions(object: ?*mut u8, dimensions: MTLSize) -> u64
+unsafe extern "C" fn metal_ComputePipelineState_support_indirect_command_buffers(object: ?*mut u8) -> u8
+unsafe extern "C" fn metal_ComputePipelineState_function_handle_with_function(object: ?*mut u8, function: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_ComputePipelineState_new_visible_function_table_with_descriptor(object: ?*mut u8, descriptor: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_ComputePipelineState_new_intersection_function_table_with_descriptor(object: ?*mut u8, descriptor: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_StageInputOutputDescriptor_new() -> ?*mut u8
+unsafe extern "C" fn metal_StageInputOutputDescriptor_attributes(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_StageInputOutputDescriptor_index_buffer_index(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_StageInputOutputDescriptor_set_index_buffer_index(object: ?*mut u8, idx_buffer_idx: u64) -> ()
+unsafe extern "C" fn metal_StageInputOutputDescriptor_index_type(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_StageInputOutputDescriptor_set_index_type(object: ?*mut u8, index_ty: u64) -> ()
+unsafe extern "C" fn metal_StageInputOutputDescriptor_layouts(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_StageInputOutputDescriptor_reset(object: ?*mut u8) -> ()
+unsafe extern "C" fn metal_AttributeDescriptorArray_object_at(object: ?*mut u8, index: u64) -> ?*mut u8
+unsafe extern "C" fn metal_AttributeDescriptorArray_set_object_at(object: ?*mut u8, index: u64, buffer_desc: ?*mut u8) -> ()
+unsafe extern "C" fn metal_AttributeDescriptor_buffer_index(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_AttributeDescriptor_set_buffer_index(object: ?*mut u8, buffer_index: u64) -> ()
+unsafe extern "C" fn metal_AttributeDescriptor_format(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_AttributeDescriptor_set_format(object: ?*mut u8, format: u64) -> ()
+unsafe extern "C" fn metal_AttributeDescriptor_offset(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_AttributeDescriptor_set_offset(object: ?*mut u8, offset: u64) -> ()
+unsafe extern "C" fn metal_BufferLayoutDescriptorArray_object_at(object: ?*mut u8, index: u64) -> ?*mut u8
+unsafe extern "C" fn metal_BufferLayoutDescriptorArray_set_object_at(object: ?*mut u8, index: u64, buffer_desc: ?*mut u8) -> ()
+unsafe extern "C" fn metal_BufferLayoutDescriptor_step_function(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_BufferLayoutDescriptor_set_step_function(object: ?*mut u8, step_function: u64) -> ()
+unsafe extern "C" fn metal_BufferLayoutDescriptor_step_rate(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_BufferLayoutDescriptor_set_step_rate(object: ?*mut u8, step_rate: u64) -> ()
+unsafe extern "C" fn metal_BufferLayoutDescriptor_stride(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_BufferLayoutDescriptor_set_stride(object: ?*mut u8, stride: u64) -> ()
+unsafe extern "C" fn metal_RenderPassAttachmentDescriptor_texture(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_RenderPassAttachmentDescriptor_set_texture(object: ?*mut u8, texture: ?*mut u8) -> ()
+unsafe extern "C" fn metal_RenderPassAttachmentDescriptor_level(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_RenderPassAttachmentDescriptor_set_level(object: ?*mut u8, level: u64) -> ()
+unsafe extern "C" fn metal_RenderPassAttachmentDescriptor_slice(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_RenderPassAttachmentDescriptor_set_slice(object: ?*mut u8, slice: u64) -> ()
+unsafe extern "C" fn metal_RenderPassAttachmentDescriptor_depth_plane(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_RenderPassAttachmentDescriptor_set_depth_plane(object: ?*mut u8, depth_plane: u64) -> ()
+unsafe extern "C" fn metal_RenderPassAttachmentDescriptor_resolve_texture(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_RenderPassAttachmentDescriptor_set_resolve_texture(object: ?*mut u8, resolve_texture: ?*mut u8) -> ()
+unsafe extern "C" fn metal_RenderPassAttachmentDescriptor_resolve_level(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_RenderPassAttachmentDescriptor_set_resolve_level(object: ?*mut u8, resolve_level: u64) -> ()
+unsafe extern "C" fn metal_RenderPassAttachmentDescriptor_resolve_slice(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_RenderPassAttachmentDescriptor_set_resolve_slice(object: ?*mut u8, resolve_slice: u64) -> ()
+unsafe extern "C" fn metal_RenderPassAttachmentDescriptor_resolve_depth_plane(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_RenderPassAttachmentDescriptor_set_resolve_depth_plane(object: ?*mut u8, resolve_depth_plane: u64) -> ()
+unsafe extern "C" fn metal_RenderPassAttachmentDescriptor_load_action(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_RenderPassAttachmentDescriptor_set_load_action(object: ?*mut u8, load_action: u64) -> ()
+unsafe extern "C" fn metal_RenderPassAttachmentDescriptor_store_action(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_RenderPassAttachmentDescriptor_set_store_action(object: ?*mut u8, store_action: u64) -> ()
+unsafe extern "C" fn metal_RenderPassColorAttachmentDescriptor_new() -> ?*mut u8
+unsafe extern "C" fn metal_RenderPassColorAttachmentDescriptor_clear_color(object: ?*mut u8) -> MTLClearColor
+unsafe extern "C" fn metal_RenderPassColorAttachmentDescriptor_set_clear_color(object: ?*mut u8, clear_color: MTLClearColor) -> ()
+unsafe extern "C" fn metal_RenderPassDepthAttachmentDescriptor_clear_depth(object: ?*mut u8) -> f64
+unsafe extern "C" fn metal_RenderPassDepthAttachmentDescriptor_set_clear_depth(object: ?*mut u8, clear_depth: f64) -> ()
+unsafe extern "C" fn metal_RenderPassStencilAttachmentDescriptor_clear_stencil(object: ?*mut u8) -> u32
+unsafe extern "C" fn metal_RenderPassStencilAttachmentDescriptor_set_clear_stencil(object: ?*mut u8, clear_stencil: u32) -> ()
+unsafe extern "C" fn metal_RenderPassStencilAttachmentDescriptor_stencil_resolve_filter(object: ?*mut u8) -> u32
+unsafe extern "C" fn metal_RenderPassStencilAttachmentDescriptor_set_stencil_resolve_filter(object: ?*mut u8, stencil_resolve_filter: u32) -> ()
+unsafe extern "C" fn metal_RenderPassColorAttachmentDescriptorArray_object_at(object: ?*mut u8, index: u64) -> ?*mut u8
+unsafe extern "C" fn metal_RenderPassColorAttachmentDescriptorArray_set_object_at(object: ?*mut u8, index: u64, attachment: ?*mut u8) -> ()
+unsafe extern "C" fn metal_RenderPassSampleBufferAttachmentDescriptor_new() -> ?*mut u8
+unsafe extern "C" fn metal_RenderPassSampleBufferAttachmentDescriptor_sample_buffer(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_RenderPassSampleBufferAttachmentDescriptor_set_sample_buffer(object: ?*mut u8, sample_buffer: ?*mut u8) -> ()
+unsafe extern "C" fn metal_RenderPassSampleBufferAttachmentDescriptor_start_of_vertex_sample_index(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_RenderPassSampleBufferAttachmentDescriptor_set_start_of_vertex_sample_index(object: ?*mut u8, start_of_vertex_sample_index: u64) -> ()
+unsafe extern "C" fn metal_RenderPassSampleBufferAttachmentDescriptor_end_of_vertex_sample_index(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_RenderPassSampleBufferAttachmentDescriptor_set_end_of_vertex_sample_index(object: ?*mut u8, end_of_vertex_sample_index: u64) -> ()
+unsafe extern "C" fn metal_RenderPassSampleBufferAttachmentDescriptor_start_of_fragment_sample_index(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_RenderPassSampleBufferAttachmentDescriptor_set_start_of_fragment_sample_index(object: ?*mut u8, start_of_fragment_sample_index: u64) -> ()
+unsafe extern "C" fn metal_RenderPassSampleBufferAttachmentDescriptor_end_of_fragment_sample_index(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_RenderPassSampleBufferAttachmentDescriptor_set_end_of_fragment_sample_index(object: ?*mut u8, end_of_fragment_sample_index: u64) -> ()
+unsafe extern "C" fn metal_RenderPassSampleBufferAttachmentDescriptorArray_object_at(object: ?*mut u8, index: u64) -> ?*mut u8
+unsafe extern "C" fn metal_RenderPassSampleBufferAttachmentDescriptorArray_set_object_at(object: ?*mut u8, index: u64, attachment: ?*mut u8) -> ()
+unsafe extern "C" fn metal_RenderPassDescriptor_new() -> ?*mut u8
+unsafe extern "C" fn metal_RenderPassDescriptor_color_attachments(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_RenderPassDescriptor_depth_attachment(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_RenderPassDescriptor_set_depth_attachment(object: ?*mut u8, depth_attachment: ?*mut u8) -> ()
+unsafe extern "C" fn metal_RenderPassDescriptor_stencil_attachment(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_RenderPassDescriptor_set_stencil_attachment(object: ?*mut u8, stencil_attachment: ?*mut u8) -> ()
+unsafe extern "C" fn metal_RenderPassDescriptor_visibility_result_buffer(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_RenderPassDescriptor_set_visibility_result_buffer(object: ?*mut u8, buffer: ?*mut u8) -> ()
+unsafe extern "C" fn metal_RenderPassDescriptor_render_target_array_length(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_RenderPassDescriptor_set_render_target_array_length(object: ?*mut u8, length: u64) -> ()
+unsafe extern "C" fn metal_RenderPassDescriptor_render_target_width(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_RenderPassDescriptor_set_render_target_width(object: ?*mut u8, size: u64) -> ()
+unsafe extern "C" fn metal_RenderPassDescriptor_render_target_height(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_RenderPassDescriptor_set_render_target_height(object: ?*mut u8, size: u64) -> ()
+unsafe extern "C" fn metal_RenderPassDescriptor_default_raster_sample_count(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_RenderPassDescriptor_set_default_raster_sample_count(object: ?*mut u8, count: u64) -> ()
+unsafe extern "C" fn metal_RenderPassDescriptor_sample_buffer_attachments(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_ComputePassDescriptor_new() -> ?*mut u8
+unsafe extern "C" fn metal_ComputePassDescriptor_sample_buffer_attachments(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_ComputePassDescriptor_set_dispatch_type(object: ?*mut u8, ty: u32) -> ()
+unsafe extern "C" fn metal_ComputePassSampleBufferAttachmentDescriptorArray_object_at(object: ?*mut u8, index: u64) -> ?*mut u8
+unsafe extern "C" fn metal_ComputePassSampleBufferAttachmentDescriptorArray_set_object_at(object: ?*mut u8, index: u64, attachment: ?*mut u8) -> ()
+unsafe extern "C" fn metal_ComputePassSampleBufferAttachmentDescriptor_new() -> ?*mut u8
+unsafe extern "C" fn metal_ComputePassSampleBufferAttachmentDescriptor_sample_buffer(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_ComputePassSampleBufferAttachmentDescriptor_set_sample_buffer(object: ?*mut u8, sample_buffer: ?*mut u8) -> ()
+unsafe extern "C" fn metal_ComputePassSampleBufferAttachmentDescriptor_start_of_encoder_sample_index(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_ComputePassSampleBufferAttachmentDescriptor_set_start_of_encoder_sample_index(object: ?*mut u8, start_of_encoder_sample_index: u64) -> ()
+unsafe extern "C" fn metal_ComputePassSampleBufferAttachmentDescriptor_end_of_encoder_sample_index(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_ComputePassSampleBufferAttachmentDescriptor_set_end_of_encoder_sample_index(object: ?*mut u8, end_of_encoder_sample_index: u64) -> ()
+unsafe extern "C" fn metal_BlitPassDescriptor_new() -> ?*mut u8
+unsafe extern "C" fn metal_BlitPassDescriptor_sample_buffer_attachments(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_BlitPassSampleBufferAttachmentDescriptorArray_object_at(object: ?*mut u8, index: u64) -> ?*mut u8
+unsafe extern "C" fn metal_BlitPassSampleBufferAttachmentDescriptorArray_set_object_at(object: ?*mut u8, index: u64, attachment: ?*mut u8) -> ()
+unsafe extern "C" fn metal_BlitPassSampleBufferAttachmentDescriptor_new() -> ?*mut u8
+unsafe extern "C" fn metal_BlitPassSampleBufferAttachmentDescriptor_sample_buffer(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_BlitPassSampleBufferAttachmentDescriptor_set_sample_buffer(object: ?*mut u8, sample_buffer: ?*mut u8) -> ()
+unsafe extern "C" fn metal_BlitPassSampleBufferAttachmentDescriptor_start_of_encoder_sample_index(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_BlitPassSampleBufferAttachmentDescriptor_set_start_of_encoder_sample_index(object: ?*mut u8, start_of_encoder_sample_index: u64) -> ()
+unsafe extern "C" fn metal_BlitPassSampleBufferAttachmentDescriptor_end_of_encoder_sample_index(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_BlitPassSampleBufferAttachmentDescriptor_set_end_of_encoder_sample_index(object: ?*mut u8, end_of_encoder_sample_index: u64) -> ()
+unsafe extern "C" fn metal_AccelerationStructurePassDescriptor_new() -> ?*mut u8
+unsafe extern "C" fn metal_AccelerationStructurePassDescriptor_sample_buffer_attachments(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_AccelerationStructurePassSampleBufferAttachmentDescriptorArray_object_at(object: ?*mut u8, index: u64) -> ?*mut u8
+unsafe extern "C" fn metal_AccelerationStructurePassSampleBufferAttachmentDescriptorArray_set_object_at(object: ?*mut u8, index: u64, attachment: ?*mut u8) -> ()
+unsafe extern "C" fn metal_AccelerationStructurePassSampleBufferAttachmentDescriptor_new() -> ?*mut u8
+unsafe extern "C" fn metal_AccelerationStructurePassSampleBufferAttachmentDescriptor_sample_buffer(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_AccelerationStructurePassSampleBufferAttachmentDescriptor_set_sample_buffer(object: ?*mut u8, sample_buffer: ?*mut u8) -> ()
+unsafe extern "C" fn metal_AccelerationStructurePassSampleBufferAttachmentDescriptor_start_of_encoder_sample_index(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_AccelerationStructurePassSampleBufferAttachmentDescriptor_set_start_of_encoder_sample_index(object: ?*mut u8, start_of_encoder_sample_index: u64) -> ()
+unsafe extern "C" fn metal_AccelerationStructurePassSampleBufferAttachmentDescriptor_end_of_encoder_sample_index(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_AccelerationStructurePassSampleBufferAttachmentDescriptor_set_end_of_encoder_sample_index(object: ?*mut u8, end_of_encoder_sample_index: u64) -> ()
+
+pub struct PipelineBufferDescriptorArray {}
+impl PipelineBufferDescriptorArray {
+  // Returns borrowed +0 object handle.
+  pub unsafe fn object_at(object: ?*mut u8, index: u64) -> ?*mut u8 {
+    return unsafe metal_PipelineBufferDescriptorArray_object_at(object, index)
+  }
+
+  pub unsafe fn set_object_at(object: ?*mut u8, index: u64, buffer_desc: ?*mut u8) -> () {
+    unsafe metal_PipelineBufferDescriptorArray_set_object_at(object, index, buffer_desc)
+  }
+}
+
+pub struct PipelineBufferDescriptor {}
+impl PipelineBufferDescriptor {
+  pub unsafe fn mutability(object: ?*mut u8) -> u64 {
+    return unsafe metal_PipelineBufferDescriptor_mutability(object)
+  }
+
+  pub unsafe fn set_mutability(object: ?*mut u8, new_mutability: u64) -> () {
+    unsafe metal_PipelineBufferDescriptor_set_mutability(object, new_mutability)
+  }
+}
+
+pub struct RenderPipelineColorAttachmentDescriptor {}
+impl RenderPipelineColorAttachmentDescriptor {
+  pub unsafe fn pixel_format(object: ?*mut u8) -> u64 {
+    return unsafe metal_RenderPipelineColorAttachmentDescriptor_pixel_format(object)
+  }
+
+  pub unsafe fn set_pixel_format(object: ?*mut u8, pixel_format: u64) -> () {
+    unsafe metal_RenderPipelineColorAttachmentDescriptor_set_pixel_format(object, pixel_format)
+  }
+
+  pub unsafe fn is_blending_enabled(object: ?*mut u8) -> bool {
+    return unsafe metal_RenderPipelineColorAttachmentDescriptor_is_blending_enabled(object) != 0
+  }
+
+  pub unsafe fn set_blending_enabled(object: ?*mut u8, enabled: bool) -> () {
+    let mut enabled_abi: u8 = 0
+    if enabled {
+      enabled_abi = 1
+    }
+    unsafe metal_RenderPipelineColorAttachmentDescriptor_set_blending_enabled(object, enabled_abi)
+  }
+
+  pub unsafe fn source_rgb_blend_factor(object: ?*mut u8) -> u64 {
+    return unsafe metal_RenderPipelineColorAttachmentDescriptor_source_rgb_blend_factor(object)
+  }
+
+  pub unsafe fn set_source_rgb_blend_factor(object: ?*mut u8, blend_factor: u64) -> () {
+    unsafe metal_RenderPipelineColorAttachmentDescriptor_set_source_rgb_blend_factor(object, blend_factor)
+  }
+
+  pub unsafe fn destination_rgb_blend_factor(object: ?*mut u8) -> u64 {
+    return unsafe metal_RenderPipelineColorAttachmentDescriptor_destination_rgb_blend_factor(object)
+  }
+
+  pub unsafe fn set_destination_rgb_blend_factor(object: ?*mut u8, blend_factor: u64) -> () {
+    unsafe metal_RenderPipelineColorAttachmentDescriptor_set_destination_rgb_blend_factor(object, blend_factor)
+  }
+
+  pub unsafe fn rgb_blend_operation(object: ?*mut u8) -> u64 {
+    return unsafe metal_RenderPipelineColorAttachmentDescriptor_rgb_blend_operation(object)
+  }
+
+  pub unsafe fn set_rgb_blend_operation(object: ?*mut u8, blend_operation: u64) -> () {
+    unsafe metal_RenderPipelineColorAttachmentDescriptor_set_rgb_blend_operation(object, blend_operation)
+  }
+
+  pub unsafe fn source_alpha_blend_factor(object: ?*mut u8) -> u64 {
+    return unsafe metal_RenderPipelineColorAttachmentDescriptor_source_alpha_blend_factor(object)
+  }
+
+  pub unsafe fn set_source_alpha_blend_factor(object: ?*mut u8, blend_factor: u64) -> () {
+    unsafe metal_RenderPipelineColorAttachmentDescriptor_set_source_alpha_blend_factor(object, blend_factor)
+  }
+
+  pub unsafe fn destination_alpha_blend_factor(object: ?*mut u8) -> u64 {
+    return unsafe metal_RenderPipelineColorAttachmentDescriptor_destination_alpha_blend_factor(object)
+  }
+
+  pub unsafe fn set_destination_alpha_blend_factor(object: ?*mut u8, blend_factor: u64) -> () {
+    unsafe metal_RenderPipelineColorAttachmentDescriptor_set_destination_alpha_blend_factor(object, blend_factor)
+  }
+
+  pub unsafe fn alpha_blend_operation(object: ?*mut u8) -> u64 {
+    return unsafe metal_RenderPipelineColorAttachmentDescriptor_alpha_blend_operation(object)
+  }
+
+  pub unsafe fn set_alpha_blend_operation(object: ?*mut u8, blend_operation: u64) -> () {
+    unsafe metal_RenderPipelineColorAttachmentDescriptor_set_alpha_blend_operation(object, blend_operation)
+  }
+
+  pub unsafe fn write_mask(object: ?*mut u8) -> u64 {
+    return unsafe metal_RenderPipelineColorAttachmentDescriptor_write_mask(object)
+  }
+
+  pub unsafe fn set_write_mask(object: ?*mut u8, mask: u64) -> () {
+    unsafe metal_RenderPipelineColorAttachmentDescriptor_set_write_mask(object, mask)
+  }
+}
+
+pub struct RenderPipelineReflection {}
+impl RenderPipelineReflection {
+  // Returns +1 owned object; caller must release.
+  // Private upstream API: caller must establish selector availability and argument validity; null indicates initialization failure.
+  pub unsafe fn new(vertex_data: ?*mut u8, fragment_data: ?*mut u8, vertex_desc: ?*mut u8, device: ?*mut u8, options: u64, flags: u64) -> ?*mut u8 {
+    return unsafe metal_RenderPipelineReflection_new(vertex_data, fragment_data, vertex_desc, device, options, flags)
+  }
+
+  // Returns borrowed +0 object handle.
+  pub unsafe fn fragment_arguments(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_RenderPipelineReflection_fragment_arguments(object)
+  }
+
+  // Returns borrowed +0 object handle.
+  pub unsafe fn vertex_arguments(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_RenderPipelineReflection_vertex_arguments(object)
+  }
+
+  // Returns borrowed +0 object handle.
+  pub unsafe fn tile_arguments(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_RenderPipelineReflection_tile_arguments(object)
+  }
+}
+
+pub struct ArgumentArray {}
+impl ArgumentArray {
+  // Returns borrowed +0 object handle.
+  pub unsafe fn object_at(object: ?*mut u8, index: u64) -> ?*mut u8 {
+    return unsafe metal_ArgumentArray_object_at(object, index)
+  }
+
+  pub unsafe fn count(object: ?*mut u8) -> u64 {
+    return unsafe metal_ArgumentArray_count(object)
+  }
+}
+
+pub struct ComputePipelineReflection {}
+impl ComputePipelineReflection {
+  // Returns borrowed +0 object handle.
+  pub unsafe fn arguments(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_ComputePipelineReflection_arguments(object)
+  }
+}
+
+pub struct MeshRenderPipelineDescriptor {}
+impl MeshRenderPipelineDescriptor {
+  // Returns +1 owned object; caller must release.
+  pub unsafe fn new() -> ?*mut u8 {
+    return unsafe metal_MeshRenderPipelineDescriptor_new()
+  }
+
+  // Returns borrowed +0 object handle.
+  pub unsafe fn color_attachments(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_MeshRenderPipelineDescriptor_color_attachments(object)
+  }
+
+  pub unsafe fn depth_attachment_pixel_format(object: ?*mut u8) -> u64 {
+    return unsafe metal_MeshRenderPipelineDescriptor_depth_attachment_pixel_format(object)
+  }
+
+  pub unsafe fn set_depth_attachment_pixel_format(object: ?*mut u8, pixel_format: u64) -> () {
+    unsafe metal_MeshRenderPipelineDescriptor_set_depth_attachment_pixel_format(object, pixel_format)
+  }
+
+  // Returns borrowed +0 object handle.
+  pub unsafe fn fragment_buffers(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_MeshRenderPipelineDescriptor_fragment_buffers(object)
+  }
+
+  // Returns borrowed +0 object handle.
+  pub unsafe fn fragment_function(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_MeshRenderPipelineDescriptor_fragment_function(object)
+  }
+
+  pub unsafe fn set_fragment_function(object: ?*mut u8, function: ?*mut u8) -> () {
+    unsafe metal_MeshRenderPipelineDescriptor_set_fragment_function(object, function)
+  }
+
+  pub unsafe fn is_alpha_to_coverage_enabled(object: ?*mut u8) -> bool {
+    return unsafe metal_MeshRenderPipelineDescriptor_is_alpha_to_coverage_enabled(object) != 0
+  }
+
+  pub unsafe fn set_alpha_to_coverage_enabled(object: ?*mut u8, enabled: bool) -> () {
+    let mut enabled_abi: u8 = 0
+    if enabled {
+      enabled_abi = 1
+    }
+    unsafe metal_MeshRenderPipelineDescriptor_set_alpha_to_coverage_enabled(object, enabled_abi)
+  }
+
+  pub unsafe fn is_alpha_to_one_enabled(object: ?*mut u8) -> bool {
+    return unsafe metal_MeshRenderPipelineDescriptor_is_alpha_to_one_enabled(object) != 0
+  }
+
+  pub unsafe fn set_alpha_to_one_enabled(object: ?*mut u8, enabled: bool) -> () {
+    let mut enabled_abi: u8 = 0
+    if enabled {
+      enabled_abi = 1
+    }
+    unsafe metal_MeshRenderPipelineDescriptor_set_alpha_to_one_enabled(object, enabled_abi)
+  }
+
+  pub unsafe fn is_rasterization_enabled(object: ?*mut u8) -> bool {
+    return unsafe metal_MeshRenderPipelineDescriptor_is_rasterization_enabled(object) != 0
+  }
+
+  pub unsafe fn set_rasterization_enabled(object: ?*mut u8, enabled: bool) -> () {
+    let mut enabled_abi: u8 = 0
+    if enabled {
+      enabled_abi = 1
+    }
+    unsafe metal_MeshRenderPipelineDescriptor_set_rasterization_enabled(object, enabled_abi)
+  }
+
+  // Returns borrowed NUL-terminated UTF-8; owner must remain alive and unchanged.
+  pub unsafe fn label(object: ?*mut u8) -> ?[*]const u8 {
+    return unsafe metal_MeshRenderPipelineDescriptor_label(object)
+  }
+
+  pub unsafe fn set_label(object: ?*mut u8, label: ?[*]const u8) -> () {
+    unsafe metal_MeshRenderPipelineDescriptor_set_label(object, label)
+  }
+
+  pub unsafe fn max_total_threadgroups_per_mesh_grid(object: ?*mut u8) -> u64 {
+    return unsafe metal_MeshRenderPipelineDescriptor_max_total_threadgroups_per_mesh_grid(object)
+  }
+
+  pub unsafe fn set_max_total_threadgroups_per_mesh_grid(object: ?*mut u8, max_total_threadgroups_per_mesh_grid: u64) -> () {
+    unsafe metal_MeshRenderPipelineDescriptor_set_max_total_threadgroups_per_mesh_grid(object, max_total_threadgroups_per_mesh_grid)
+  }
+
+  pub unsafe fn max_total_threads_per_mesh_threadgroup(object: ?*mut u8) -> u64 {
+    return unsafe metal_MeshRenderPipelineDescriptor_max_total_threads_per_mesh_threadgroup(object)
+  }
+
+  pub unsafe fn set_max_total_threads_per_mesh_threadgroup(object: ?*mut u8, max_total_threads_per_mesh_threadgroup: u64) -> () {
+    unsafe metal_MeshRenderPipelineDescriptor_set_max_total_threads_per_mesh_threadgroup(object, max_total_threads_per_mesh_threadgroup)
+  }
+
+  pub unsafe fn max_total_threads_per_object_threadgroup(object: ?*mut u8) -> u64 {
+    return unsafe metal_MeshRenderPipelineDescriptor_max_total_threads_per_object_threadgroup(object)
+  }
+
+  pub unsafe fn set_max_total_threads_per_object_threadgroup(object: ?*mut u8, max_total_threads_per_object_threadgroup: u64) -> () {
+    unsafe metal_MeshRenderPipelineDescriptor_set_max_total_threads_per_object_threadgroup(object, max_total_threads_per_object_threadgroup)
+  }
+
+  pub unsafe fn max_vertex_amplification_count(object: ?*mut u8) -> u64 {
+    return unsafe metal_MeshRenderPipelineDescriptor_max_vertex_amplification_count(object)
+  }
+
+  pub unsafe fn set_max_vertex_amplification_count(object: ?*mut u8, max_vertex_amplification_count: u64) -> () {
+    unsafe metal_MeshRenderPipelineDescriptor_set_max_vertex_amplification_count(object, max_vertex_amplification_count)
+  }
+
+  // Returns borrowed +0 object handle.
+  pub unsafe fn mesh_buffers(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_MeshRenderPipelineDescriptor_mesh_buffers(object)
+  }
+
+  // Returns borrowed +0 object handle.
+  pub unsafe fn mesh_function(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_MeshRenderPipelineDescriptor_mesh_function(object)
+  }
+
+  pub unsafe fn set_mesh_function(object: ?*mut u8, function: ?*mut u8) -> () {
+    unsafe metal_MeshRenderPipelineDescriptor_set_mesh_function(object, function)
+  }
+
+  pub unsafe fn mesh_threadgroup_size_is_multiple_of_thread_execution_width(object: ?*mut u8) -> bool {
+    return unsafe metal_MeshRenderPipelineDescriptor_mesh_threadgroup_size_is_multiple_of_thread_execution_width(object) != 0
+  }
+
+  pub unsafe fn set_mesh_threadgroup_size_is_multiple_of_thread_execution_width(object: ?*mut u8, mesh_threadgroup_size_is_multiple_of_thread_execution_width: bool) -> () {
+    let mut mesh_threadgroup_size_is_multiple_of_thread_execution_width_abi: u8 = 0
+    if mesh_threadgroup_size_is_multiple_of_thread_execution_width {
+      mesh_threadgroup_size_is_multiple_of_thread_execution_width_abi = 1
+    }
+    unsafe metal_MeshRenderPipelineDescriptor_set_mesh_threadgroup_size_is_multiple_of_thread_execution_width(object, mesh_threadgroup_size_is_multiple_of_thread_execution_width_abi)
+  }
+
+  // Returns borrowed +0 object handle.
+  pub unsafe fn object_buffers(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_MeshRenderPipelineDescriptor_object_buffers(object)
+  }
+
+  // Returns borrowed +0 object handle.
+  pub unsafe fn object_function(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_MeshRenderPipelineDescriptor_object_function(object)
+  }
+
+  pub unsafe fn set_object_function(object: ?*mut u8, function: ?*mut u8) -> () {
+    unsafe metal_MeshRenderPipelineDescriptor_set_object_function(object, function)
+  }
+
+  pub unsafe fn object_threadgroup_size_is_multiple_of_thread_execution_width(object: ?*mut u8) -> bool {
+    return unsafe metal_MeshRenderPipelineDescriptor_object_threadgroup_size_is_multiple_of_thread_execution_width(object) != 0
+  }
+
+  pub unsafe fn set_object_threadgroup_size_is_multiple_of_thread_execution_width(object: ?*mut u8, object_threadgroup_size_is_multiple_of_thread_execution_width: bool) -> () {
+    let mut object_threadgroup_size_is_multiple_of_thread_execution_width_abi: u8 = 0
+    if object_threadgroup_size_is_multiple_of_thread_execution_width {
+      object_threadgroup_size_is_multiple_of_thread_execution_width_abi = 1
+    }
+    unsafe metal_MeshRenderPipelineDescriptor_set_object_threadgroup_size_is_multiple_of_thread_execution_width(object, object_threadgroup_size_is_multiple_of_thread_execution_width_abi)
+  }
+
+  pub unsafe fn payload_memory_length(object: ?*mut u8) -> u64 {
+    return unsafe metal_MeshRenderPipelineDescriptor_payload_memory_length(object)
+  }
+
+  pub unsafe fn set_payload_memory_length(object: ?*mut u8, payload_memory_length: u64) -> () {
+    unsafe metal_MeshRenderPipelineDescriptor_set_payload_memory_length(object, payload_memory_length)
+  }
+
+  pub unsafe fn raster_sample_count(object: ?*mut u8) -> u64 {
+    return unsafe metal_MeshRenderPipelineDescriptor_raster_sample_count(object)
+  }
+
+  pub unsafe fn set_raster_sample_count(object: ?*mut u8, raster_sample_count: u64) -> () {
+    unsafe metal_MeshRenderPipelineDescriptor_set_raster_sample_count(object, raster_sample_count)
+  }
+
+  pub unsafe fn stencil_attachment_pixel_format(object: ?*mut u8) -> u64 {
+    return unsafe metal_MeshRenderPipelineDescriptor_stencil_attachment_pixel_format(object)
+  }
+
+  pub unsafe fn set_stencil_attachment_pixel_format(object: ?*mut u8, pixel_format: u64) -> () {
+    unsafe metal_MeshRenderPipelineDescriptor_set_stencil_attachment_pixel_format(object, pixel_format)
+  }
+
+  pub unsafe fn reset(object: ?*mut u8) -> () {
+    unsafe metal_MeshRenderPipelineDescriptor_reset(object)
+  }
+}
+
+pub struct RenderPipelineDescriptor {}
+impl RenderPipelineDescriptor {
+  // Returns +1 owned object; caller must release.
+  pub unsafe fn new() -> ?*mut u8 {
+    return unsafe metal_RenderPipelineDescriptor_new()
+  }
+
+  // Returns borrowed NUL-terminated UTF-8; owner must remain alive and unchanged.
+  pub unsafe fn label(object: ?*mut u8) -> ?[*]const u8 {
+    return unsafe metal_RenderPipelineDescriptor_label(object)
+  }
+
+  pub unsafe fn set_label(object: ?*mut u8, label: ?[*]const u8) -> () {
+    unsafe metal_RenderPipelineDescriptor_set_label(object, label)
+  }
+
+  // Returns borrowed +0 object handle.
+  pub unsafe fn vertex_function(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_RenderPipelineDescriptor_vertex_function(object)
+  }
+
+  pub unsafe fn set_vertex_function(object: ?*mut u8, function: ?*mut u8) -> () {
+    unsafe metal_RenderPipelineDescriptor_set_vertex_function(object, function)
+  }
+
+  // Returns borrowed +0 object handle.
+  pub unsafe fn fragment_function(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_RenderPipelineDescriptor_fragment_function(object)
+  }
+
+  pub unsafe fn set_fragment_function(object: ?*mut u8, function: ?*mut u8) -> () {
+    unsafe metal_RenderPipelineDescriptor_set_fragment_function(object, function)
+  }
+
+  // Returns borrowed +0 object handle.
+  pub unsafe fn vertex_descriptor(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_RenderPipelineDescriptor_vertex_descriptor(object)
+  }
+
+  pub unsafe fn set_vertex_descriptor(object: ?*mut u8, descriptor: ?*mut u8) -> () {
+    unsafe metal_RenderPipelineDescriptor_set_vertex_descriptor(object, descriptor)
+  }
+
+  pub unsafe fn sample_count(object: ?*mut u8) -> u64 {
+    return unsafe metal_RenderPipelineDescriptor_sample_count(object)
+  }
+
+  pub unsafe fn set_sample_count(object: ?*mut u8, count: u64) -> () {
+    unsafe metal_RenderPipelineDescriptor_set_sample_count(object, count)
+  }
+
+  pub unsafe fn raster_sample_count(object: ?*mut u8) -> u64 {
+    return unsafe metal_RenderPipelineDescriptor_raster_sample_count(object)
+  }
+
+  pub unsafe fn set_raster_sample_count(object: ?*mut u8, count: u64) -> () {
+    unsafe metal_RenderPipelineDescriptor_set_raster_sample_count(object, count)
+  }
+
+  pub unsafe fn max_vertex_amplification_count(object: ?*mut u8) -> u64 {
+    return unsafe metal_RenderPipelineDescriptor_max_vertex_amplification_count(object)
+  }
+
+  pub unsafe fn set_max_vertex_amplification_count(object: ?*mut u8, count: u64) -> () {
+    unsafe metal_RenderPipelineDescriptor_set_max_vertex_amplification_count(object, count)
+  }
+
+  pub unsafe fn is_alpha_to_coverage_enabled(object: ?*mut u8) -> bool {
+    return unsafe metal_RenderPipelineDescriptor_is_alpha_to_coverage_enabled(object) != 0
+  }
+
+  pub unsafe fn set_alpha_to_coverage_enabled(object: ?*mut u8, enabled: bool) -> () {
+    let mut enabled_abi: u8 = 0
+    if enabled {
+      enabled_abi = 1
+    }
+    unsafe metal_RenderPipelineDescriptor_set_alpha_to_coverage_enabled(object, enabled_abi)
+  }
+
+  pub unsafe fn is_alpha_to_one_enabled(object: ?*mut u8) -> bool {
+    return unsafe metal_RenderPipelineDescriptor_is_alpha_to_one_enabled(object) != 0
+  }
+
+  pub unsafe fn set_alpha_to_one_enabled(object: ?*mut u8, enabled: bool) -> () {
+    let mut enabled_abi: u8 = 0
+    if enabled {
+      enabled_abi = 1
+    }
+    unsafe metal_RenderPipelineDescriptor_set_alpha_to_one_enabled(object, enabled_abi)
+  }
+
+  pub unsafe fn is_rasterization_enabled(object: ?*mut u8) -> bool {
+    return unsafe metal_RenderPipelineDescriptor_is_rasterization_enabled(object) != 0
+  }
+
+  pub unsafe fn set_rasterization_enabled(object: ?*mut u8, enabled: bool) -> () {
+    let mut enabled_abi: u8 = 0
+    if enabled {
+      enabled_abi = 1
+    }
+    unsafe metal_RenderPipelineDescriptor_set_rasterization_enabled(object, enabled_abi)
+  }
+
+  // Returns borrowed +0 object handle.
+  pub unsafe fn color_attachments(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_RenderPipelineDescriptor_color_attachments(object)
+  }
+
+  pub unsafe fn depth_attachment_pixel_format(object: ?*mut u8) -> u64 {
+    return unsafe metal_RenderPipelineDescriptor_depth_attachment_pixel_format(object)
+  }
+
+  pub unsafe fn set_depth_attachment_pixel_format(object: ?*mut u8, pixel_format: u64) -> () {
+    unsafe metal_RenderPipelineDescriptor_set_depth_attachment_pixel_format(object, pixel_format)
+  }
+
+  pub unsafe fn stencil_attachment_pixel_format(object: ?*mut u8) -> u64 {
+    return unsafe metal_RenderPipelineDescriptor_stencil_attachment_pixel_format(object)
+  }
+
+  pub unsafe fn set_stencil_attachment_pixel_format(object: ?*mut u8, pixel_format: u64) -> () {
+    unsafe metal_RenderPipelineDescriptor_set_stencil_attachment_pixel_format(object, pixel_format)
+  }
+
+  pub unsafe fn input_primitive_topology(object: ?*mut u8) -> u64 {
+    return unsafe metal_RenderPipelineDescriptor_input_primitive_topology(object)
+  }
+
+  pub unsafe fn set_input_primitive_topology(object: ?*mut u8, topology: u64) -> () {
+    unsafe metal_RenderPipelineDescriptor_set_input_primitive_topology(object, topology)
+  }
+
+  // Private upstream API, flags fixed to zero as upstream; returns +1 serialized data. Optional error receives borrowed +0 NSError.
+  pub unsafe fn serialize_vertex_data(object: ?*mut u8, error: ?*mut ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_RenderPipelineDescriptor_serialize_vertex_data(object, error)
+  }
+
+  // Returns borrowed +0 object handle.
+  // Private upstream API: caller must establish selector availability.
+  pub unsafe fn serialize_fragment_data(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_RenderPipelineDescriptor_serialize_fragment_data(object)
+  }
+
+  pub unsafe fn support_indirect_command_buffers(object: ?*mut u8) -> bool {
+    return unsafe metal_RenderPipelineDescriptor_support_indirect_command_buffers(object) != 0
+  }
+
+  pub unsafe fn set_support_indirect_command_buffers(object: ?*mut u8, support: bool) -> () {
+    let mut support_abi: u8 = 0
+    if support {
+      support_abi = 1
+    }
+    unsafe metal_RenderPipelineDescriptor_set_support_indirect_command_buffers(object, support_abi)
+  }
+
+  // Returns borrowed +0 object handle.
+  pub unsafe fn vertex_buffers(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_RenderPipelineDescriptor_vertex_buffers(object)
+  }
+
+  // Returns borrowed +0 object handle.
+  pub unsafe fn fragment_buffers(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_RenderPipelineDescriptor_fragment_buffers(object)
+  }
+
+  // Returns borrowed +0 NSArray handle rather than a Rust Vec.
+  pub unsafe fn binary_archives(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_RenderPipelineDescriptor_binary_archives(object)
+  }
+
+  // Slice input uses pointer/count; elements are borrowed for this call.
+  pub unsafe fn set_binary_archives(object: ?*mut u8, archives: ?[*]const ?*mut u8, archives_count: u64) -> () {
+    unsafe metal_RenderPipelineDescriptor_set_binary_archives(object, archives, archives_count)
+  }
+
+  // Returns borrowed +0 object handle.
+  pub unsafe fn fragment_linked_functions(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_RenderPipelineDescriptor_fragment_linked_functions(object)
+  }
+
+  pub unsafe fn set_fragment_linked_functions(object: ?*mut u8, functions: ?*mut u8) -> () {
+    unsafe metal_RenderPipelineDescriptor_set_fragment_linked_functions(object, functions)
+  }
+
+  pub unsafe fn reset(object: ?*mut u8) -> () {
+    unsafe metal_RenderPipelineDescriptor_reset(object)
+  }
+}
+
+pub struct RenderPipelineState {}
+impl RenderPipelineState {
+  // Returns borrowed +0 object handle.
+  pub unsafe fn device(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_RenderPipelineState_device(object)
+  }
+
+  // Returns borrowed NUL-terminated UTF-8; owner must remain alive and unchanged.
+  pub unsafe fn label(object: ?*mut u8) -> ?[*]const u8 {
+    return unsafe metal_RenderPipelineState_label(object)
+  }
+
+  // Returns +1 owned object; caller must release.
+  pub unsafe fn new_intersection_function_table_with_descriptor(object: ?*mut u8, descriptor: ?*mut u8, stage: u64) -> ?*mut u8 {
+    return unsafe metal_RenderPipelineState_new_intersection_function_table_with_descriptor(object, descriptor, stage)
+  }
+
+  // Returns borrowed +0 object handle.
+  pub unsafe fn function_handle_with_function(object: ?*mut u8, function: ?*mut u8, stage: u64) -> ?*mut u8 {
+    return unsafe metal_RenderPipelineState_function_handle_with_function(object, function, stage)
+  }
+
+  // Returns +1 owned object; caller must release.
+  pub unsafe fn new_visible_function_table_with_descriptor(object: ?*mut u8, descriptor: ?*mut u8, stage: u64) -> ?*mut u8 {
+    return unsafe metal_RenderPipelineState_new_visible_function_table_with_descriptor(object, descriptor, stage)
+  }
+}
+
+pub struct RenderPipelineColorAttachmentDescriptorArray {}
+impl RenderPipelineColorAttachmentDescriptorArray {
+  // Returns borrowed +0 object handle.
+  pub unsafe fn object_at(object: ?*mut u8, index: u64) -> ?*mut u8 {
+    return unsafe metal_RenderPipelineColorAttachmentDescriptorArray_object_at(object, index)
+  }
+
+  pub unsafe fn set_object_at(object: ?*mut u8, index: u64, attachment: ?*mut u8) -> () {
+    unsafe metal_RenderPipelineColorAttachmentDescriptorArray_set_object_at(object, index, attachment)
+  }
+}
+
+pub struct ComputePipelineDescriptor {}
+impl ComputePipelineDescriptor {
+  // Returns +1 owned object; caller must release.
+  pub unsafe fn new() -> ?*mut u8 {
+    return unsafe metal_ComputePipelineDescriptor_new()
+  }
+
+  // Returns borrowed NUL-terminated UTF-8; owner must remain alive and unchanged.
+  pub unsafe fn label(object: ?*mut u8) -> ?[*]const u8 {
+    return unsafe metal_ComputePipelineDescriptor_label(object)
+  }
+
+  pub unsafe fn set_label(object: ?*mut u8, label: ?[*]const u8) -> () {
+    unsafe metal_ComputePipelineDescriptor_set_label(object, label)
+  }
+
+  // Returns borrowed +0 object handle.
+  pub unsafe fn compute_function(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_ComputePipelineDescriptor_compute_function(object)
+  }
+
+  pub unsafe fn set_compute_function(object: ?*mut u8, function: ?*mut u8) -> () {
+    unsafe metal_ComputePipelineDescriptor_set_compute_function(object, function)
+  }
+
+  pub unsafe fn thread_group_size_is_multiple_of_thread_execution_width(object: ?*mut u8) -> bool {
+    return unsafe metal_ComputePipelineDescriptor_thread_group_size_is_multiple_of_thread_execution_width(object) != 0
+  }
+
+  pub unsafe fn set_thread_group_size_is_multiple_of_thread_execution_width(object: ?*mut u8, size_is_multiple_of_width: bool) -> () {
+    let mut size_is_multiple_of_width_abi: u8 = 0
+    if size_is_multiple_of_width {
+      size_is_multiple_of_width_abi = 1
+    }
+    unsafe metal_ComputePipelineDescriptor_set_thread_group_size_is_multiple_of_thread_execution_width(object, size_is_multiple_of_width_abi)
+  }
+
+  pub unsafe fn max_total_threads_per_threadgroup(object: ?*mut u8) -> u64 {
+    return unsafe metal_ComputePipelineDescriptor_max_total_threads_per_threadgroup(object)
+  }
+
+  pub unsafe fn set_max_total_threads_per_threadgroup(object: ?*mut u8, max_total_threads: u64) -> () {
+    unsafe metal_ComputePipelineDescriptor_set_max_total_threads_per_threadgroup(object, max_total_threads)
+  }
+
+  pub unsafe fn support_indirect_command_buffers(object: ?*mut u8) -> bool {
+    return unsafe metal_ComputePipelineDescriptor_support_indirect_command_buffers(object) != 0
+  }
+
+  pub unsafe fn set_support_indirect_command_buffers(object: ?*mut u8, support: bool) -> () {
+    let mut support_abi: u8 = 0
+    if support {
+      support_abi = 1
+    }
+    unsafe metal_ComputePipelineDescriptor_set_support_indirect_command_buffers(object, support_abi)
+  }
+
+  pub unsafe fn support_adding_binary_functions(object: ?*mut u8) -> bool {
+    return unsafe metal_ComputePipelineDescriptor_support_adding_binary_functions(object) != 0
+  }
+
+  pub unsafe fn set_support_adding_binary_functions(object: ?*mut u8, support: bool) -> () {
+    let mut support_abi: u8 = 0
+    if support {
+      support_abi = 1
+    }
+    unsafe metal_ComputePipelineDescriptor_set_support_adding_binary_functions(object, support_abi)
+  }
+
+  pub unsafe fn max_call_stack_depth(object: ?*mut u8) -> u64 {
+    return unsafe metal_ComputePipelineDescriptor_max_call_stack_depth(object)
+  }
+
+  pub unsafe fn set_max_call_stack_depth(object: ?*mut u8, depth: u64) -> () {
+    unsafe metal_ComputePipelineDescriptor_set_max_call_stack_depth(object, depth)
+  }
+
+  // Returns borrowed +0 NSArray handle rather than a Rust Vec.
+  pub unsafe fn insert_libraries(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_ComputePipelineDescriptor_insert_libraries(object)
+  }
+
+  // Slice input uses pointer/count; elements are borrowed for this call.
+  pub unsafe fn set_insert_libraries(object: ?*mut u8, libraries: ?[*]const ?*mut u8, libraries_count: u64) -> () {
+    unsafe metal_ComputePipelineDescriptor_set_insert_libraries(object, libraries, libraries_count)
+  }
+
+  // Returns borrowed +0 NSArray handle rather than a Rust Vec.
+  pub unsafe fn binary_archives(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_ComputePipelineDescriptor_binary_archives(object)
+  }
+
+  // Slice input uses pointer/count; elements are borrowed for this call.
+  pub unsafe fn set_binary_archives(object: ?*mut u8, archives: ?[*]const ?*mut u8, archives_count: u64) -> () {
+    unsafe metal_ComputePipelineDescriptor_set_binary_archives(object, archives, archives_count)
+  }
+
+  // Returns borrowed +0 object handle.
+  pub unsafe fn linked_functions(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_ComputePipelineDescriptor_linked_functions(object)
+  }
+
+  pub unsafe fn set_linked_functions(object: ?*mut u8, functions: ?*mut u8) -> () {
+    unsafe metal_ComputePipelineDescriptor_set_linked_functions(object, functions)
+  }
+
+  // Returns borrowed +0 object handle.
+  pub unsafe fn stage_input_descriptor(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_ComputePipelineDescriptor_stage_input_descriptor(object)
+  }
+
+  pub unsafe fn set_stage_input_descriptor(object: ?*mut u8, descriptor: ?*mut u8) -> () {
+    unsafe metal_ComputePipelineDescriptor_set_stage_input_descriptor(object, descriptor)
+  }
+
+  // Returns borrowed +0 object handle.
+  pub unsafe fn buffers(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_ComputePipelineDescriptor_buffers(object)
+  }
+
+  pub unsafe fn reset(object: ?*mut u8) -> () {
+    unsafe metal_ComputePipelineDescriptor_reset(object)
+  }
+}
+
+pub struct ComputePipelineState {}
+impl ComputePipelineState {
+  // Returns borrowed NUL-terminated UTF-8; owner must remain alive and unchanged.
+  pub unsafe fn label(object: ?*mut u8) -> ?[*]const u8 {
+    return unsafe metal_ComputePipelineState_label(object)
+  }
+
+  pub unsafe fn max_total_threads_per_threadgroup(object: ?*mut u8) -> u64 {
+    return unsafe metal_ComputePipelineState_max_total_threads_per_threadgroup(object)
+  }
+
+  pub unsafe fn thread_execution_width(object: ?*mut u8) -> u64 {
+    return unsafe metal_ComputePipelineState_thread_execution_width(object)
+  }
+
+  pub unsafe fn static_threadgroup_memory_length(object: ?*mut u8) -> u64 {
+    return unsafe metal_ComputePipelineState_static_threadgroup_memory_length(object)
+  }
+
+  // Aggregate inputs are passed by value.
+  pub unsafe fn imageblock_memory_length_for_dimensions(object: ?*mut u8, dimensions: MTLSize) -> u64 {
+    return unsafe metal_ComputePipelineState_imageblock_memory_length_for_dimensions(object, dimensions)
+  }
+
+  pub unsafe fn support_indirect_command_buffers(object: ?*mut u8) -> bool {
+    return unsafe metal_ComputePipelineState_support_indirect_command_buffers(object) != 0
+  }
+
+  // Returns borrowed +0 object handle.
+  pub unsafe fn function_handle_with_function(object: ?*mut u8, function: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_ComputePipelineState_function_handle_with_function(object, function)
+  }
+
+  // Returns +1 owned object; caller must release.
+  pub unsafe fn new_visible_function_table_with_descriptor(object: ?*mut u8, descriptor: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_ComputePipelineState_new_visible_function_table_with_descriptor(object, descriptor)
+  }
+
+  // Returns +1 owned object; caller must release.
+  pub unsafe fn new_intersection_function_table_with_descriptor(object: ?*mut u8, descriptor: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_ComputePipelineState_new_intersection_function_table_with_descriptor(object, descriptor)
+  }
+}
+
+pub struct StageInputOutputDescriptor {}
+impl StageInputOutputDescriptor {
+  // Returns +1 owned object; caller must release.
+  pub unsafe fn new() -> ?*mut u8 {
+    return unsafe metal_StageInputOutputDescriptor_new()
+  }
+
+  // Returns borrowed +0 object handle.
+  pub unsafe fn attributes(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_StageInputOutputDescriptor_attributes(object)
+  }
+
+  pub unsafe fn index_buffer_index(object: ?*mut u8) -> u64 {
+    return unsafe metal_StageInputOutputDescriptor_index_buffer_index(object)
+  }
+
+  pub unsafe fn set_index_buffer_index(object: ?*mut u8, idx_buffer_idx: u64) -> () {
+    unsafe metal_StageInputOutputDescriptor_set_index_buffer_index(object, idx_buffer_idx)
+  }
+
+  pub unsafe fn index_type(object: ?*mut u8) -> u64 {
+    return unsafe metal_StageInputOutputDescriptor_index_type(object)
+  }
+
+  pub unsafe fn set_index_type(object: ?*mut u8, index_ty: u64) -> () {
+    unsafe metal_StageInputOutputDescriptor_set_index_type(object, index_ty)
+  }
+
+  // Returns borrowed +0 object handle.
+  pub unsafe fn layouts(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_StageInputOutputDescriptor_layouts(object)
+  }
+
+  pub unsafe fn reset(object: ?*mut u8) -> () {
+    unsafe metal_StageInputOutputDescriptor_reset(object)
+  }
+}
+
+pub struct AttributeDescriptorArray {}
+impl AttributeDescriptorArray {
+  // Returns borrowed +0 object handle.
+  pub unsafe fn object_at(object: ?*mut u8, index: u64) -> ?*mut u8 {
+    return unsafe metal_AttributeDescriptorArray_object_at(object, index)
+  }
+
+  pub unsafe fn set_object_at(object: ?*mut u8, index: u64, buffer_desc: ?*mut u8) -> () {
+    unsafe metal_AttributeDescriptorArray_set_object_at(object, index, buffer_desc)
+  }
+}
+
+pub struct AttributeDescriptor {}
+impl AttributeDescriptor {
+  pub unsafe fn buffer_index(object: ?*mut u8) -> u64 {
+    return unsafe metal_AttributeDescriptor_buffer_index(object)
+  }
+
+  pub unsafe fn set_buffer_index(object: ?*mut u8, buffer_index: u64) -> () {
+    unsafe metal_AttributeDescriptor_set_buffer_index(object, buffer_index)
+  }
+
+  pub unsafe fn format(object: ?*mut u8) -> u64 {
+    return unsafe metal_AttributeDescriptor_format(object)
+  }
+
+  pub unsafe fn set_format(object: ?*mut u8, format: u64) -> () {
+    unsafe metal_AttributeDescriptor_set_format(object, format)
+  }
+
+  pub unsafe fn offset(object: ?*mut u8) -> u64 {
+    return unsafe metal_AttributeDescriptor_offset(object)
+  }
+
+  pub unsafe fn set_offset(object: ?*mut u8, offset: u64) -> () {
+    unsafe metal_AttributeDescriptor_set_offset(object, offset)
+  }
+}
+
+pub struct BufferLayoutDescriptorArray {}
+impl BufferLayoutDescriptorArray {
+  // Returns borrowed +0 object handle.
+  pub unsafe fn object_at(object: ?*mut u8, index: u64) -> ?*mut u8 {
+    return unsafe metal_BufferLayoutDescriptorArray_object_at(object, index)
+  }
+
+  pub unsafe fn set_object_at(object: ?*mut u8, index: u64, buffer_desc: ?*mut u8) -> () {
+    unsafe metal_BufferLayoutDescriptorArray_set_object_at(object, index, buffer_desc)
+  }
+}
+
+pub struct BufferLayoutDescriptor {}
+impl BufferLayoutDescriptor {
+  pub unsafe fn step_function(object: ?*mut u8) -> u64 {
+    return unsafe metal_BufferLayoutDescriptor_step_function(object)
+  }
+
+  pub unsafe fn set_step_function(object: ?*mut u8, step_function: u64) -> () {
+    unsafe metal_BufferLayoutDescriptor_set_step_function(object, step_function)
+  }
+
+  pub unsafe fn step_rate(object: ?*mut u8) -> u64 {
+    return unsafe metal_BufferLayoutDescriptor_step_rate(object)
+  }
+
+  pub unsafe fn set_step_rate(object: ?*mut u8, step_rate: u64) -> () {
+    unsafe metal_BufferLayoutDescriptor_set_step_rate(object, step_rate)
+  }
+
+  pub unsafe fn stride(object: ?*mut u8) -> u64 {
+    return unsafe metal_BufferLayoutDescriptor_stride(object)
+  }
+
+  pub unsafe fn set_stride(object: ?*mut u8, stride: u64) -> () {
+    unsafe metal_BufferLayoutDescriptor_set_stride(object, stride)
+  }
+}
+
+pub struct RenderPassAttachmentDescriptor {}
+impl RenderPassAttachmentDescriptor {
+  // Returns borrowed +0 object handle.
+  pub unsafe fn texture(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_RenderPassAttachmentDescriptor_texture(object)
+  }
+
+  pub unsafe fn set_texture(object: ?*mut u8, texture: ?*mut u8) -> () {
+    unsafe metal_RenderPassAttachmentDescriptor_set_texture(object, texture)
+  }
+
+  pub unsafe fn level(object: ?*mut u8) -> u64 {
+    return unsafe metal_RenderPassAttachmentDescriptor_level(object)
+  }
+
+  pub unsafe fn set_level(object: ?*mut u8, level: u64) -> () {
+    unsafe metal_RenderPassAttachmentDescriptor_set_level(object, level)
+  }
+
+  pub unsafe fn slice(object: ?*mut u8) -> u64 {
+    return unsafe metal_RenderPassAttachmentDescriptor_slice(object)
+  }
+
+  pub unsafe fn set_slice(object: ?*mut u8, slice: u64) -> () {
+    unsafe metal_RenderPassAttachmentDescriptor_set_slice(object, slice)
+  }
+
+  pub unsafe fn depth_plane(object: ?*mut u8) -> u64 {
+    return unsafe metal_RenderPassAttachmentDescriptor_depth_plane(object)
+  }
+
+  pub unsafe fn set_depth_plane(object: ?*mut u8, depth_plane: u64) -> () {
+    unsafe metal_RenderPassAttachmentDescriptor_set_depth_plane(object, depth_plane)
+  }
+
+  // Returns borrowed +0 object handle.
+  pub unsafe fn resolve_texture(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_RenderPassAttachmentDescriptor_resolve_texture(object)
+  }
+
+  pub unsafe fn set_resolve_texture(object: ?*mut u8, resolve_texture: ?*mut u8) -> () {
+    unsafe metal_RenderPassAttachmentDescriptor_set_resolve_texture(object, resolve_texture)
+  }
+
+  pub unsafe fn resolve_level(object: ?*mut u8) -> u64 {
+    return unsafe metal_RenderPassAttachmentDescriptor_resolve_level(object)
+  }
+
+  pub unsafe fn set_resolve_level(object: ?*mut u8, resolve_level: u64) -> () {
+    unsafe metal_RenderPassAttachmentDescriptor_set_resolve_level(object, resolve_level)
+  }
+
+  pub unsafe fn resolve_slice(object: ?*mut u8) -> u64 {
+    return unsafe metal_RenderPassAttachmentDescriptor_resolve_slice(object)
+  }
+
+  pub unsafe fn set_resolve_slice(object: ?*mut u8, resolve_slice: u64) -> () {
+    unsafe metal_RenderPassAttachmentDescriptor_set_resolve_slice(object, resolve_slice)
+  }
+
+  pub unsafe fn resolve_depth_plane(object: ?*mut u8) -> u64 {
+    return unsafe metal_RenderPassAttachmentDescriptor_resolve_depth_plane(object)
+  }
+
+  pub unsafe fn set_resolve_depth_plane(object: ?*mut u8, resolve_depth_plane: u64) -> () {
+    unsafe metal_RenderPassAttachmentDescriptor_set_resolve_depth_plane(object, resolve_depth_plane)
+  }
+
+  pub unsafe fn load_action(object: ?*mut u8) -> u64 {
+    return unsafe metal_RenderPassAttachmentDescriptor_load_action(object)
+  }
+
+  pub unsafe fn set_load_action(object: ?*mut u8, load_action: u64) -> () {
+    unsafe metal_RenderPassAttachmentDescriptor_set_load_action(object, load_action)
+  }
+
+  pub unsafe fn store_action(object: ?*mut u8) -> u64 {
+    return unsafe metal_RenderPassAttachmentDescriptor_store_action(object)
+  }
+
+  pub unsafe fn set_store_action(object: ?*mut u8, store_action: u64) -> () {
+    unsafe metal_RenderPassAttachmentDescriptor_set_store_action(object, store_action)
+  }
+}
+
+pub struct RenderPassColorAttachmentDescriptor {}
+impl RenderPassColorAttachmentDescriptor {
+  // Returns +1 owned object; caller must release.
+  pub unsafe fn new() -> ?*mut u8 {
+    return unsafe metal_RenderPassColorAttachmentDescriptor_new()
+  }
+
+  // Returns the aggregate result by value.
+  pub unsafe fn clear_color(object: ?*mut u8) -> MTLClearColor {
+    return unsafe metal_RenderPassColorAttachmentDescriptor_clear_color(object)
+  }
+
+  // Aggregate inputs are passed by value.
+  pub unsafe fn set_clear_color(object: ?*mut u8, clear_color: MTLClearColor) -> () {
+    unsafe metal_RenderPassColorAttachmentDescriptor_set_clear_color(object, clear_color)
+  }
+}
+
+pub struct RenderPassDepthAttachmentDescriptor {}
+impl RenderPassDepthAttachmentDescriptor {
+  pub unsafe fn clear_depth(object: ?*mut u8) -> f64 {
+    return unsafe metal_RenderPassDepthAttachmentDescriptor_clear_depth(object)
+  }
+
+  pub unsafe fn set_clear_depth(object: ?*mut u8, clear_depth: f64) -> () {
+    unsafe metal_RenderPassDepthAttachmentDescriptor_set_clear_depth(object, clear_depth)
+  }
+}
+
+pub struct RenderPassStencilAttachmentDescriptor {}
+impl RenderPassStencilAttachmentDescriptor {
+  pub unsafe fn clear_stencil(object: ?*mut u8) -> u32 {
+    return unsafe metal_RenderPassStencilAttachmentDescriptor_clear_stencil(object)
+  }
+
+  pub unsafe fn set_clear_stencil(object: ?*mut u8, clear_stencil: u32) -> () {
+    unsafe metal_RenderPassStencilAttachmentDescriptor_set_clear_stencil(object, clear_stencil)
+  }
+
+  pub unsafe fn stencil_resolve_filter(object: ?*mut u8) -> u32 {
+    return unsafe metal_RenderPassStencilAttachmentDescriptor_stencil_resolve_filter(object)
+  }
+
+  pub unsafe fn set_stencil_resolve_filter(object: ?*mut u8, stencil_resolve_filter: u32) -> () {
+    unsafe metal_RenderPassStencilAttachmentDescriptor_set_stencil_resolve_filter(object, stencil_resolve_filter)
+  }
+}
+
+pub struct RenderPassColorAttachmentDescriptorArray {}
+impl RenderPassColorAttachmentDescriptorArray {
+  // Returns borrowed +0 object handle.
+  pub unsafe fn object_at(object: ?*mut u8, index: u64) -> ?*mut u8 {
+    return unsafe metal_RenderPassColorAttachmentDescriptorArray_object_at(object, index)
+  }
+
+  pub unsafe fn set_object_at(object: ?*mut u8, index: u64, attachment: ?*mut u8) -> () {
+    unsafe metal_RenderPassColorAttachmentDescriptorArray_set_object_at(object, index, attachment)
+  }
+}
+
+pub struct RenderPassSampleBufferAttachmentDescriptor {}
+impl RenderPassSampleBufferAttachmentDescriptor {
+  // Returns +1 owned object; caller must release.
+  pub unsafe fn new() -> ?*mut u8 {
+    return unsafe metal_RenderPassSampleBufferAttachmentDescriptor_new()
+  }
+
+  // Returns borrowed +0 object handle.
+  pub unsafe fn sample_buffer(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_RenderPassSampleBufferAttachmentDescriptor_sample_buffer(object)
+  }
+
+  pub unsafe fn set_sample_buffer(object: ?*mut u8, sample_buffer: ?*mut u8) -> () {
+    unsafe metal_RenderPassSampleBufferAttachmentDescriptor_set_sample_buffer(object, sample_buffer)
+  }
+
+  pub unsafe fn start_of_vertex_sample_index(object: ?*mut u8) -> u64 {
+    return unsafe metal_RenderPassSampleBufferAttachmentDescriptor_start_of_vertex_sample_index(object)
+  }
+
+  pub unsafe fn set_start_of_vertex_sample_index(object: ?*mut u8, start_of_vertex_sample_index: u64) -> () {
+    unsafe metal_RenderPassSampleBufferAttachmentDescriptor_set_start_of_vertex_sample_index(object, start_of_vertex_sample_index)
+  }
+
+  pub unsafe fn end_of_vertex_sample_index(object: ?*mut u8) -> u64 {
+    return unsafe metal_RenderPassSampleBufferAttachmentDescriptor_end_of_vertex_sample_index(object)
+  }
+
+  pub unsafe fn set_end_of_vertex_sample_index(object: ?*mut u8, end_of_vertex_sample_index: u64) -> () {
+    unsafe metal_RenderPassSampleBufferAttachmentDescriptor_set_end_of_vertex_sample_index(object, end_of_vertex_sample_index)
+  }
+
+  pub unsafe fn start_of_fragment_sample_index(object: ?*mut u8) -> u64 {
+    return unsafe metal_RenderPassSampleBufferAttachmentDescriptor_start_of_fragment_sample_index(object)
+  }
+
+  pub unsafe fn set_start_of_fragment_sample_index(object: ?*mut u8, start_of_fragment_sample_index: u64) -> () {
+    unsafe metal_RenderPassSampleBufferAttachmentDescriptor_set_start_of_fragment_sample_index(object, start_of_fragment_sample_index)
+  }
+
+  pub unsafe fn end_of_fragment_sample_index(object: ?*mut u8) -> u64 {
+    return unsafe metal_RenderPassSampleBufferAttachmentDescriptor_end_of_fragment_sample_index(object)
+  }
+
+  pub unsafe fn set_end_of_fragment_sample_index(object: ?*mut u8, end_of_fragment_sample_index: u64) -> () {
+    unsafe metal_RenderPassSampleBufferAttachmentDescriptor_set_end_of_fragment_sample_index(object, end_of_fragment_sample_index)
+  }
+}
+
+pub struct RenderPassSampleBufferAttachmentDescriptorArray {}
+impl RenderPassSampleBufferAttachmentDescriptorArray {
+  // Returns borrowed +0 object handle.
+  pub unsafe fn object_at(object: ?*mut u8, index: u64) -> ?*mut u8 {
+    return unsafe metal_RenderPassSampleBufferAttachmentDescriptorArray_object_at(object, index)
+  }
+
+  pub unsafe fn set_object_at(object: ?*mut u8, index: u64, attachment: ?*mut u8) -> () {
+    unsafe metal_RenderPassSampleBufferAttachmentDescriptorArray_set_object_at(object, index, attachment)
+  }
+}
+
+pub struct RenderPassDescriptor {}
+impl RenderPassDescriptor {
+  // Returns +1 owned object; caller must release.
+  pub unsafe fn new() -> ?*mut u8 {
+    return unsafe metal_RenderPassDescriptor_new()
+  }
+
+  // Returns borrowed +0 object handle.
+  pub unsafe fn color_attachments(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_RenderPassDescriptor_color_attachments(object)
+  }
+
+  // Returns borrowed +0 object handle.
+  pub unsafe fn depth_attachment(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_RenderPassDescriptor_depth_attachment(object)
+  }
+
+  pub unsafe fn set_depth_attachment(object: ?*mut u8, depth_attachment: ?*mut u8) -> () {
+    unsafe metal_RenderPassDescriptor_set_depth_attachment(object, depth_attachment)
+  }
+
+  // Returns borrowed +0 object handle.
+  pub unsafe fn stencil_attachment(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_RenderPassDescriptor_stencil_attachment(object)
+  }
+
+  pub unsafe fn set_stencil_attachment(object: ?*mut u8, stencil_attachment: ?*mut u8) -> () {
+    unsafe metal_RenderPassDescriptor_set_stencil_attachment(object, stencil_attachment)
+  }
+
+  // Returns borrowed +0 object handle.
+  pub unsafe fn visibility_result_buffer(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_RenderPassDescriptor_visibility_result_buffer(object)
+  }
+
+  pub unsafe fn set_visibility_result_buffer(object: ?*mut u8, buffer: ?*mut u8) -> () {
+    unsafe metal_RenderPassDescriptor_set_visibility_result_buffer(object, buffer)
+  }
+
+  pub unsafe fn render_target_array_length(object: ?*mut u8) -> u64 {
+    return unsafe metal_RenderPassDescriptor_render_target_array_length(object)
+  }
+
+  pub unsafe fn set_render_target_array_length(object: ?*mut u8, length: u64) -> () {
+    unsafe metal_RenderPassDescriptor_set_render_target_array_length(object, length)
+  }
+
+  pub unsafe fn render_target_width(object: ?*mut u8) -> u64 {
+    return unsafe metal_RenderPassDescriptor_render_target_width(object)
+  }
+
+  pub unsafe fn set_render_target_width(object: ?*mut u8, size: u64) -> () {
+    unsafe metal_RenderPassDescriptor_set_render_target_width(object, size)
+  }
+
+  pub unsafe fn render_target_height(object: ?*mut u8) -> u64 {
+    return unsafe metal_RenderPassDescriptor_render_target_height(object)
+  }
+
+  pub unsafe fn set_render_target_height(object: ?*mut u8, size: u64) -> () {
+    unsafe metal_RenderPassDescriptor_set_render_target_height(object, size)
+  }
+
+  pub unsafe fn default_raster_sample_count(object: ?*mut u8) -> u64 {
+    return unsafe metal_RenderPassDescriptor_default_raster_sample_count(object)
+  }
+
+  pub unsafe fn set_default_raster_sample_count(object: ?*mut u8, count: u64) -> () {
+    unsafe metal_RenderPassDescriptor_set_default_raster_sample_count(object, count)
+  }
+
+  // Returns borrowed +0 object handle.
+  pub unsafe fn sample_buffer_attachments(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_RenderPassDescriptor_sample_buffer_attachments(object)
+  }
+}
+
+pub struct ComputePassDescriptor {}
+impl ComputePassDescriptor {
+  // Returns +1 owned object; caller must release.
+  pub unsafe fn new() -> ?*mut u8 {
+    return unsafe metal_ComputePassDescriptor_new()
+  }
+
+  // Returns borrowed +0 object handle.
+  pub unsafe fn sample_buffer_attachments(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_ComputePassDescriptor_sample_buffer_attachments(object)
+  }
+
+  pub unsafe fn set_dispatch_type(object: ?*mut u8, ty: u32) -> () {
+    unsafe metal_ComputePassDescriptor_set_dispatch_type(object, ty)
+  }
+}
+
+pub struct ComputePassSampleBufferAttachmentDescriptorArray {}
+impl ComputePassSampleBufferAttachmentDescriptorArray {
+  // Returns borrowed +0 object handle.
+  pub unsafe fn object_at(object: ?*mut u8, index: u64) -> ?*mut u8 {
+    return unsafe metal_ComputePassSampleBufferAttachmentDescriptorArray_object_at(object, index)
+  }
+
+  pub unsafe fn set_object_at(object: ?*mut u8, index: u64, attachment: ?*mut u8) -> () {
+    unsafe metal_ComputePassSampleBufferAttachmentDescriptorArray_set_object_at(object, index, attachment)
+  }
+}
+
+pub struct ComputePassSampleBufferAttachmentDescriptor {}
+impl ComputePassSampleBufferAttachmentDescriptor {
+  // Returns +1 owned object; caller must release.
+  pub unsafe fn new() -> ?*mut u8 {
+    return unsafe metal_ComputePassSampleBufferAttachmentDescriptor_new()
+  }
+
+  // Returns borrowed +0 object handle.
+  pub unsafe fn sample_buffer(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_ComputePassSampleBufferAttachmentDescriptor_sample_buffer(object)
+  }
+
+  pub unsafe fn set_sample_buffer(object: ?*mut u8, sample_buffer: ?*mut u8) -> () {
+    unsafe metal_ComputePassSampleBufferAttachmentDescriptor_set_sample_buffer(object, sample_buffer)
+  }
+
+  pub unsafe fn start_of_encoder_sample_index(object: ?*mut u8) -> u64 {
+    return unsafe metal_ComputePassSampleBufferAttachmentDescriptor_start_of_encoder_sample_index(object)
+  }
+
+  pub unsafe fn set_start_of_encoder_sample_index(object: ?*mut u8, start_of_encoder_sample_index: u64) -> () {
+    unsafe metal_ComputePassSampleBufferAttachmentDescriptor_set_start_of_encoder_sample_index(object, start_of_encoder_sample_index)
+  }
+
+  pub unsafe fn end_of_encoder_sample_index(object: ?*mut u8) -> u64 {
+    return unsafe metal_ComputePassSampleBufferAttachmentDescriptor_end_of_encoder_sample_index(object)
+  }
+
+  pub unsafe fn set_end_of_encoder_sample_index(object: ?*mut u8, end_of_encoder_sample_index: u64) -> () {
+    unsafe metal_ComputePassSampleBufferAttachmentDescriptor_set_end_of_encoder_sample_index(object, end_of_encoder_sample_index)
+  }
+}
+
+pub struct BlitPassDescriptor {}
+impl BlitPassDescriptor {
+  // Returns +1 owned object; caller must release.
+  pub unsafe fn new() -> ?*mut u8 {
+    return unsafe metal_BlitPassDescriptor_new()
+  }
+
+  // Returns borrowed +0 object handle.
+  pub unsafe fn sample_buffer_attachments(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_BlitPassDescriptor_sample_buffer_attachments(object)
+  }
+}
+
+pub struct BlitPassSampleBufferAttachmentDescriptorArray {}
+impl BlitPassSampleBufferAttachmentDescriptorArray {
+  // Returns borrowed +0 object handle.
+  pub unsafe fn object_at(object: ?*mut u8, index: u64) -> ?*mut u8 {
+    return unsafe metal_BlitPassSampleBufferAttachmentDescriptorArray_object_at(object, index)
+  }
+
+  pub unsafe fn set_object_at(object: ?*mut u8, index: u64, attachment: ?*mut u8) -> () {
+    unsafe metal_BlitPassSampleBufferAttachmentDescriptorArray_set_object_at(object, index, attachment)
+  }
+}
+
+pub struct BlitPassSampleBufferAttachmentDescriptor {}
+impl BlitPassSampleBufferAttachmentDescriptor {
+  // Returns +1 owned object; caller must release.
+  pub unsafe fn new() -> ?*mut u8 {
+    return unsafe metal_BlitPassSampleBufferAttachmentDescriptor_new()
+  }
+
+  // Returns borrowed +0 object handle.
+  pub unsafe fn sample_buffer(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_BlitPassSampleBufferAttachmentDescriptor_sample_buffer(object)
+  }
+
+  pub unsafe fn set_sample_buffer(object: ?*mut u8, sample_buffer: ?*mut u8) -> () {
+    unsafe metal_BlitPassSampleBufferAttachmentDescriptor_set_sample_buffer(object, sample_buffer)
+  }
+
+  pub unsafe fn start_of_encoder_sample_index(object: ?*mut u8) -> u64 {
+    return unsafe metal_BlitPassSampleBufferAttachmentDescriptor_start_of_encoder_sample_index(object)
+  }
+
+  pub unsafe fn set_start_of_encoder_sample_index(object: ?*mut u8, start_of_encoder_sample_index: u64) -> () {
+    unsafe metal_BlitPassSampleBufferAttachmentDescriptor_set_start_of_encoder_sample_index(object, start_of_encoder_sample_index)
+  }
+
+  pub unsafe fn end_of_encoder_sample_index(object: ?*mut u8) -> u64 {
+    return unsafe metal_BlitPassSampleBufferAttachmentDescriptor_end_of_encoder_sample_index(object)
+  }
+
+  pub unsafe fn set_end_of_encoder_sample_index(object: ?*mut u8, end_of_encoder_sample_index: u64) -> () {
+    unsafe metal_BlitPassSampleBufferAttachmentDescriptor_set_end_of_encoder_sample_index(object, end_of_encoder_sample_index)
+  }
+}
+
+pub struct AccelerationStructurePassDescriptor {}
+impl AccelerationStructurePassDescriptor {
+  // Returns +1 owned object; caller must release.
+  pub unsafe fn new() -> ?*mut u8 {
+    return unsafe metal_AccelerationStructurePassDescriptor_new()
+  }
+
+  // Returns borrowed +0 object handle.
+  pub unsafe fn sample_buffer_attachments(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_AccelerationStructurePassDescriptor_sample_buffer_attachments(object)
+  }
+}
+
+pub struct AccelerationStructurePassSampleBufferAttachmentDescriptorArray {}
+impl AccelerationStructurePassSampleBufferAttachmentDescriptorArray {
+  // Returns borrowed +0 object handle.
+  pub unsafe fn object_at(object: ?*mut u8, index: u64) -> ?*mut u8 {
+    return unsafe metal_AccelerationStructurePassSampleBufferAttachmentDescriptorArray_object_at(object, index)
+  }
+
+  pub unsafe fn set_object_at(object: ?*mut u8, index: u64, attachment: ?*mut u8) -> () {
+    unsafe metal_AccelerationStructurePassSampleBufferAttachmentDescriptorArray_set_object_at(object, index, attachment)
+  }
+}
+
+pub struct AccelerationStructurePassSampleBufferAttachmentDescriptor {}
+impl AccelerationStructurePassSampleBufferAttachmentDescriptor {
+  // Returns +1 owned object; caller must release.
+  pub unsafe fn new() -> ?*mut u8 {
+    return unsafe metal_AccelerationStructurePassSampleBufferAttachmentDescriptor_new()
+  }
+
+  // Returns borrowed +0 object handle.
+  pub unsafe fn sample_buffer(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_AccelerationStructurePassSampleBufferAttachmentDescriptor_sample_buffer(object)
+  }
+
+  pub unsafe fn set_sample_buffer(object: ?*mut u8, sample_buffer: ?*mut u8) -> () {
+    unsafe metal_AccelerationStructurePassSampleBufferAttachmentDescriptor_set_sample_buffer(object, sample_buffer)
+  }
+
+  pub unsafe fn start_of_encoder_sample_index(object: ?*mut u8) -> u64 {
+    return unsafe metal_AccelerationStructurePassSampleBufferAttachmentDescriptor_start_of_encoder_sample_index(object)
+  }
+
+  pub unsafe fn set_start_of_encoder_sample_index(object: ?*mut u8, start_of_encoder_sample_index: u64) -> () {
+    unsafe metal_AccelerationStructurePassSampleBufferAttachmentDescriptor_set_start_of_encoder_sample_index(object, start_of_encoder_sample_index)
+  }
+
+  pub unsafe fn end_of_encoder_sample_index(object: ?*mut u8) -> u64 {
+    return unsafe metal_AccelerationStructurePassSampleBufferAttachmentDescriptor_end_of_encoder_sample_index(object)
+  }
+
+  pub unsafe fn set_end_of_encoder_sample_index(object: ?*mut u8, end_of_encoder_sample_index: u64) -> () {
+    unsafe metal_AccelerationStructurePassSampleBufferAttachmentDescriptor_set_end_of_encoder_sample_index(object, end_of_encoder_sample_index)
+  }
+}
+

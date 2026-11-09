@@ -1,0 +1,732 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Port of metal-rs, Copyright 2017 GFX developers.
+// Unsafe raw Metal API. The caller guarantees receiver type, object lifetime and OS availability.
+// Objects are borrowed +0 unless a method explicitly documents owned +1.
+// String inputs are NUL-terminated UTF-8. Release owned returns using the runtime API.
+
+import types { NSRange }
+
+pub struct VertexAttribute {}
+impl VertexAttribute {
+  // Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive.
+  pub unsafe fn name(object: ?*mut u8) -> ?[*]const u8 {
+    return unsafe metal_VertexAttribute_name(object)
+  }
+  pub unsafe fn attribute_index(object: ?*mut u8) -> u64 {
+    return unsafe metal_VertexAttribute_attribute_index(object)
+  }
+  pub unsafe fn attribute_type(object: ?*mut u8) -> u64 {
+    return unsafe metal_VertexAttribute_attribute_type(object)
+  }
+  pub unsafe fn is_active(object: ?*mut u8) -> bool {
+    return unsafe metal_VertexAttribute_is_active(object) != 0
+  }
+  pub unsafe fn is_patch_data(object: ?*mut u8) -> bool {
+    return unsafe metal_VertexAttribute_is_patch_data(object) != 0
+  }
+  pub unsafe fn is_patch_control_point_data(object: ?*mut u8) -> bool {
+    return unsafe metal_VertexAttribute_is_patch_control_point_data(object) != 0
+  }
+}
+
+unsafe extern "C" fn metal_VertexAttribute_name(object: ?*mut u8) -> ?[*]const u8
+unsafe extern "C" fn metal_VertexAttribute_attribute_index(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_VertexAttribute_attribute_type(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_VertexAttribute_is_active(object: ?*mut u8) -> u8
+unsafe extern "C" fn metal_VertexAttribute_is_patch_data(object: ?*mut u8) -> u8
+unsafe extern "C" fn metal_VertexAttribute_is_patch_control_point_data(object: ?*mut u8) -> u8
+
+pub struct Attribute {}
+impl Attribute {
+  // Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive.
+  pub unsafe fn name(object: ?*mut u8) -> ?[*]const u8 {
+    return unsafe metal_Attribute_name(object)
+  }
+  pub unsafe fn attribute_index(object: ?*mut u8) -> u64 {
+    return unsafe metal_Attribute_attribute_index(object)
+  }
+  pub unsafe fn attribute_type(object: ?*mut u8) -> u64 {
+    return unsafe metal_Attribute_attribute_type(object)
+  }
+  pub unsafe fn is_active(object: ?*mut u8) -> bool {
+    return unsafe metal_Attribute_is_active(object) != 0
+  }
+  pub unsafe fn is_patch_data(object: ?*mut u8) -> bool {
+    return unsafe metal_Attribute_is_patch_data(object) != 0
+  }
+  pub unsafe fn is_patch_control_point_data(object: ?*mut u8) -> bool {
+    return unsafe metal_Attribute_is_patch_control_point_data(object) != 0
+  }
+}
+
+unsafe extern "C" fn metal_Attribute_name(object: ?*mut u8) -> ?[*]const u8
+unsafe extern "C" fn metal_Attribute_attribute_index(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_Attribute_attribute_type(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_Attribute_is_active(object: ?*mut u8) -> u8
+unsafe extern "C" fn metal_Attribute_is_patch_data(object: ?*mut u8) -> u8
+unsafe extern "C" fn metal_Attribute_is_patch_control_point_data(object: ?*mut u8) -> u8
+
+pub struct FunctionConstant {}
+impl FunctionConstant {
+  // Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive.
+  pub unsafe fn name(object: ?*mut u8) -> ?[*]const u8 {
+    return unsafe metal_FunctionConstant_name(object)
+  }
+  pub unsafe fn data_type(object: ?*mut u8) -> u64 {
+    return unsafe metal_FunctionConstant_data_type(object)
+  }
+  pub unsafe fn index(object: ?*mut u8) -> u64 {
+    return unsafe metal_FunctionConstant_index(object)
+  }
+  pub unsafe fn required(object: ?*mut u8) -> bool {
+    return unsafe metal_FunctionConstant_required(object) != 0
+  }
+}
+
+unsafe extern "C" fn metal_FunctionConstant_name(object: ?*mut u8) -> ?[*]const u8
+unsafe extern "C" fn metal_FunctionConstant_data_type(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_FunctionConstant_index(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_FunctionConstant_required(object: ?*mut u8) -> u8
+
+pub struct FunctionDescriptor {}
+impl FunctionDescriptor {
+  // Returns an owned +1 object; release exactly once.
+  pub unsafe fn new() -> ?*mut u8 {
+    return unsafe metal_FunctionDescriptor_new()
+  }
+  // Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive.
+  pub unsafe fn name(object: ?*mut u8) -> ?[*]const u8 {
+    return unsafe metal_FunctionDescriptor_name(object)
+  }
+  pub unsafe fn set_name(object: ?*mut u8, name: ?[*]const u8) -> () {
+    unsafe metal_FunctionDescriptor_set_name(object, name)
+  }
+  // Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive.
+  pub unsafe fn specialized_name(object: ?*mut u8) -> ?[*]const u8 {
+    return unsafe metal_FunctionDescriptor_specialized_name(object)
+  }
+  pub unsafe fn set_specialized_name(object: ?*mut u8, name: ?[*]const u8) -> () {
+    unsafe metal_FunctionDescriptor_set_specialized_name(object, name)
+  }
+  // Borrowed +0 Objective-C object; retain explicitly if needed.
+  pub unsafe fn constant_values(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_FunctionDescriptor_constant_values(object)
+  }
+  pub unsafe fn set_constant_values(object: ?*mut u8, values: ?*mut u8) -> () {
+    unsafe metal_FunctionDescriptor_set_constant_values(object, values)
+  }
+  pub unsafe fn options(object: ?*mut u8) -> u64 {
+    return unsafe metal_FunctionDescriptor_options(object)
+  }
+  pub unsafe fn set_options(object: ?*mut u8, value: u64) -> () {
+    unsafe metal_FunctionDescriptor_set_options(object, value)
+  }
+}
+
+unsafe extern "C" fn metal_FunctionDescriptor_new() -> ?*mut u8
+unsafe extern "C" fn metal_FunctionDescriptor_name(object: ?*mut u8) -> ?[*]const u8
+unsafe extern "C" fn metal_FunctionDescriptor_set_name(object: ?*mut u8, name: ?[*]const u8) -> ()
+unsafe extern "C" fn metal_FunctionDescriptor_specialized_name(object: ?*mut u8) -> ?[*]const u8
+unsafe extern "C" fn metal_FunctionDescriptor_set_specialized_name(object: ?*mut u8, name: ?[*]const u8) -> ()
+unsafe extern "C" fn metal_FunctionDescriptor_constant_values(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_FunctionDescriptor_set_constant_values(object: ?*mut u8, values: ?*mut u8) -> ()
+unsafe extern "C" fn metal_FunctionDescriptor_options(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_FunctionDescriptor_set_options(object: ?*mut u8, value: u64) -> ()
+
+pub struct IntersectionFunctionDescriptor {}
+
+pub struct FunctionHandle {}
+impl FunctionHandle {
+  // Borrowed +0 Objective-C object; retain explicitly if needed.
+  pub unsafe fn device(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_FunctionHandle_device(object)
+  }
+  // Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive.
+  pub unsafe fn name(object: ?*mut u8) -> ?[*]const u8 {
+    return unsafe metal_FunctionHandle_name(object)
+  }
+  pub unsafe fn function_type(object: ?*mut u8) -> u64 {
+    return unsafe metal_FunctionHandle_function_type(object)
+  }
+}
+
+unsafe extern "C" fn metal_FunctionHandle_device(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_FunctionHandle_name(object: ?*mut u8) -> ?[*]const u8
+unsafe extern "C" fn metal_FunctionHandle_function_type(object: ?*mut u8) -> u64
+
+pub struct Function {}
+impl Function {
+  // Borrowed +0 Objective-C object; retain explicitly if needed.
+  pub unsafe fn device(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_Function_device(object)
+  }
+  // Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive.
+  pub unsafe fn name(object: ?*mut u8) -> ?[*]const u8 {
+    return unsafe metal_Function_name(object)
+  }
+  pub unsafe fn function_type(object: ?*mut u8) -> u64 {
+    return unsafe metal_Function_function_type(object)
+  }
+  // Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive.
+  pub unsafe fn label(object: ?*mut u8) -> ?[*]const u8 {
+    return unsafe metal_Function_label(object)
+  }
+  pub unsafe fn set_label(object: ?*mut u8, label: ?[*]const u8) -> () {
+    unsafe metal_Function_set_label(object, label)
+  }
+  pub unsafe fn patch_type(object: ?*mut u8) -> u64 {
+    return unsafe metal_Function_patch_type(object)
+  }
+  pub unsafe fn patch_control_point_count(object: ?*mut u8) -> u64 {
+    return unsafe metal_Function_patch_control_point_count(object)
+  }
+  // Borrowed +0 NSArray of MTLVertexAttribute objects.
+  pub unsafe fn vertex_attributes(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_Function_vertex_attributes(object)
+  }
+  // Borrowed +0 NSArray of MTLAttribute objects.
+  pub unsafe fn stage_input_attributes(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_Function_stage_input_attributes(object)
+  }
+  // Returns an owned +1 argument encoder.
+  pub unsafe fn new_argument_encoder(object: ?*mut u8, buffer_index: u64) -> ?*mut u8 {
+    return unsafe metal_Function_new_argument_encoder(object, buffer_index)
+  }
+  // Borrowed +0 NSDictionary mapping NSString names to MTLFunctionConstant objects.
+  pub unsafe fn function_constants_dictionary(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_Function_function_constants_dictionary(object)
+  }
+  pub unsafe fn options(object: ?*mut u8) -> u64 {
+    return unsafe metal_Function_options(object)
+  }
+}
+
+unsafe extern "C" fn metal_Function_device(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_Function_name(object: ?*mut u8) -> ?[*]const u8
+unsafe extern "C" fn metal_Function_function_type(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_Function_label(object: ?*mut u8) -> ?[*]const u8
+unsafe extern "C" fn metal_Function_set_label(object: ?*mut u8, label: ?[*]const u8) -> ()
+unsafe extern "C" fn metal_Function_patch_type(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_Function_patch_control_point_count(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_Function_vertex_attributes(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_Function_stage_input_attributes(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_Function_new_argument_encoder(object: ?*mut u8, buffer_index: u64) -> ?*mut u8
+unsafe extern "C" fn metal_Function_function_constants_dictionary(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_Function_options(object: ?*mut u8) -> u64
+
+pub struct FunctionConstantValues {}
+impl FunctionConstantValues {
+  // Returns an owned +1 object; release exactly once.
+  pub unsafe fn new() -> ?*mut u8 {
+    return unsafe metal_FunctionConstantValues_new()
+  }
+  // Value must point to a live value matching the Metal data type during this call.
+  pub unsafe fn set_constant_value_at_index(object: ?*mut u8, value: ?*const u8, ty: u64, index: u64) -> () {
+    unsafe metal_FunctionConstantValues_set_constant_value_at_index(object, value, ty, index)
+  }
+  // Range is passed by value. Values must address range.length values matching the Metal data type during this call.
+  pub unsafe fn set_constant_values_with_range(object: ?*mut u8, values: ?*const u8, ty: u64, range: NSRange) -> () {
+    unsafe metal_FunctionConstantValues_set_constant_values_with_range(object, values, ty, range)
+  }
+  // Value must point to a live value matching the Metal data type during this call.
+  pub unsafe fn set_constant_value_with_name(object: ?*mut u8, value: ?*const u8, ty: u64, name: ?[*]const u8) -> () {
+    unsafe metal_FunctionConstantValues_set_constant_value_with_name(object, value, ty, name)
+  }
+}
+
+unsafe extern "C" fn metal_FunctionConstantValues_new() -> ?*mut u8
+unsafe extern "C" fn metal_FunctionConstantValues_set_constant_value_at_index(object: ?*mut u8, value: ?*const u8, ty: u64, index: u64) -> ()
+unsafe extern "C" fn metal_FunctionConstantValues_set_constant_values_with_range(object: ?*mut u8, values: ?*const u8, ty: u64, range: NSRange) -> ()
+unsafe extern "C" fn metal_FunctionConstantValues_set_constant_value_with_name(object: ?*mut u8, value: ?*const u8, ty: u64, name: ?[*]const u8) -> ()
+
+pub struct CompileOptions {}
+impl CompileOptions {
+  // Returns an owned +1 object; release exactly once.
+  pub unsafe fn new() -> ?*mut u8 {
+    return unsafe metal_CompileOptions_new()
+  }
+  // Borrowed +0 NSDictionary of NSString keys and NSString or NSNumber values.
+  pub unsafe fn preprocessor_macros(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_CompileOptions_preprocessor_macros(object)
+  }
+  pub unsafe fn set_preprocessor_macros(object: ?*mut u8, defines: ?*mut u8) -> () {
+    unsafe metal_CompileOptions_set_preprocessor_macros(object, defines)
+  }
+  pub unsafe fn is_fast_math_enabled(object: ?*mut u8) -> bool {
+    return unsafe metal_CompileOptions_is_fast_math_enabled(object) != 0
+  }
+  pub unsafe fn set_fast_math_enabled(object: ?*mut u8, enabled: bool) -> () {
+    let mut enabled_abi: u8 = 0
+    if enabled {
+      enabled_abi = 1
+    }
+    unsafe metal_CompileOptions_set_fast_math_enabled(object, enabled_abi)
+  }
+  pub unsafe fn language_version(object: ?*mut u8) -> u64 {
+    return unsafe metal_CompileOptions_language_version(object)
+  }
+  pub unsafe fn set_language_version(object: ?*mut u8, version: u64) -> () {
+    unsafe metal_CompileOptions_set_language_version(object, version)
+  }
+  pub unsafe fn library_type(object: ?*mut u8) -> u64 {
+    return unsafe metal_CompileOptions_library_type(object)
+  }
+  pub unsafe fn set_library_type(object: ?*mut u8, lib_type: u64) -> () {
+    unsafe metal_CompileOptions_set_library_type(object, lib_type)
+  }
+  // Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive.
+  pub unsafe fn install_name(object: ?*mut u8) -> ?[*]const u8 {
+    return unsafe metal_CompileOptions_install_name(object)
+  }
+  pub unsafe fn set_install_name(object: ?*mut u8, name: ?[*]const u8) -> () {
+    unsafe metal_CompileOptions_set_install_name(object, name)
+  }
+  // Borrowed +0 NSArray of MTLDynamicLibrary objects; replaces the Rust Vec with its source NSArray.
+  pub unsafe fn libraries(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_CompileOptions_libraries(object)
+  }
+  // Borrowed +0 NSArray of MTLDynamicLibrary objects; replaces the Rust Vec with its source NSArray.
+  pub unsafe fn libraries_as_nsarray(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_CompileOptions_libraries_as_nsarray(object)
+  }
+  // Pointer addresses count nonnull library objects; null pointer permitted only for count zero.
+  pub unsafe fn set_libraries(object: ?*mut u8, libraries: ?[*]const ?*mut u8, count: u64) -> () {
+    unsafe metal_CompileOptions_set_libraries(object, libraries, count)
+  }
+  pub unsafe fn set_libraries_nsarray(object: ?*mut u8, libraries: ?*mut u8) -> () {
+    unsafe metal_CompileOptions_set_libraries_nsarray(object, libraries)
+  }
+  pub unsafe fn preserve_invariance(object: ?*mut u8) -> bool {
+    return unsafe metal_CompileOptions_preserve_invariance(object) != 0
+  }
+  pub unsafe fn set_preserve_invariance(object: ?*mut u8, preserve: bool) -> () {
+    let mut preserve_abi: u8 = 0
+    if preserve {
+      preserve_abi = 1
+    }
+    unsafe metal_CompileOptions_set_preserve_invariance(object, preserve_abi)
+  }
+}
+
+unsafe extern "C" fn metal_CompileOptions_new() -> ?*mut u8
+unsafe extern "C" fn metal_CompileOptions_preprocessor_macros(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_CompileOptions_set_preprocessor_macros(object: ?*mut u8, defines: ?*mut u8) -> ()
+unsafe extern "C" fn metal_CompileOptions_is_fast_math_enabled(object: ?*mut u8) -> u8
+unsafe extern "C" fn metal_CompileOptions_set_fast_math_enabled(object: ?*mut u8, enabled: u8) -> ()
+unsafe extern "C" fn metal_CompileOptions_language_version(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_CompileOptions_set_language_version(object: ?*mut u8, version: u64) -> ()
+unsafe extern "C" fn metal_CompileOptions_library_type(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_CompileOptions_set_library_type(object: ?*mut u8, lib_type: u64) -> ()
+unsafe extern "C" fn metal_CompileOptions_install_name(object: ?*mut u8) -> ?[*]const u8
+unsafe extern "C" fn metal_CompileOptions_set_install_name(object: ?*mut u8, name: ?[*]const u8) -> ()
+unsafe extern "C" fn metal_CompileOptions_libraries(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_CompileOptions_libraries_as_nsarray(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_CompileOptions_set_libraries(object: ?*mut u8, libraries: ?[*]const ?*mut u8, count: u64) -> ()
+unsafe extern "C" fn metal_CompileOptions_set_libraries_nsarray(object: ?*mut u8, libraries: ?*mut u8) -> ()
+unsafe extern "C" fn metal_CompileOptions_preserve_invariance(object: ?*mut u8) -> u8
+unsafe extern "C" fn metal_CompileOptions_set_preserve_invariance(object: ?*mut u8, preserve: u8) -> ()
+
+pub struct Library {}
+impl Library {
+  // Borrowed +0 Objective-C object; retain explicitly if needed.
+  pub unsafe fn device(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_Library_device(object)
+  }
+  // Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive.
+  pub unsafe fn label(object: ?*mut u8) -> ?[*]const u8 {
+    return unsafe metal_Library_label(object)
+  }
+  pub unsafe fn set_label(object: ?*mut u8, label: ?[*]const u8) -> () {
+    unsafe metal_Library_set_label(object, label)
+  }
+  // Returns owned +1 function or null. Null constants selects the unspecialized Metal overload; nonnull selects specialization. NSError is borrowed +0; missing-function convenience errors retain the upstream message.
+  pub unsafe fn get_function(object: ?*mut u8, name: ?[*]const u8, constants: ?*mut u8, error: ?*mut ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_Library_get_function(object, name, constants, error)
+  }
+  // Borrowed +0 NSArray of NSString names; replaces the Rust Vec<String>.
+  pub unsafe fn function_names(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_Library_function_names(object)
+  }
+  pub unsafe fn library_type(object: ?*mut u8) -> u64 {
+    return unsafe metal_Library_library_type(object)
+  }
+  // Borrowed UTF-8 install name; null represents upstream None.
+  pub unsafe fn install_name(object: ?*mut u8) -> ?[*]const u8 {
+    return unsafe metal_Library_install_name(object)
+  }
+  // Result is owned +1 or null. NSError output is borrowed +0; fallback error preserves the upstream convenience failure message.
+  pub unsafe fn new_function_with_descriptor(object: ?*mut u8, descriptor: ?*mut u8, error: ?*mut ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_Library_new_function_with_descriptor(object, descriptor, error)
+  }
+  // Result is owned +1 or null. NSError output is borrowed +0; fallback error preserves the upstream convenience failure message.
+  pub unsafe fn new_intersection_function_with_descriptor(object: ?*mut u8, descriptor: ?*mut u8, error: ?*mut ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_Library_new_intersection_function_with_descriptor(object, descriptor, error)
+  }
+}
+
+unsafe extern "C" fn metal_Library_device(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_Library_label(object: ?*mut u8) -> ?[*]const u8
+unsafe extern "C" fn metal_Library_set_label(object: ?*mut u8, label: ?[*]const u8) -> ()
+unsafe extern "C" fn metal_Library_get_function(object: ?*mut u8, name: ?[*]const u8, constants: ?*mut u8, error: ?*mut ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_Library_function_names(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_Library_library_type(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_Library_install_name(object: ?*mut u8) -> ?[*]const u8
+unsafe extern "C" fn metal_Library_new_function_with_descriptor(object: ?*mut u8, descriptor: ?*mut u8, error: ?*mut ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_Library_new_intersection_function_with_descriptor(object: ?*mut u8, descriptor: ?*mut u8, error: ?*mut ?*mut u8) -> ?*mut u8
+
+pub struct DynamicLibrary {}
+impl DynamicLibrary {
+  // Borrowed +0 Objective-C object; retain explicitly if needed.
+  pub unsafe fn device(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_DynamicLibrary_device(object)
+  }
+  // Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive.
+  pub unsafe fn label(object: ?*mut u8) -> ?[*]const u8 {
+    return unsafe metal_DynamicLibrary_label(object)
+  }
+  pub unsafe fn set_label(object: ?*mut u8, label: ?[*]const u8) -> () {
+    unsafe metal_DynamicLibrary_set_label(object, label)
+  }
+  // Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive.
+  pub unsafe fn install_name(object: ?*mut u8) -> ?[*]const u8 {
+    return unsafe metal_DynamicLibrary_install_name(object)
+  }
+  // NSError output is borrowed +0 and cleared on success. Returns the Metal BOOL result.
+  pub unsafe fn serialize_to_url(object: ?*mut u8, url: ?*mut u8, error: ?*mut ?*mut u8) -> bool {
+    return unsafe metal_DynamicLibrary_serialize_to_url(object, url, error) != 0
+  }
+}
+
+unsafe extern "C" fn metal_DynamicLibrary_device(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_DynamicLibrary_label(object: ?*mut u8) -> ?[*]const u8
+unsafe extern "C" fn metal_DynamicLibrary_set_label(object: ?*mut u8, label: ?[*]const u8) -> ()
+unsafe extern "C" fn metal_DynamicLibrary_install_name(object: ?*mut u8) -> ?[*]const u8
+unsafe extern "C" fn metal_DynamicLibrary_serialize_to_url(object: ?*mut u8, url: ?*mut u8, error: ?*mut ?*mut u8) -> u8
+
+pub struct BinaryArchiveDescriptor {}
+impl BinaryArchiveDescriptor {
+  // Returns an owned +1 object; release exactly once.
+  pub unsafe fn new() -> ?*mut u8 {
+    return unsafe metal_BinaryArchiveDescriptor_new()
+  }
+  // Borrowed +0 Objective-C object; retain explicitly if needed.
+  pub unsafe fn url(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_BinaryArchiveDescriptor_url(object)
+  }
+  pub unsafe fn set_url(object: ?*mut u8, url: ?*mut u8) -> () {
+    unsafe metal_BinaryArchiveDescriptor_set_url(object, url)
+  }
+}
+
+unsafe extern "C" fn metal_BinaryArchiveDescriptor_new() -> ?*mut u8
+unsafe extern "C" fn metal_BinaryArchiveDescriptor_url(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_BinaryArchiveDescriptor_set_url(object: ?*mut u8, url: ?*mut u8) -> ()
+
+pub struct BinaryArchive {}
+impl BinaryArchive {
+  // Borrowed +0 Objective-C object; retain explicitly if needed.
+  pub unsafe fn device(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_BinaryArchive_device(object)
+  }
+  // Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive.
+  pub unsafe fn label(object: ?*mut u8) -> ?[*]const u8 {
+    return unsafe metal_BinaryArchive_label(object)
+  }
+  pub unsafe fn set_label(object: ?*mut u8, label: ?[*]const u8) -> () {
+    unsafe metal_BinaryArchive_set_label(object, label)
+  }
+  // NSError output is borrowed +0 and cleared on success. Returns the Metal BOOL result.
+  pub unsafe fn add_compute_pipeline_functions_with_descriptor(object: ?*mut u8, descriptor: ?*mut u8, error: ?*mut ?*mut u8) -> bool {
+    return unsafe metal_BinaryArchive_add_compute_pipeline_functions_with_descriptor(object, descriptor, error) != 0
+  }
+  // NSError output is borrowed +0 and cleared on success. Returns the Metal BOOL result.
+  pub unsafe fn add_render_pipeline_functions_with_descriptor(object: ?*mut u8, descriptor: ?*mut u8, error: ?*mut ?*mut u8) -> bool {
+    return unsafe metal_BinaryArchive_add_render_pipeline_functions_with_descriptor(object, descriptor, error) != 0
+  }
+  // NSError output is borrowed +0 and cleared on success. Returns the Metal BOOL result.
+  pub unsafe fn serialize_to_url(object: ?*mut u8, url: ?*mut u8, error: ?*mut ?*mut u8) -> bool {
+    return unsafe metal_BinaryArchive_serialize_to_url(object, url, error) != 0
+  }
+}
+
+unsafe extern "C" fn metal_BinaryArchive_device(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_BinaryArchive_label(object: ?*mut u8) -> ?[*]const u8
+unsafe extern "C" fn metal_BinaryArchive_set_label(object: ?*mut u8, label: ?[*]const u8) -> ()
+unsafe extern "C" fn metal_BinaryArchive_add_compute_pipeline_functions_with_descriptor(object: ?*mut u8, descriptor: ?*mut u8, error: ?*mut ?*mut u8) -> u8
+unsafe extern "C" fn metal_BinaryArchive_add_render_pipeline_functions_with_descriptor(object: ?*mut u8, descriptor: ?*mut u8, error: ?*mut ?*mut u8) -> u8
+unsafe extern "C" fn metal_BinaryArchive_serialize_to_url(object: ?*mut u8, url: ?*mut u8, error: ?*mut ?*mut u8) -> u8
+
+pub struct LinkedFunctions {}
+impl LinkedFunctions {
+  // Returns an owned +1 object; release exactly once.
+  pub unsafe fn new() -> ?*mut u8 {
+    return unsafe metal_LinkedFunctions_new()
+  }
+  // Borrowed +0 NSArray of MTLFunction objects; replaces the Rust Vec.
+  pub unsafe fn functions(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_LinkedFunctions_functions(object)
+  }
+  // Pointer addresses count nonnull functions; null pointer permitted only for count zero.
+  pub unsafe fn set_functions(object: ?*mut u8, functions: ?[*]const ?*mut u8, count: u64) -> () {
+    unsafe metal_LinkedFunctions_set_functions(object, functions, count)
+  }
+  // Borrowed +0 NSArray of MTLFunction objects; replaces the Rust Vec.
+  pub unsafe fn binary_functions(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_LinkedFunctions_binary_functions(object)
+  }
+  // Pointer addresses count nonnull functions; null pointer permitted only for count zero.
+  pub unsafe fn set_binary_functions(object: ?*mut u8, functions: ?[*]const ?*mut u8, count: u64) -> () {
+    unsafe metal_LinkedFunctions_set_binary_functions(object, functions, count)
+  }
+}
+
+unsafe extern "C" fn metal_LinkedFunctions_new() -> ?*mut u8
+unsafe extern "C" fn metal_LinkedFunctions_functions(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_LinkedFunctions_set_functions(object: ?*mut u8, functions: ?[*]const ?*mut u8, count: u64) -> ()
+unsafe extern "C" fn metal_LinkedFunctions_binary_functions(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_LinkedFunctions_set_binary_functions(object: ?*mut u8, functions: ?[*]const ?*mut u8, count: u64) -> ()
+
+pub struct StructMember {}
+impl StructMember {
+  // Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive.
+  pub unsafe fn name(object: ?*mut u8) -> ?[*]const u8 {
+    return unsafe metal_StructMember_name(object)
+  }
+  pub unsafe fn offset(object: ?*mut u8) -> u64 {
+    return unsafe metal_StructMember_offset(object)
+  }
+  pub unsafe fn data_type(object: ?*mut u8) -> u64 {
+    return unsafe metal_StructMember_data_type(object)
+  }
+  // Borrowed +0 Objective-C object; retain explicitly if needed.
+  pub unsafe fn struct_type(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_StructMember_struct_type(object)
+  }
+  // Borrowed +0 Objective-C object; retain explicitly if needed.
+  pub unsafe fn array_type(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_StructMember_array_type(object)
+  }
+}
+
+unsafe extern "C" fn metal_StructMember_name(object: ?*mut u8) -> ?[*]const u8
+unsafe extern "C" fn metal_StructMember_offset(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_StructMember_data_type(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_StructMember_struct_type(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_StructMember_array_type(object: ?*mut u8) -> ?*mut u8
+
+pub struct StructMemberArray {}
+impl StructMemberArray {
+  // Borrowed +0 member. Index must be within the NSArray bounds.
+  pub unsafe fn object_at(object: ?*mut u8, index: u64) -> ?*mut u8 {
+    return unsafe metal_StructMemberArray_object_at(object, index)
+  }
+  pub unsafe fn count(object: ?*mut u8) -> u64 {
+    return unsafe metal_StructMemberArray_count(object)
+  }
+}
+
+unsafe extern "C" fn metal_StructMemberArray_object_at(object: ?*mut u8, index: u64) -> ?*mut u8
+unsafe extern "C" fn metal_StructMemberArray_count(object: ?*mut u8) -> u64
+
+pub struct StructType {}
+impl StructType {
+  // Borrowed +0 Objective-C object; retain explicitly if needed.
+  pub unsafe fn members(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_StructType_members(object)
+  }
+  // Borrowed +0 member, or null when absent.
+  pub unsafe fn member_from_name(object: ?*mut u8, name: ?[*]const u8) -> ?*mut u8 {
+    return unsafe metal_StructType_member_from_name(object, name)
+  }
+}
+
+unsafe extern "C" fn metal_StructType_members(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_StructType_member_from_name(object: ?*mut u8, name: ?[*]const u8) -> ?*mut u8
+
+pub struct ArrayType {}
+impl ArrayType {
+  pub unsafe fn array_length(object: ?*mut u8) -> u64 {
+    return unsafe metal_ArrayType_array_length(object)
+  }
+  pub unsafe fn stride(object: ?*mut u8) -> u64 {
+    return unsafe metal_ArrayType_stride(object)
+  }
+  pub unsafe fn element_type(object: ?*mut u8) -> u64 {
+    return unsafe metal_ArrayType_element_type(object)
+  }
+  // Borrowed +0 Objective-C object; retain explicitly if needed.
+  pub unsafe fn element_struct_type(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_ArrayType_element_struct_type(object)
+  }
+  // Borrowed +0 Objective-C object; retain explicitly if needed.
+  pub unsafe fn element_array_type(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_ArrayType_element_array_type(object)
+  }
+}
+
+unsafe extern "C" fn metal_ArrayType_array_length(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_ArrayType_stride(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_ArrayType_element_type(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_ArrayType_element_struct_type(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_ArrayType_element_array_type(object: ?*mut u8) -> ?*mut u8
+
+pub struct Argument {}
+impl Argument {
+  // Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive.
+  pub unsafe fn name(object: ?*mut u8) -> ?[*]const u8 {
+    return unsafe metal_Argument_name(object)
+  }
+  pub unsafe fn type_(object: ?*mut u8) -> u64 {
+    return unsafe metal_Argument_type_(object)
+  }
+  pub unsafe fn access(object: ?*mut u8) -> u64 {
+    return unsafe metal_Argument_access(object)
+  }
+  pub unsafe fn index(object: ?*mut u8) -> u64 {
+    return unsafe metal_Argument_index(object)
+  }
+  pub unsafe fn is_active(object: ?*mut u8) -> bool {
+    return unsafe metal_Argument_is_active(object) != 0
+  }
+  pub unsafe fn buffer_alignment(object: ?*mut u8) -> u64 {
+    return unsafe metal_Argument_buffer_alignment(object)
+  }
+  pub unsafe fn buffer_data_size(object: ?*mut u8) -> u64 {
+    return unsafe metal_Argument_buffer_data_size(object)
+  }
+  pub unsafe fn buffer_data_type(object: ?*mut u8) -> u64 {
+    return unsafe metal_Argument_buffer_data_type(object)
+  }
+  pub unsafe fn threadgroup_memory_alignment(object: ?*mut u8) -> u64 {
+    return unsafe metal_Argument_threadgroup_memory_alignment(object)
+  }
+  pub unsafe fn threadgroup_memory_data_size(object: ?*mut u8) -> u64 {
+    return unsafe metal_Argument_threadgroup_memory_data_size(object)
+  }
+  pub unsafe fn texture_type(object: ?*mut u8) -> u64 {
+    return unsafe metal_Argument_texture_type(object)
+  }
+  pub unsafe fn texture_data_type(object: ?*mut u8) -> u64 {
+    return unsafe metal_Argument_texture_data_type(object)
+  }
+  // Borrowed +0 Objective-C object; retain explicitly if needed.
+  pub unsafe fn buffer_struct_type(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_Argument_buffer_struct_type(object)
+  }
+}
+
+unsafe extern "C" fn metal_Argument_name(object: ?*mut u8) -> ?[*]const u8
+unsafe extern "C" fn metal_Argument_type_(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_Argument_access(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_Argument_index(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_Argument_is_active(object: ?*mut u8) -> u8
+unsafe extern "C" fn metal_Argument_buffer_alignment(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_Argument_buffer_data_size(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_Argument_buffer_data_type(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_Argument_threadgroup_memory_alignment(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_Argument_threadgroup_memory_data_size(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_Argument_texture_type(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_Argument_texture_data_type(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_Argument_buffer_struct_type(object: ?*mut u8) -> ?*mut u8
+
+pub struct ArgumentDescriptor {}
+impl ArgumentDescriptor {
+  // Returns owned +1; explicitly retains the upstream autoreleased factory result.
+  pub unsafe fn new() -> ?*mut u8 {
+    return unsafe metal_ArgumentDescriptor_new()
+  }
+  pub unsafe fn set_data_type(object: ?*mut u8, ty: u64) -> () {
+    unsafe metal_ArgumentDescriptor_set_data_type(object, ty)
+  }
+  pub unsafe fn set_index(object: ?*mut u8, index: u64) -> () {
+    unsafe metal_ArgumentDescriptor_set_index(object, index)
+  }
+  pub unsafe fn set_access(object: ?*mut u8, access: u64) -> () {
+    unsafe metal_ArgumentDescriptor_set_access(object, access)
+  }
+  pub unsafe fn set_array_length(object: ?*mut u8, length: u64) -> () {
+    unsafe metal_ArgumentDescriptor_set_array_length(object, length)
+  }
+  pub unsafe fn set_texture_type(object: ?*mut u8, ty: u64) -> () {
+    unsafe metal_ArgumentDescriptor_set_texture_type(object, ty)
+  }
+}
+
+unsafe extern "C" fn metal_ArgumentDescriptor_new() -> ?*mut u8
+unsafe extern "C" fn metal_ArgumentDescriptor_set_data_type(object: ?*mut u8, ty: u64) -> ()
+unsafe extern "C" fn metal_ArgumentDescriptor_set_index(object: ?*mut u8, index: u64) -> ()
+unsafe extern "C" fn metal_ArgumentDescriptor_set_access(object: ?*mut u8, access: u64) -> ()
+unsafe extern "C" fn metal_ArgumentDescriptor_set_array_length(object: ?*mut u8, length: u64) -> ()
+unsafe extern "C" fn metal_ArgumentDescriptor_set_texture_type(object: ?*mut u8, ty: u64) -> ()
+
+pub struct CounterSampleBufferDescriptor {}
+impl CounterSampleBufferDescriptor {
+  // Returns an owned +1 object; release exactly once.
+  pub unsafe fn new() -> ?*mut u8 {
+    return unsafe metal_CounterSampleBufferDescriptor_new()
+  }
+  // Borrowed +0 Objective-C object; retain explicitly if needed.
+  pub unsafe fn counter_set(object: ?*mut u8) -> ?*mut u8 {
+    return unsafe metal_CounterSampleBufferDescriptor_counter_set(object)
+  }
+  pub unsafe fn set_counter_set(object: ?*mut u8, counter_set: ?*mut u8) -> () {
+    unsafe metal_CounterSampleBufferDescriptor_set_counter_set(object, counter_set)
+  }
+  // Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive.
+  pub unsafe fn label(object: ?*mut u8) -> ?[*]const u8 {
+    return unsafe metal_CounterSampleBufferDescriptor_label(object)
+  }
+  pub unsafe fn set_label(object: ?*mut u8, label: ?[*]const u8) -> () {
+    unsafe metal_CounterSampleBufferDescriptor_set_label(object, label)
+  }
+  pub unsafe fn sample_count(object: ?*mut u8) -> u64 {
+    return unsafe metal_CounterSampleBufferDescriptor_sample_count(object)
+  }
+  pub unsafe fn set_sample_count(object: ?*mut u8, sample_count: u64) -> () {
+    unsafe metal_CounterSampleBufferDescriptor_set_sample_count(object, sample_count)
+  }
+  pub unsafe fn storage_mode(object: ?*mut u8) -> u64 {
+    return unsafe metal_CounterSampleBufferDescriptor_storage_mode(object)
+  }
+  pub unsafe fn set_storage_mode(object: ?*mut u8, storage_mode: u64) -> () {
+    unsafe metal_CounterSampleBufferDescriptor_set_storage_mode(object, storage_mode)
+  }
+}
+
+unsafe extern "C" fn metal_CounterSampleBufferDescriptor_new() -> ?*mut u8
+unsafe extern "C" fn metal_CounterSampleBufferDescriptor_counter_set(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_CounterSampleBufferDescriptor_set_counter_set(object: ?*mut u8, counter_set: ?*mut u8) -> ()
+unsafe extern "C" fn metal_CounterSampleBufferDescriptor_label(object: ?*mut u8) -> ?[*]const u8
+unsafe extern "C" fn metal_CounterSampleBufferDescriptor_set_label(object: ?*mut u8, label: ?[*]const u8) -> ()
+unsafe extern "C" fn metal_CounterSampleBufferDescriptor_sample_count(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_CounterSampleBufferDescriptor_set_sample_count(object: ?*mut u8, sample_count: u64) -> ()
+unsafe extern "C" fn metal_CounterSampleBufferDescriptor_storage_mode(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_CounterSampleBufferDescriptor_set_storage_mode(object: ?*mut u8, storage_mode: u64) -> ()
+
+pub struct CounterSampleBuffer {}
+impl CounterSampleBuffer {
+  pub unsafe fn sample_count(object: ?*mut u8) -> u64 {
+    return unsafe metal_CounterSampleBuffer_sample_count(object)
+  }
+  // Range is passed by value. Writes range.length u64 samples into caller-owned output, matching the upstream Vec<NSUInteger> helper. Range must be valid and range.length * 8 must not overflow; output must hold that many bytes.
+  pub unsafe fn resolve_counter_range(object: ?*mut u8, range: NSRange, out: [*]mut u64) -> () {
+    unsafe metal_CounterSampleBuffer_resolve_counter_range(object, range, out)
+  }
+}
+
+unsafe extern "C" fn metal_CounterSampleBuffer_sample_count(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_CounterSampleBuffer_resolve_counter_range(object: ?*mut u8, range: NSRange, out: [*]mut u64) -> ()
+
+pub struct Counter {}
+
+pub struct CounterSet {}
+impl CounterSet {
+  // Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive.
+  pub unsafe fn name(object: ?*mut u8) -> ?[*]const u8 {
+    return unsafe metal_CounterSet_name(object)
+  }
+}
+
+unsafe extern "C" fn metal_CounterSet_name(object: ?*mut u8) -> ?[*]const u8
+
+pub struct CommonCounter {}

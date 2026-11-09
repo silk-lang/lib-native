@@ -1,0 +1,45 @@
+//! Native-only sample artifact output. Filesystem access is kept out of rendering.
+static if Intrinsic.targetArchitecture() != "wasm32" {
+  import silk.mem.allocator { Allocator, OutOfMemoryError }
+  import silk.core.effect { Effect }
+  import silk.system.filesystem { FileSystem, Path, FileError }
+  import silk.system.filesystem_native { OsFileSystem }
+  import silk.system.host_input { HostInput, HostInputError }
+  static if Intrinsic.targetOperatingSystem() == "windows" {
+    import silk.platform.windows.host_input { WindowsHostInput }
+  } else {
+    import silk.system.host_input_native { OsHostInput }
+    import silk.platform.native.host_input { NativeHostInput }
+  }
+  import silk.collections.bytes { Bytes }
+
+  pub effect fn save(name: string, bytes: &[u8]) -> ()
+    ! FileError | HostInputError | OutOfMemoryError {
+    let mut allocator = Allocator.systemAllocatorProvider()
+    run saveAllocated(name, bytes) |> Effect.provideMut<Allocator>(&mut allocator)
+  }
+
+  effect fn saveAllocated(name: string, bytes: &[u8]) -> ()
+    ! FileError | HostInputError | OutOfMemoryError
+    ? &mut Allocator {
+    // No concurrent code in this sample mutates the process environment.
+    let cwd = run workingDirectory()
+    let mut files = run OsFileSystem.makeBytes(Bytes.asSlice(&cwd))
+    let root = run Path.root()
+    let path = run Path.join(&root, name)
+    run FileSystem.writeFile(&path, bytes) |> Effect.provideMut<FileSystem>(&mut files)
+  }
+
+  effect fn workingDirectory() -> Bytes
+    ! HostInputError | OutOfMemoryError
+    ? &mut Allocator {
+    static if Intrinsic.targetOperatingSystem() == "windows" {
+      let mut inputs = run WindowsHostInput.capture()
+      return run HostInput.workingDirectory() |> Effect.provideMut<HostInput>(&mut inputs)
+    } else {
+      let snapshot = run unsafe NativeHostInput.environmentSnapshot()
+      let mut inputs = OsHostInput.make(move snapshot)
+      return run HostInput.workingDirectory() |> Effect.provideMut<HostInput>(&mut inputs)
+    }
+  }
+}

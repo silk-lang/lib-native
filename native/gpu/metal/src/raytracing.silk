@@ -1,0 +1,751 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Ported from metal-rs; copyright GFX developers (2020, 2023).
+
+// Raw unsafe Metal and MetalPerformanceShaders namespaces.
+// Objects are nullable untyped handles: caller supplies the correct live SDK object.
+// Availability, buffer lifetimes, bounds and command-buffer synchronization are caller contracts.
+// Constructors return +1 ownership; getters return borrowed +0 handles unless documented.
+// Inherited methods are called through the parent namespace using the same object handle.
+
+import types { MTLResourceID }
+
+unsafe extern "C" fn metal_PrimitiveAccelerationStructureDescriptor_descriptor() -> ?*mut u8
+unsafe extern "C" fn metal_PrimitiveAccelerationStructureDescriptor_set_geometry_descriptors(object: ?*mut u8, descriptors: ?*mut u8) -> ()
+unsafe extern "C" fn metal_AccelerationStructure_gpu_resource_id(object: ?*mut u8) -> MTLResourceID
+unsafe extern "C" fn metal_AccelerationStructureGeometryDescriptor_set_opaque(object: ?*mut u8, opaque: u8) -> ()
+unsafe extern "C" fn metal_AccelerationStructureGeometryDescriptor_set_primitive_data_buffer(object: ?*mut u8, buffer: ?*mut u8) -> ()
+unsafe extern "C" fn metal_AccelerationStructureGeometryDescriptor_set_primitive_data_stride(object: ?*mut u8, stride: u64) -> ()
+unsafe extern "C" fn metal_AccelerationStructureGeometryDescriptor_set_primitive_data_element_size(object: ?*mut u8, size: u64) -> ()
+unsafe extern "C" fn metal_AccelerationStructureGeometryDescriptor_set_intersection_function_table_offset(object: ?*mut u8, offset: u64) -> ()
+unsafe extern "C" fn metal_AccelerationStructureTriangleGeometryDescriptor_descriptor() -> ?*mut u8
+unsafe extern "C" fn metal_AccelerationStructureTriangleGeometryDescriptor_set_index_buffer(object: ?*mut u8, buffer: ?*mut u8) -> ()
+unsafe extern "C" fn metal_AccelerationStructureTriangleGeometryDescriptor_set_index_buffer_offset(object: ?*mut u8, offset: u64) -> ()
+unsafe extern "C" fn metal_AccelerationStructureTriangleGeometryDescriptor_set_index_type(object: ?*mut u8, t: u64) -> ()
+unsafe extern "C" fn metal_AccelerationStructureTriangleGeometryDescriptor_set_vertex_buffer(object: ?*mut u8, buffer: ?*mut u8) -> ()
+unsafe extern "C" fn metal_AccelerationStructureTriangleGeometryDescriptor_set_vertex_buffer_offset(object: ?*mut u8, offset: u64) -> ()
+unsafe extern "C" fn metal_AccelerationStructureTriangleGeometryDescriptor_set_vertex_stride(object: ?*mut u8, stride: u64) -> ()
+unsafe extern "C" fn metal_AccelerationStructureTriangleGeometryDescriptor_set_triangle_count(object: ?*mut u8, count: u64) -> ()
+unsafe extern "C" fn metal_AccelerationStructureTriangleGeometryDescriptor_set_vertex_format(object: ?*mut u8, format: u64) -> ()
+unsafe extern "C" fn metal_AccelerationStructureTriangleGeometryDescriptor_set_transformation_matrix_buffer(object: ?*mut u8, buffer: ?*mut u8) -> ()
+unsafe extern "C" fn metal_AccelerationStructureTriangleGeometryDescriptor_set_transformation_matrix_buffer_offset(object: ?*mut u8, offset: u64) -> ()
+unsafe extern "C" fn metal_AccelerationStructureBoundingBoxGeometryDescriptor_descriptor() -> ?*mut u8
+unsafe extern "C" fn metal_AccelerationStructureBoundingBoxGeometryDescriptor_set_bounding_box_buffer(object: ?*mut u8, buffer: ?*mut u8) -> ()
+unsafe extern "C" fn metal_AccelerationStructureBoundingBoxGeometryDescriptor_set_bounding_box_count(object: ?*mut u8, count: u64) -> ()
+unsafe extern "C" fn metal_AccelerationStructureBoundingBoxGeometryDescriptor_set_bounding_box_stride(object: ?*mut u8, stride: u64) -> ()
+unsafe extern "C" fn metal_AccelerationStructureBoundingBoxGeometryDescriptor_set_bounding_box_buffer_offset(object: ?*mut u8, offset: u64) -> ()
+unsafe extern "C" fn metal_InstanceAccelerationStructureDescriptor_descriptor() -> ?*mut u8
+unsafe extern "C" fn metal_InstanceAccelerationStructureDescriptor_set_instance_descriptor_type(object: ?*mut u8, ty: u64) -> ()
+unsafe extern "C" fn metal_InstanceAccelerationStructureDescriptor_set_instanced_acceleration_structures(object: ?*mut u8, instances: ?*mut u8) -> ()
+unsafe extern "C" fn metal_InstanceAccelerationStructureDescriptor_set_instance_count(object: ?*mut u8, count: u64) -> ()
+unsafe extern "C" fn metal_InstanceAccelerationStructureDescriptor_set_instance_descriptor_buffer(object: ?*mut u8, buffer: ?*mut u8) -> ()
+unsafe extern "C" fn metal_InstanceAccelerationStructureDescriptor_set_instance_descriptor_buffer_offset(object: ?*mut u8, offset: u64) -> ()
+unsafe extern "C" fn metal_InstanceAccelerationStructureDescriptor_set_instance_descriptor_stride(object: ?*mut u8, stride: u64) -> ()
+unsafe extern "C" fn metal_IndirectInstanceAccelerationStructureDescriptor_descriptor() -> ?*mut u8
+unsafe extern "C" fn metal_IndirectInstanceAccelerationStructureDescriptor_set_instance_descriptor_buffer(object: ?*mut u8, buffer: ?*mut u8) -> ()
+unsafe extern "C" fn metal_IndirectInstanceAccelerationStructureDescriptor_set_instance_descriptor_buffer_offset(object: ?*mut u8, offset: u64) -> ()
+unsafe extern "C" fn metal_IndirectInstanceAccelerationStructureDescriptor_set_instance_descriptor_stride(object: ?*mut u8, stride: u64) -> ()
+unsafe extern "C" fn metal_IndirectInstanceAccelerationStructureDescriptor_set_max_instance_count(object: ?*mut u8, count: u64) -> ()
+unsafe extern "C" fn metal_IndirectInstanceAccelerationStructureDescriptor_set_instance_count_buffer(object: ?*mut u8, buffer: ?*mut u8) -> ()
+unsafe extern "C" fn metal_IndirectInstanceAccelerationStructureDescriptor_set_instance_count_buffer_offset(object: ?*mut u8, offset: u64) -> ()
+unsafe extern "C" fn metal_IndirectInstanceAccelerationStructureDescriptor_set_instance_descriptor_type(object: ?*mut u8, ty: u64) -> ()
+unsafe extern "C" fn metal_IndirectInstanceAccelerationStructureDescriptor_set_motion_transform_buffer(object: ?*mut u8, buffer: ?*mut u8) -> ()
+unsafe extern "C" fn metal_IndirectInstanceAccelerationStructureDescriptor_set_motion_transform_buffer_offset(object: ?*mut u8, offset: u64) -> ()
+unsafe extern "C" fn metal_IndirectInstanceAccelerationStructureDescriptor_set_max_motion_transform_count(object: ?*mut u8, count: u64) -> ()
+unsafe extern "C" fn metal_IndirectInstanceAccelerationStructureDescriptor_set_motion_transform_count_buffer(object: ?*mut u8, buffer: ?*mut u8) -> ()
+unsafe extern "C" fn metal_IndirectInstanceAccelerationStructureDescriptor_set_motion_transform_count_buffer_offset(object: ?*mut u8, offset: u64) -> ()
+unsafe extern "C" fn metal_AccelerationStructureCommandEncoder_build_acceleration_structure(object: ?*mut u8, acceleration_structure: ?*mut u8, descriptor: ?*mut u8, scratch_buffer: ?*mut u8, scratch_buffer_offset: u64) -> ()
+unsafe extern "C" fn metal_AccelerationStructureCommandEncoder_copy_acceleration_structure(object: ?*mut u8, source_acceleration_structure: ?*mut u8, destination_acceleration_structure: ?*mut u8) -> ()
+unsafe extern "C" fn metal_AccelerationStructureCommandEncoder_write_compacted_acceleration_structure_size(object: ?*mut u8, acceleration_structure: ?*mut u8, to_buffer: ?*mut u8, offset: u64) -> ()
+unsafe extern "C" fn metal_AccelerationStructureCommandEncoder_write_compacted_acceleration_structure_size_with_type(object: ?*mut u8, acceleration_structure: ?*mut u8, to_buffer: ?*mut u8, offset: u64, size_data_type: u64) -> ()
+unsafe extern "C" fn metal_AccelerationStructureCommandEncoder_copy_and_compact_acceleration_structure(object: ?*mut u8, source: ?*mut u8, destination: ?*mut u8) -> ()
+unsafe extern "C" fn metal_AccelerationStructureCommandEncoder_refit_acceleration_structure(object: ?*mut u8, source_acceleration_structure: ?*mut u8, descriptor: ?*mut u8, destination_acceleration_structure: ?*mut u8, scratch_buffer: ?*mut u8, scratch_buffer_offset: u64) -> ()
+unsafe extern "C" fn metal_AccelerationStructureCommandEncoder_update_fence(object: ?*mut u8, fence: ?*mut u8) -> ()
+unsafe extern "C" fn metal_AccelerationStructureCommandEncoder_wait_for_fence(object: ?*mut u8, fence: ?*mut u8) -> ()
+unsafe extern "C" fn metal_AccelerationStructureCommandEncoder_use_heap(object: ?*mut u8, heap: ?*mut u8) -> ()
+unsafe extern "C" fn metal_AccelerationStructureCommandEncoder_use_heaps(object: ?*mut u8, heaps: ?[*]const ?*mut u8, heaps_count: u64) -> ()
+unsafe extern "C" fn metal_AccelerationStructureCommandEncoder_use_resource(object: ?*mut u8, resource: ?*mut u8, usage: u64) -> ()
+unsafe extern "C" fn metal_AccelerationStructureCommandEncoder_use_resources(object: ?*mut u8, resources: ?[*]const ?*mut u8, resources_count: u64, usage: u64) -> ()
+unsafe extern "C" fn metal_AccelerationStructureCommandEncoder_sample_counters_in_buffer(object: ?*mut u8, sample_buffer: ?*mut u8, sample_index: u64, with_barrier: u8) -> ()
+unsafe extern "C" fn metal_IntersectionFunctionTableDescriptor_new() -> ?*mut u8
+unsafe extern "C" fn metal_IntersectionFunctionTableDescriptor_set_function_count(object: ?*mut u8, count: u64) -> ()
+unsafe extern "C" fn metal_IntersectionFunctionTable_set_function(object: ?*mut u8, function: ?*mut u8, index: u64) -> ()
+unsafe extern "C" fn metal_IntersectionFunctionTable_set_functions(object: ?*mut u8, functions: ?[*]const ?*mut u8, functions_count: u64, start_index: u64) -> ()
+unsafe extern "C" fn metal_IntersectionFunctionTable_set_buffer(object: ?*mut u8, index: u64, buffer: ?*mut u8, offset: u64) -> ()
+unsafe extern "C" fn metal_IntersectionFunctionTable_set_buffers(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, data_count: u64, offsets: ?[*]const u64) -> ()
+unsafe extern "C" fn metal_IntersectionFunctionTable_set_visible_function_table(object: ?*mut u8, buffer_index: u64, visible_function_table: ?*mut u8) -> ()
+unsafe extern "C" fn metal_IntersectionFunctionTable_set_visible_function_tables(object: ?*mut u8, buffer_start_index: u64, visible_function_tables: ?[*]const ?*mut u8, visible_function_tables_count: u64) -> ()
+unsafe extern "C" fn metal_IntersectionFunctionTable_gpu_resource_id(object: ?*mut u8) -> MTLResourceID
+unsafe extern "C" fn metal_VisibleFunctionTableDescriptor_new() -> ?*mut u8
+unsafe extern "C" fn metal_VisibleFunctionTableDescriptor_set_function_count(object: ?*mut u8, count: u64) -> ()
+unsafe extern "C" fn metal_VisibleFunctionTable_set_functions(object: ?*mut u8, functions: ?[*]const ?*mut u8, functions_count: u64) -> ()
+unsafe extern "C" fn metal_VisibleFunctionTable_set_function(object: ?*mut u8, index: u64, function: ?*mut u8) -> ()
+unsafe extern "C" fn metal_VisibleFunctionTable_gpu_resource_id(object: ?*mut u8) -> MTLResourceID
+unsafe extern "C" fn metal_RayIntersector_from_device(device: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_RayIntersector_set_cull_mode(object: ?*mut u8, mode: u64) -> ()
+unsafe extern "C" fn metal_RayIntersector_set_front_facing_winding(object: ?*mut u8, winding: u64) -> ()
+unsafe extern "C" fn metal_RayIntersector_set_intersection_data_type(object: ?*mut u8, options: u64) -> ()
+unsafe extern "C" fn metal_RayIntersector_set_intersection_stride(object: ?*mut u8, stride: u64) -> ()
+unsafe extern "C" fn metal_RayIntersector_set_ray_data_type(object: ?*mut u8, ty: u64) -> ()
+unsafe extern "C" fn metal_RayIntersector_set_ray_index_data_type(object: ?*mut u8, ty: u64) -> ()
+unsafe extern "C" fn metal_RayIntersector_set_ray_mask(object: ?*mut u8, ray_mask: u32) -> ()
+unsafe extern "C" fn metal_RayIntersector_set_ray_mask_operator(object: ?*mut u8, operator: u64) -> ()
+unsafe extern "C" fn metal_RayIntersector_set_ray_mask_options(object: ?*mut u8, options: u64) -> ()
+unsafe extern "C" fn metal_RayIntersector_set_ray_stride(object: ?*mut u8, stride: u64) -> ()
+unsafe extern "C" fn metal_RayIntersector_set_triangle_intersection_test_type(object: ?*mut u8, test_type: u64) -> ()
+unsafe extern "C" fn metal_RayIntersector_encode_intersection_to_command_buffer(object: ?*mut u8, command_buffer: ?*mut u8, intersection_type: u64, ray_buffer: ?*mut u8, ray_buffer_offset: u64, intersection_buffer: ?*mut u8, intersection_buffer_offset: u64, ray_count: u64, acceleration_structure: ?*mut u8) -> ()
+unsafe extern "C" fn metal_RayIntersector_recommended_minimum_ray_batch_size_for_ray_count(object: ?*mut u8, ray_count: u64) -> u64
+unsafe extern "C" fn metal_AccelerationStructureGroup_new_with_device(device: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_AccelerationStructureGroup_device(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_MPSAccelerationStructure_status(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_MPSAccelerationStructure_usage(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_MPSAccelerationStructure_set_usage(object: ?*mut u8, usage: u64) -> ()
+unsafe extern "C" fn metal_MPSAccelerationStructure_group(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_MPSAccelerationStructure_encode_refit_to_command_buffer(object: ?*mut u8, buffer: ?*mut u8) -> ()
+unsafe extern "C" fn metal_MPSAccelerationStructure_rebuild(object: ?*mut u8) -> ()
+unsafe extern "C" fn metal_PolygonAccelerationStructure_set_index_buffer(object: ?*mut u8, buffer: ?*mut u8) -> ()
+unsafe extern "C" fn metal_PolygonAccelerationStructure_set_index_buffer_offset(object: ?*mut u8, offset: u64) -> ()
+unsafe extern "C" fn metal_PolygonAccelerationStructure_set_index_type(object: ?*mut u8, data_type: u64) -> ()
+unsafe extern "C" fn metal_PolygonAccelerationStructure_set_mask_buffer(object: ?*mut u8, buffer: ?*mut u8) -> ()
+unsafe extern "C" fn metal_PolygonAccelerationStructure_set_mask_buffer_offset(object: ?*mut u8, offset: u64) -> ()
+unsafe extern "C" fn metal_PolygonAccelerationStructure_set_vertex_buffer(object: ?*mut u8, buffer: ?*mut u8) -> ()
+unsafe extern "C" fn metal_PolygonAccelerationStructure_set_vertex_buffer_offset(object: ?*mut u8, offset: u64) -> ()
+unsafe extern "C" fn metal_PolygonAccelerationStructure_set_vertex_stride(object: ?*mut u8, stride: u64) -> ()
+unsafe extern "C" fn metal_TriangleAccelerationStructure_from_device(device: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_TriangleAccelerationStructure_triangle_count(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_TriangleAccelerationStructure_set_triangle_count(object: ?*mut u8, count: u64) -> ()
+unsafe extern "C" fn metal_InstanceAccelerationStructure_init_with_group(group: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_InstanceAccelerationStructure_acceleration_structures(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_InstanceAccelerationStructure_set_acceleration_structures(object: ?*mut u8, acs: ?[*]const ?*mut u8, acs_count: u64) -> ()
+unsafe extern "C" fn metal_InstanceAccelerationStructure_instance_buffer(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_InstanceAccelerationStructure_set_instance_buffer(object: ?*mut u8, buffer: ?*mut u8) -> ()
+unsafe extern "C" fn metal_InstanceAccelerationStructure_instance_buffer_offset(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_InstanceAccelerationStructure_set_instance_buffer_offset(object: ?*mut u8, offset: u64) -> ()
+unsafe extern "C" fn metal_InstanceAccelerationStructure_transform_buffer(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_InstanceAccelerationStructure_set_transform_buffer(object: ?*mut u8, buffer: ?*mut u8) -> ()
+unsafe extern "C" fn metal_InstanceAccelerationStructure_transform_buffer_offset(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_InstanceAccelerationStructure_set_transform_buffer_offset(object: ?*mut u8, offset: u64) -> ()
+unsafe extern "C" fn metal_InstanceAccelerationStructure_transform_type(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_InstanceAccelerationStructure_set_transform_type(object: ?*mut u8, transform_type: u64) -> ()
+unsafe extern "C" fn metal_InstanceAccelerationStructure_mask_buffer(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_InstanceAccelerationStructure_set_mask_buffer(object: ?*mut u8, buffer: ?*mut u8) -> ()
+unsafe extern "C" fn metal_InstanceAccelerationStructure_mask_buffer_offset(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_InstanceAccelerationStructure_set_mask_buffer_offset(object: ?*mut u8, offset: u64) -> ()
+unsafe extern "C" fn metal_InstanceAccelerationStructure_instance_count(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_InstanceAccelerationStructure_set_instance_count(object: ?*mut u8, count: u64) -> ()
+unsafe extern "C" fn metal_mps_supports_device(device: ?*mut u8) -> u8
+
+/// Inherited methods: NsObject namespace.
+pub struct AccelerationStructureDescriptor {}
+
+/// Inherited methods: AccelerationStructureDescriptor namespace.
+pub struct PrimitiveAccelerationStructureDescriptor {}
+
+impl PrimitiveAccelerationStructureDescriptor {
+    /// Returns +1 owned object; release when finished.
+    pub unsafe fn descriptor() -> ?*mut u8 {
+        return unsafe metal_PrimitiveAccelerationStructureDescriptor_descriptor()
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_geometry_descriptors(object: ?*mut u8, descriptors: ?*mut u8) -> () {
+        return unsafe metal_PrimitiveAccelerationStructureDescriptor_set_geometry_descriptors(object, descriptors)
+    }
+}
+
+/// Inherited methods: Resource namespace.
+pub struct AccelerationStructure {}
+
+impl AccelerationStructure {
+    /// Returns the resource identifier record by value.
+    pub unsafe fn gpu_resource_id(object: ?*mut u8) -> MTLResourceID {
+        return unsafe metal_AccelerationStructure_gpu_resource_id(object)
+    }
+}
+
+/// Inherited methods: NsObject namespace.
+pub struct AccelerationStructureGeometryDescriptor {}
+
+impl AccelerationStructureGeometryDescriptor {
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_opaque(object: ?*mut u8, opaque: bool) -> () {
+        let mut raw_opaque: u8 = 0
+        if opaque {
+            raw_opaque = 1
+        }
+        return unsafe metal_AccelerationStructureGeometryDescriptor_set_opaque(object, raw_opaque)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_primitive_data_buffer(object: ?*mut u8, buffer: ?*mut u8) -> () {
+        return unsafe metal_AccelerationStructureGeometryDescriptor_set_primitive_data_buffer(object, buffer)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_primitive_data_stride(object: ?*mut u8, stride: u64) -> () {
+        return unsafe metal_AccelerationStructureGeometryDescriptor_set_primitive_data_stride(object, stride)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_primitive_data_element_size(object: ?*mut u8, size: u64) -> () {
+        return unsafe metal_AccelerationStructureGeometryDescriptor_set_primitive_data_element_size(object, size)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_intersection_function_table_offset(object: ?*mut u8, offset: u64) -> () {
+        return unsafe metal_AccelerationStructureGeometryDescriptor_set_intersection_function_table_offset(object, offset)
+    }
+}
+
+/// Inherited methods: AccelerationStructureGeometryDescriptor namespace.
+pub struct AccelerationStructureTriangleGeometryDescriptor {}
+
+impl AccelerationStructureTriangleGeometryDescriptor {
+    /// Returns +1 owned object; release when finished.
+    pub unsafe fn descriptor() -> ?*mut u8 {
+        return unsafe metal_AccelerationStructureTriangleGeometryDescriptor_descriptor()
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_index_buffer(object: ?*mut u8, buffer: ?*mut u8) -> () {
+        return unsafe metal_AccelerationStructureTriangleGeometryDescriptor_set_index_buffer(object, buffer)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_index_buffer_offset(object: ?*mut u8, offset: u64) -> () {
+        return unsafe metal_AccelerationStructureTriangleGeometryDescriptor_set_index_buffer_offset(object, offset)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_index_type(object: ?*mut u8, t: u64) -> () {
+        return unsafe metal_AccelerationStructureTriangleGeometryDescriptor_set_index_type(object, t)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_vertex_buffer(object: ?*mut u8, buffer: ?*mut u8) -> () {
+        return unsafe metal_AccelerationStructureTriangleGeometryDescriptor_set_vertex_buffer(object, buffer)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_vertex_buffer_offset(object: ?*mut u8, offset: u64) -> () {
+        return unsafe metal_AccelerationStructureTriangleGeometryDescriptor_set_vertex_buffer_offset(object, offset)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_vertex_stride(object: ?*mut u8, stride: u64) -> () {
+        return unsafe metal_AccelerationStructureTriangleGeometryDescriptor_set_vertex_stride(object, stride)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_triangle_count(object: ?*mut u8, count: u64) -> () {
+        return unsafe metal_AccelerationStructureTriangleGeometryDescriptor_set_triangle_count(object, count)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_vertex_format(object: ?*mut u8, format: u64) -> () {
+        return unsafe metal_AccelerationStructureTriangleGeometryDescriptor_set_vertex_format(object, format)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_transformation_matrix_buffer(object: ?*mut u8, buffer: ?*mut u8) -> () {
+        return unsafe metal_AccelerationStructureTriangleGeometryDescriptor_set_transformation_matrix_buffer(object, buffer)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_transformation_matrix_buffer_offset(object: ?*mut u8, offset: u64) -> () {
+        return unsafe metal_AccelerationStructureTriangleGeometryDescriptor_set_transformation_matrix_buffer_offset(object, offset)
+    }
+}
+
+/// Inherited methods: AccelerationStructureGeometryDescriptor namespace.
+pub struct AccelerationStructureBoundingBoxGeometryDescriptor {}
+
+impl AccelerationStructureBoundingBoxGeometryDescriptor {
+    /// Returns +1 owned object; release when finished.
+    pub unsafe fn descriptor() -> ?*mut u8 {
+        return unsafe metal_AccelerationStructureBoundingBoxGeometryDescriptor_descriptor()
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_bounding_box_buffer(object: ?*mut u8, buffer: ?*mut u8) -> () {
+        return unsafe metal_AccelerationStructureBoundingBoxGeometryDescriptor_set_bounding_box_buffer(object, buffer)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_bounding_box_count(object: ?*mut u8, count: u64) -> () {
+        return unsafe metal_AccelerationStructureBoundingBoxGeometryDescriptor_set_bounding_box_count(object, count)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_bounding_box_stride(object: ?*mut u8, stride: u64) -> () {
+        return unsafe metal_AccelerationStructureBoundingBoxGeometryDescriptor_set_bounding_box_stride(object, stride)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_bounding_box_buffer_offset(object: ?*mut u8, offset: u64) -> () {
+        return unsafe metal_AccelerationStructureBoundingBoxGeometryDescriptor_set_bounding_box_buffer_offset(object, offset)
+    }
+}
+
+/// Inherited methods: AccelerationStructureDescriptor namespace.
+pub struct InstanceAccelerationStructureDescriptor {}
+
+impl InstanceAccelerationStructureDescriptor {
+    /// Returns +1 owned object; release when finished.
+    pub unsafe fn descriptor() -> ?*mut u8 {
+        return unsafe metal_InstanceAccelerationStructureDescriptor_descriptor()
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_instance_descriptor_type(object: ?*mut u8, ty: u64) -> () {
+        return unsafe metal_InstanceAccelerationStructureDescriptor_set_instance_descriptor_type(object, ty)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_instanced_acceleration_structures(object: ?*mut u8, instances: ?*mut u8) -> () {
+        return unsafe metal_InstanceAccelerationStructureDescriptor_set_instanced_acceleration_structures(object, instances)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_instance_count(object: ?*mut u8, count: u64) -> () {
+        return unsafe metal_InstanceAccelerationStructureDescriptor_set_instance_count(object, count)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_instance_descriptor_buffer(object: ?*mut u8, buffer: ?*mut u8) -> () {
+        return unsafe metal_InstanceAccelerationStructureDescriptor_set_instance_descriptor_buffer(object, buffer)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_instance_descriptor_buffer_offset(object: ?*mut u8, offset: u64) -> () {
+        return unsafe metal_InstanceAccelerationStructureDescriptor_set_instance_descriptor_buffer_offset(object, offset)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_instance_descriptor_stride(object: ?*mut u8, stride: u64) -> () {
+        return unsafe metal_InstanceAccelerationStructureDescriptor_set_instance_descriptor_stride(object, stride)
+    }
+}
+
+/// Inherited methods: AccelerationStructureDescriptor namespace.
+pub struct IndirectInstanceAccelerationStructureDescriptor {}
+
+impl IndirectInstanceAccelerationStructureDescriptor {
+    /// Returns +1 owned object; release when finished.
+    pub unsafe fn descriptor() -> ?*mut u8 {
+        return unsafe metal_IndirectInstanceAccelerationStructureDescriptor_descriptor()
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_instance_descriptor_buffer(object: ?*mut u8, buffer: ?*mut u8) -> () {
+        return unsafe metal_IndirectInstanceAccelerationStructureDescriptor_set_instance_descriptor_buffer(object, buffer)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_instance_descriptor_buffer_offset(object: ?*mut u8, offset: u64) -> () {
+        return unsafe metal_IndirectInstanceAccelerationStructureDescriptor_set_instance_descriptor_buffer_offset(object, offset)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_instance_descriptor_stride(object: ?*mut u8, stride: u64) -> () {
+        return unsafe metal_IndirectInstanceAccelerationStructureDescriptor_set_instance_descriptor_stride(object, stride)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_max_instance_count(object: ?*mut u8, count: u64) -> () {
+        return unsafe metal_IndirectInstanceAccelerationStructureDescriptor_set_max_instance_count(object, count)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_instance_count_buffer(object: ?*mut u8, buffer: ?*mut u8) -> () {
+        return unsafe metal_IndirectInstanceAccelerationStructureDescriptor_set_instance_count_buffer(object, buffer)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_instance_count_buffer_offset(object: ?*mut u8, offset: u64) -> () {
+        return unsafe metal_IndirectInstanceAccelerationStructureDescriptor_set_instance_count_buffer_offset(object, offset)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_instance_descriptor_type(object: ?*mut u8, ty: u64) -> () {
+        return unsafe metal_IndirectInstanceAccelerationStructureDescriptor_set_instance_descriptor_type(object, ty)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_motion_transform_buffer(object: ?*mut u8, buffer: ?*mut u8) -> () {
+        return unsafe metal_IndirectInstanceAccelerationStructureDescriptor_set_motion_transform_buffer(object, buffer)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_motion_transform_buffer_offset(object: ?*mut u8, offset: u64) -> () {
+        return unsafe metal_IndirectInstanceAccelerationStructureDescriptor_set_motion_transform_buffer_offset(object, offset)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_max_motion_transform_count(object: ?*mut u8, count: u64) -> () {
+        return unsafe metal_IndirectInstanceAccelerationStructureDescriptor_set_max_motion_transform_count(object, count)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_motion_transform_count_buffer(object: ?*mut u8, buffer: ?*mut u8) -> () {
+        return unsafe metal_IndirectInstanceAccelerationStructureDescriptor_set_motion_transform_count_buffer(object, buffer)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_motion_transform_count_buffer_offset(object: ?*mut u8, offset: u64) -> () {
+        return unsafe metal_IndirectInstanceAccelerationStructureDescriptor_set_motion_transform_count_buffer_offset(object, offset)
+    }
+}
+
+/// Inherited methods: CommandEncoder namespace.
+pub struct AccelerationStructureCommandEncoder {}
+
+impl AccelerationStructureCommandEncoder {
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn build_acceleration_structure(object: ?*mut u8, acceleration_structure: ?*mut u8, descriptor: ?*mut u8, scratch_buffer: ?*mut u8, scratch_buffer_offset: u64) -> () {
+        return unsafe metal_AccelerationStructureCommandEncoder_build_acceleration_structure(object, acceleration_structure, descriptor, scratch_buffer, scratch_buffer_offset)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn copy_acceleration_structure(object: ?*mut u8, source_acceleration_structure: ?*mut u8, destination_acceleration_structure: ?*mut u8) -> () {
+        return unsafe metal_AccelerationStructureCommandEncoder_copy_acceleration_structure(object, source_acceleration_structure, destination_acceleration_structure)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn write_compacted_acceleration_structure_size(object: ?*mut u8, acceleration_structure: ?*mut u8, to_buffer: ?*mut u8, offset: u64) -> () {
+        return unsafe metal_AccelerationStructureCommandEncoder_write_compacted_acceleration_structure_size(object, acceleration_structure, to_buffer, offset)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn write_compacted_acceleration_structure_size_with_type(object: ?*mut u8, acceleration_structure: ?*mut u8, to_buffer: ?*mut u8, offset: u64, size_data_type: u64) -> () {
+        return unsafe metal_AccelerationStructureCommandEncoder_write_compacted_acceleration_structure_size_with_type(object, acceleration_structure, to_buffer, offset, size_data_type)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn copy_and_compact_acceleration_structure(object: ?*mut u8, source: ?*mut u8, destination: ?*mut u8) -> () {
+        return unsafe metal_AccelerationStructureCommandEncoder_copy_and_compact_acceleration_structure(object, source, destination)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn refit_acceleration_structure(object: ?*mut u8, source_acceleration_structure: ?*mut u8, descriptor: ?*mut u8, destination_acceleration_structure: ?*mut u8, scratch_buffer: ?*mut u8, scratch_buffer_offset: u64) -> () {
+        return unsafe metal_AccelerationStructureCommandEncoder_refit_acceleration_structure(object, source_acceleration_structure, descriptor, destination_acceleration_structure, scratch_buffer, scratch_buffer_offset)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn update_fence(object: ?*mut u8, fence: ?*mut u8) -> () {
+        return unsafe metal_AccelerationStructureCommandEncoder_update_fence(object, fence)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn wait_for_fence(object: ?*mut u8, fence: ?*mut u8) -> () {
+        return unsafe metal_AccelerationStructureCommandEncoder_wait_for_fence(object, fence)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn use_heap(object: ?*mut u8, heap: ?*mut u8) -> () {
+        return unsafe metal_AccelerationStructureCommandEncoder_use_heap(object, heap)
+    }
+    /// Pointer/count inputs must describe initialized storage valid for the call; counts are element counts.
+    pub unsafe fn use_heaps(object: ?*mut u8, heaps: ?[*]const ?*mut u8, heaps_count: u64) -> () {
+        return unsafe metal_AccelerationStructureCommandEncoder_use_heaps(object, heaps, heaps_count)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn use_resource(object: ?*mut u8, resource: ?*mut u8, usage: u64) -> () {
+        return unsafe metal_AccelerationStructureCommandEncoder_use_resource(object, resource, usage)
+    }
+    /// Pointer/count inputs must describe initialized storage valid for the call; counts are element counts.
+    pub unsafe fn use_resources(object: ?*mut u8, resources: ?[*]const ?*mut u8, resources_count: u64, usage: u64) -> () {
+        return unsafe metal_AccelerationStructureCommandEncoder_use_resources(object, resources, resources_count, usage)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn sample_counters_in_buffer(object: ?*mut u8, sample_buffer: ?*mut u8, sample_index: u64, with_barrier: bool) -> () {
+        let mut raw_with_barrier: u8 = 0
+        if with_barrier {
+            raw_with_barrier = 1
+        }
+        return unsafe metal_AccelerationStructureCommandEncoder_sample_counters_in_buffer(object, sample_buffer, sample_index, raw_with_barrier)
+    }
+}
+
+/// Inherited methods: NsObject namespace.
+pub struct IntersectionFunctionTableDescriptor {}
+
+impl IntersectionFunctionTableDescriptor {
+    /// Returns +1 owned object; release when finished.
+    pub unsafe fn new() -> ?*mut u8 {
+        return unsafe metal_IntersectionFunctionTableDescriptor_new()
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_function_count(object: ?*mut u8, count: u64) -> () {
+        return unsafe metal_IntersectionFunctionTableDescriptor_set_function_count(object, count)
+    }
+}
+
+/// Inherited methods: Resource namespace.
+pub struct IntersectionFunctionTable {}
+
+impl IntersectionFunctionTable {
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_function(object: ?*mut u8, function: ?*mut u8, index: u64) -> () {
+        return unsafe metal_IntersectionFunctionTable_set_function(object, function, index)
+    }
+    /// Pointer/count inputs must describe initialized storage valid for the call; counts are element counts.
+    pub unsafe fn set_functions(object: ?*mut u8, functions: ?[*]const ?*mut u8, functions_count: u64, start_index: u64) -> () {
+        return unsafe metal_IntersectionFunctionTable_set_functions(object, functions, functions_count, start_index)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_buffer(object: ?*mut u8, index: u64, buffer: ?*mut u8, offset: u64) -> () {
+        return unsafe metal_IntersectionFunctionTable_set_buffer(object, index, buffer, offset)
+    }
+    /// offsets must contain at least data_count entries; data entries may be null. Pointer/count inputs must describe initialized storage valid for the call; counts are element counts.
+    pub unsafe fn set_buffers(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, data_count: u64, offsets: ?[*]const u64) -> () {
+        return unsafe metal_IntersectionFunctionTable_set_buffers(object, start_index, data, data_count, offsets)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_visible_function_table(object: ?*mut u8, buffer_index: u64, visible_function_table: ?*mut u8) -> () {
+        return unsafe metal_IntersectionFunctionTable_set_visible_function_table(object, buffer_index, visible_function_table)
+    }
+    /// Pointer/count inputs must describe initialized storage valid for the call; counts are element counts.
+    pub unsafe fn set_visible_function_tables(object: ?*mut u8, buffer_start_index: u64, visible_function_tables: ?[*]const ?*mut u8, visible_function_tables_count: u64) -> () {
+        return unsafe metal_IntersectionFunctionTable_set_visible_function_tables(object, buffer_start_index, visible_function_tables, visible_function_tables_count)
+    }
+    /// Returns the resource identifier record by value.
+    pub unsafe fn gpu_resource_id(object: ?*mut u8) -> MTLResourceID {
+        return unsafe metal_IntersectionFunctionTable_gpu_resource_id(object)
+    }
+}
+
+/// Inherited methods: NsObject namespace.
+pub struct VisibleFunctionTableDescriptor {}
+
+impl VisibleFunctionTableDescriptor {
+    /// Returns +1 owned object; release when finished.
+    pub unsafe fn new() -> ?*mut u8 {
+        return unsafe metal_VisibleFunctionTableDescriptor_new()
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_function_count(object: ?*mut u8, count: u64) -> () {
+        return unsafe metal_VisibleFunctionTableDescriptor_set_function_count(object, count)
+    }
+}
+
+/// Inherited methods: Resource namespace.
+pub struct VisibleFunctionTable {}
+
+impl VisibleFunctionTable {
+    /// functions contains MTLFunctionHandle objects, not MTLFunction objects. Uses the SDK setFunctions:withRange: selector over indices 0..<functions_count, correcting upstream unsupported setFunctions: NSArray invocation. Pointer/count inputs must describe initialized storage valid for the call; counts are element counts.
+    pub unsafe fn set_functions(object: ?*mut u8, functions: ?[*]const ?*mut u8, functions_count: u64) -> () {
+        return unsafe metal_VisibleFunctionTable_set_functions(object, functions, functions_count)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_function(object: ?*mut u8, index: u64, function: ?*mut u8) -> () {
+        return unsafe metal_VisibleFunctionTable_set_function(object, index, function)
+    }
+    /// Returns the resource identifier record by value.
+    pub unsafe fn gpu_resource_id(object: ?*mut u8) -> MTLResourceID {
+        return unsafe metal_VisibleFunctionTable_gpu_resource_id(object)
+    }
+}
+
+pub struct Kernel {}
+
+/// Inherited methods: Kernel namespace.
+pub struct RayIntersector {}
+
+impl RayIntersector {
+    /// Returns +1 owned object; release when finished. Null indicates initialization failure.
+    pub unsafe fn from_device(device: ?*mut u8) -> ?*mut u8 {
+        return unsafe metal_RayIntersector_from_device(device)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_cull_mode(object: ?*mut u8, mode: u64) -> () {
+        return unsafe metal_RayIntersector_set_cull_mode(object, mode)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_front_facing_winding(object: ?*mut u8, winding: u64) -> () {
+        return unsafe metal_RayIntersector_set_front_facing_winding(object, winding)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_intersection_data_type(object: ?*mut u8, options: u64) -> () {
+        return unsafe metal_RayIntersector_set_intersection_data_type(object, options)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_intersection_stride(object: ?*mut u8, stride: u64) -> () {
+        return unsafe metal_RayIntersector_set_intersection_stride(object, stride)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_ray_data_type(object: ?*mut u8, ty: u64) -> () {
+        return unsafe metal_RayIntersector_set_ray_data_type(object, ty)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_ray_index_data_type(object: ?*mut u8, ty: u64) -> () {
+        return unsafe metal_RayIntersector_set_ray_index_data_type(object, ty)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_ray_mask(object: ?*mut u8, ray_mask: u32) -> () {
+        return unsafe metal_RayIntersector_set_ray_mask(object, ray_mask)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_ray_mask_operator(object: ?*mut u8, operator: u64) -> () {
+        return unsafe metal_RayIntersector_set_ray_mask_operator(object, operator)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_ray_mask_options(object: ?*mut u8, options: u64) -> () {
+        return unsafe metal_RayIntersector_set_ray_mask_options(object, options)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_ray_stride(object: ?*mut u8, stride: u64) -> () {
+        return unsafe metal_RayIntersector_set_ray_stride(object, stride)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_triangle_intersection_test_type(object: ?*mut u8, test_type: u64) -> () {
+        return unsafe metal_RayIntersector_set_triangle_intersection_test_type(object, test_type)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn encode_intersection_to_command_buffer(object: ?*mut u8, command_buffer: ?*mut u8, intersection_type: u64, ray_buffer: ?*mut u8, ray_buffer_offset: u64, intersection_buffer: ?*mut u8, intersection_buffer_offset: u64, ray_count: u64, acceleration_structure: ?*mut u8) -> () {
+        return unsafe metal_RayIntersector_encode_intersection_to_command_buffer(object, command_buffer, intersection_type, ray_buffer, ray_buffer_offset, intersection_buffer, intersection_buffer_offset, ray_count, acceleration_structure)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn recommended_minimum_ray_batch_size_for_ray_count(object: ?*mut u8, ray_count: u64) -> u64 {
+        return unsafe metal_RayIntersector_recommended_minimum_ray_batch_size_for_ray_count(object, ray_count)
+    }
+}
+
+pub struct AccelerationStructureGroup {}
+
+impl AccelerationStructureGroup {
+    /// Returns +1 owned object; release when finished. Null indicates initialization failure.
+    pub unsafe fn new_with_device(device: ?*mut u8) -> ?*mut u8 {
+        return unsafe metal_AccelerationStructureGroup_new_with_device(device)
+    }
+    /// Returns borrowed +0 object; keep its owner alive or retain the result.
+    pub unsafe fn device(object: ?*mut u8) -> ?*mut u8 {
+        return unsafe metal_AccelerationStructureGroup_device(object)
+    }
+}
+
+pub struct MPSAccelerationStructure {}
+
+impl MPSAccelerationStructure {
+    /// MPSAccelerationStructure namespace disambiguates the Metal AccelerationStructure namespace.
+    pub unsafe fn status(object: ?*mut u8) -> u64 {
+        return unsafe metal_MPSAccelerationStructure_status(object)
+    }
+    /// MPSAccelerationStructure namespace disambiguates the Metal AccelerationStructure namespace.
+    pub unsafe fn usage(object: ?*mut u8) -> u64 {
+        return unsafe metal_MPSAccelerationStructure_usage(object)
+    }
+    /// MPSAccelerationStructure namespace disambiguates the Metal AccelerationStructure namespace.
+    pub unsafe fn set_usage(object: ?*mut u8, usage: u64) -> () {
+        return unsafe metal_MPSAccelerationStructure_set_usage(object, usage)
+    }
+    /// Returns borrowed +0 object; keep its owner alive or retain the result. MPSAccelerationStructure namespace disambiguates the Metal AccelerationStructure namespace.
+    pub unsafe fn group(object: ?*mut u8) -> ?*mut u8 {
+        return unsafe metal_MPSAccelerationStructure_group(object)
+    }
+    /// MPSAccelerationStructure namespace disambiguates the Metal AccelerationStructure namespace.
+    pub unsafe fn encode_refit_to_command_buffer(object: ?*mut u8, buffer: ?*mut u8) -> () {
+        return unsafe metal_MPSAccelerationStructure_encode_refit_to_command_buffer(object, buffer)
+    }
+    /// MPSAccelerationStructure namespace disambiguates the Metal AccelerationStructure namespace.
+    pub unsafe fn rebuild(object: ?*mut u8) -> () {
+        return unsafe metal_MPSAccelerationStructure_rebuild(object)
+    }
+}
+
+/// Inherited methods: MPSAccelerationStructure namespace.
+pub struct PolygonAccelerationStructure {}
+
+impl PolygonAccelerationStructure {
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_index_buffer(object: ?*mut u8, buffer: ?*mut u8) -> () {
+        return unsafe metal_PolygonAccelerationStructure_set_index_buffer(object, buffer)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_index_buffer_offset(object: ?*mut u8, offset: u64) -> () {
+        return unsafe metal_PolygonAccelerationStructure_set_index_buffer_offset(object, offset)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_index_type(object: ?*mut u8, data_type: u64) -> () {
+        return unsafe metal_PolygonAccelerationStructure_set_index_type(object, data_type)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_mask_buffer(object: ?*mut u8, buffer: ?*mut u8) -> () {
+        return unsafe metal_PolygonAccelerationStructure_set_mask_buffer(object, buffer)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_mask_buffer_offset(object: ?*mut u8, offset: u64) -> () {
+        return unsafe metal_PolygonAccelerationStructure_set_mask_buffer_offset(object, offset)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_vertex_buffer(object: ?*mut u8, buffer: ?*mut u8) -> () {
+        return unsafe metal_PolygonAccelerationStructure_set_vertex_buffer(object, buffer)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_vertex_buffer_offset(object: ?*mut u8, offset: u64) -> () {
+        return unsafe metal_PolygonAccelerationStructure_set_vertex_buffer_offset(object, offset)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_vertex_stride(object: ?*mut u8, stride: u64) -> () {
+        return unsafe metal_PolygonAccelerationStructure_set_vertex_stride(object, stride)
+    }
+}
+
+/// Inherited methods: PolygonAccelerationStructure namespace.
+pub struct TriangleAccelerationStructure {}
+
+impl TriangleAccelerationStructure {
+    /// Returns +1 owned object; release when finished. Null indicates initialization failure.
+    pub unsafe fn from_device(device: ?*mut u8) -> ?*mut u8 {
+        return unsafe metal_TriangleAccelerationStructure_from_device(device)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn triangle_count(object: ?*mut u8) -> u64 {
+        return unsafe metal_TriangleAccelerationStructure_triangle_count(object)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_triangle_count(object: ?*mut u8, count: u64) -> () {
+        return unsafe metal_TriangleAccelerationStructure_set_triangle_count(object, count)
+    }
+}
+
+/// Inherited methods: MPSAccelerationStructure namespace.
+pub struct InstanceAccelerationStructure {}
+
+impl InstanceAccelerationStructure {
+    /// Returns +1 owned object; release when finished. Null indicates initialization failure.
+    pub unsafe fn init_with_group(group: ?*mut u8) -> ?*mut u8 {
+        return unsafe metal_InstanceAccelerationStructure_init_with_group(group)
+    }
+    /// Returns borrowed +0 NSArray of MPSPolygonAccelerationStructure objects rather than a Rust Vec; owner must remain alive.
+    pub unsafe fn acceleration_structures(object: ?*mut u8) -> ?*mut u8 {
+        return unsafe metal_InstanceAccelerationStructure_acceleration_structures(object)
+    }
+    /// Pointer/count inputs must describe initialized storage valid for the call; counts are element counts.
+    pub unsafe fn set_acceleration_structures(object: ?*mut u8, acs: ?[*]const ?*mut u8, acs_count: u64) -> () {
+        return unsafe metal_InstanceAccelerationStructure_set_acceleration_structures(object, acs, acs_count)
+    }
+    /// Returns borrowed +0 object; keep its owner alive or retain the result.
+    pub unsafe fn instance_buffer(object: ?*mut u8) -> ?*mut u8 {
+        return unsafe metal_InstanceAccelerationStructure_instance_buffer(object)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_instance_buffer(object: ?*mut u8, buffer: ?*mut u8) -> () {
+        return unsafe metal_InstanceAccelerationStructure_set_instance_buffer(object, buffer)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn instance_buffer_offset(object: ?*mut u8) -> u64 {
+        return unsafe metal_InstanceAccelerationStructure_instance_buffer_offset(object)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_instance_buffer_offset(object: ?*mut u8, offset: u64) -> () {
+        return unsafe metal_InstanceAccelerationStructure_set_instance_buffer_offset(object, offset)
+    }
+    /// Returns borrowed +0 object; keep its owner alive or retain the result.
+    pub unsafe fn transform_buffer(object: ?*mut u8) -> ?*mut u8 {
+        return unsafe metal_InstanceAccelerationStructure_transform_buffer(object)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_transform_buffer(object: ?*mut u8, buffer: ?*mut u8) -> () {
+        return unsafe metal_InstanceAccelerationStructure_set_transform_buffer(object, buffer)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn transform_buffer_offset(object: ?*mut u8) -> u64 {
+        return unsafe metal_InstanceAccelerationStructure_transform_buffer_offset(object)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_transform_buffer_offset(object: ?*mut u8, offset: u64) -> () {
+        return unsafe metal_InstanceAccelerationStructure_set_transform_buffer_offset(object, offset)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn transform_type(object: ?*mut u8) -> u64 {
+        return unsafe metal_InstanceAccelerationStructure_transform_type(object)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_transform_type(object: ?*mut u8, transform_type: u64) -> () {
+        return unsafe metal_InstanceAccelerationStructure_set_transform_type(object, transform_type)
+    }
+    /// Returns borrowed +0 object; keep its owner alive or retain the result.
+    pub unsafe fn mask_buffer(object: ?*mut u8) -> ?*mut u8 {
+        return unsafe metal_InstanceAccelerationStructure_mask_buffer(object)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_mask_buffer(object: ?*mut u8, buffer: ?*mut u8) -> () {
+        return unsafe metal_InstanceAccelerationStructure_set_mask_buffer(object, buffer)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn mask_buffer_offset(object: ?*mut u8) -> u64 {
+        return unsafe metal_InstanceAccelerationStructure_mask_buffer_offset(object)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_mask_buffer_offset(object: ?*mut u8, offset: u64) -> () {
+        return unsafe metal_InstanceAccelerationStructure_set_mask_buffer_offset(object, offset)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn instance_count(object: ?*mut u8) -> u64 {
+        return unsafe metal_InstanceAccelerationStructure_instance_count(object)
+    }
+    /// Unsafe direct Metal/MPS call; caller must supply live objects of the documented SDK types and satisfy SDK availability requirements.
+    pub unsafe fn set_instance_count(object: ?*mut u8, count: u64) -> () {
+        return unsafe metal_InstanceAccelerationStructure_set_instance_count(object, count)
+    }
+}
+
+/// Reports whether MPS supports this live MTLDevice handle.
+pub unsafe fn mps_supports_device(device: ?*mut u8) -> bool {
+    return unsafe metal_mps_supports_device(device) != 0
+}

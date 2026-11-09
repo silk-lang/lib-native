@@ -1,0 +1,1063 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Derived from metal-rs, copyright GFX developers.
+// Unsafe low-level bindings: callers guarantee object validity, API availability,
+// encoder state, resource lifetimes, and pointer extents for the Metal operation.
+// Object arguments are borrowed. Inherited operations use CommandEncoder or Resource.
+import types { MTLOrigin, MTLRegion, MTLScissorRect, MTLSize, MTLViewport, NSRange, VertexAmplificationViewMapping }
+
+pub struct CommandEncoder {}
+
+impl CommandEncoder {
+    // Returned UTF-8 storage is borrowed from the encoder label NSString.
+    pub unsafe fn label(object: ?*mut u8) -> ?[*]const u8 {
+        return unsafe metal_CommandEncoder_label(object)
+    }
+
+    // label is a non-null NUL-terminated UTF-8 string.
+    pub unsafe fn set_label(object: ?*mut u8, label: ?[*]const u8) -> () {
+        unsafe metal_CommandEncoder_set_label(object, label)
+    }
+
+    pub unsafe fn end_encoding(object: ?*mut u8) -> () {
+        unsafe metal_CommandEncoder_end_encoding(object)
+    }
+
+    // name is a non-null NUL-terminated UTF-8 string.
+    pub unsafe fn insert_debug_signpost(object: ?*mut u8, name: ?[*]const u8) -> () {
+        unsafe metal_CommandEncoder_insert_debug_signpost(object, name)
+    }
+
+    // name is a non-null NUL-terminated UTF-8 string.
+    pub unsafe fn push_debug_group(object: ?*mut u8, name: ?[*]const u8) -> () {
+        unsafe metal_CommandEncoder_push_debug_group(object, name)
+    }
+
+    pub unsafe fn pop_debug_group(object: ?*mut u8) -> () {
+        unsafe metal_CommandEncoder_pop_debug_group(object)
+    }
+}
+
+pub struct ParallelRenderCommandEncoder {}
+
+impl ParallelRenderCommandEncoder {
+    // Returned object is borrowed (+0).
+    pub unsafe fn render_command_encoder(object: ?*mut u8) -> ?*mut u8 {
+        return unsafe metal_ParallelRenderCommandEncoder_render_command_encoder(object)
+    }
+}
+
+pub struct RenderCommandEncoder {}
+
+impl RenderCommandEncoder {
+    pub unsafe fn set_render_pipeline_state(object: ?*mut u8, pipeline_state: ?*mut u8) -> () {
+        unsafe metal_RenderCommandEncoder_set_render_pipeline_state(object, pipeline_state)
+    }
+
+    // viewport is passed by value.
+    pub unsafe fn set_viewport(object: ?*mut u8, viewport: MTLViewport) -> () {
+        unsafe metal_RenderCommandEncoder_set_viewport(object, viewport)
+    }
+
+    // viewports points to viewports_count entries; null is allowed only for a zero count.
+    pub unsafe fn set_viewports(object: ?*mut u8, viewports: ?[*]const MTLViewport, viewports_count: u64) -> () {
+        unsafe metal_RenderCommandEncoder_set_viewports(object, viewports, viewports_count)
+    }
+
+    pub unsafe fn set_front_facing_winding(object: ?*mut u8, winding: u64) -> () {
+        unsafe metal_RenderCommandEncoder_set_front_facing_winding(object, winding)
+    }
+
+    pub unsafe fn set_cull_mode(object: ?*mut u8, mode: u64) -> () {
+        unsafe metal_RenderCommandEncoder_set_cull_mode(object, mode)
+    }
+
+    pub unsafe fn set_depth_clip_mode(object: ?*mut u8, mode: u64) -> () {
+        unsafe metal_RenderCommandEncoder_set_depth_clip_mode(object, mode)
+    }
+
+    pub unsafe fn set_depth_bias(object: ?*mut u8, bias: f32, scale: f32, clamp: f32) -> () {
+        unsafe metal_RenderCommandEncoder_set_depth_bias(object, bias, scale, clamp)
+    }
+
+    // rect is passed by value.
+    pub unsafe fn set_scissor_rect(object: ?*mut u8, rect: MTLScissorRect) -> () {
+        unsafe metal_RenderCommandEncoder_set_scissor_rect(object, rect)
+    }
+
+    // rects points to rects_count entries; null is allowed only for a zero count.
+    pub unsafe fn set_scissor_rects(object: ?*mut u8, rects: ?[*]const MTLScissorRect, rects_count: u64) -> () {
+        unsafe metal_RenderCommandEncoder_set_scissor_rects(object, rects, rects_count)
+    }
+
+    pub unsafe fn set_triangle_fill_mode(object: ?*mut u8, mode: u64) -> () {
+        unsafe metal_RenderCommandEncoder_set_triangle_fill_mode(object, mode)
+    }
+
+    pub unsafe fn set_blend_color(object: ?*mut u8, red: f32, green: f32, blue: f32, alpha: f32) -> () {
+        unsafe metal_RenderCommandEncoder_set_blend_color(object, red, green, blue, alpha)
+    }
+
+    pub unsafe fn set_depth_stencil_state(object: ?*mut u8, depth_stencil_state: ?*mut u8) -> () {
+        unsafe metal_RenderCommandEncoder_set_depth_stencil_state(object, depth_stencil_state)
+    }
+
+    pub unsafe fn set_stencil_reference_value(object: ?*mut u8, value: u32) -> () {
+        unsafe metal_RenderCommandEncoder_set_stencil_reference_value(object, value)
+    }
+
+    pub unsafe fn set_stencil_front_back_reference_value(object: ?*mut u8, front: u32, back: u32) -> () {
+        unsafe metal_RenderCommandEncoder_set_stencil_front_back_reference_value(object, front, back)
+    }
+
+    pub unsafe fn set_visibility_result_mode(object: ?*mut u8, mode: u64, offset: u64) -> () {
+        unsafe metal_RenderCommandEncoder_set_visibility_result_mode(object, mode, offset)
+    }
+
+    // view_mappings is null or points to count entries.
+    pub unsafe fn set_vertex_amplification_count(object: ?*mut u8, count: u64, view_mappings: ?[*]const VertexAmplificationViewMapping) -> () {
+        unsafe metal_RenderCommandEncoder_set_vertex_amplification_count(object, count, view_mappings)
+    }
+
+    pub unsafe fn set_vertex_bytes(object: ?*mut u8, index: u64, length: u64, bytes: ?*const u8) -> () {
+        unsafe metal_RenderCommandEncoder_set_vertex_bytes(object, index, length, bytes)
+    }
+
+    pub unsafe fn set_vertex_buffer(object: ?*mut u8, index: u64, buffer: ?*mut u8, offset: u64) -> () {
+        unsafe metal_RenderCommandEncoder_set_vertex_buffer(object, index, buffer, offset)
+    }
+
+    pub unsafe fn set_vertex_buffer_offset(object: ?*mut u8, index: u64, offset: u64) -> () {
+        unsafe metal_RenderCommandEncoder_set_vertex_buffer_offset(object, index, offset)
+    }
+
+    // data points to data_count entries; null is allowed only for a zero count.
+    // offsets and data each contain data_count elements.
+    pub unsafe fn set_vertex_buffers(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, offsets: ?[*]const u64, data_count: u64) -> () {
+        unsafe metal_RenderCommandEncoder_set_vertex_buffers(object, start_index, data, offsets, data_count)
+    }
+
+    pub unsafe fn set_vertex_texture(object: ?*mut u8, index: u64, texture: ?*mut u8) -> () {
+        unsafe metal_RenderCommandEncoder_set_vertex_texture(object, index, texture)
+    }
+
+    // data points to data_count entries; null is allowed only for a zero count.
+    pub unsafe fn set_vertex_textures(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, data_count: u64) -> () {
+        unsafe metal_RenderCommandEncoder_set_vertex_textures(object, start_index, data, data_count)
+    }
+
+    pub unsafe fn set_vertex_sampler_state(object: ?*mut u8, index: u64, sampler: ?*mut u8) -> () {
+        unsafe metal_RenderCommandEncoder_set_vertex_sampler_state(object, index, sampler)
+    }
+
+    // data points to data_count entries; null is allowed only for a zero count.
+    pub unsafe fn set_vertex_sampler_states(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, data_count: u64) -> () {
+        unsafe metal_RenderCommandEncoder_set_vertex_sampler_states(object, start_index, data, data_count)
+    }
+
+    // lod_clamp is flattened into start/end scalars.
+    pub unsafe fn set_vertex_sampler_state_with_lod(object: ?*mut u8, index: u64, sampler: ?*mut u8, lod_clamp_start: f32, lod_clamp_end: f32) -> () {
+        unsafe metal_RenderCommandEncoder_set_vertex_sampler_state_with_lod(object, index, sampler, lod_clamp_start, lod_clamp_end)
+    }
+
+    pub unsafe fn set_vertex_acceleration_structure(object: ?*mut u8, index: u64, accel: ?*mut u8) -> () {
+        unsafe metal_RenderCommandEncoder_set_vertex_acceleration_structure(object, index, accel)
+    }
+
+    pub unsafe fn set_vertex_intersection_function_table(object: ?*mut u8, index: u64, table: ?*mut u8) -> () {
+        unsafe metal_RenderCommandEncoder_set_vertex_intersection_function_table(object, index, table)
+    }
+
+    pub unsafe fn set_vertex_visible_function_table(object: ?*mut u8, buffer_index: u64, visible_function_table: ?*mut u8) -> () {
+        unsafe metal_RenderCommandEncoder_set_vertex_visible_function_table(object, buffer_index, visible_function_table)
+    }
+
+    // visible_function_tables points to visible_function_tables_count entries; null is allowed only for a zero count.
+    pub unsafe fn set_vertex_visible_function_tables(object: ?*mut u8, buffer_start_index: u64, visible_function_tables: ?[*]const ?*mut u8, visible_function_tables_count: u64) -> () {
+        unsafe metal_RenderCommandEncoder_set_vertex_visible_function_tables(object, buffer_start_index, visible_function_tables, visible_function_tables_count)
+    }
+
+    pub unsafe fn set_object_buffer(object: ?*mut u8, index: u64, buffer: ?*mut u8, offset: u64) -> () {
+        unsafe metal_RenderCommandEncoder_set_object_buffer(object, index, buffer, offset)
+    }
+
+    pub unsafe fn set_object_buffer_offset(object: ?*mut u8, index: u64, offset: u64) -> () {
+        unsafe metal_RenderCommandEncoder_set_object_buffer_offset(object, index, offset)
+    }
+
+    pub unsafe fn set_object_bytes(object: ?*mut u8, index: u64, length: u64, bytes: ?*const u8) -> () {
+        unsafe metal_RenderCommandEncoder_set_object_bytes(object, index, length, bytes)
+    }
+
+    pub unsafe fn set_object_sampler_state(object: ?*mut u8, index: u64, sampler: ?*mut u8) -> () {
+        unsafe metal_RenderCommandEncoder_set_object_sampler_state(object, index, sampler)
+    }
+
+    // lod_clamp is flattened into start/end scalars.
+    pub unsafe fn set_object_sampler_state_with_lod(object: ?*mut u8, index: u64, sampler: ?*mut u8, lod_clamp_start: f32, lod_clamp_end: f32) -> () {
+        unsafe metal_RenderCommandEncoder_set_object_sampler_state_with_lod(object, index, sampler, lod_clamp_start, lod_clamp_end)
+    }
+
+    pub unsafe fn set_object_texture(object: ?*mut u8, index: u64, texture: ?*mut u8) -> () {
+        unsafe metal_RenderCommandEncoder_set_object_texture(object, index, texture)
+    }
+
+    pub unsafe fn set_object_threadgroup_memory_length(object: ?*mut u8, index: u64, length: u64) -> () {
+        unsafe metal_RenderCommandEncoder_set_object_threadgroup_memory_length(object, index, length)
+    }
+
+    // data points to data_count entries; null is allowed only for a zero count.
+    // offsets and data each contain data_count elements.
+    pub unsafe fn set_object_buffers(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, offsets: ?[*]const u64, data_count: u64) -> () {
+        unsafe metal_RenderCommandEncoder_set_object_buffers(object, start_index, data, offsets, data_count)
+    }
+
+    // data points to data_count entries; null is allowed only for a zero count.
+    pub unsafe fn set_object_sampler_states(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, data_count: u64) -> () {
+        unsafe metal_RenderCommandEncoder_set_object_sampler_states(object, start_index, data, data_count)
+    }
+
+    // data points to data_count entries; null is allowed only for a zero count.
+    pub unsafe fn set_object_textures(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, data_count: u64) -> () {
+        unsafe metal_RenderCommandEncoder_set_object_textures(object, start_index, data, data_count)
+    }
+
+    pub unsafe fn set_mesh_buffer(object: ?*mut u8, index: u64, buffer: ?*mut u8, offset: u64) -> () {
+        unsafe metal_RenderCommandEncoder_set_mesh_buffer(object, index, buffer, offset)
+    }
+
+    pub unsafe fn set_mesh_buffer_offset(object: ?*mut u8, index: u64, offset: u64) -> () {
+        unsafe metal_RenderCommandEncoder_set_mesh_buffer_offset(object, index, offset)
+    }
+
+    pub unsafe fn set_mesh_bytes(object: ?*mut u8, index: u64, length: u64, bytes: ?*const u8) -> () {
+        unsafe metal_RenderCommandEncoder_set_mesh_bytes(object, index, length, bytes)
+    }
+
+    pub unsafe fn set_mesh_sampler_state(object: ?*mut u8, index: u64, sampler: ?*mut u8) -> () {
+        unsafe metal_RenderCommandEncoder_set_mesh_sampler_state(object, index, sampler)
+    }
+
+    // lod_clamp is flattened into start/end scalars.
+    pub unsafe fn set_mesh_sampler_state_with_lod(object: ?*mut u8, index: u64, sampler: ?*mut u8, lod_clamp_start: f32, lod_clamp_end: f32) -> () {
+        unsafe metal_RenderCommandEncoder_set_mesh_sampler_state_with_lod(object, index, sampler, lod_clamp_start, lod_clamp_end)
+    }
+
+    pub unsafe fn set_mesh_texture(object: ?*mut u8, index: u64, texture: ?*mut u8) -> () {
+        unsafe metal_RenderCommandEncoder_set_mesh_texture(object, index, texture)
+    }
+
+    // data points to data_count entries; null is allowed only for a zero count.
+    // offsets and data each contain data_count elements.
+    pub unsafe fn set_mesh_buffers(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, offsets: ?[*]const u64, data_count: u64) -> () {
+        unsafe metal_RenderCommandEncoder_set_mesh_buffers(object, start_index, data, offsets, data_count)
+    }
+
+    // data points to data_count entries; null is allowed only for a zero count.
+    pub unsafe fn set_mesh_sampler_states(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, data_count: u64) -> () {
+        unsafe metal_RenderCommandEncoder_set_mesh_sampler_states(object, start_index, data, data_count)
+    }
+
+    // data points to data_count entries; null is allowed only for a zero count.
+    pub unsafe fn set_mesh_textures(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, data_count: u64) -> () {
+        unsafe metal_RenderCommandEncoder_set_mesh_textures(object, start_index, data, data_count)
+    }
+
+    pub unsafe fn set_fragment_bytes(object: ?*mut u8, index: u64, length: u64, bytes: ?*const u8) -> () {
+        unsafe metal_RenderCommandEncoder_set_fragment_bytes(object, index, length, bytes)
+    }
+
+    pub unsafe fn set_fragment_buffer(object: ?*mut u8, index: u64, buffer: ?*mut u8, offset: u64) -> () {
+        unsafe metal_RenderCommandEncoder_set_fragment_buffer(object, index, buffer, offset)
+    }
+
+    pub unsafe fn set_fragment_buffer_offset(object: ?*mut u8, index: u64, offset: u64) -> () {
+        unsafe metal_RenderCommandEncoder_set_fragment_buffer_offset(object, index, offset)
+    }
+
+    // data points to data_count entries; null is allowed only for a zero count.
+    // offsets and data each contain data_count elements.
+    pub unsafe fn set_fragment_buffers(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, offsets: ?[*]const u64, data_count: u64) -> () {
+        unsafe metal_RenderCommandEncoder_set_fragment_buffers(object, start_index, data, offsets, data_count)
+    }
+
+    pub unsafe fn set_fragment_texture(object: ?*mut u8, index: u64, texture: ?*mut u8) -> () {
+        unsafe metal_RenderCommandEncoder_set_fragment_texture(object, index, texture)
+    }
+
+    // data points to data_count entries; null is allowed only for a zero count.
+    pub unsafe fn set_fragment_textures(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, data_count: u64) -> () {
+        unsafe metal_RenderCommandEncoder_set_fragment_textures(object, start_index, data, data_count)
+    }
+
+    pub unsafe fn set_fragment_sampler_state(object: ?*mut u8, index: u64, sampler: ?*mut u8) -> () {
+        unsafe metal_RenderCommandEncoder_set_fragment_sampler_state(object, index, sampler)
+    }
+
+    // data points to data_count entries; null is allowed only for a zero count.
+    pub unsafe fn set_fragment_sampler_states(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, data_count: u64) -> () {
+        unsafe metal_RenderCommandEncoder_set_fragment_sampler_states(object, start_index, data, data_count)
+    }
+
+    // lod_clamp is flattened into start/end scalars.
+    pub unsafe fn set_fragment_sampler_state_with_lod(object: ?*mut u8, index: u64, sampler: ?*mut u8, lod_clamp_start: f32, lod_clamp_end: f32) -> () {
+        unsafe metal_RenderCommandEncoder_set_fragment_sampler_state_with_lod(object, index, sampler, lod_clamp_start, lod_clamp_end)
+    }
+
+    pub unsafe fn set_fragment_acceleration_structure(object: ?*mut u8, index: u64, accel: ?*mut u8) -> () {
+        unsafe metal_RenderCommandEncoder_set_fragment_acceleration_structure(object, index, accel)
+    }
+
+    pub unsafe fn set_fragment_intersection_function_table(object: ?*mut u8, index: u64, table: ?*mut u8) -> () {
+        unsafe metal_RenderCommandEncoder_set_fragment_intersection_function_table(object, index, table)
+    }
+
+    pub unsafe fn set_fragment_visible_function_table(object: ?*mut u8, buffer_index: u64, visible_function_table: ?*mut u8) -> () {
+        unsafe metal_RenderCommandEncoder_set_fragment_visible_function_table(object, buffer_index, visible_function_table)
+    }
+
+    // visible_function_tables points to visible_function_tables_count entries; null is allowed only for a zero count.
+    pub unsafe fn set_fragment_visible_function_tables(object: ?*mut u8, buffer_start_index: u64, visible_function_tables: ?[*]const ?*mut u8, visible_function_tables_count: u64) -> () {
+        unsafe metal_RenderCommandEncoder_set_fragment_visible_function_tables(object, buffer_start_index, visible_function_tables, visible_function_tables_count)
+    }
+
+    pub unsafe fn draw_primitives(object: ?*mut u8, primitive_type: u64, vertex_start: u64, vertex_count: u64) -> () {
+        unsafe metal_RenderCommandEncoder_draw_primitives(object, primitive_type, vertex_start, vertex_count)
+    }
+
+    pub unsafe fn draw_primitives_instanced(object: ?*mut u8, primitive_type: u64, vertex_start: u64, vertex_count: u64, instance_count: u64) -> () {
+        unsafe metal_RenderCommandEncoder_draw_primitives_instanced(object, primitive_type, vertex_start, vertex_count, instance_count)
+    }
+
+    pub unsafe fn draw_primitives_instanced_base_instance(object: ?*mut u8, primitive_type: u64, vertex_start: u64, vertex_count: u64, instance_count: u64, base_instance: u64) -> () {
+        unsafe metal_RenderCommandEncoder_draw_primitives_instanced_base_instance(object, primitive_type, vertex_start, vertex_count, instance_count, base_instance)
+    }
+
+    pub unsafe fn draw_primitives_indirect(object: ?*mut u8, primitive_type: u64, indirect_buffer: ?*mut u8, indirect_buffer_offset: u64) -> () {
+        unsafe metal_RenderCommandEncoder_draw_primitives_indirect(object, primitive_type, indirect_buffer, indirect_buffer_offset)
+    }
+
+    pub unsafe fn draw_indexed_primitives(object: ?*mut u8, primitive_type: u64, index_count: u64, index_type: u64, index_buffer: ?*mut u8, index_buffer_offset: u64) -> () {
+        unsafe metal_RenderCommandEncoder_draw_indexed_primitives(object, primitive_type, index_count, index_type, index_buffer, index_buffer_offset)
+    }
+
+    pub unsafe fn draw_indexed_primitives_instanced(object: ?*mut u8, primitive_type: u64, index_count: u64, index_type: u64, index_buffer: ?*mut u8, index_buffer_offset: u64, instance_count: u64) -> () {
+        unsafe metal_RenderCommandEncoder_draw_indexed_primitives_instanced(object, primitive_type, index_count, index_type, index_buffer, index_buffer_offset, instance_count)
+    }
+
+    pub unsafe fn draw_indexed_primitives_instanced_base_instance(object: ?*mut u8, primitive_type: u64, index_count: u64, index_type: u64, index_buffer: ?*mut u8, index_buffer_offset: u64, instance_count: u64, base_vertex: i64, base_instance: u64) -> () {
+        unsafe metal_RenderCommandEncoder_draw_indexed_primitives_instanced_base_instance(object, primitive_type, index_count, index_type, index_buffer, index_buffer_offset, instance_count, base_vertex, base_instance)
+    }
+
+    pub unsafe fn draw_indexed_primitives_indirect(object: ?*mut u8, primitive_type: u64, index_type: u64, index_buffer: ?*mut u8, index_buffer_offset: u64, indirect_buffer: ?*mut u8, indirect_buffer_offset: u64) -> () {
+        unsafe metal_RenderCommandEncoder_draw_indexed_primitives_indirect(object, primitive_type, index_type, index_buffer, index_buffer_offset, indirect_buffer, indirect_buffer_offset)
+    }
+
+    // threadgroups_per_grid is passed by value.
+    // threads_per_object_threadgroup is passed by value.
+    // threads_per_mesh_threadgroup is passed by value.
+    pub unsafe fn draw_mesh_threadgroups(object: ?*mut u8, threadgroups_per_grid: MTLSize, threads_per_object_threadgroup: MTLSize, threads_per_mesh_threadgroup: MTLSize) -> () {
+        unsafe metal_RenderCommandEncoder_draw_mesh_threadgroups(object, threadgroups_per_grid, threads_per_object_threadgroup, threads_per_mesh_threadgroup)
+    }
+
+    // threads_per_object_threadgroup is passed by value.
+    // threads_per_mesh_threadgroup is passed by value.
+    pub unsafe fn draw_mesh_threadgroups_with_indirect_buffer(object: ?*mut u8, indirect_buffer: ?*mut u8, indirect_buffer_offset: u64, threads_per_object_threadgroup: MTLSize, threads_per_mesh_threadgroup: MTLSize) -> () {
+        unsafe metal_RenderCommandEncoder_draw_mesh_threadgroups_with_indirect_buffer(object, indirect_buffer, indirect_buffer_offset, threads_per_object_threadgroup, threads_per_mesh_threadgroup)
+    }
+
+    // threads_per_grid is passed by value.
+    // threads_per_object_threadgroup is passed by value.
+    // threads_per_mesh_threadgroup is passed by value.
+    pub unsafe fn draw_mesh_threads(object: ?*mut u8, threads_per_grid: MTLSize, threads_per_object_threadgroup: MTLSize, threads_per_mesh_threadgroup: MTLSize) -> () {
+        unsafe metal_RenderCommandEncoder_draw_mesh_threads(object, threads_per_grid, threads_per_object_threadgroup, threads_per_mesh_threadgroup)
+    }
+
+    pub unsafe fn use_resource(object: ?*mut u8, resource: ?*mut u8, usage: u64) -> () {
+        unsafe metal_RenderCommandEncoder_use_resource(object, resource, usage)
+    }
+
+    pub unsafe fn use_resource_at(object: ?*mut u8, resource: ?*mut u8, usage: u64, stages: u64) -> () {
+        unsafe metal_RenderCommandEncoder_use_resource_at(object, resource, usage, stages)
+    }
+
+    // resources points to resources_count entries; null is allowed only for a zero count.
+    pub unsafe fn use_resources(object: ?*mut u8, resources: ?[*]const ?*mut u8, usage: u64, stages: u64, resources_count: u64) -> () {
+        unsafe metal_RenderCommandEncoder_use_resources(object, resources, usage, stages, resources_count)
+    }
+
+    pub unsafe fn use_heap(object: ?*mut u8, heap: ?*mut u8) -> () {
+        unsafe metal_RenderCommandEncoder_use_heap(object, heap)
+    }
+
+    pub unsafe fn use_heap_at(object: ?*mut u8, heap: ?*mut u8, stages: u64) -> () {
+        unsafe metal_RenderCommandEncoder_use_heap_at(object, heap, stages)
+    }
+
+    // heaps points to heaps_count entries; null is allowed only for a zero count.
+    pub unsafe fn use_heaps(object: ?*mut u8, heaps: ?[*]const ?*mut u8, stages: u64, heaps_count: u64) -> () {
+        unsafe metal_RenderCommandEncoder_use_heaps(object, heaps, stages, heaps_count)
+    }
+
+    // with_range is passed by value.
+    pub unsafe fn execute_commands_in_buffer(object: ?*mut u8, buffer: ?*mut u8, with_range: NSRange) -> () {
+        unsafe metal_RenderCommandEncoder_execute_commands_in_buffer(object, buffer, with_range)
+    }
+
+    pub unsafe fn update_fence(object: ?*mut u8, fence: ?*mut u8, after_stages: u64) -> () {
+        unsafe metal_RenderCommandEncoder_update_fence(object, fence, after_stages)
+    }
+
+    pub unsafe fn wait_for_fence(object: ?*mut u8, fence: ?*mut u8, before_stages: u64) -> () {
+        unsafe metal_RenderCommandEncoder_wait_for_fence(object, fence, before_stages)
+    }
+
+    pub unsafe fn sample_counters_in_buffer(object: ?*mut u8, sample_buffer: ?*mut u8, sample_index: u64, with_barrier: bool) -> () {
+        let mut with_barrier_abi: u8 = 0
+        if with_barrier {
+            with_barrier_abi = 1
+        }
+        unsafe metal_RenderCommandEncoder_sample_counters_in_buffer(object, sample_buffer, sample_index, with_barrier_abi)
+    }
+}
+
+pub struct BlitCommandEncoder {}
+
+impl BlitCommandEncoder {
+    pub unsafe fn synchronize_resource(object: ?*mut u8, resource: ?*mut u8) -> () {
+        unsafe metal_BlitCommandEncoder_synchronize_resource(object, resource)
+    }
+
+    // range is passed by value.
+    pub unsafe fn fill_buffer(object: ?*mut u8, destination_buffer: ?*mut u8, range: NSRange, value: u8) -> () {
+        unsafe metal_BlitCommandEncoder_fill_buffer(object, destination_buffer, range, value)
+    }
+
+    pub unsafe fn generate_mipmaps(object: ?*mut u8, texture: ?*mut u8) -> () {
+        unsafe metal_BlitCommandEncoder_generate_mipmaps(object, texture)
+    }
+
+    pub unsafe fn copy_from_buffer(object: ?*mut u8, source_buffer: ?*mut u8, source_offset: u64, destination_buffer: ?*mut u8, destination_offset: u64, size: u64) -> () {
+        unsafe metal_BlitCommandEncoder_copy_from_buffer(object, source_buffer, source_offset, destination_buffer, destination_offset, size)
+    }
+
+    // source_origin is passed by value.
+    // source_size is passed by value.
+    // destination_origin is passed by value.
+    pub unsafe fn copy_from_texture(object: ?*mut u8, source_texture: ?*mut u8, source_slice: u64, source_level: u64, source_origin: MTLOrigin, source_size: MTLSize, destination_texture: ?*mut u8, destination_slice: u64, destination_level: u64, destination_origin: MTLOrigin) -> () {
+        unsafe metal_BlitCommandEncoder_copy_from_texture(object, source_texture, source_slice, source_level, source_origin, source_size, destination_texture, destination_slice, destination_level, destination_origin)
+    }
+
+    // source_size is passed by value.
+    // destination_origin is passed by value.
+    pub unsafe fn copy_from_buffer_to_texture(object: ?*mut u8, source_buffer: ?*mut u8, source_offset: u64, source_bytes_per_row: u64, source_bytes_per_image: u64, source_size: MTLSize, destination_texture: ?*mut u8, destination_slice: u64, destination_level: u64, destination_origin: MTLOrigin, options: u64) -> () {
+        unsafe metal_BlitCommandEncoder_copy_from_buffer_to_texture(object, source_buffer, source_offset, source_bytes_per_row, source_bytes_per_image, source_size, destination_texture, destination_slice, destination_level, destination_origin, options)
+    }
+
+    // source_origin is passed by value.
+    // source_size is passed by value.
+    pub unsafe fn copy_from_texture_to_buffer(object: ?*mut u8, source_texture: ?*mut u8, source_slice: u64, source_level: u64, source_origin: MTLOrigin, source_size: MTLSize, destination_buffer: ?*mut u8, destination_offset: u64, destination_bytes_per_row: u64, destination_bytes_per_image: u64, options: u64) -> () {
+        unsafe metal_BlitCommandEncoder_copy_from_texture_to_buffer(object, source_texture, source_slice, source_level, source_origin, source_size, destination_buffer, destination_offset, destination_bytes_per_row, destination_bytes_per_image, options)
+    }
+
+    pub unsafe fn optimize_contents_for_gpu_access(object: ?*mut u8, texture: ?*mut u8) -> () {
+        unsafe metal_BlitCommandEncoder_optimize_contents_for_gpu_access(object, texture)
+    }
+
+    pub unsafe fn optimize_contents_for_gpu_access_slice_level(object: ?*mut u8, texture: ?*mut u8, slice: u64, level: u64) -> () {
+        unsafe metal_BlitCommandEncoder_optimize_contents_for_gpu_access_slice_level(object, texture, slice, level)
+    }
+
+    pub unsafe fn optimize_contents_for_cpu_access(object: ?*mut u8, texture: ?*mut u8) -> () {
+        unsafe metal_BlitCommandEncoder_optimize_contents_for_cpu_access(object, texture)
+    }
+
+    pub unsafe fn optimize_contents_for_cpu_access_slice_level(object: ?*mut u8, texture: ?*mut u8, slice: u64, level: u64) -> () {
+        unsafe metal_BlitCommandEncoder_optimize_contents_for_cpu_access_slice_level(object, texture, slice, level)
+    }
+
+    pub unsafe fn update_fence(object: ?*mut u8, fence: ?*mut u8) -> () {
+        unsafe metal_BlitCommandEncoder_update_fence(object, fence)
+    }
+
+    pub unsafe fn wait_for_fence(object: ?*mut u8, fence: ?*mut u8) -> () {
+        unsafe metal_BlitCommandEncoder_wait_for_fence(object, fence)
+    }
+
+    // source_range is passed by value.
+    pub unsafe fn copy_indirect_command_buffer(object: ?*mut u8, source: ?*mut u8, source_range: NSRange, destination: ?*mut u8, destination_index: u64) -> () {
+        unsafe metal_BlitCommandEncoder_copy_indirect_command_buffer(object, source, source_range, destination, destination_index)
+    }
+
+    // range is passed by value.
+    pub unsafe fn reset_commands_in_buffer(object: ?*mut u8, buffer: ?*mut u8, range: NSRange) -> () {
+        unsafe metal_BlitCommandEncoder_reset_commands_in_buffer(object, buffer, range)
+    }
+
+    // range is passed by value.
+    pub unsafe fn optimize_indirect_command_buffer(object: ?*mut u8, buffer: ?*mut u8, range: NSRange) -> () {
+        unsafe metal_BlitCommandEncoder_optimize_indirect_command_buffer(object, buffer, range)
+    }
+
+    pub unsafe fn sample_counters_in_buffer(object: ?*mut u8, sample_buffer: ?*mut u8, sample_index: u64, with_barrier: bool) -> () {
+        let mut with_barrier_abi: u8 = 0
+        if with_barrier {
+            with_barrier_abi = 1
+        }
+        unsafe metal_BlitCommandEncoder_sample_counters_in_buffer(object, sample_buffer, sample_index, with_barrier_abi)
+    }
+
+    // range is passed by value.
+    pub unsafe fn resolve_counters(object: ?*mut u8, sample_buffer: ?*mut u8, range: NSRange, destination_buffer: ?*mut u8, destination_offset: u64) -> () {
+        unsafe metal_BlitCommandEncoder_resolve_counters(object, sample_buffer, range, destination_buffer, destination_offset)
+    }
+}
+
+pub struct ComputeCommandEncoder {}
+
+impl ComputeCommandEncoder {
+    pub unsafe fn set_compute_pipeline_state(object: ?*mut u8, state: ?*mut u8) -> () {
+        unsafe metal_ComputeCommandEncoder_set_compute_pipeline_state(object, state)
+    }
+
+    pub unsafe fn set_buffer(object: ?*mut u8, index: u64, buffer: ?*mut u8, offset: u64) -> () {
+        unsafe metal_ComputeCommandEncoder_set_buffer(object, index, buffer, offset)
+    }
+
+    // data points to data_count entries; null is allowed only for a zero count.
+    // offsets and data each contain data_count elements.
+    pub unsafe fn set_buffers(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, offsets: ?[*]const u64, data_count: u64) -> () {
+        unsafe metal_ComputeCommandEncoder_set_buffers(object, start_index, data, offsets, data_count)
+    }
+
+    pub unsafe fn set_texture(object: ?*mut u8, index: u64, texture: ?*mut u8) -> () {
+        unsafe metal_ComputeCommandEncoder_set_texture(object, index, texture)
+    }
+
+    // data points to data_count entries; null is allowed only for a zero count.
+    pub unsafe fn set_textures(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, data_count: u64) -> () {
+        unsafe metal_ComputeCommandEncoder_set_textures(object, start_index, data, data_count)
+    }
+
+    pub unsafe fn set_sampler_state(object: ?*mut u8, index: u64, sampler: ?*mut u8) -> () {
+        unsafe metal_ComputeCommandEncoder_set_sampler_state(object, index, sampler)
+    }
+
+    // data points to data_count entries; null is allowed only for a zero count.
+    pub unsafe fn set_sampler_states(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, data_count: u64) -> () {
+        unsafe metal_ComputeCommandEncoder_set_sampler_states(object, start_index, data, data_count)
+    }
+
+    // lod_clamp is flattened into start/end scalars.
+    pub unsafe fn set_sampler_state_with_lod(object: ?*mut u8, index: u64, sampler: ?*mut u8, lod_clamp_start: f32, lod_clamp_end: f32) -> () {
+        unsafe metal_ComputeCommandEncoder_set_sampler_state_with_lod(object, index, sampler, lod_clamp_start, lod_clamp_end)
+    }
+
+    pub unsafe fn set_bytes(object: ?*mut u8, index: u64, length: u64, bytes: ?*const u8) -> () {
+        unsafe metal_ComputeCommandEncoder_set_bytes(object, index, length, bytes)
+    }
+
+    pub unsafe fn set_visible_function_table(object: ?*mut u8, buffer_index: u64, visible_function_table: ?*mut u8) -> () {
+        unsafe metal_ComputeCommandEncoder_set_visible_function_table(object, buffer_index, visible_function_table)
+    }
+
+    // visible_function_tables points to visible_function_tables_count entries; null is allowed only for a zero count.
+    pub unsafe fn set_visible_function_tables(object: ?*mut u8, buffer_start_index: u64, visible_function_tables: ?[*]const ?*mut u8, visible_function_tables_count: u64) -> () {
+        unsafe metal_ComputeCommandEncoder_set_visible_function_tables(object, buffer_start_index, visible_function_tables, visible_function_tables_count)
+    }
+
+    // thread_groups_count is passed by value.
+    // threads_per_threadgroup is passed by value.
+    pub unsafe fn dispatch_thread_groups(object: ?*mut u8, thread_groups_count: MTLSize, threads_per_threadgroup: MTLSize) -> () {
+        unsafe metal_ComputeCommandEncoder_dispatch_thread_groups(object, thread_groups_count, threads_per_threadgroup)
+    }
+
+    // threads_per_grid is passed by value.
+    // threads_per_thread_group is passed by value.
+    pub unsafe fn dispatch_threads(object: ?*mut u8, threads_per_grid: MTLSize, threads_per_thread_group: MTLSize) -> () {
+        unsafe metal_ComputeCommandEncoder_dispatch_threads(object, threads_per_grid, threads_per_thread_group)
+    }
+
+    // threads_per_threadgroup is passed by value.
+    pub unsafe fn dispatch_thread_groups_indirect(object: ?*mut u8, buffer: ?*mut u8, offset: u64, threads_per_threadgroup: MTLSize) -> () {
+        unsafe metal_ComputeCommandEncoder_dispatch_thread_groups_indirect(object, buffer, offset, threads_per_threadgroup)
+    }
+
+    pub unsafe fn set_threadgroup_memory_length(object: ?*mut u8, at_index: u64, size: u64) -> () {
+        unsafe metal_ComputeCommandEncoder_set_threadgroup_memory_length(object, at_index, size)
+    }
+
+    // resources points to resources_count entries; null is allowed only for a zero count.
+    pub unsafe fn memory_barrier_with_resources(object: ?*mut u8, resources: ?[*]const ?*mut u8, resources_count: u64) -> () {
+        unsafe metal_ComputeCommandEncoder_memory_barrier_with_resources(object, resources, resources_count)
+    }
+
+    pub unsafe fn use_resource(object: ?*mut u8, resource: ?*mut u8, usage: u64) -> () {
+        unsafe metal_ComputeCommandEncoder_use_resource(object, resource, usage)
+    }
+
+    // resources points to resources_count entries; null is allowed only for a zero count.
+    pub unsafe fn use_resources(object: ?*mut u8, resources: ?[*]const ?*mut u8, usage: u64, resources_count: u64) -> () {
+        unsafe metal_ComputeCommandEncoder_use_resources(object, resources, usage, resources_count)
+    }
+
+    pub unsafe fn use_heap(object: ?*mut u8, heap: ?*mut u8) -> () {
+        unsafe metal_ComputeCommandEncoder_use_heap(object, heap)
+    }
+
+    // heaps points to heaps_count entries; null is allowed only for a zero count.
+    pub unsafe fn use_heaps(object: ?*mut u8, heaps: ?[*]const ?*mut u8, heaps_count: u64) -> () {
+        unsafe metal_ComputeCommandEncoder_use_heaps(object, heaps, heaps_count)
+    }
+
+    pub unsafe fn update_fence(object: ?*mut u8, fence: ?*mut u8) -> () {
+        unsafe metal_ComputeCommandEncoder_update_fence(object, fence)
+    }
+
+    pub unsafe fn wait_for_fence(object: ?*mut u8, fence: ?*mut u8) -> () {
+        unsafe metal_ComputeCommandEncoder_wait_for_fence(object, fence)
+    }
+
+    pub unsafe fn set_acceleration_structure(object: ?*mut u8, index: u64, accel: ?*mut u8) -> () {
+        unsafe metal_ComputeCommandEncoder_set_acceleration_structure(object, index, accel)
+    }
+
+    pub unsafe fn set_intersection_function_table(object: ?*mut u8, index: u64, table: ?*mut u8) -> () {
+        unsafe metal_ComputeCommandEncoder_set_intersection_function_table(object, index, table)
+    }
+
+    pub unsafe fn sample_counters_in_buffer(object: ?*mut u8, sample_buffer: ?*mut u8, sample_index: u64, with_barrier: bool) -> () {
+        let mut with_barrier_abi: u8 = 0
+        if with_barrier {
+            with_barrier_abi = 1
+        }
+        unsafe metal_ComputeCommandEncoder_sample_counters_in_buffer(object, sample_buffer, sample_index, with_barrier_abi)
+    }
+}
+
+pub struct ArgumentEncoder {}
+
+impl ArgumentEncoder {
+    pub unsafe fn encoded_length(object: ?*mut u8) -> u64 {
+        return unsafe metal_ArgumentEncoder_encoded_length(object)
+    }
+
+    pub unsafe fn alignment(object: ?*mut u8) -> u64 {
+        return unsafe metal_ArgumentEncoder_alignment(object)
+    }
+
+    pub unsafe fn set_argument_buffer(object: ?*mut u8, buffer: ?*mut u8, offset: u64) -> () {
+        unsafe metal_ArgumentEncoder_set_argument_buffer(object, buffer, offset)
+    }
+
+    pub unsafe fn set_argument_buffer_to_element(object: ?*mut u8, array_element: u64, buffer: ?*mut u8, offset: u64) -> () {
+        unsafe metal_ArgumentEncoder_set_argument_buffer_to_element(object, array_element, buffer, offset)
+    }
+
+    pub unsafe fn set_buffer(object: ?*mut u8, at_index: u64, buffer: ?*mut u8, offset: u64) -> () {
+        unsafe metal_ArgumentEncoder_set_buffer(object, at_index, buffer, offset)
+    }
+
+    // data points to data_count entries; null is allowed only for a zero count.
+    // offsets and data each contain data_count elements.
+    pub unsafe fn set_buffers(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, offsets: ?[*]const u64, data_count: u64) -> () {
+        unsafe metal_ArgumentEncoder_set_buffers(object, start_index, data, offsets, data_count)
+    }
+
+    pub unsafe fn set_texture(object: ?*mut u8, at_index: u64, texture: ?*mut u8) -> () {
+        unsafe metal_ArgumentEncoder_set_texture(object, at_index, texture)
+    }
+
+    // data points to data_count entries; null is allowed only for a zero count.
+    pub unsafe fn set_textures(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, data_count: u64) -> () {
+        unsafe metal_ArgumentEncoder_set_textures(object, start_index, data, data_count)
+    }
+
+    pub unsafe fn set_sampler_state(object: ?*mut u8, at_index: u64, sampler_state: ?*mut u8) -> () {
+        unsafe metal_ArgumentEncoder_set_sampler_state(object, at_index, sampler_state)
+    }
+
+    // data points to data_count entries; null is allowed only for a zero count.
+    pub unsafe fn set_sampler_states(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, data_count: u64) -> () {
+        unsafe metal_ArgumentEncoder_set_sampler_states(object, start_index, data, data_count)
+    }
+
+    pub unsafe fn set_render_pipeline_state(object: ?*mut u8, at_index: u64, pipeline: ?*mut u8) -> () {
+        unsafe metal_ArgumentEncoder_set_render_pipeline_state(object, at_index, pipeline)
+    }
+
+    // pipelines points to pipelines_count entries; null is allowed only for a zero count.
+    pub unsafe fn set_render_pipeline_states(object: ?*mut u8, start_index: u64, pipelines: ?[*]const ?*mut u8, pipelines_count: u64) -> () {
+        unsafe metal_ArgumentEncoder_set_render_pipeline_states(object, start_index, pipelines, pipelines_count)
+    }
+
+    // Returned mutable storage is borrowed from the argument buffer.
+    pub unsafe fn constant_data(object: ?*mut u8, at_index: u64) -> ?*mut u8 {
+        return unsafe metal_ArgumentEncoder_constant_data(object, at_index)
+    }
+
+    pub unsafe fn set_indirect_command_buffer(object: ?*mut u8, at_index: u64, buffer: ?*mut u8) -> () {
+        unsafe metal_ArgumentEncoder_set_indirect_command_buffer(object, at_index, buffer)
+    }
+
+    // data points to data_count entries; null is allowed only for a zero count.
+    pub unsafe fn set_indirect_command_buffers(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, data_count: u64) -> () {
+        unsafe metal_ArgumentEncoder_set_indirect_command_buffers(object, start_index, data, data_count)
+    }
+
+    // Returned object is owned (+1); release it exactly once.
+    pub unsafe fn new_argument_encoder_for_buffer(object: ?*mut u8, index: u64) -> ?*mut u8 {
+        return unsafe metal_ArgumentEncoder_new_argument_encoder_for_buffer(object, index)
+    }
+}
+
+pub struct IndirectCommandBufferDescriptor {}
+
+impl IndirectCommandBufferDescriptor {
+    // Returned object is owned (+1); release it exactly once.
+    pub unsafe fn new() -> ?*mut u8 {
+        return unsafe metal_IndirectCommandBufferDescriptor_new()
+    }
+
+    pub unsafe fn command_types(object: ?*mut u8) -> u64 {
+        return unsafe metal_IndirectCommandBufferDescriptor_command_types(object)
+    }
+
+    pub unsafe fn set_command_types(object: ?*mut u8, types: u64) -> () {
+        unsafe metal_IndirectCommandBufferDescriptor_set_command_types(object, types)
+    }
+
+    pub unsafe fn inherit_buffers(object: ?*mut u8) -> bool {
+        return (unsafe metal_IndirectCommandBufferDescriptor_inherit_buffers(object)) != 0
+    }
+
+    pub unsafe fn set_inherit_buffers(object: ?*mut u8, inherit: bool) -> () {
+        let mut inherit_abi: u8 = 0
+        if inherit {
+            inherit_abi = 1
+        }
+        unsafe metal_IndirectCommandBufferDescriptor_set_inherit_buffers(object, inherit_abi)
+    }
+
+    pub unsafe fn inherit_pipeline_state(object: ?*mut u8) -> bool {
+        return (unsafe metal_IndirectCommandBufferDescriptor_inherit_pipeline_state(object)) != 0
+    }
+
+    pub unsafe fn set_inherit_pipeline_state(object: ?*mut u8, inherit: bool) -> () {
+        let mut inherit_abi: u8 = 0
+        if inherit {
+            inherit_abi = 1
+        }
+        unsafe metal_IndirectCommandBufferDescriptor_set_inherit_pipeline_state(object, inherit_abi)
+    }
+
+    pub unsafe fn max_vertex_buffer_bind_count(object: ?*mut u8) -> u64 {
+        return unsafe metal_IndirectCommandBufferDescriptor_max_vertex_buffer_bind_count(object)
+    }
+
+    pub unsafe fn set_max_vertex_buffer_bind_count(object: ?*mut u8, count: u64) -> () {
+        unsafe metal_IndirectCommandBufferDescriptor_set_max_vertex_buffer_bind_count(object, count)
+    }
+
+    pub unsafe fn max_fragment_buffer_bind_count(object: ?*mut u8) -> u64 {
+        return unsafe metal_IndirectCommandBufferDescriptor_max_fragment_buffer_bind_count(object)
+    }
+
+    pub unsafe fn set_max_fragment_buffer_bind_count(object: ?*mut u8, count: u64) -> () {
+        unsafe metal_IndirectCommandBufferDescriptor_set_max_fragment_buffer_bind_count(object, count)
+    }
+
+    pub unsafe fn max_kernel_buffer_bind_count(object: ?*mut u8) -> u64 {
+        return unsafe metal_IndirectCommandBufferDescriptor_max_kernel_buffer_bind_count(object)
+    }
+
+    pub unsafe fn set_max_kernel_buffer_bind_count(object: ?*mut u8, count: u64) -> () {
+        unsafe metal_IndirectCommandBufferDescriptor_set_max_kernel_buffer_bind_count(object, count)
+    }
+}
+
+pub struct IndirectCommandBuffer {}
+
+impl IndirectCommandBuffer {
+    pub unsafe fn size(object: ?*mut u8) -> u64 {
+        return unsafe metal_IndirectCommandBuffer_size(object)
+    }
+
+    // Returned object is borrowed (+0).
+    pub unsafe fn indirect_render_command_at_index(object: ?*mut u8, index: u64) -> ?*mut u8 {
+        return unsafe metal_IndirectCommandBuffer_indirect_render_command_at_index(object, index)
+    }
+
+    // Returned object is borrowed (+0).
+    pub unsafe fn indirect_compute_command_at_index(object: ?*mut u8, index: u64) -> ?*mut u8 {
+        return unsafe metal_IndirectCommandBuffer_indirect_compute_command_at_index(object, index)
+    }
+
+    // range is passed by value.
+    pub unsafe fn reset_with_range(object: ?*mut u8, range: NSRange) -> () {
+        unsafe metal_IndirectCommandBuffer_reset_with_range(object, range)
+    }
+}
+
+pub struct IndirectRenderCommand {}
+
+impl IndirectRenderCommand {
+    pub unsafe fn set_render_pipeline_state(object: ?*mut u8, pipeline_state: ?*mut u8) -> () {
+        unsafe metal_IndirectRenderCommand_set_render_pipeline_state(object, pipeline_state)
+    }
+
+    pub unsafe fn set_vertex_buffer(object: ?*mut u8, index: u64, buffer: ?*mut u8, offset: u64) -> () {
+        unsafe metal_IndirectRenderCommand_set_vertex_buffer(object, index, buffer, offset)
+    }
+
+    pub unsafe fn set_fragment_buffer(object: ?*mut u8, index: u64, buffer: ?*mut u8, offset: u64) -> () {
+        unsafe metal_IndirectRenderCommand_set_fragment_buffer(object, index, buffer, offset)
+    }
+
+    pub unsafe fn draw_primitives(object: ?*mut u8, primitive_type: u64, vertex_start: u64, vertex_count: u64, instance_count: u64, base_instance: u64) -> () {
+        unsafe metal_IndirectRenderCommand_draw_primitives(object, primitive_type, vertex_start, vertex_count, instance_count, base_instance)
+    }
+
+    pub unsafe fn draw_indexed_primitives(object: ?*mut u8, primitive_type: u64, index_count: u64, index_type: u64, index_buffer: ?*mut u8, index_buffer_offset: u64, instance_count: u64, base_vertex: u64, base_instance: u64) -> () {
+        unsafe metal_IndirectRenderCommand_draw_indexed_primitives(object, primitive_type, index_count, index_type, index_buffer, index_buffer_offset, instance_count, base_vertex, base_instance)
+    }
+
+    pub unsafe fn draw_patches(object: ?*mut u8, number_of_patch_control_points: u64, patch_start: u64, patch_count: u64, patch_index_buffer: ?*mut u8, patch_index_buffer_offset: u64, instance_count: u64, base_instance: u64, tesselation_factor_buffer: ?*mut u8, tesselation_factor_buffer_offset: u64, tesselation_factor_buffer_instance_stride: u64) -> () {
+        unsafe metal_IndirectRenderCommand_draw_patches(object, number_of_patch_control_points, patch_start, patch_count, patch_index_buffer, patch_index_buffer_offset, instance_count, base_instance, tesselation_factor_buffer, tesselation_factor_buffer_offset, tesselation_factor_buffer_instance_stride)
+    }
+
+    pub unsafe fn draw_indexed_patches(object: ?*mut u8, number_of_patch_control_points: u64, patch_start: u64, patch_count: u64, patch_index_buffer: ?*mut u8, patch_index_buffer_offset: u64, control_point_index_buffer: ?*mut u8, control_point_index_buffer_offset: u64, instance_count: u64, base_instance: u64, tesselation_factor_buffer: ?*mut u8, tesselation_factor_buffer_offset: u64, tesselation_factor_buffer_instance_stride: u64) -> () {
+        unsafe metal_IndirectRenderCommand_draw_indexed_patches(object, number_of_patch_control_points, patch_start, patch_count, patch_index_buffer, patch_index_buffer_offset, control_point_index_buffer, control_point_index_buffer_offset, instance_count, base_instance, tesselation_factor_buffer, tesselation_factor_buffer_offset, tesselation_factor_buffer_instance_stride)
+    }
+
+    pub unsafe fn reset(object: ?*mut u8) -> () {
+        unsafe metal_IndirectRenderCommand_reset(object)
+    }
+}
+
+pub struct IndirectComputeCommand {}
+
+impl IndirectComputeCommand {
+    pub unsafe fn set_compute_pipeline_state(object: ?*mut u8, state: ?*mut u8) -> () {
+        unsafe metal_IndirectComputeCommand_set_compute_pipeline_state(object, state)
+    }
+
+    pub unsafe fn set_kernel_buffer(object: ?*mut u8, index: u64, buffer: ?*mut u8, offset: u64) -> () {
+        unsafe metal_IndirectComputeCommand_set_kernel_buffer(object, index, buffer, offset)
+    }
+
+    pub unsafe fn set_threadgroup_memory_length(object: ?*mut u8, index: u64, length: u64) -> () {
+        unsafe metal_IndirectComputeCommand_set_threadgroup_memory_length(object, index, length)
+    }
+
+    // region is passed by value.
+    pub unsafe fn set_stage_in_region(object: ?*mut u8, region: MTLRegion) -> () {
+        unsafe metal_IndirectComputeCommand_set_stage_in_region(object, region)
+    }
+
+    pub unsafe fn set_barrier(object: ?*mut u8) -> () {
+        unsafe metal_IndirectComputeCommand_set_barrier(object)
+    }
+
+    pub unsafe fn clear_barrier(object: ?*mut u8) -> () {
+        unsafe metal_IndirectComputeCommand_clear_barrier(object)
+    }
+
+    // thread_groups_per_grid is passed by value.
+    // threads_per_threadgroup is passed by value.
+    pub unsafe fn concurrent_dispatch_threadgroups(object: ?*mut u8, thread_groups_per_grid: MTLSize, threads_per_threadgroup: MTLSize) -> () {
+        unsafe metal_IndirectComputeCommand_concurrent_dispatch_threadgroups(object, thread_groups_per_grid, threads_per_threadgroup)
+    }
+
+    // thread_groups_per_grid is passed by value.
+    // threads_per_threadgroup is passed by value.
+    pub unsafe fn concurrent_dispatch_threads(object: ?*mut u8, thread_groups_per_grid: MTLSize, threads_per_threadgroup: MTLSize) -> () {
+        unsafe metal_IndirectComputeCommand_concurrent_dispatch_threads(object, thread_groups_per_grid, threads_per_threadgroup)
+    }
+
+    pub unsafe fn reset(object: ?*mut u8) -> () {
+        unsafe metal_IndirectComputeCommand_reset(object)
+    }
+}
+
+unsafe extern "C" fn metal_CommandEncoder_label(object: ?*mut u8) -> ?[*]const u8
+unsafe extern "C" fn metal_CommandEncoder_set_label(object: ?*mut u8, label: ?[*]const u8) -> ()
+unsafe extern "C" fn metal_CommandEncoder_end_encoding(object: ?*mut u8) -> ()
+unsafe extern "C" fn metal_CommandEncoder_insert_debug_signpost(object: ?*mut u8, name: ?[*]const u8) -> ()
+unsafe extern "C" fn metal_CommandEncoder_push_debug_group(object: ?*mut u8, name: ?[*]const u8) -> ()
+unsafe extern "C" fn metal_CommandEncoder_pop_debug_group(object: ?*mut u8) -> ()
+unsafe extern "C" fn metal_ParallelRenderCommandEncoder_render_command_encoder(object: ?*mut u8) -> ?*mut u8
+unsafe extern "C" fn metal_RenderCommandEncoder_set_render_pipeline_state(object: ?*mut u8, pipeline_state: ?*mut u8) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_viewport(object: ?*mut u8, viewport: MTLViewport) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_viewports(object: ?*mut u8, viewports: ?[*]const MTLViewport, viewports_count: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_front_facing_winding(object: ?*mut u8, winding: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_cull_mode(object: ?*mut u8, mode: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_depth_clip_mode(object: ?*mut u8, mode: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_depth_bias(object: ?*mut u8, bias: f32, scale: f32, clamp: f32) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_scissor_rect(object: ?*mut u8, rect: MTLScissorRect) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_scissor_rects(object: ?*mut u8, rects: ?[*]const MTLScissorRect, rects_count: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_triangle_fill_mode(object: ?*mut u8, mode: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_blend_color(object: ?*mut u8, red: f32, green: f32, blue: f32, alpha: f32) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_depth_stencil_state(object: ?*mut u8, depth_stencil_state: ?*mut u8) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_stencil_reference_value(object: ?*mut u8, value: u32) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_stencil_front_back_reference_value(object: ?*mut u8, front: u32, back: u32) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_visibility_result_mode(object: ?*mut u8, mode: u64, offset: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_vertex_amplification_count(object: ?*mut u8, count: u64, view_mappings: ?[*]const VertexAmplificationViewMapping) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_vertex_bytes(object: ?*mut u8, index: u64, length: u64, bytes: ?*const u8) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_vertex_buffer(object: ?*mut u8, index: u64, buffer: ?*mut u8, offset: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_vertex_buffer_offset(object: ?*mut u8, index: u64, offset: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_vertex_buffers(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, offsets: ?[*]const u64, data_count: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_vertex_texture(object: ?*mut u8, index: u64, texture: ?*mut u8) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_vertex_textures(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, data_count: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_vertex_sampler_state(object: ?*mut u8, index: u64, sampler: ?*mut u8) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_vertex_sampler_states(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, data_count: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_vertex_sampler_state_with_lod(object: ?*mut u8, index: u64, sampler: ?*mut u8, lod_clamp_start: f32, lod_clamp_end: f32) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_vertex_acceleration_structure(object: ?*mut u8, index: u64, accel: ?*mut u8) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_vertex_intersection_function_table(object: ?*mut u8, index: u64, table: ?*mut u8) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_vertex_visible_function_table(object: ?*mut u8, buffer_index: u64, visible_function_table: ?*mut u8) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_vertex_visible_function_tables(object: ?*mut u8, buffer_start_index: u64, visible_function_tables: ?[*]const ?*mut u8, visible_function_tables_count: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_object_buffer(object: ?*mut u8, index: u64, buffer: ?*mut u8, offset: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_object_buffer_offset(object: ?*mut u8, index: u64, offset: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_object_bytes(object: ?*mut u8, index: u64, length: u64, bytes: ?*const u8) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_object_sampler_state(object: ?*mut u8, index: u64, sampler: ?*mut u8) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_object_sampler_state_with_lod(object: ?*mut u8, index: u64, sampler: ?*mut u8, lod_clamp_start: f32, lod_clamp_end: f32) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_object_texture(object: ?*mut u8, index: u64, texture: ?*mut u8) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_object_threadgroup_memory_length(object: ?*mut u8, index: u64, length: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_object_buffers(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, offsets: ?[*]const u64, data_count: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_object_sampler_states(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, data_count: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_object_textures(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, data_count: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_mesh_buffer(object: ?*mut u8, index: u64, buffer: ?*mut u8, offset: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_mesh_buffer_offset(object: ?*mut u8, index: u64, offset: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_mesh_bytes(object: ?*mut u8, index: u64, length: u64, bytes: ?*const u8) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_mesh_sampler_state(object: ?*mut u8, index: u64, sampler: ?*mut u8) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_mesh_sampler_state_with_lod(object: ?*mut u8, index: u64, sampler: ?*mut u8, lod_clamp_start: f32, lod_clamp_end: f32) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_mesh_texture(object: ?*mut u8, index: u64, texture: ?*mut u8) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_mesh_buffers(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, offsets: ?[*]const u64, data_count: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_mesh_sampler_states(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, data_count: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_mesh_textures(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, data_count: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_fragment_bytes(object: ?*mut u8, index: u64, length: u64, bytes: ?*const u8) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_fragment_buffer(object: ?*mut u8, index: u64, buffer: ?*mut u8, offset: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_fragment_buffer_offset(object: ?*mut u8, index: u64, offset: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_fragment_buffers(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, offsets: ?[*]const u64, data_count: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_fragment_texture(object: ?*mut u8, index: u64, texture: ?*mut u8) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_fragment_textures(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, data_count: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_fragment_sampler_state(object: ?*mut u8, index: u64, sampler: ?*mut u8) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_fragment_sampler_states(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, data_count: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_fragment_sampler_state_with_lod(object: ?*mut u8, index: u64, sampler: ?*mut u8, lod_clamp_start: f32, lod_clamp_end: f32) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_fragment_acceleration_structure(object: ?*mut u8, index: u64, accel: ?*mut u8) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_fragment_intersection_function_table(object: ?*mut u8, index: u64, table: ?*mut u8) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_fragment_visible_function_table(object: ?*mut u8, buffer_index: u64, visible_function_table: ?*mut u8) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_set_fragment_visible_function_tables(object: ?*mut u8, buffer_start_index: u64, visible_function_tables: ?[*]const ?*mut u8, visible_function_tables_count: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_draw_primitives(object: ?*mut u8, primitive_type: u64, vertex_start: u64, vertex_count: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_draw_primitives_instanced(object: ?*mut u8, primitive_type: u64, vertex_start: u64, vertex_count: u64, instance_count: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_draw_primitives_instanced_base_instance(object: ?*mut u8, primitive_type: u64, vertex_start: u64, vertex_count: u64, instance_count: u64, base_instance: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_draw_primitives_indirect(object: ?*mut u8, primitive_type: u64, indirect_buffer: ?*mut u8, indirect_buffer_offset: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_draw_indexed_primitives(object: ?*mut u8, primitive_type: u64, index_count: u64, index_type: u64, index_buffer: ?*mut u8, index_buffer_offset: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_draw_indexed_primitives_instanced(object: ?*mut u8, primitive_type: u64, index_count: u64, index_type: u64, index_buffer: ?*mut u8, index_buffer_offset: u64, instance_count: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_draw_indexed_primitives_instanced_base_instance(object: ?*mut u8, primitive_type: u64, index_count: u64, index_type: u64, index_buffer: ?*mut u8, index_buffer_offset: u64, instance_count: u64, base_vertex: i64, base_instance: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_draw_indexed_primitives_indirect(object: ?*mut u8, primitive_type: u64, index_type: u64, index_buffer: ?*mut u8, index_buffer_offset: u64, indirect_buffer: ?*mut u8, indirect_buffer_offset: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_draw_mesh_threadgroups(object: ?*mut u8, threadgroups_per_grid: MTLSize, threads_per_object_threadgroup: MTLSize, threads_per_mesh_threadgroup: MTLSize) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_draw_mesh_threadgroups_with_indirect_buffer(object: ?*mut u8, indirect_buffer: ?*mut u8, indirect_buffer_offset: u64, threads_per_object_threadgroup: MTLSize, threads_per_mesh_threadgroup: MTLSize) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_draw_mesh_threads(object: ?*mut u8, threads_per_grid: MTLSize, threads_per_object_threadgroup: MTLSize, threads_per_mesh_threadgroup: MTLSize) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_use_resource(object: ?*mut u8, resource: ?*mut u8, usage: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_use_resource_at(object: ?*mut u8, resource: ?*mut u8, usage: u64, stages: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_use_resources(object: ?*mut u8, resources: ?[*]const ?*mut u8, usage: u64, stages: u64, resources_count: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_use_heap(object: ?*mut u8, heap: ?*mut u8) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_use_heap_at(object: ?*mut u8, heap: ?*mut u8, stages: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_use_heaps(object: ?*mut u8, heaps: ?[*]const ?*mut u8, stages: u64, heaps_count: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_execute_commands_in_buffer(object: ?*mut u8, buffer: ?*mut u8, with_range: NSRange) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_update_fence(object: ?*mut u8, fence: ?*mut u8, after_stages: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_wait_for_fence(object: ?*mut u8, fence: ?*mut u8, before_stages: u64) -> ()
+unsafe extern "C" fn metal_RenderCommandEncoder_sample_counters_in_buffer(object: ?*mut u8, sample_buffer: ?*mut u8, sample_index: u64, with_barrier: u8) -> ()
+unsafe extern "C" fn metal_BlitCommandEncoder_synchronize_resource(object: ?*mut u8, resource: ?*mut u8) -> ()
+unsafe extern "C" fn metal_BlitCommandEncoder_fill_buffer(object: ?*mut u8, destination_buffer: ?*mut u8, range: NSRange, value: u8) -> ()
+unsafe extern "C" fn metal_BlitCommandEncoder_generate_mipmaps(object: ?*mut u8, texture: ?*mut u8) -> ()
+unsafe extern "C" fn metal_BlitCommandEncoder_copy_from_buffer(object: ?*mut u8, source_buffer: ?*mut u8, source_offset: u64, destination_buffer: ?*mut u8, destination_offset: u64, size: u64) -> ()
+unsafe extern "C" fn metal_BlitCommandEncoder_copy_from_texture(object: ?*mut u8, source_texture: ?*mut u8, source_slice: u64, source_level: u64, source_origin: MTLOrigin, source_size: MTLSize, destination_texture: ?*mut u8, destination_slice: u64, destination_level: u64, destination_origin: MTLOrigin) -> ()
+unsafe extern "C" fn metal_BlitCommandEncoder_copy_from_buffer_to_texture(object: ?*mut u8, source_buffer: ?*mut u8, source_offset: u64, source_bytes_per_row: u64, source_bytes_per_image: u64, source_size: MTLSize, destination_texture: ?*mut u8, destination_slice: u64, destination_level: u64, destination_origin: MTLOrigin, options: u64) -> ()
+unsafe extern "C" fn metal_BlitCommandEncoder_copy_from_texture_to_buffer(object: ?*mut u8, source_texture: ?*mut u8, source_slice: u64, source_level: u64, source_origin: MTLOrigin, source_size: MTLSize, destination_buffer: ?*mut u8, destination_offset: u64, destination_bytes_per_row: u64, destination_bytes_per_image: u64, options: u64) -> ()
+unsafe extern "C" fn metal_BlitCommandEncoder_optimize_contents_for_gpu_access(object: ?*mut u8, texture: ?*mut u8) -> ()
+unsafe extern "C" fn metal_BlitCommandEncoder_optimize_contents_for_gpu_access_slice_level(object: ?*mut u8, texture: ?*mut u8, slice: u64, level: u64) -> ()
+unsafe extern "C" fn metal_BlitCommandEncoder_optimize_contents_for_cpu_access(object: ?*mut u8, texture: ?*mut u8) -> ()
+unsafe extern "C" fn metal_BlitCommandEncoder_optimize_contents_for_cpu_access_slice_level(object: ?*mut u8, texture: ?*mut u8, slice: u64, level: u64) -> ()
+unsafe extern "C" fn metal_BlitCommandEncoder_update_fence(object: ?*mut u8, fence: ?*mut u8) -> ()
+unsafe extern "C" fn metal_BlitCommandEncoder_wait_for_fence(object: ?*mut u8, fence: ?*mut u8) -> ()
+unsafe extern "C" fn metal_BlitCommandEncoder_copy_indirect_command_buffer(object: ?*mut u8, source: ?*mut u8, source_range: NSRange, destination: ?*mut u8, destination_index: u64) -> ()
+unsafe extern "C" fn metal_BlitCommandEncoder_reset_commands_in_buffer(object: ?*mut u8, buffer: ?*mut u8, range: NSRange) -> ()
+unsafe extern "C" fn metal_BlitCommandEncoder_optimize_indirect_command_buffer(object: ?*mut u8, buffer: ?*mut u8, range: NSRange) -> ()
+unsafe extern "C" fn metal_BlitCommandEncoder_sample_counters_in_buffer(object: ?*mut u8, sample_buffer: ?*mut u8, sample_index: u64, with_barrier: u8) -> ()
+unsafe extern "C" fn metal_BlitCommandEncoder_resolve_counters(object: ?*mut u8, sample_buffer: ?*mut u8, range: NSRange, destination_buffer: ?*mut u8, destination_offset: u64) -> ()
+unsafe extern "C" fn metal_ComputeCommandEncoder_set_compute_pipeline_state(object: ?*mut u8, state: ?*mut u8) -> ()
+unsafe extern "C" fn metal_ComputeCommandEncoder_set_buffer(object: ?*mut u8, index: u64, buffer: ?*mut u8, offset: u64) -> ()
+unsafe extern "C" fn metal_ComputeCommandEncoder_set_buffers(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, offsets: ?[*]const u64, data_count: u64) -> ()
+unsafe extern "C" fn metal_ComputeCommandEncoder_set_texture(object: ?*mut u8, index: u64, texture: ?*mut u8) -> ()
+unsafe extern "C" fn metal_ComputeCommandEncoder_set_textures(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, data_count: u64) -> ()
+unsafe extern "C" fn metal_ComputeCommandEncoder_set_sampler_state(object: ?*mut u8, index: u64, sampler: ?*mut u8) -> ()
+unsafe extern "C" fn metal_ComputeCommandEncoder_set_sampler_states(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, data_count: u64) -> ()
+unsafe extern "C" fn metal_ComputeCommandEncoder_set_sampler_state_with_lod(object: ?*mut u8, index: u64, sampler: ?*mut u8, lod_clamp_start: f32, lod_clamp_end: f32) -> ()
+unsafe extern "C" fn metal_ComputeCommandEncoder_set_bytes(object: ?*mut u8, index: u64, length: u64, bytes: ?*const u8) -> ()
+unsafe extern "C" fn metal_ComputeCommandEncoder_set_visible_function_table(object: ?*mut u8, buffer_index: u64, visible_function_table: ?*mut u8) -> ()
+unsafe extern "C" fn metal_ComputeCommandEncoder_set_visible_function_tables(object: ?*mut u8, buffer_start_index: u64, visible_function_tables: ?[*]const ?*mut u8, visible_function_tables_count: u64) -> ()
+unsafe extern "C" fn metal_ComputeCommandEncoder_dispatch_thread_groups(object: ?*mut u8, thread_groups_count: MTLSize, threads_per_threadgroup: MTLSize) -> ()
+unsafe extern "C" fn metal_ComputeCommandEncoder_dispatch_threads(object: ?*mut u8, threads_per_grid: MTLSize, threads_per_thread_group: MTLSize) -> ()
+unsafe extern "C" fn metal_ComputeCommandEncoder_dispatch_thread_groups_indirect(object: ?*mut u8, buffer: ?*mut u8, offset: u64, threads_per_threadgroup: MTLSize) -> ()
+unsafe extern "C" fn metal_ComputeCommandEncoder_set_threadgroup_memory_length(object: ?*mut u8, at_index: u64, size: u64) -> ()
+unsafe extern "C" fn metal_ComputeCommandEncoder_memory_barrier_with_resources(object: ?*mut u8, resources: ?[*]const ?*mut u8, resources_count: u64) -> ()
+unsafe extern "C" fn metal_ComputeCommandEncoder_use_resource(object: ?*mut u8, resource: ?*mut u8, usage: u64) -> ()
+unsafe extern "C" fn metal_ComputeCommandEncoder_use_resources(object: ?*mut u8, resources: ?[*]const ?*mut u8, usage: u64, resources_count: u64) -> ()
+unsafe extern "C" fn metal_ComputeCommandEncoder_use_heap(object: ?*mut u8, heap: ?*mut u8) -> ()
+unsafe extern "C" fn metal_ComputeCommandEncoder_use_heaps(object: ?*mut u8, heaps: ?[*]const ?*mut u8, heaps_count: u64) -> ()
+unsafe extern "C" fn metal_ComputeCommandEncoder_update_fence(object: ?*mut u8, fence: ?*mut u8) -> ()
+unsafe extern "C" fn metal_ComputeCommandEncoder_wait_for_fence(object: ?*mut u8, fence: ?*mut u8) -> ()
+unsafe extern "C" fn metal_ComputeCommandEncoder_set_acceleration_structure(object: ?*mut u8, index: u64, accel: ?*mut u8) -> ()
+unsafe extern "C" fn metal_ComputeCommandEncoder_set_intersection_function_table(object: ?*mut u8, index: u64, table: ?*mut u8) -> ()
+unsafe extern "C" fn metal_ComputeCommandEncoder_sample_counters_in_buffer(object: ?*mut u8, sample_buffer: ?*mut u8, sample_index: u64, with_barrier: u8) -> ()
+unsafe extern "C" fn metal_ArgumentEncoder_encoded_length(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_ArgumentEncoder_alignment(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_ArgumentEncoder_set_argument_buffer(object: ?*mut u8, buffer: ?*mut u8, offset: u64) -> ()
+unsafe extern "C" fn metal_ArgumentEncoder_set_argument_buffer_to_element(object: ?*mut u8, array_element: u64, buffer: ?*mut u8, offset: u64) -> ()
+unsafe extern "C" fn metal_ArgumentEncoder_set_buffer(object: ?*mut u8, at_index: u64, buffer: ?*mut u8, offset: u64) -> ()
+unsafe extern "C" fn metal_ArgumentEncoder_set_buffers(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, offsets: ?[*]const u64, data_count: u64) -> ()
+unsafe extern "C" fn metal_ArgumentEncoder_set_texture(object: ?*mut u8, at_index: u64, texture: ?*mut u8) -> ()
+unsafe extern "C" fn metal_ArgumentEncoder_set_textures(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, data_count: u64) -> ()
+unsafe extern "C" fn metal_ArgumentEncoder_set_sampler_state(object: ?*mut u8, at_index: u64, sampler_state: ?*mut u8) -> ()
+unsafe extern "C" fn metal_ArgumentEncoder_set_sampler_states(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, data_count: u64) -> ()
+unsafe extern "C" fn metal_ArgumentEncoder_set_render_pipeline_state(object: ?*mut u8, at_index: u64, pipeline: ?*mut u8) -> ()
+unsafe extern "C" fn metal_ArgumentEncoder_set_render_pipeline_states(object: ?*mut u8, start_index: u64, pipelines: ?[*]const ?*mut u8, pipelines_count: u64) -> ()
+unsafe extern "C" fn metal_ArgumentEncoder_constant_data(object: ?*mut u8, at_index: u64) -> ?*mut u8
+unsafe extern "C" fn metal_ArgumentEncoder_set_indirect_command_buffer(object: ?*mut u8, at_index: u64, buffer: ?*mut u8) -> ()
+unsafe extern "C" fn metal_ArgumentEncoder_set_indirect_command_buffers(object: ?*mut u8, start_index: u64, data: ?[*]const ?*mut u8, data_count: u64) -> ()
+unsafe extern "C" fn metal_ArgumentEncoder_new_argument_encoder_for_buffer(object: ?*mut u8, index: u64) -> ?*mut u8
+unsafe extern "C" fn metal_IndirectCommandBufferDescriptor_new() -> ?*mut u8
+unsafe extern "C" fn metal_IndirectCommandBufferDescriptor_command_types(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_IndirectCommandBufferDescriptor_set_command_types(object: ?*mut u8, types: u64) -> ()
+unsafe extern "C" fn metal_IndirectCommandBufferDescriptor_inherit_buffers(object: ?*mut u8) -> u8
+unsafe extern "C" fn metal_IndirectCommandBufferDescriptor_set_inherit_buffers(object: ?*mut u8, inherit: u8) -> ()
+unsafe extern "C" fn metal_IndirectCommandBufferDescriptor_inherit_pipeline_state(object: ?*mut u8) -> u8
+unsafe extern "C" fn metal_IndirectCommandBufferDescriptor_set_inherit_pipeline_state(object: ?*mut u8, inherit: u8) -> ()
+unsafe extern "C" fn metal_IndirectCommandBufferDescriptor_max_vertex_buffer_bind_count(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_IndirectCommandBufferDescriptor_set_max_vertex_buffer_bind_count(object: ?*mut u8, count: u64) -> ()
+unsafe extern "C" fn metal_IndirectCommandBufferDescriptor_max_fragment_buffer_bind_count(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_IndirectCommandBufferDescriptor_set_max_fragment_buffer_bind_count(object: ?*mut u8, count: u64) -> ()
+unsafe extern "C" fn metal_IndirectCommandBufferDescriptor_max_kernel_buffer_bind_count(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_IndirectCommandBufferDescriptor_set_max_kernel_buffer_bind_count(object: ?*mut u8, count: u64) -> ()
+unsafe extern "C" fn metal_IndirectCommandBuffer_size(object: ?*mut u8) -> u64
+unsafe extern "C" fn metal_IndirectCommandBuffer_indirect_render_command_at_index(object: ?*mut u8, index: u64) -> ?*mut u8
+unsafe extern "C" fn metal_IndirectCommandBuffer_indirect_compute_command_at_index(object: ?*mut u8, index: u64) -> ?*mut u8
+unsafe extern "C" fn metal_IndirectCommandBuffer_reset_with_range(object: ?*mut u8, range: NSRange) -> ()
+unsafe extern "C" fn metal_IndirectRenderCommand_set_render_pipeline_state(object: ?*mut u8, pipeline_state: ?*mut u8) -> ()
+unsafe extern "C" fn metal_IndirectRenderCommand_set_vertex_buffer(object: ?*mut u8, index: u64, buffer: ?*mut u8, offset: u64) -> ()
+unsafe extern "C" fn metal_IndirectRenderCommand_set_fragment_buffer(object: ?*mut u8, index: u64, buffer: ?*mut u8, offset: u64) -> ()
+unsafe extern "C" fn metal_IndirectRenderCommand_draw_primitives(object: ?*mut u8, primitive_type: u64, vertex_start: u64, vertex_count: u64, instance_count: u64, base_instance: u64) -> ()
+unsafe extern "C" fn metal_IndirectRenderCommand_draw_indexed_primitives(object: ?*mut u8, primitive_type: u64, index_count: u64, index_type: u64, index_buffer: ?*mut u8, index_buffer_offset: u64, instance_count: u64, base_vertex: u64, base_instance: u64) -> ()
+unsafe extern "C" fn metal_IndirectRenderCommand_draw_patches(object: ?*mut u8, number_of_patch_control_points: u64, patch_start: u64, patch_count: u64, patch_index_buffer: ?*mut u8, patch_index_buffer_offset: u64, instance_count: u64, base_instance: u64, tesselation_factor_buffer: ?*mut u8, tesselation_factor_buffer_offset: u64, tesselation_factor_buffer_instance_stride: u64) -> ()
+unsafe extern "C" fn metal_IndirectRenderCommand_draw_indexed_patches(object: ?*mut u8, number_of_patch_control_points: u64, patch_start: u64, patch_count: u64, patch_index_buffer: ?*mut u8, patch_index_buffer_offset: u64, control_point_index_buffer: ?*mut u8, control_point_index_buffer_offset: u64, instance_count: u64, base_instance: u64, tesselation_factor_buffer: ?*mut u8, tesselation_factor_buffer_offset: u64, tesselation_factor_buffer_instance_stride: u64) -> ()
+unsafe extern "C" fn metal_IndirectRenderCommand_reset(object: ?*mut u8) -> ()
+unsafe extern "C" fn metal_IndirectComputeCommand_set_compute_pipeline_state(object: ?*mut u8, state: ?*mut u8) -> ()
+unsafe extern "C" fn metal_IndirectComputeCommand_set_kernel_buffer(object: ?*mut u8, index: u64, buffer: ?*mut u8, offset: u64) -> ()
+unsafe extern "C" fn metal_IndirectComputeCommand_set_threadgroup_memory_length(object: ?*mut u8, index: u64, length: u64) -> ()
+unsafe extern "C" fn metal_IndirectComputeCommand_set_stage_in_region(object: ?*mut u8, region: MTLRegion) -> ()
+unsafe extern "C" fn metal_IndirectComputeCommand_set_barrier(object: ?*mut u8) -> ()
+unsafe extern "C" fn metal_IndirectComputeCommand_clear_barrier(object: ?*mut u8) -> ()
+unsafe extern "C" fn metal_IndirectComputeCommand_concurrent_dispatch_threadgroups(object: ?*mut u8, thread_groups_per_grid: MTLSize, threads_per_threadgroup: MTLSize) -> ()
+unsafe extern "C" fn metal_IndirectComputeCommand_concurrent_dispatch_threads(object: ?*mut u8, thread_groups_per_grid: MTLSize, threads_per_threadgroup: MTLSize) -> ()
+unsafe extern "C" fn metal_IndirectComputeCommand_reset(object: ?*mut u8) -> ()

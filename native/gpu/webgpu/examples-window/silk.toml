@@ -1,0 +1,31 @@
+[package]
+name = "gpu-webgpu-examples-window"
+version = "0.1.0"
+silk-version = "0.1.0-dev.61+91f335268900"
+
+[dependencies]
+webgpu_sys = { path = "../sys", package = "gpu-webgpu-sys" }
+webgpu = { path = "..", package = "gpu-webgpu" }
+
+# The dev-only GLFW host. It is not a workspace member because it needs GLFW 3.4 installed:
+# on Linux the distribution's libglfw (libglfw3-dev), on macOS a GLFW the linker finds by default,
+# on Windows the pinned release that scripts/prepare-windows.ps1 names as the `glfw` override.
+[native]
+sources = [
+  { objc = "native/metal_layer.m", flags = ["-fobjc-arc", "-O2"], os = "macos" },
+]
+link = [
+  { library = "glfw", mode = "dynamic", os = ["linux", "macos"] },
+  { framework = "Cocoa", os = "macos" },
+  { framework = "QuartzCore", os = "macos" },
+  { static-archive = "glfw:lib-vc2022/glfw3dll.lib", os = "windows" },
+  # A `library` entry for kernel32 does not reach the Windows linker, so the override carries it.
+  { static-archive = "glfw:lib-vc2022/kernel32.lib", os = "windows" },
+]
+
+# GLFW's Windows release is a zip, which Silk does not extract, so scripts/prepare-windows.ps1 always
+# replaces this archive with an override; the entry records the pinned release. Other hosts never
+# fetch it.
+[native.archive.glfw]
+url = "https://github.com/glfw/glfw/releases/download/3.4/glfw-3.4.bin.WIN64.zip"
+sha256 = "54efa829400f2a0537f742b2b3bdd74e437bb4f2f048e4b7d3c5557d11a611e6"

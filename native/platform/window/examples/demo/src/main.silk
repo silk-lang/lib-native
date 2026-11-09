@@ -1,0 +1,268 @@
+//! The phase 5 exit demo: one window cleared on WebGPU, redrawn only when something asks.
+//!
+//! - Move the mouse: the color follows it. Each frame is logged, so an idle window logs
+//!   nothing.
+//! - Drag a window edge: frames keep coming during the live resize.
+//! - Move the window to a display with another scale factor: the scale change is logged.
+//! - Press Space: toggles a continuous animation, one frame per display refresh.
+//! - Type, including with a Japanese input method: composition and committed text are
+//!   logged, and the candidate window opens at the mouse position.
+//! - File > Open… (Command+O) and File > Save… (Command+S) open native dialogs.
+import window.event { Event, Key, Modifiers }
+import window.keys { KeyCode }
+import window.macos { MacPlatform }
+import window.menu { MenuBar, OpenDialog, SaveDialog, Shortcut, SystemItem }
+import window.platform { Platform }
+import window.types { WindowId, WindowOptions, WindowError, Wait, ImeState, RawSurface }
+import webgpu.runtime { Instance, RequestAdapterOptions, GpuError, Device }
+import webgpu.resources { Queue }
+import webgpu.surface { SurfaceTarget, Surface, SurfaceConfiguration }
+import webgpu.descriptors {
+  DeviceDescriptor,
+  TextureViewDescriptor,
+  Color,
+  RenderPassColorAttachment,
+  RenderPassDescriptor
+}
+import webgpu.resources { createCommandEncoder, getQueue }
+import webgpu_sys.generated_webgpu as sys
+import silk.core.effect { Effect }
+import silk.core.option { Option }
+import silk.geometry.rect { Rect }
+import silk.geometry.size { Size2 }
+import silk.io.writer_native { StderrWriter }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.mem.pointer { Pointer }
+import silk.num.f64
+import silk.text.string { String }
+
+const OPEN: u32 = 1
+
+const SAVE: u32 = 2
+
+const ANIMATE: u32 = 3
+
+pub fn main() -> i32 {
+  return run Effect.catchAll(program(), failed)
+}
+
+effect fn failed<E>(error: E) -> i32 {
+  drop error
+  StderrWriter.print("demo: failed to start the window or the GPU\n", &())
+  return 1
+}
+
+effect fn program() -> i32
+  ! WindowError | GpuError | OutOfMemoryError {
+  let mut allocator = Allocator.systemAllocatorProvider()
+  let instance = run Instance.create()
+  run demo(&instance) |> Effect.provideMut<Allocator>(&mut allocator)
+  return 0
+}
+
+effect fn menus(platform: &mut MacPlatform) -> ()
+  ! OutOfMemoryError
+  ? &mut Allocator {
+  let mut bar = MenuBar.make()
+  run bar.begin("Demo")
+  run bar.system(SystemItem.About)
+  run bar.separator()
+  run bar.system(SystemItem.Services)
+  run bar.separator()
+  run bar.system(SystemItem.Hide)
+  run bar.system(SystemItem.HideOthers)
+  run bar.system(SystemItem.ShowAll)
+  run bar.separator()
+  run bar.system(SystemItem.Quit)
+  run bar.end()
+  run bar.begin("File")
+  run bar.action("Open…", OPEN, Option<Shortcut>.some(Shortcut.command('o')))
+  run bar.action("Save…", SAVE, Option<Shortcut>.some(Shortcut.command('s')))
+  run bar.separator()
+  run bar.system(SystemItem.CloseWindow)
+  run bar.end()
+  run bar.begin("View")
+  run bar.action("Animate", ANIMATE, Option<Shortcut>.some(Shortcut.command('e')))
+  run bar.system(SystemItem.ToggleFullScreen)
+  run bar.end()
+  run bar.begin("Window")
+  run bar.system(SystemItem.Minimize)
+  run bar.system(SystemItem.Zoom)
+  run bar.separator()
+  run bar.system(SystemItem.BringAllToFront)
+  run bar.end()
+  run platform.setMenuBar(&bar)
+}
+
+struct Scene {
+  x: f64,
+  y: f64,
+  width: f64,
+  height: f64,
+  time: f64,
+  animating: bool,
+  frames: u64,
+}
+
+effect fn demo(instance: &Instance) -> ()
+  ! WindowError | GpuError | OutOfMemoryError
+  ? &mut Allocator {
+  let mut platform = run MacPlatform.start()
+  run menus(&mut platform)
+  let mut options = WindowOptions.make("platform/window demo", 800.0, 600.0)
+  options.minSize = Option<Size2<f64>>.some(Size2<f64>.new(240.0, 160.0))
+  let mainWindow = run platform.openWindow(&options)
+  platform.setIme(mainWindow, ImeState.at(Rect<f64>.new(20.0, 20.0, 22.0, 40.0)))
+  let owner = mainWindow
+  let layer = match platform.rawSurface(mainWindow) {
+    RawSurface.MetalLayer { layer } => layer
+    _ => Pointer.null<u8>()
+  }
+  let target = unsafe SurfaceTarget.metalLayer(&owner, layer)
+  let surface = run Surface.create(instance, &target, String.utf8Bytes("demo"))
+  let adapterOptions = RequestAdapterOptions.forSurface(&surface)
+  let adapter = run instance.requestAdapter(&adapterOptions)
+  let capabilities = run surface.getCapabilities(&adapter)
+  if capabilities.formats().length == 0 {
+    fail GpuError.status(sys.WGPUStatus_Error)
+  }
+  let device = run adapter.requestDevice(&DeviceDescriptor.default())
+  let queue = run getQueue(&device)
+  let mut configuration = SurfaceConfiguration.make(&device, capabilities.formats()[0], 1, 1)
+  if capabilities.alphaModes().length != 0 {
+    configuration.setAlphaMode(capabilities.alphaModes()[0])
+  }
+  let mut scene = Scene {
+    x: 0.5,
+    y: 0.5,
+    width: 800.0,
+    height: 600.0,
+    time: 0.0,
+    animating: false,
+    frames: 0,
+  }
+  let mut configured = false
+  while true {
+    match move run platform.nextEvent(Wait.Forever) {
+      Option<Event>.Some { value } => {
+        match &value {
+          Event.Resized { window, size, scaleFactor } => {
+            scene.width = size.width
+            scene.height = size.height
+            let width = f64.toU32(f64.round(size.width * scaleFactor))
+            let height = f64.toU32(f64.round(size.height * scaleFactor))
+            if width > 0 && height > 0 {
+              surface.resize(&mut configuration, width, height)
+              configured = true
+            }
+          }
+          Event.ScaleFactorChanged { window, scaleFactor } => {
+            StderrWriter.print("scale factor {}\n", &.(scaleFactor))
+          }
+          Event.RequestFrame { window, targetTime } => {
+            if configured {
+              scene.frames = scene.frames + 1
+              scene.time = targetTime
+              StderrWriter.print("frame {} at {}\n", &(scene.frames, targetTime))
+              run draw(&surface, &device, &queue, &scene)
+            }
+            if scene.animating {
+              platform.requestFrame(window)
+            }
+          }
+          Event.MouseMoved { window, position, modifiers } => {
+            scene.x = position.x / f64.max(scene.width, 1.0)
+            scene.y = position.y / f64.max(scene.height, 1.0)
+            platform.setIme(
+              window,
+              ImeState.at(
+                Rect<f64>.new(position.x, position.y, position.x + 2.0, position.y + 20.0),
+              ),
+            )
+            platform.requestFrame(window)
+          }
+          Event.KeyDown { window, key, code, modifiers, repeat, imeHandled } => {
+            if code == KeyCode.Space && !imeHandled && !repeat {
+              scene.animating = !scene.animating
+              platform.requestFrame(window)
+            }
+          }
+          Event.ImePreedit { window, text, selectionStart, selectionEnd } => {
+            StderrWriter.print(
+              "preedit \"{}\" caret {}..{}\n",
+              &(text.view(), selectionStart, selectionEnd),
+            )
+          }
+          Event.TextInput { window, text } => {
+            StderrWriter.print("text \"{}\"\n", &.(text.view()))
+          }
+          Event.MenuAction { action } => {
+            if action == OPEN {
+              let mut dialog = OpenDialog.file("Open an SVG or PNG file", "svg,png")
+              dialog.multiple = true
+              dialog.parent = Option<WindowId>.some(owner)
+              drop run platform.openFileDialog(&dialog)
+            } else if action == SAVE {
+              drop run platform.saveFileDialog(
+                &SaveDialog.named("Save the demo", "demo.txt", "txt"),
+              )
+            } else if action == ANIMATE {
+              scene.animating = !scene.animating
+              platform.requestFrame(owner)
+            }
+          }
+          Event.DialogClosed { dialog, paths } => {
+            StderrWriter.print("dialog {} closed with {} paths\n", &(dialog.value, paths.length()))
+            let chosen = paths.asSlice()
+            let mut i: usize = 0
+            while i < chosen.length {
+              StderrWriter.print("  {}\n", &.(chosen[i].view()))
+              i = i + 1
+            }
+          }
+          Event.AppearanceChanged { appearance } => {
+            StderrWriter.print("appearance changed\n", &())
+          }
+          Event.CloseRequested { window } => {
+            break
+          }
+          Event.QuitRequested => {
+            break
+          }
+          _ => {}
+        }
+      }
+      _ => {}
+    }
+  }
+  surface.unconfigure()
+  platform.closeWindow(owner)
+}
+
+effect fn draw(surface: &Surface<'_>, device: &Device, queue: &Queue, scene: &Scene) -> ()
+  ! GpuError | OutOfMemoryError {
+  let frame = run surface.getCurrentTexture()
+  let view = run frame.texture.createView(&TextureViewDescriptor.default())
+  let mut pulse = 0.5
+  if scene.animating {
+    pulse = 0.5 + 0.5 * f64.sin(scene.time * 2.0)
+  }
+  let mut clear = Color.default()
+  clear.setR(0.1 + 0.6 * scene.x)
+  clear.setG(0.1 + 0.5 * pulse)
+  clear.setB(0.1 + 0.6 * scene.y)
+  clear.setA(1.0)
+  let mut attachment = RenderPassColorAttachment.default().withView(&view)
+  attachment.setClearValue(clear)
+  attachment.setLoadOp(sys.WGPULoadOp_Clear)
+  attachment.setStoreOp(sys.WGPUStoreOp_Store)
+  let attachments = [attachment]
+  let passDescriptor = RenderPassDescriptor.default().withColorAttachments(&attachments)
+  let mut encoder = run createCommandEncoder(device, String.utf8Bytes("demo"))
+  let pass = run encoder.beginRenderPass(&passDescriptor)
+  pass.end()
+  let command = run encoder.finish(String.utf8Bytes("demo"))
+  queue.submit(&[command.reference()])
+  run surface.present()
+  run device.checkErrors()
+}

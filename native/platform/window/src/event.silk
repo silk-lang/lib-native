@@ -1,0 +1,225 @@
+//! Input, window, and app events delivered by `Platform.nextEvent`.
+//!
+//! Frames are events too: after `Platform.requestFrame`, the platform delivers one
+//! `RequestFrame` for that window, paced by its display, and the app draws then. A resize
+//! or a scale change also delivers `RequestFrame`, so a window is only redrawn when
+//! something asked for it.
+import keys { KeyCode, NamedKey }
+import types { WindowId, DialogId, Appearance }
+import silk.collections.list { List }
+import silk.core.equal { Equal }
+import silk.core.ownership { Copy }
+import silk.geometry.point { Point2 }
+import silk.geometry.size { Size2 }
+import silk.geometry.vector { Vector2 }
+import silk.text.string { String }
+
+/// Modifier keys held during an event.
+pub struct Modifiers {
+  pub shift: bool,
+  pub control: bool,
+  pub alt: bool,
+  /// Command on macOS, the Windows key elsewhere.
+  pub meta: bool,
+  pub capsLock: bool,
+  /// The Fn key (macOS) or a function-key modifier, when the system reports it.
+  pub function: bool,
+}
+
+impl Copy for Modifiers {}
+
+impl Equal for Modifiers {
+  fn equals(left: &Self, right: &Self) -> bool {
+    return left.shift == right.shift && left.control == right.control && left.alt == right.alt
+      && left.meta == right.meta
+      && left.capsLock == right.capsLock
+      && left.function == right.function
+  }
+}
+
+impl Modifiers {
+  pub fn none() -> Modifiers {
+    return Modifiers {
+      shift: false,
+      control: false,
+      alt: false,
+      meta: false,
+      capsLock: false,
+      function: false,
+    }
+  }
+
+  /// The platform's shortcut modifier: Command on macOS, Control elsewhere.
+  pub fn command(self: &Self) -> bool {
+    static if Intrinsic.targetOperatingSystem() == "darwin" {
+      return self.meta
+    } else {
+      return self.control
+    }
+  }
+
+  /// Packs the flags as the native backends' C ABI does: bit 0 shift, 1 control, 2 alt,
+  /// 3 meta, 4 caps lock, 5 function.
+  pub fn fromBits(bits: u32) -> Modifiers {
+    return Modifiers {
+      shift: (bits & 1) != 0,
+      control: (bits & 2) != 0,
+      alt: (bits & 4) != 0,
+      meta: (bits & 8) != 0,
+      capsLock: (bits & 16) != 0,
+      function: (bits & 32) != 0,
+    }
+  }
+
+  pub fn bits(self: &Self) -> u32 {
+    let mut bits: u32 = 0
+    if self.shift {
+      bits = bits | 1
+    }
+    if self.control {
+      bits = bits | 2
+    }
+    if self.alt {
+      bits = bits | 4
+    }
+    if self.meta {
+      bits = bits | 8
+    }
+    if self.capsLock {
+      bits = bits | 16
+    }
+    if self.function {
+      bits = bits | 32
+    }
+    return bits
+  }
+}
+
+/// The logical key: what the key means on the current layout.
+pub union Key {
+  /// A key that types characters. `text` is what it types with Shift applied but with the
+  /// other modifiers ignored, so Command+Shift+Z reports "Z".
+  Character { pub text: String },
+  Named { pub key: NamedKey },
+}
+
+pub enum MouseButton {
+  Left,
+  Right,
+  Middle,
+  Back,
+  Forward,
+  Other,
+}
+
+/// Where a trackpad gesture or a momentum scroll is.
+pub enum Phase {
+  /// Not part of a gesture, like the steps of a mouse wheel.
+  None,
+  Began,
+  Changed,
+  Ended,
+  Cancelled,
+  /// Momentum after the fingers lifted, until it ends.
+  Momentum,
+  MomentumEnded,
+}
+
+pub union ScrollDelta {
+  /// Lines and columns, from a mouse wheel with notches.
+  Lines { pub delta: Vector2<f64> },
+  /// Logical points, from a trackpad or a smooth wheel.
+  Points { pub delta: Vector2<f64> },
+}
+
+impl Copy for ScrollDelta {}
+
+pub union Event {
+  // Frames and window state.
+
+  /// Draw the window now. `targetTime` is when the frame will reach the display, in seconds
+  /// of the same monotonic clock across frames; animations sample their state at it.
+  RequestFrame { pub window: WindowId, pub targetTime: f64 },
+  /// The content area changed size. `size` is in logical points.
+  Resized { pub window: WindowId, pub size: Size2<f64>, pub scaleFactor: f64 },
+  /// The window moved to a display with another scale factor, or the factor changed.
+  ScaleFactorChanged { pub window: WindowId, pub scaleFactor: f64 },
+  /// The window's top-left corner moved, in logical points of the desktop.
+  Moved { pub window: WindowId, pub position: Point2<f64> },
+  Focused { pub window: WindowId, pub focused: bool },
+  /// Whether any part of the window can be seen. Hidden windows get no frames.
+  Occluded { pub window: WindowId, pub occluded: bool },
+  /// The user asked to close the window. It stays open until `closeWindow`.
+  CloseRequested { pub window: WindowId },
+  /// The window entered or left full screen.
+  FullScreenChanged { pub window: WindowId, pub fullScreen: bool },
+
+  // Keyboard and text.
+
+  /// A key went down. `imeHandled` is true when the input method used the key for
+  /// composition; such a key should not trigger shortcuts or edits.
+  KeyDown {
+    pub window: WindowId,
+    pub key: Key,
+    pub code: KeyCode,
+    pub modifiers: Modifiers,
+    pub repeat: bool,
+    pub imeHandled: bool,
+  },
+  KeyUp { pub window: WindowId, pub key: Key, pub code: KeyCode, pub modifiers: Modifiers },
+  ModifiersChanged { pub window: WindowId, pub modifiers: Modifiers },
+  /// Text to insert at the caret: a typed character, or text the input method committed.
+  /// Shortcuts with Command or Control type no text.
+  TextInput { pub window: WindowId, pub text: String },
+  /// The input method's composition (preedit) text, drawn at the caret until it is
+  /// committed. `selectionStart` and `selectionEnd` are UTF-8 byte offsets into `text`,
+  /// the caret when equal. Empty text ends the composition.
+  ImePreedit {
+    pub window: WindowId,
+    pub text: String,
+    pub selectionStart: usize,
+    pub selectionEnd: usize,
+  },
+
+  // Pointer.
+
+  MouseMoved { pub window: WindowId, pub position: Point2<f64>, pub modifiers: Modifiers },
+  MouseDown {
+    pub window: WindowId,
+    pub button: MouseButton,
+    pub position: Point2<f64>,
+    pub modifiers: Modifiers,
+    /// 1 for a single click, 2 for a double click, and so on.
+    pub clickCount: u32,
+  },
+  MouseUp {
+    pub window: WindowId,
+    pub button: MouseButton,
+    pub position: Point2<f64>,
+    pub modifiers: Modifiers,
+  },
+  MouseEntered { pub window: WindowId, pub position: Point2<f64> },
+  MouseExited { pub window: WindowId },
+  /// Positive y moves the content down, to show what is above it. The system's natural
+  /// scrolling setting is already applied.
+  Scroll {
+    pub window: WindowId,
+    pub position: Point2<f64>,
+    pub delta: ScrollDelta,
+    pub phase: Phase,
+    pub modifiers: Modifiers,
+  },
+  /// A trackpad pinch. `delta` is the change of the magnification, 0.1 for 10% larger.
+  Pinch { pub window: WindowId, pub position: Point2<f64>, pub delta: f64, pub phase: Phase },
+
+  // App.
+
+  /// A menu item from `Platform.setMenuBar` was chosen, by click or by its shortcut.
+  MenuAction { pub action: u32 },
+  /// A file dialog closed. `paths` is empty when it was cancelled.
+  DialogClosed { pub dialog: DialogId, pub paths: List<String> },
+  AppearanceChanged { pub appearance: Appearance },
+  /// The user asked to quit, from the app menu or the system. The app decides whether to
+  /// stop its event loop.
+  QuitRequested,
+}

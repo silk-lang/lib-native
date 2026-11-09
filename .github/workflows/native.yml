@@ -1,0 +1,188 @@
+name: Native libraries
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: native-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  unix:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-26.04
+            target: x86_64-unknown-linux-gnu
+            setup: --linux-gpu
+          - os: macos-26
+            target: aarch64-apple-darwin
+            setup: ''
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: |
+            .cache/ci
+            ~/.silk/archives
+          key: native-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('toolchains.lock.json', 'native/gpu/webgpu/scripts/ci-lock.json') }}
+      - name: Linux system and display prerequisites
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libx11-dev libxkbcommon-dev libwayland-dev libglfw3-dev libvulkan1 xvfb xauth weston
+      - name: Install pinned Silk and select LLVM 22
+        run: node scripts/setup-ci.mjs ${{ matrix.setup }}
+      - name: Select the macOS SDK
+        if: runner.os == 'macOS'
+        run: echo "SDKROOT=$(xcrun --sdk macosx --show-sdk-path)" >> "$GITHUB_ENV"
+      - name: Check workspace and browser host contracts
+        run: |
+          silkc check --workspace
+          node --test native/gpu/webgpu/browser/host.test.mjs
+      - name: Headless window unit tests
+        working-directory: native/platform/window
+        run: silkc test --root src/tests.silk
+      - name: WebGPU ABI and native lifetime/validation scenarios
+        run: |
+          silkc run --manifest-path native/gpu/webgpu/sys/abi/silk.toml
+          silkc run --manifest-path native/gpu/webgpu/tests/native/silk.toml
+      - name: Cross-target declaration checks
+        if: runner.os == 'Linux'
+        run: |
+          for target in aarch64-apple-darwin x86_64-apple-darwin; do
+            for package in native/gpu/metal native/gpu/metal/examples/compute native/gpu/metal/examples/headless-render native/platform/window native/platform/window/tests/macos native/platform/window/examples/demo; do
+              silkc check --manifest-path "$package/silk.toml" --target "$target"
+            done
+          done
+          for target in x86_64-unknown-linux-gnu x86_64-pc-windows-msvc wasm32-unknown-unknown; do
+            silkc check --manifest-path native/platform/window/silk.toml --target "$target"
+            silkc check --manifest-path native/platform/window/tests/smoke/silk.toml --target "$target"
+          done
+      - name: Six native pixel and compute samples
+        run: |
+          silkc build --manifest-path native/gpu/webgpu/examples/silk.toml
+          program=$(node scripts/artifact.mjs gpu-webgpu-examples '${{ matrix.target }}')
+          mkdir -p .cache/pixels/native
+          (cd .cache/pixels/native && "$program")
+          node scripts/check-pixels.mjs .cache/pixels/native
+      - name: Linux X11 and Wayland native windows
+        if: runner.os == 'Linux'
+        env:
+          SILK_WINDOW_SCALE: '1'
+          SILK_WINDOW_DIALOG: 'printf "/tmp/%s-%s.svg\n" "$1" "$2"'
+        run: |
+          silkc build --manifest-path native/platform/window/tests/linux/silk.toml
+          program=$(node scripts/artifact.mjs platform-window-tests-linux '${{ matrix.target }}')
+          SILK_WINDOW_BACKEND=x11 xvfb-run -a "$program"
+          export XDG_RUNTIME_DIR=$(mktemp -d)
+          chmod 700 "$XDG_RUNTIME_DIR"
+          weston --backend=headless --socket=silk-smoke --idle-time=0 --width=1280 --height=800 > "$XDG_RUNTIME_DIR/weston.log" 2>&1 &
+          server=$!
+          trap 'kill "$server"; rm -rf "$XDG_RUNTIME_DIR"' EXIT
+          for attempt in $(seq 1 100); do
+            test ! -S "$XDG_RUNTIME_DIR/silk-smoke" || break
+            kill -0 "$server"
+            sleep 0.1
+          done
+          test -S "$XDG_RUNTIME_DIR/silk-smoke"
+          SILK_WINDOW_BACKEND=wayland WAYLAND_DISPLAY=silk-smoke "$program"
+          silkc build --manifest-path native/gpu/webgpu/examples-window/silk.toml
+      - name: Metal and AppKit execution
+        if: runner.os == 'macOS'
+        run: |
+          silkc check --manifest-path native/gpu/metal/silk.toml
+          silkc run --manifest-path native/gpu/metal/examples/compute/silk.toml
+          silkc run --manifest-path native/gpu/metal/examples/headless-render/silk.toml
+          silkc run --manifest-path native/platform/window/tests/macos/silk.toml
+          SILK_WINDOW_FIBER=0 silkc run --manifest-path native/platform/window/tests/macos/silk.toml
+          silkc build --manifest-path native/platform/window/examples/demo/silk.toml
+  browser:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: .cache/ci
+          key: browser-${{ runner.os }}-${{ hashFiles('toolchains.lock.json', 'native/gpu/webgpu/scripts/ci-lock.json') }}
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends xvfb xauth
+      - run: node scripts/setup-ci.mjs --browser
+      - name: Compile real wasm applications and exercise canvas surfaces
+        run: |
+          node --test native/gpu/webgpu/browser/host.test.mjs
+          silkc build --manifest-path native/gpu/webgpu/examples/silk.toml --target wasm32-unknown-unknown
+          silkc build --manifest-path native/platform/window/tests/browser/silk.toml --target wasm32-unknown-unknown
+          wasm=$(node scripts/artifact.mjs gpu-webgpu-examples wasm32-unknown-unknown)
+          xvfb-run -a --server-args='-screen 0 1280x720x24' node native/gpu/webgpu/browser/test.mjs --wasm "$wasm" --fixtures native/gpu/webgpu/browser/fixtures.json
+          wasm=$(node scripts/artifact.mjs platform-window-tests-browser wasm32-unknown-unknown)
+          node native/platform/window/browser/test.mjs --wasm "$wasm"
+  windows:
+    runs-on: windows-2025-vs2026
+    timeout-minutes: 60
+    env:
+      SILK_HOME: ${{ github.workspace }}\.silk-home
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: |
+            .cache
+            .silk-home/archives
+          key: native-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('toolchains.lock.json') }}
+      - run: node scripts/setup-ci.mjs
+      - name: Prepare SDK bridge, Dawn DLL and runtime payloads
+        run: ./scripts/prepare-windows.ps1 -RuntimeDirectory build/llvm/x86_64-pc-windows-msvc/debug
+      - name: Check workspace and headless tests
+        run: |
+          silkc check --workspace
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Push-Location native/platform/window
+          silkc test --root src/tests.silk
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Pop-Location
+      - name: ABI, native runtime, pixels and Win32 windows
+        run: |
+          foreach ($package in @('native/gpu/webgpu/sys/abi', 'native/gpu/webgpu/tests/native', 'native/platform/window/tests/windows')) {
+            silkc run --manifest-path "$package/silk.toml"
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+          $env:SILK_WINDOW_FIBER = '0'
+          silkc run --manifest-path native/platform/window/tests/windows/silk.toml
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          silkc build --manifest-path native/gpu/webgpu/examples/silk.toml
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $program = node scripts/artifact.mjs gpu-webgpu-examples x86_64-pc-windows-msvc
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          New-Item -ItemType Directory -Force .cache/pixels/native | Out-Null
+          Push-Location .cache/pixels/native
+          & $program
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Pop-Location
+          node scripts/check-pixels.mjs .cache/pixels/native
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          silkc build --manifest-path native/gpu/webgpu/examples-window/silk.toml
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $window = node scripts/artifact.mjs gpu-webgpu-examples-window x86_64-pc-windows-msvc native/gpu/webgpu/examples-window
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          ./scripts/prepare-windows.ps1 -RuntimeDirectory (Split-Path $window)

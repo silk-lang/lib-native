@@ -1,0 +1,396 @@
+//! A backend with no display: windows are records, events come from the test that drives
+//! it, and frames follow the same request rules as the native backends. Tests of code that
+//! is generic over `Platform` run on it anywhere, including CI without a display.
+import event { Event }
+import menu { MenuBar, MenuEntry, OpenDialog, SaveDialog }
+import platform { Platform }
+import types {
+  WindowId,
+  DialogId,
+  WindowOptions,
+  WindowError,
+  Wait,
+  Cursor,
+  ImeState,
+  Appearance,
+  RawSurface,
+}
+import silk.collections.list { List }
+import silk.core.option { Option }
+import silk.geometry.size { Size2 }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.text.string { String }
+import silk.num.usize
+
+/// What the headless platform remembers about one window.
+pub struct HeadlessWindow {
+  pub id: WindowId,
+  pub open: bool,
+  pub title: String,
+  pub size: Size2<f64>,
+  pub minSize: Size2<f64>,
+  pub scaleFactor: f64,
+  pub visible: bool,
+  pub focused: bool,
+  pub minimized: bool,
+  pub fullScreen: bool,
+  pub cursor: Cursor,
+  pub ime: ImeState,
+  /// A frame was requested and not yet delivered.
+  pub framePending: bool,
+  /// Frames delivered so far.
+  pub frames: u64,
+}
+
+pub struct HeadlessPlatform {
+  windows: List<HeadlessWindow>,
+  queue: List<Event>,
+  clipboard: Option<String>,
+  appearance: Appearance,
+  nextDialog: u32,
+  /// The seconds between display refreshes; `targetTime` advances by it per frame.
+  pub refreshInterval: f64,
+  time: f64,
+  /// Menus and items in the last menu bar, counted through submenus.
+  pub menuItems: usize,
+}
+
+impl HeadlessPlatform {
+  /// The same entry point as the native backends, so `native.NativePlatform.start()` works
+  /// on every target. It never fails.
+  pub effect fn start() -> HeadlessPlatform
+    ! WindowError {
+    return HeadlessPlatform.make()
+  }
+
+  pub fn make() -> HeadlessPlatform {
+    return HeadlessPlatform {
+      windows: List<HeadlessWindow>.make(),
+      queue: List<Event>.make(),
+      clipboard: Option<String>.None,
+      appearance: Appearance.Light,
+      nextDialog: 1,
+      refreshInterval: 1.0 / 60.0,
+      time: 0.0,
+      menuItems: 0,
+    }
+  }
+
+  /// Queues an event as if the system had sent it.
+  pub effect fn push(self: &mut Self, event: Event) -> ()
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    run self.queue.append(move event)
+  }
+
+  /// Resizes the window as a user would: `Resized`, then a frame at the new size.
+  pub effect fn resize(self: &mut Self, window: WindowId, size: Size2<f64>) -> ()
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let scaleFactor = self.scaleFactor(window)
+    let value = self.find(window)
+    if value < self.windows.length() {
+      let windows = self.windows.asMutSlice()
+      windows[value].size = size
+      windows[value].framePending = true
+    } else {
+      return ()
+    }
+    run self.queue.append(Event.Resized { window: window, size: size, scaleFactor: scaleFactor })
+  }
+
+  /// Moves the window to a display with another scale factor.
+  pub effect fn changeScaleFactor(self: &mut Self, window: WindowId, scaleFactor: f64) -> ()
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let size = self.contentSize(window)
+    let value = self.find(window)
+    if value < self.windows.length() {
+      let windows = self.windows.asMutSlice()
+      windows[value].scaleFactor = scaleFactor
+      windows[value].framePending = true
+    } else {
+      return ()
+    }
+    run self.queue.append(Event.ScaleFactorChanged { window: window, scaleFactor: scaleFactor })
+    run self.queue.append(Event.Resized { window: window, size: size, scaleFactor: scaleFactor })
+  }
+
+  /// Closes a dialog with the chosen paths; none means cancelled.
+  pub effect fn closeDialog(self: &mut Self, dialog: DialogId, paths: List<String>) -> ()
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    run self.queue.append(Event.DialogClosed { dialog: dialog, paths: move paths })
+  }
+
+  pub fn setAppearance(self: &mut Self, appearance: Appearance) -> () {
+    self.appearance = appearance
+  }
+
+  /// The window's record, while the window is open.
+  pub fn window(self: &Self, window: WindowId) -> Option<&HeadlessWindow> {
+    let value = self.find(window)
+    if value < self.windows.length() {
+      return Option<&HeadlessWindow>.some(&self.windows.asSlice()[value])
+    }
+    return Option<&HeadlessWindow>.None
+  }
+
+  /// Events queued and not yet returned by `nextEvent`.
+  pub fn queued(self: &Self) -> usize {
+    return self.queue.length()
+  }
+
+  /// The index of the open window, or the window count when it is not open.
+  fn find(self: &Self, window: WindowId) -> usize {
+    let windows = self.windows.asSlice()
+    let mut i: usize = 0
+    while i < windows.length {
+      if windows[i].id.value == window.value && windows[i].open {
+        return i
+      }
+      i = i + 1
+    }
+    return windows.length
+  }
+
+  fn newDialog(self: &mut Self) -> DialogId {
+    let id = DialogId { value: self.nextDialog }
+    self.nextDialog = self.nextDialog + 1
+    return id
+  }
+}
+
+impl Platform for HeadlessPlatform {
+  effect fn openWindow(self: &mut Self, options: &WindowOptions<'_>) -> WindowId
+    ! WindowError | OutOfMemoryError
+    ? &mut Allocator {
+    let id = WindowId { value: usize.toU32(self.windows.length()) + 1 }
+    let minSize = match options.minSize {
+      Option<Size2<f64>>.Some { value } => value
+      _ => Size2<f64>.zero()
+    }
+    let title = run String.copy(options.title)
+    run self.windows.append(
+      HeadlessWindow {
+        id: id,
+        open: true,
+        title: move title,
+        size: options.size,
+        minSize: minSize,
+        scaleFactor: 1.0,
+        visible: options.visible,
+        focused: options.visible,
+        minimized: false,
+        fullScreen: false,
+        cursor: Cursor.Arrow,
+        ime: ImeState.disabled(),
+        framePending: options.visible,
+        frames: 0,
+      },
+    )
+    if options.visible {
+      run self.queue.append(Event.Resized { window: id, size: options.size, scaleFactor: 1.0 })
+    }
+    return id
+  }
+
+  fn closeWindow(self: &mut Self, window: WindowId) -> () {
+    let value = self.find(window)
+    if value < self.windows.length() {
+      let windows = self.windows.asMutSlice()
+      windows[value].open = false
+      windows[value].framePending = false
+    }
+  }
+
+  effect fn nextEvent(self: &mut Self, wait: Wait) -> Option<Event>
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    if self.queue.length() != 0 {
+      return Option<Event>.some(self.queue.remove(0))
+    }
+
+    // One display refresh: every window with a pending request draws once.
+    let windows = self.windows.asMutSlice()
+    let mut i: usize = 0
+    while i < windows.length {
+      if windows[i].framePending && windows[i].open && windows[i].visible && !windows[i].minimized {
+        windows[i].framePending = false
+        windows[i].frames = windows[i].frames + 1
+        self.time = self.time + self.refreshInterval
+        return Option<Event>.some(
+          Event.RequestFrame { window: windows[i].id, targetTime: self.time },
+        )
+      }
+      i = i + 1
+    }
+    return Option<Event>.None
+  }
+
+  fn requestFrame(self: &mut Self, window: WindowId) -> () {
+    let value = self.find(window)
+    if value < self.windows.length() {
+      let windows = self.windows.asMutSlice()
+      windows[value].framePending = true
+    }
+  }
+
+  fn contentSize(self: &Self, window: WindowId) -> Size2<f64> {
+    let value = self.find(window)
+    if value < self.windows.length() {
+      return self.windows.asSlice()[value].size
+    }
+    return Size2<f64>.zero()
+  }
+
+  fn scaleFactor(self: &Self, window: WindowId) -> f64 {
+    let value = self.find(window)
+    if value < self.windows.length() {
+      return self.windows.asSlice()[value].scaleFactor
+    }
+    return 1.0
+  }
+
+  fn rawSurface(self: &Self, window: WindowId) -> RawSurface {
+    return RawSurface.None
+  }
+
+  effect fn setTitle(self: &mut Self, window: WindowId, title: string) -> ()
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let value = self.find(window)
+    if value < self.windows.length() {
+      let copy = run String.copy(title)
+      let windows = self.windows.asMutSlice()
+      windows[value].title = move copy
+    }
+  }
+
+  fn setContentSize(self: &mut Self, window: WindowId, size: Size2<f64>) -> () {
+    let value = self.find(window)
+    if value < self.windows.length() {
+      let windows = self.windows.asMutSlice()
+      windows[value].size = size
+      windows[value].framePending = true
+    }
+  }
+
+  fn setMinContentSize(self: &mut Self, window: WindowId, size: Size2<f64>) -> () {
+    let value = self.find(window)
+    if value < self.windows.length() {
+      let windows = self.windows.asMutSlice()
+      windows[value].minSize = size
+    }
+  }
+
+  fn setVisible(self: &mut Self, window: WindowId, visible: bool) -> () {
+    let value = self.find(window)
+    if value < self.windows.length() {
+      let windows = self.windows.asMutSlice()
+      windows[value].visible = visible
+      if visible {
+        let windows = self.windows.asMutSlice()
+        windows[value].framePending = true
+      }
+    }
+  }
+
+  fn focus(self: &mut Self, window: WindowId) -> () {
+    let windows = self.windows.asMutSlice()
+    let mut i: usize = 0
+    while i < windows.length {
+      windows[i].focused = windows[i].id.value == window.value
+      i = i + 1
+    }
+  }
+
+  fn minimize(self: &mut Self, window: WindowId) -> () {
+    let value = self.find(window)
+    if value < self.windows.length() {
+      let windows = self.windows.asMutSlice()
+      windows[value].minimized = true
+    }
+  }
+
+  fn toggleFullScreen(self: &mut Self, window: WindowId) -> () {
+    let value = self.find(window)
+    if value < self.windows.length() {
+      let record = &mut self.windows.asMutSlice()[value]
+      record.fullScreen = !record.fullScreen
+    }
+  }
+
+  fn startWindowDrag(self: &mut Self, window: WindowId) -> () {}
+
+  fn setCursor(self: &mut Self, window: WindowId, cursor: Cursor) -> () {
+    let value = self.find(window)
+    if value < self.windows.length() {
+      let windows = self.windows.asMutSlice()
+      windows[value].cursor = cursor
+    }
+  }
+
+  fn setIme(self: &mut Self, window: WindowId, ime: ImeState) -> () {
+    let value = self.find(window)
+    if value < self.windows.length() {
+      let windows = self.windows.asMutSlice()
+      windows[value].ime = ime
+    }
+  }
+
+  effect fn setMenuBar(self: &mut Self, bar: &MenuBar) -> ()
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let entries = bar.entries.asSlice()
+    let mut count: usize = 0
+    let mut i: usize = 0
+    while i < entries.length {
+      match &entries[i] {
+        MenuEntry.End => {}
+        _ => {
+          count = count + 1
+        }
+      }
+      i = i + 1
+    }
+    self.menuItems = count
+  }
+
+  effect fn openFileDialog(self: &mut Self, options: &OpenDialog<'_>) -> DialogId
+    ! WindowError | OutOfMemoryError
+    ? &mut Allocator {
+    return self.newDialog()
+  }
+
+  effect fn saveFileDialog(self: &mut Self, options: &SaveDialog<'_>) -> DialogId
+    ! WindowError | OutOfMemoryError
+    ? &mut Allocator {
+    return self.newDialog()
+  }
+
+  effect fn readClipboard(self: &mut Self) -> Option<String>
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    match &self.clipboard {
+      Option<String>.Some { value } => {
+        let copy = run String.copy(value.view())
+        return Option<String>.some(move copy)
+      }
+      _ => {
+        return Option<String>.None
+      }
+    }
+  }
+
+  effect fn writeClipboard(self: &mut Self, text: string) -> ()
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let copy = run String.copy(text)
+    self.clipboard = Option<String>.some(move copy)
+  }
+
+  fn appearance(self: &Self) -> Appearance {
+    return self.appearance
+  }
+}

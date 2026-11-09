@@ -1,0 +1,3707 @@
+[
+  {
+    "rust": "MTLResourceCPUCacheModeShift",
+    "silk": "types.MTLResourceCPUCacheModeShift",
+    "notes": "resource.rs; u64 constant, value 0"
+  },
+  {
+    "rust": "MTLResourceCPUCacheModeMask",
+    "silk": "types.MTLResourceCPUCacheModeMask",
+    "notes": "resource.rs; u64 constant, value 15"
+  },
+  {
+    "rust": "MTLResourceStorageModeShift",
+    "silk": "types.MTLResourceStorageModeShift",
+    "notes": "resource.rs; u64 constant, value 4"
+  },
+  {
+    "rust": "MTLResourceStorageModeMask",
+    "silk": "types.MTLResourceStorageModeMask",
+    "notes": "resource.rs; u64 constant, value 240"
+  },
+  {
+    "rust": "MTLResourceHazardTrackingModeShift",
+    "silk": "types.MTLResourceHazardTrackingModeShift",
+    "notes": "resource.rs; u64 constant, value 8"
+  },
+  {
+    "rust": "MTLResourceHazardTrackingModeMask",
+    "silk": "types.MTLResourceHazardTrackingModeMask",
+    "notes": "resource.rs; u64 constant, value 768"
+  },
+  {
+    "rust": "COUNTER_DONT_SAMPLE",
+    "silk": "types.COUNTER_DONT_SAMPLE",
+    "notes": "encoder.rs; u64 constant, value 18446744073709551615"
+  },
+  {
+    "rust": "MTLPurgeableState.KeepCurrent",
+    "silk": "types.MTLPurgeableState_KeepCurrent",
+    "notes": "resource.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLPurgeableState.NonVolatile",
+    "silk": "types.MTLPurgeableState_NonVolatile",
+    "notes": "resource.rs; enum u64, discriminant 2"
+  },
+  {
+    "rust": "MTLPurgeableState.Volatile",
+    "silk": "types.MTLPurgeableState_Volatile",
+    "notes": "resource.rs; enum u64, discriminant 3"
+  },
+  {
+    "rust": "MTLPurgeableState.Empty",
+    "silk": "types.MTLPurgeableState_Empty",
+    "notes": "resource.rs; enum u64, discriminant 4"
+  },
+  {
+    "rust": "MTLCPUCacheMode.DefaultCache",
+    "silk": "types.MTLCPUCacheMode_DefaultCache",
+    "notes": "resource.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLCPUCacheMode.WriteCombined",
+    "silk": "types.MTLCPUCacheMode_WriteCombined",
+    "notes": "resource.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLStorageMode.Shared",
+    "silk": "types.MTLStorageMode_Shared",
+    "notes": "resource.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLStorageMode.Managed",
+    "silk": "types.MTLStorageMode_Managed",
+    "notes": "resource.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLStorageMode.Private",
+    "silk": "types.MTLStorageMode_Private",
+    "notes": "resource.rs; enum u64, discriminant 2"
+  },
+  {
+    "rust": "MTLStorageMode.Memoryless",
+    "silk": "types.MTLStorageMode_Memoryless",
+    "notes": "resource.rs; enum u64, discriminant 3"
+  },
+  {
+    "rust": "MTLHazardTrackingMode.Default",
+    "silk": "types.MTLHazardTrackingMode_Default",
+    "notes": "resource.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLHazardTrackingMode.Untracked",
+    "silk": "types.MTLHazardTrackingMode_Untracked",
+    "notes": "resource.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLHazardTrackingMode.Tracked",
+    "silk": "types.MTLHazardTrackingMode_Tracked",
+    "notes": "resource.rs; enum u64, discriminant 2"
+  },
+  {
+    "rust": "MTLResourceOptions.CPUCacheModeDefaultCache",
+    "silk": "types.MTLResourceOptions_CPUCacheModeDefaultCache",
+    "notes": "resource.rs; flags u64, discriminant 0"
+  },
+  {
+    "rust": "MTLResourceOptions.CPUCacheModeWriteCombined",
+    "silk": "types.MTLResourceOptions_CPUCacheModeWriteCombined",
+    "notes": "resource.rs; flags u64, discriminant 1"
+  },
+  {
+    "rust": "MTLResourceOptions.StorageModeShared",
+    "silk": "types.MTLResourceOptions_StorageModeShared",
+    "notes": "resource.rs; flags u64, discriminant 0"
+  },
+  {
+    "rust": "MTLResourceOptions.StorageModeManaged",
+    "silk": "types.MTLResourceOptions_StorageModeManaged",
+    "notes": "resource.rs; flags u64, discriminant 16"
+  },
+  {
+    "rust": "MTLResourceOptions.StorageModePrivate",
+    "silk": "types.MTLResourceOptions_StorageModePrivate",
+    "notes": "resource.rs; flags u64, discriminant 32"
+  },
+  {
+    "rust": "MTLResourceOptions.StorageModeMemoryless",
+    "silk": "types.MTLResourceOptions_StorageModeMemoryless",
+    "notes": "resource.rs; flags u64, discriminant 48"
+  },
+  {
+    "rust": "MTLResourceOptions.HazardTrackingModeDefault",
+    "silk": "types.MTLResourceOptions_HazardTrackingModeDefault",
+    "notes": "resource.rs; flags u64, discriminant 0"
+  },
+  {
+    "rust": "MTLResourceOptions.HazardTrackingModeUntracked",
+    "silk": "types.MTLResourceOptions_HazardTrackingModeUntracked",
+    "notes": "resource.rs; flags u64, discriminant 256"
+  },
+  {
+    "rust": "MTLResourceOptions.HazardTrackingModeTracked",
+    "silk": "types.MTLResourceOptions_HazardTrackingModeTracked",
+    "notes": "resource.rs; flags u64, discriminant 512"
+  },
+  {
+    "rust": "MTLResourceUsage.Read",
+    "silk": "types.MTLResourceUsage_Read",
+    "notes": "resource.rs; flags u64, discriminant 1"
+  },
+  {
+    "rust": "MTLResourceUsage.Write",
+    "silk": "types.MTLResourceUsage_Write",
+    "notes": "resource.rs; flags u64, discriminant 2"
+  },
+  {
+    "rust": "MTLResourceUsage.Sample",
+    "silk": "types.MTLResourceUsage_Sample",
+    "notes": "resource.rs; flags u64, discriminant 4"
+  },
+  {
+    "rust": "MTLSizeAndAlign",
+    "silk": "types.MTLSizeAndAlign",
+    "notes": "resource.rs; C layout; fields retain upstream spellings; Copy"
+  },
+  {
+    "rust": "MTLAccelerationStructureInstanceOptions.None",
+    "silk": "types.MTLAccelerationStructureInstanceOptions_None",
+    "notes": "acceleration_structure.rs; flags u32, discriminant 0"
+  },
+  {
+    "rust": "MTLAccelerationStructureInstanceOptions.DisableTriangleCulling",
+    "silk": "types.MTLAccelerationStructureInstanceOptions_DisableTriangleCulling",
+    "notes": "acceleration_structure.rs; flags u32, discriminant 1"
+  },
+  {
+    "rust": "MTLAccelerationStructureInstanceOptions.TriangleFrontFacingWindingCounterClockwise",
+    "silk": "types.MTLAccelerationStructureInstanceOptions_TriangleFrontFacingWindingCounterClockwise",
+    "notes": "acceleration_structure.rs; flags u32, discriminant 2"
+  },
+  {
+    "rust": "MTLAccelerationStructureInstanceOptions.Opaque",
+    "silk": "types.MTLAccelerationStructureInstanceOptions_Opaque",
+    "notes": "acceleration_structure.rs; flags u32, discriminant 4"
+  },
+  {
+    "rust": "MTLAccelerationStructureInstanceOptions.NonOpaque",
+    "silk": "types.MTLAccelerationStructureInstanceOptions_NonOpaque",
+    "notes": "acceleration_structure.rs; flags u32, discriminant 8"
+  },
+  {
+    "rust": "MTLAccelerationStructureInstanceDescriptorType.Default",
+    "silk": "types.MTLAccelerationStructureInstanceDescriptorType_Default",
+    "notes": "acceleration_structure.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLAccelerationStructureInstanceDescriptorType.UserID",
+    "silk": "types.MTLAccelerationStructureInstanceDescriptorType_UserID",
+    "notes": "acceleration_structure.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLAccelerationStructureInstanceDescriptorType.Motion",
+    "silk": "types.MTLAccelerationStructureInstanceDescriptorType_Motion",
+    "notes": "acceleration_structure.rs; enum u64, discriminant 2"
+  },
+  {
+    "rust": "MTLAccelerationStructureInstanceDescriptorType.Indirect",
+    "silk": "types.MTLAccelerationStructureInstanceDescriptorType_Indirect",
+    "notes": "acceleration_structure.rs; enum u64, discriminant 3"
+  },
+  {
+    "rust": "MTLAccelerationStructureInstanceDescriptor",
+    "silk": "types.MTLAccelerationStructureInstanceDescriptor",
+    "notes": "acceleration_structure.rs; C layout; fields retain upstream spellings; Copy"
+  },
+  {
+    "rust": "MTLAccelerationStructureUserIDInstanceDescriptor",
+    "silk": "types.MTLAccelerationStructureUserIDInstanceDescriptor",
+    "notes": "acceleration_structure.rs; C layout; fields retain upstream spellings; Copy"
+  },
+  {
+    "rust": "MTLIndirectAccelerationStructureInstanceDescriptor",
+    "silk": "types.MTLIndirectAccelerationStructureInstanceDescriptor",
+    "notes": "acceleration_structure.rs; C layout; fields retain upstream spellings; Copy"
+  },
+  {
+    "rust": "MTLPrimitiveType.Point",
+    "silk": "types.MTLPrimitiveType_Point",
+    "notes": "encoder.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLPrimitiveType.Line",
+    "silk": "types.MTLPrimitiveType_Line",
+    "notes": "encoder.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLPrimitiveType.LineStrip",
+    "silk": "types.MTLPrimitiveType_LineStrip",
+    "notes": "encoder.rs; enum u64, discriminant 2"
+  },
+  {
+    "rust": "MTLPrimitiveType.Triangle",
+    "silk": "types.MTLPrimitiveType_Triangle",
+    "notes": "encoder.rs; enum u64, discriminant 3"
+  },
+  {
+    "rust": "MTLPrimitiveType.TriangleStrip",
+    "silk": "types.MTLPrimitiveType_TriangleStrip",
+    "notes": "encoder.rs; enum u64, discriminant 4"
+  },
+  {
+    "rust": "MTLIndexType.UInt16",
+    "silk": "types.MTLIndexType_UInt16",
+    "notes": "encoder.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLIndexType.UInt32",
+    "silk": "types.MTLIndexType_UInt32",
+    "notes": "encoder.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLVisibilityResultMode.Disabled",
+    "silk": "types.MTLVisibilityResultMode_Disabled",
+    "notes": "encoder.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLVisibilityResultMode.Boolean",
+    "silk": "types.MTLVisibilityResultMode_Boolean",
+    "notes": "encoder.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLVisibilityResultMode.Counting",
+    "silk": "types.MTLVisibilityResultMode_Counting",
+    "notes": "encoder.rs; enum u64, discriminant 2"
+  },
+  {
+    "rust": "MTLCullMode.None",
+    "silk": "types.MTLCullMode_None",
+    "notes": "encoder.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLCullMode.Front",
+    "silk": "types.MTLCullMode_Front",
+    "notes": "encoder.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLCullMode.Back",
+    "silk": "types.MTLCullMode_Back",
+    "notes": "encoder.rs; enum u64, discriminant 2"
+  },
+  {
+    "rust": "MTLWinding.Clockwise",
+    "silk": "types.MTLWinding_Clockwise",
+    "notes": "encoder.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLWinding.CounterClockwise",
+    "silk": "types.MTLWinding_CounterClockwise",
+    "notes": "encoder.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLDepthClipMode.Clip",
+    "silk": "types.MTLDepthClipMode_Clip",
+    "notes": "encoder.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLDepthClipMode.Clamp",
+    "silk": "types.MTLDepthClipMode_Clamp",
+    "notes": "encoder.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLTriangleFillMode.Fill",
+    "silk": "types.MTLTriangleFillMode_Fill",
+    "notes": "encoder.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLTriangleFillMode.Lines",
+    "silk": "types.MTLTriangleFillMode_Lines",
+    "notes": "encoder.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLBlitOption.None",
+    "silk": "types.MTLBlitOption_None",
+    "notes": "encoder.rs; flags u64, discriminant 0"
+  },
+  {
+    "rust": "MTLBlitOption.DepthFromDepthStencil",
+    "silk": "types.MTLBlitOption_DepthFromDepthStencil",
+    "notes": "encoder.rs; flags u64, discriminant 1"
+  },
+  {
+    "rust": "MTLBlitOption.StencilFromDepthStencil",
+    "silk": "types.MTLBlitOption_StencilFromDepthStencil",
+    "notes": "encoder.rs; flags u64, discriminant 2"
+  },
+  {
+    "rust": "MTLBlitOption.RowLinearPVRTC",
+    "silk": "types.MTLBlitOption_RowLinearPVRTC",
+    "notes": "encoder.rs; flags u64, discriminant 4"
+  },
+  {
+    "rust": "MTLScissorRect",
+    "silk": "types.MTLScissorRect",
+    "notes": "encoder.rs; C layout; fields retain upstream spellings; Copy"
+  },
+  {
+    "rust": "MTLViewport",
+    "silk": "types.MTLViewport",
+    "notes": "encoder.rs; C layout; fields retain upstream spellings; Copy"
+  },
+  {
+    "rust": "MTLDrawPrimitivesIndirectArguments",
+    "silk": "types.MTLDrawPrimitivesIndirectArguments",
+    "notes": "encoder.rs; C layout; fields retain upstream spellings; Copy"
+  },
+  {
+    "rust": "MTLDrawIndexedPrimitivesIndirectArguments",
+    "silk": "types.MTLDrawIndexedPrimitivesIndirectArguments",
+    "notes": "encoder.rs; C layout; fields retain upstream spellings; Copy"
+  },
+  {
+    "rust": "VertexAmplificationViewMapping",
+    "silk": "types.VertexAmplificationViewMapping",
+    "notes": "encoder.rs; C layout; fields retain upstream spellings; Copy"
+  },
+  {
+    "rust": "MTLOrigin",
+    "silk": "types.MTLOrigin",
+    "notes": "types.rs; C layout; fields retain upstream spellings; Copy"
+  },
+  {
+    "rust": "MTLSize",
+    "silk": "types.MTLSize",
+    "notes": "types.rs; C layout; fields retain upstream spellings; Copy"
+  },
+  {
+    "rust": "MTLRegion",
+    "silk": "types.MTLRegion",
+    "notes": "types.rs; C layout; fields retain upstream spellings; Copy"
+  },
+  {
+    "rust": "MTLSamplePosition",
+    "silk": "types.MTLSamplePosition",
+    "notes": "types.rs; C layout; fields retain upstream spellings; Copy"
+  },
+  {
+    "rust": "MTLResourceID",
+    "silk": "types.MTLResourceID",
+    "notes": "types.rs; C layout; fields retain upstream spellings; Copy"
+  },
+  {
+    "rust": "MPSRayDataType.OriginDirection",
+    "silk": "types.MPSRayDataType_OriginDirection",
+    "notes": "mps.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MPSRayDataType.OriginMinDistanceDirectionMaxDistance",
+    "silk": "types.MPSRayDataType_OriginMinDistanceDirectionMaxDistance",
+    "notes": "mps.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MPSRayDataType.OriginMaskDirectionMaxDistance",
+    "silk": "types.MPSRayDataType_OriginMaskDirectionMaxDistance",
+    "notes": "mps.rs; enum u64, discriminant 2"
+  },
+  {
+    "rust": "MPSRayMaskOptions.Primitive",
+    "silk": "types.MPSRayMaskOptions_Primitive",
+    "notes": "mps.rs; flags u64, discriminant 1"
+  },
+  {
+    "rust": "MPSRayMaskOptions.Instance",
+    "silk": "types.MPSRayMaskOptions_Instance",
+    "notes": "mps.rs; flags u64, discriminant 2"
+  },
+  {
+    "rust": "MPSIntersectionDataType.Distance",
+    "silk": "types.MPSIntersectionDataType_Distance",
+    "notes": "mps.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MPSIntersectionDataType.DistancePrimitiveIndex",
+    "silk": "types.MPSIntersectionDataType_DistancePrimitiveIndex",
+    "notes": "mps.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MPSIntersectionDataType.DistancePrimitiveIndexCoordinates",
+    "silk": "types.MPSIntersectionDataType_DistancePrimitiveIndexCoordinates",
+    "notes": "mps.rs; enum u64, discriminant 2"
+  },
+  {
+    "rust": "MPSIntersectionDataType.DistancePrimitiveIndexInstanceIndex",
+    "silk": "types.MPSIntersectionDataType_DistancePrimitiveIndexInstanceIndex",
+    "notes": "mps.rs; enum u64, discriminant 3"
+  },
+  {
+    "rust": "MPSIntersectionDataType.DistancePrimitiveIndexInstanceIndexCoordinates",
+    "silk": "types.MPSIntersectionDataType_DistancePrimitiveIndexInstanceIndexCoordinates",
+    "notes": "mps.rs; enum u64, discriminant 4"
+  },
+  {
+    "rust": "MPSIntersectionType.Nearest",
+    "silk": "types.MPSIntersectionType_Nearest",
+    "notes": "mps.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MPSIntersectionType.Any",
+    "silk": "types.MPSIntersectionType_Any",
+    "notes": "mps.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MPSRayMaskOperator.And",
+    "silk": "types.MPSRayMaskOperator_And",
+    "notes": "mps.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MPSRayMaskOperator.NotAnd",
+    "silk": "types.MPSRayMaskOperator_NotAnd",
+    "notes": "mps.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MPSRayMaskOperator.Or",
+    "silk": "types.MPSRayMaskOperator_Or",
+    "notes": "mps.rs; enum u64, discriminant 2"
+  },
+  {
+    "rust": "MPSRayMaskOperator.NotOr",
+    "silk": "types.MPSRayMaskOperator_NotOr",
+    "notes": "mps.rs; enum u64, discriminant 3"
+  },
+  {
+    "rust": "MPSRayMaskOperator.Xor",
+    "silk": "types.MPSRayMaskOperator_Xor",
+    "notes": "mps.rs; enum u64, discriminant 4"
+  },
+  {
+    "rust": "MPSRayMaskOperator.NotXor",
+    "silk": "types.MPSRayMaskOperator_NotXor",
+    "notes": "mps.rs; enum u64, discriminant 5"
+  },
+  {
+    "rust": "MPSRayMaskOperator.LessThan",
+    "silk": "types.MPSRayMaskOperator_LessThan",
+    "notes": "mps.rs; enum u64, discriminant 6"
+  },
+  {
+    "rust": "MPSRayMaskOperator.LessThanOrEqualTo",
+    "silk": "types.MPSRayMaskOperator_LessThanOrEqualTo",
+    "notes": "mps.rs; enum u64, discriminant 7"
+  },
+  {
+    "rust": "MPSRayMaskOperator.GreaterThan",
+    "silk": "types.MPSRayMaskOperator_GreaterThan",
+    "notes": "mps.rs; enum u64, discriminant 8"
+  },
+  {
+    "rust": "MPSRayMaskOperator.GreaterThanOrEqualTo",
+    "silk": "types.MPSRayMaskOperator_GreaterThanOrEqualTo",
+    "notes": "mps.rs; enum u64, discriminant 9"
+  },
+  {
+    "rust": "MPSTriangleIntersectionTestType.Default",
+    "silk": "types.MPSTriangleIntersectionTestType_Default",
+    "notes": "mps.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MPSTriangleIntersectionTestType.Watertight",
+    "silk": "types.MPSTriangleIntersectionTestType_Watertight",
+    "notes": "mps.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MPSAccelerationStructureStatus.Unbuilt",
+    "silk": "types.MPSAccelerationStructureStatus_Unbuilt",
+    "notes": "mps.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MPSAccelerationStructureStatus.Built",
+    "silk": "types.MPSAccelerationStructureStatus_Built",
+    "notes": "mps.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MPSAccelerationStructureUsage.None",
+    "silk": "types.MPSAccelerationStructureUsage_None",
+    "notes": "mps.rs; flags u64, discriminant 0"
+  },
+  {
+    "rust": "MPSAccelerationStructureUsage.Refit",
+    "silk": "types.MPSAccelerationStructureUsage_Refit",
+    "notes": "mps.rs; flags u64, discriminant 1"
+  },
+  {
+    "rust": "MPSAccelerationStructureUsage.FrequentRebuild",
+    "silk": "types.MPSAccelerationStructureUsage_FrequentRebuild",
+    "notes": "mps.rs; flags u64, discriminant 2"
+  },
+  {
+    "rust": "MPSAccelerationStructureUsage.PreferGPUBuild",
+    "silk": "types.MPSAccelerationStructureUsage_PreferGPUBuild",
+    "notes": "mps.rs; flags u64, discriminant 4"
+  },
+  {
+    "rust": "MPSAccelerationStructureUsage.PreferCPUBuild",
+    "silk": "types.MPSAccelerationStructureUsage_PreferCPUBuild",
+    "notes": "mps.rs; flags u64, discriminant 8"
+  },
+  {
+    "rust": "MPSDataType.Invalid",
+    "silk": "types.MPSDataType_Invalid",
+    "notes": "mps.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MPSDataType.Float32",
+    "silk": "types.MPSDataType_Float32",
+    "notes": "mps.rs; enum u64, discriminant 268435488"
+  },
+  {
+    "rust": "MPSDataType.Float16",
+    "silk": "types.MPSDataType_Float16",
+    "notes": "mps.rs; enum u64, discriminant 268435472"
+  },
+  {
+    "rust": "MPSDataType.Int8",
+    "silk": "types.MPSDataType_Int8",
+    "notes": "mps.rs; enum u64, discriminant 536870920"
+  },
+  {
+    "rust": "MPSDataType.Int16",
+    "silk": "types.MPSDataType_Int16",
+    "notes": "mps.rs; enum u64, discriminant 536870928"
+  },
+  {
+    "rust": "MPSDataType.Int32",
+    "silk": "types.MPSDataType_Int32",
+    "notes": "mps.rs; enum u64, discriminant 536870944"
+  },
+  {
+    "rust": "MPSDataType.UInt8",
+    "silk": "types.MPSDataType_UInt8",
+    "notes": "mps.rs; enum u64, discriminant 8"
+  },
+  {
+    "rust": "MPSDataType.UInt16",
+    "silk": "types.MPSDataType_UInt16",
+    "notes": "mps.rs; enum u64, discriminant 16"
+  },
+  {
+    "rust": "MPSDataType.UInt32",
+    "silk": "types.MPSDataType_UInt32",
+    "notes": "mps.rs; enum u64, discriminant 32"
+  },
+  {
+    "rust": "MPSDataType.Unorm1",
+    "silk": "types.MPSDataType_Unorm1",
+    "notes": "mps.rs; enum u64, discriminant 1073741825"
+  },
+  {
+    "rust": "MPSDataType.Unorm8",
+    "silk": "types.MPSDataType_Unorm8",
+    "notes": "mps.rs; enum u64, discriminant 1073741832"
+  },
+  {
+    "rust": "MPSTransformType.Float4x4",
+    "silk": "types.MPSTransformType_Float4x4",
+    "notes": "mps.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MPSTransformType.Identity",
+    "silk": "types.MPSTransformType_Identity",
+    "notes": "mps.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MPSPackedFloat3",
+    "silk": "types.MPSPackedFloat3",
+    "notes": "mps.rs; C layout; fields retain upstream spellings; Copy"
+  },
+  {
+    "rust": "MPSRayOriginMinDistanceDirectionMaxDistance",
+    "silk": "types.MPSRayOriginMinDistanceDirectionMaxDistance",
+    "notes": "mps.rs; C layout; fields retain upstream spellings; Copy"
+  },
+  {
+    "rust": "MPSIntersectionDistancePrimitiveIndexCoordinates",
+    "silk": "types.MPSIntersectionDistancePrimitiveIndexCoordinates",
+    "notes": "mps.rs; C layout; fields retain upstream spellings; Copy"
+  },
+  {
+    "rust": "MTLFeatureSet.iOS_GPUFamily1_v1",
+    "silk": "types.MTLFeatureSet_iOS_GPUFamily1_v1",
+    "notes": "device.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLFeatureSet.iOS_GPUFamily2_v1",
+    "silk": "types.MTLFeatureSet_iOS_GPUFamily2_v1",
+    "notes": "device.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLFeatureSet.iOS_GPUFamily1_v2",
+    "silk": "types.MTLFeatureSet_iOS_GPUFamily1_v2",
+    "notes": "device.rs; enum u64, discriminant 2"
+  },
+  {
+    "rust": "MTLFeatureSet.iOS_GPUFamily2_v2",
+    "silk": "types.MTLFeatureSet_iOS_GPUFamily2_v2",
+    "notes": "device.rs; enum u64, discriminant 3"
+  },
+  {
+    "rust": "MTLFeatureSet.iOS_GPUFamily3_v1",
+    "silk": "types.MTLFeatureSet_iOS_GPUFamily3_v1",
+    "notes": "device.rs; enum u64, discriminant 4"
+  },
+  {
+    "rust": "MTLFeatureSet.iOS_GPUFamily1_v3",
+    "silk": "types.MTLFeatureSet_iOS_GPUFamily1_v3",
+    "notes": "device.rs; enum u64, discriminant 5"
+  },
+  {
+    "rust": "MTLFeatureSet.iOS_GPUFamily2_v3",
+    "silk": "types.MTLFeatureSet_iOS_GPUFamily2_v3",
+    "notes": "device.rs; enum u64, discriminant 6"
+  },
+  {
+    "rust": "MTLFeatureSet.iOS_GPUFamily3_v2",
+    "silk": "types.MTLFeatureSet_iOS_GPUFamily3_v2",
+    "notes": "device.rs; enum u64, discriminant 7"
+  },
+  {
+    "rust": "MTLFeatureSet.iOS_GPUFamily1_v4",
+    "silk": "types.MTLFeatureSet_iOS_GPUFamily1_v4",
+    "notes": "device.rs; enum u64, discriminant 8"
+  },
+  {
+    "rust": "MTLFeatureSet.iOS_GPUFamily2_v4",
+    "silk": "types.MTLFeatureSet_iOS_GPUFamily2_v4",
+    "notes": "device.rs; enum u64, discriminant 9"
+  },
+  {
+    "rust": "MTLFeatureSet.iOS_GPUFamily3_v3",
+    "silk": "types.MTLFeatureSet_iOS_GPUFamily3_v3",
+    "notes": "device.rs; enum u64, discriminant 10"
+  },
+  {
+    "rust": "MTLFeatureSet.iOS_GPUFamily4_v1",
+    "silk": "types.MTLFeatureSet_iOS_GPUFamily4_v1",
+    "notes": "device.rs; enum u64, discriminant 11"
+  },
+  {
+    "rust": "MTLFeatureSet.iOS_GPUFamily1_v5",
+    "silk": "types.MTLFeatureSet_iOS_GPUFamily1_v5",
+    "notes": "device.rs; enum u64, discriminant 12"
+  },
+  {
+    "rust": "MTLFeatureSet.iOS_GPUFamily2_v5",
+    "silk": "types.MTLFeatureSet_iOS_GPUFamily2_v5",
+    "notes": "device.rs; enum u64, discriminant 13"
+  },
+  {
+    "rust": "MTLFeatureSet.iOS_GPUFamily3_v4",
+    "silk": "types.MTLFeatureSet_iOS_GPUFamily3_v4",
+    "notes": "device.rs; enum u64, discriminant 14"
+  },
+  {
+    "rust": "MTLFeatureSet.iOS_GPUFamily4_v2",
+    "silk": "types.MTLFeatureSet_iOS_GPUFamily4_v2",
+    "notes": "device.rs; enum u64, discriminant 15"
+  },
+  {
+    "rust": "MTLFeatureSet.iOS_GPUFamily5_v1",
+    "silk": "types.MTLFeatureSet_iOS_GPUFamily5_v1",
+    "notes": "device.rs; enum u64, discriminant 16"
+  },
+  {
+    "rust": "MTLFeatureSet.tvOS_GPUFamily1_v1",
+    "silk": "types.MTLFeatureSet_tvOS_GPUFamily1_v1",
+    "notes": "device.rs; enum u64, discriminant 30000"
+  },
+  {
+    "rust": "MTLFeatureSet.tvOS_GPUFamily1_v2",
+    "silk": "types.MTLFeatureSet_tvOS_GPUFamily1_v2",
+    "notes": "device.rs; enum u64, discriminant 30001"
+  },
+  {
+    "rust": "MTLFeatureSet.tvOS_GPUFamily1_v3",
+    "silk": "types.MTLFeatureSet_tvOS_GPUFamily1_v3",
+    "notes": "device.rs; enum u64, discriminant 30002"
+  },
+  {
+    "rust": "MTLFeatureSet.tvOS_GPUFamily2_v1",
+    "silk": "types.MTLFeatureSet_tvOS_GPUFamily2_v1",
+    "notes": "device.rs; enum u64, discriminant 30003"
+  },
+  {
+    "rust": "MTLFeatureSet.tvOS_GPUFamily1_v4",
+    "silk": "types.MTLFeatureSet_tvOS_GPUFamily1_v4",
+    "notes": "device.rs; enum u64, discriminant 30004"
+  },
+  {
+    "rust": "MTLFeatureSet.tvOS_GPUFamily2_v2",
+    "silk": "types.MTLFeatureSet_tvOS_GPUFamily2_v2",
+    "notes": "device.rs; enum u64, discriminant 30005"
+  },
+  {
+    "rust": "MTLFeatureSet.macOS_GPUFamily1_v1",
+    "silk": "types.MTLFeatureSet_macOS_GPUFamily1_v1",
+    "notes": "device.rs; enum u64, discriminant 10000"
+  },
+  {
+    "rust": "MTLFeatureSet.macOS_GPUFamily1_v2",
+    "silk": "types.MTLFeatureSet_macOS_GPUFamily1_v2",
+    "notes": "device.rs; enum u64, discriminant 10001"
+  },
+  {
+    "rust": "MTLFeatureSet.macOS_ReadWriteTextureTier2",
+    "silk": "types.MTLFeatureSet_macOS_ReadWriteTextureTier2",
+    "notes": "device.rs; enum u64, discriminant 10002"
+  },
+  {
+    "rust": "MTLFeatureSet.macOS_GPUFamily1_v3",
+    "silk": "types.MTLFeatureSet_macOS_GPUFamily1_v3",
+    "notes": "device.rs; enum u64, discriminant 10003"
+  },
+  {
+    "rust": "MTLFeatureSet.macOS_GPUFamily1_v4",
+    "silk": "types.MTLFeatureSet_macOS_GPUFamily1_v4",
+    "notes": "device.rs; enum u64, discriminant 10004"
+  },
+  {
+    "rust": "MTLFeatureSet.macOS_GPUFamily2_v1",
+    "silk": "types.MTLFeatureSet_macOS_GPUFamily2_v1",
+    "notes": "device.rs; enum u64, discriminant 10005"
+  },
+  {
+    "rust": "MTLGPUFamily.Common1",
+    "silk": "types.MTLGPUFamily_Common1",
+    "notes": "device.rs; enum i64, discriminant 3001"
+  },
+  {
+    "rust": "MTLGPUFamily.Common2",
+    "silk": "types.MTLGPUFamily_Common2",
+    "notes": "device.rs; enum i64, discriminant 3002"
+  },
+  {
+    "rust": "MTLGPUFamily.Common3",
+    "silk": "types.MTLGPUFamily_Common3",
+    "notes": "device.rs; enum i64, discriminant 3003"
+  },
+  {
+    "rust": "MTLGPUFamily.Apple1",
+    "silk": "types.MTLGPUFamily_Apple1",
+    "notes": "device.rs; enum i64, discriminant 1001"
+  },
+  {
+    "rust": "MTLGPUFamily.Apple2",
+    "silk": "types.MTLGPUFamily_Apple2",
+    "notes": "device.rs; enum i64, discriminant 1002"
+  },
+  {
+    "rust": "MTLGPUFamily.Apple3",
+    "silk": "types.MTLGPUFamily_Apple3",
+    "notes": "device.rs; enum i64, discriminant 1003"
+  },
+  {
+    "rust": "MTLGPUFamily.Apple4",
+    "silk": "types.MTLGPUFamily_Apple4",
+    "notes": "device.rs; enum i64, discriminant 1004"
+  },
+  {
+    "rust": "MTLGPUFamily.Apple5",
+    "silk": "types.MTLGPUFamily_Apple5",
+    "notes": "device.rs; enum i64, discriminant 1005"
+  },
+  {
+    "rust": "MTLGPUFamily.Apple6",
+    "silk": "types.MTLGPUFamily_Apple6",
+    "notes": "device.rs; enum i64, discriminant 1006"
+  },
+  {
+    "rust": "MTLGPUFamily.Apple7",
+    "silk": "types.MTLGPUFamily_Apple7",
+    "notes": "device.rs; enum i64, discriminant 1007"
+  },
+  {
+    "rust": "MTLGPUFamily.Apple8",
+    "silk": "types.MTLGPUFamily_Apple8",
+    "notes": "device.rs; enum i64, discriminant 1008"
+  },
+  {
+    "rust": "MTLGPUFamily.Apple9",
+    "silk": "types.MTLGPUFamily_Apple9",
+    "notes": "device.rs; enum i64, discriminant 1009"
+  },
+  {
+    "rust": "MTLGPUFamily.Mac1",
+    "silk": "types.MTLGPUFamily_Mac1",
+    "notes": "device.rs; enum i64, discriminant 2001"
+  },
+  {
+    "rust": "MTLGPUFamily.Mac2",
+    "silk": "types.MTLGPUFamily_Mac2",
+    "notes": "device.rs; enum i64, discriminant 2002"
+  },
+  {
+    "rust": "MTLGPUFamily.MacCatalyst1",
+    "silk": "types.MTLGPUFamily_MacCatalyst1",
+    "notes": "device.rs; enum i64, discriminant 4001"
+  },
+  {
+    "rust": "MTLGPUFamily.MacCatalyst2",
+    "silk": "types.MTLGPUFamily_MacCatalyst2",
+    "notes": "device.rs; enum i64, discriminant 4002"
+  },
+  {
+    "rust": "MTLGPUFamily.Metal3",
+    "silk": "types.MTLGPUFamily_Metal3",
+    "notes": "device.rs; enum i64, discriminant 5001"
+  },
+  {
+    "rust": "MTLGPUFamily.Metal4",
+    "silk": "types.MTLGPUFamily_Metal4",
+    "notes": "device.rs; enum i64, discriminant 5002"
+  },
+  {
+    "rust": "MTLDeviceLocation.BuiltIn",
+    "silk": "types.MTLDeviceLocation_BuiltIn",
+    "notes": "device.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLDeviceLocation.Slot",
+    "silk": "types.MTLDeviceLocation_Slot",
+    "notes": "device.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLDeviceLocation.External",
+    "silk": "types.MTLDeviceLocation_External",
+    "notes": "device.rs; enum u64, discriminant 2"
+  },
+  {
+    "rust": "MTLDeviceLocation.Unspecified",
+    "silk": "types.MTLDeviceLocation_Unspecified",
+    "notes": "device.rs; enum u64, discriminant 18446744073709551615"
+  },
+  {
+    "rust": "PixelFormatCapabilities.Filter",
+    "silk": "types.PixelFormatCapabilities_Filter",
+    "notes": "device.rs; flags u32, discriminant 1"
+  },
+  {
+    "rust": "PixelFormatCapabilities.Write",
+    "silk": "types.PixelFormatCapabilities_Write",
+    "notes": "device.rs; flags u32, discriminant 2"
+  },
+  {
+    "rust": "PixelFormatCapabilities.Color",
+    "silk": "types.PixelFormatCapabilities_Color",
+    "notes": "device.rs; flags u32, discriminant 4"
+  },
+  {
+    "rust": "PixelFormatCapabilities.Blend",
+    "silk": "types.PixelFormatCapabilities_Blend",
+    "notes": "device.rs; flags u32, discriminant 8"
+  },
+  {
+    "rust": "PixelFormatCapabilities.Msaa",
+    "silk": "types.PixelFormatCapabilities_Msaa",
+    "notes": "device.rs; flags u32, discriminant 16"
+  },
+  {
+    "rust": "PixelFormatCapabilities.Resolve",
+    "silk": "types.PixelFormatCapabilities_Resolve",
+    "notes": "device.rs; flags u32, discriminant 32"
+  },
+  {
+    "rust": "MTLArgumentBuffersTier.Tier1",
+    "silk": "types.MTLArgumentBuffersTier_Tier1",
+    "notes": "device.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLArgumentBuffersTier.Tier2",
+    "silk": "types.MTLArgumentBuffersTier_Tier2",
+    "notes": "device.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLReadWriteTextureTier.TierNone",
+    "silk": "types.MTLReadWriteTextureTier_TierNone",
+    "notes": "device.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLReadWriteTextureTier.Tier1",
+    "silk": "types.MTLReadWriteTextureTier_Tier1",
+    "notes": "device.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLReadWriteTextureTier.Tier2",
+    "silk": "types.MTLReadWriteTextureTier_Tier2",
+    "notes": "device.rs; enum u64, discriminant 2"
+  },
+  {
+    "rust": "MTLCounterSamplingPoint.AtStageBoundary",
+    "silk": "types.MTLCounterSamplingPoint_AtStageBoundary",
+    "notes": "device.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLCounterSamplingPoint.AtDrawBoundary",
+    "silk": "types.MTLCounterSamplingPoint_AtDrawBoundary",
+    "notes": "device.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLCounterSamplingPoint.AtDispatchBoundary",
+    "silk": "types.MTLCounterSamplingPoint_AtDispatchBoundary",
+    "notes": "device.rs; enum u64, discriminant 2"
+  },
+  {
+    "rust": "MTLCounterSamplingPoint.AtTileDispatchBoundary",
+    "silk": "types.MTLCounterSamplingPoint_AtTileDispatchBoundary",
+    "notes": "device.rs; enum u64, discriminant 3"
+  },
+  {
+    "rust": "MTLCounterSamplingPoint.AtBlitBoundary",
+    "silk": "types.MTLCounterSamplingPoint_AtBlitBoundary",
+    "notes": "device.rs; enum u64, discriminant 4"
+  },
+  {
+    "rust": "MTLSparseTextureRegionAlignmentMode.Outward",
+    "silk": "types.MTLSparseTextureRegionAlignmentMode_Outward",
+    "notes": "device.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLSparseTextureRegionAlignmentMode.Inward",
+    "silk": "types.MTLSparseTextureRegionAlignmentMode_Inward",
+    "notes": "device.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLPipelineOption.None",
+    "silk": "types.MTLPipelineOption_None",
+    "notes": "device.rs; flags u64, discriminant 0"
+  },
+  {
+    "rust": "MTLPipelineOption.ArgumentInfo",
+    "silk": "types.MTLPipelineOption_ArgumentInfo",
+    "notes": "device.rs; flags u64, discriminant 1"
+  },
+  {
+    "rust": "MTLPipelineOption.BufferTypeInfo",
+    "silk": "types.MTLPipelineOption_BufferTypeInfo",
+    "notes": "device.rs; flags u64, discriminant 2"
+  },
+  {
+    "rust": "MTLPipelineOption.FailOnBinaryArchiveMiss",
+    "silk": "types.MTLPipelineOption_FailOnBinaryArchiveMiss",
+    "notes": "device.rs; flags u64, discriminant 4"
+  },
+  {
+    "rust": "MTLAccelerationStructureSizes",
+    "silk": "types.MTLAccelerationStructureSizes",
+    "notes": "device.rs; C layout; fields retain upstream spellings; Copy"
+  },
+  {
+    "rust": "MTLPixelFormat.Invalid",
+    "silk": "types.MTLPixelFormat_Invalid",
+    "notes": "constants.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLPixelFormat.A8Unorm",
+    "silk": "types.MTLPixelFormat_A8Unorm",
+    "notes": "constants.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLPixelFormat.R8Unorm",
+    "silk": "types.MTLPixelFormat_R8Unorm",
+    "notes": "constants.rs; enum u64, discriminant 10"
+  },
+  {
+    "rust": "MTLPixelFormat.R8Unorm_sRGB",
+    "silk": "types.MTLPixelFormat_R8Unorm_sRGB",
+    "notes": "constants.rs; enum u64, discriminant 11"
+  },
+  {
+    "rust": "MTLPixelFormat.R8Snorm",
+    "silk": "types.MTLPixelFormat_R8Snorm",
+    "notes": "constants.rs; enum u64, discriminant 12"
+  },
+  {
+    "rust": "MTLPixelFormat.R8Uint",
+    "silk": "types.MTLPixelFormat_R8Uint",
+    "notes": "constants.rs; enum u64, discriminant 13"
+  },
+  {
+    "rust": "MTLPixelFormat.R8Sint",
+    "silk": "types.MTLPixelFormat_R8Sint",
+    "notes": "constants.rs; enum u64, discriminant 14"
+  },
+  {
+    "rust": "MTLPixelFormat.R16Unorm",
+    "silk": "types.MTLPixelFormat_R16Unorm",
+    "notes": "constants.rs; enum u64, discriminant 20"
+  },
+  {
+    "rust": "MTLPixelFormat.R16Snorm",
+    "silk": "types.MTLPixelFormat_R16Snorm",
+    "notes": "constants.rs; enum u64, discriminant 22"
+  },
+  {
+    "rust": "MTLPixelFormat.R16Uint",
+    "silk": "types.MTLPixelFormat_R16Uint",
+    "notes": "constants.rs; enum u64, discriminant 23"
+  },
+  {
+    "rust": "MTLPixelFormat.R16Sint",
+    "silk": "types.MTLPixelFormat_R16Sint",
+    "notes": "constants.rs; enum u64, discriminant 24"
+  },
+  {
+    "rust": "MTLPixelFormat.R16Float",
+    "silk": "types.MTLPixelFormat_R16Float",
+    "notes": "constants.rs; enum u64, discriminant 25"
+  },
+  {
+    "rust": "MTLPixelFormat.RG8Unorm",
+    "silk": "types.MTLPixelFormat_RG8Unorm",
+    "notes": "constants.rs; enum u64, discriminant 30"
+  },
+  {
+    "rust": "MTLPixelFormat.RG8Unorm_sRGB",
+    "silk": "types.MTLPixelFormat_RG8Unorm_sRGB",
+    "notes": "constants.rs; enum u64, discriminant 31"
+  },
+  {
+    "rust": "MTLPixelFormat.RG8Snorm",
+    "silk": "types.MTLPixelFormat_RG8Snorm",
+    "notes": "constants.rs; enum u64, discriminant 32"
+  },
+  {
+    "rust": "MTLPixelFormat.RG8Uint",
+    "silk": "types.MTLPixelFormat_RG8Uint",
+    "notes": "constants.rs; enum u64, discriminant 33"
+  },
+  {
+    "rust": "MTLPixelFormat.RG8Sint",
+    "silk": "types.MTLPixelFormat_RG8Sint",
+    "notes": "constants.rs; enum u64, discriminant 34"
+  },
+  {
+    "rust": "MTLPixelFormat.B5G6R5Unorm",
+    "silk": "types.MTLPixelFormat_B5G6R5Unorm",
+    "notes": "constants.rs; enum u64, discriminant 40"
+  },
+  {
+    "rust": "MTLPixelFormat.A1BGR5Unorm",
+    "silk": "types.MTLPixelFormat_A1BGR5Unorm",
+    "notes": "constants.rs; enum u64, discriminant 41"
+  },
+  {
+    "rust": "MTLPixelFormat.ABGR4Unorm",
+    "silk": "types.MTLPixelFormat_ABGR4Unorm",
+    "notes": "constants.rs; enum u64, discriminant 42"
+  },
+  {
+    "rust": "MTLPixelFormat.BGR5A1Unorm",
+    "silk": "types.MTLPixelFormat_BGR5A1Unorm",
+    "notes": "constants.rs; enum u64, discriminant 43"
+  },
+  {
+    "rust": "MTLPixelFormat.R32Uint",
+    "silk": "types.MTLPixelFormat_R32Uint",
+    "notes": "constants.rs; enum u64, discriminant 53"
+  },
+  {
+    "rust": "MTLPixelFormat.R32Sint",
+    "silk": "types.MTLPixelFormat_R32Sint",
+    "notes": "constants.rs; enum u64, discriminant 54"
+  },
+  {
+    "rust": "MTLPixelFormat.R32Float",
+    "silk": "types.MTLPixelFormat_R32Float",
+    "notes": "constants.rs; enum u64, discriminant 55"
+  },
+  {
+    "rust": "MTLPixelFormat.RG16Unorm",
+    "silk": "types.MTLPixelFormat_RG16Unorm",
+    "notes": "constants.rs; enum u64, discriminant 60"
+  },
+  {
+    "rust": "MTLPixelFormat.RG16Snorm",
+    "silk": "types.MTLPixelFormat_RG16Snorm",
+    "notes": "constants.rs; enum u64, discriminant 62"
+  },
+  {
+    "rust": "MTLPixelFormat.RG16Uint",
+    "silk": "types.MTLPixelFormat_RG16Uint",
+    "notes": "constants.rs; enum u64, discriminant 63"
+  },
+  {
+    "rust": "MTLPixelFormat.RG16Sint",
+    "silk": "types.MTLPixelFormat_RG16Sint",
+    "notes": "constants.rs; enum u64, discriminant 64"
+  },
+  {
+    "rust": "MTLPixelFormat.RG16Float",
+    "silk": "types.MTLPixelFormat_RG16Float",
+    "notes": "constants.rs; enum u64, discriminant 65"
+  },
+  {
+    "rust": "MTLPixelFormat.RGBA8Unorm",
+    "silk": "types.MTLPixelFormat_RGBA8Unorm",
+    "notes": "constants.rs; enum u64, discriminant 70"
+  },
+  {
+    "rust": "MTLPixelFormat.RGBA8Unorm_sRGB",
+    "silk": "types.MTLPixelFormat_RGBA8Unorm_sRGB",
+    "notes": "constants.rs; enum u64, discriminant 71"
+  },
+  {
+    "rust": "MTLPixelFormat.RGBA8Snorm",
+    "silk": "types.MTLPixelFormat_RGBA8Snorm",
+    "notes": "constants.rs; enum u64, discriminant 72"
+  },
+  {
+    "rust": "MTLPixelFormat.RGBA8Uint",
+    "silk": "types.MTLPixelFormat_RGBA8Uint",
+    "notes": "constants.rs; enum u64, discriminant 73"
+  },
+  {
+    "rust": "MTLPixelFormat.RGBA8Sint",
+    "silk": "types.MTLPixelFormat_RGBA8Sint",
+    "notes": "constants.rs; enum u64, discriminant 74"
+  },
+  {
+    "rust": "MTLPixelFormat.BGRA8Unorm",
+    "silk": "types.MTLPixelFormat_BGRA8Unorm",
+    "notes": "constants.rs; enum u64, discriminant 80"
+  },
+  {
+    "rust": "MTLPixelFormat.BGRA8Unorm_sRGB",
+    "silk": "types.MTLPixelFormat_BGRA8Unorm_sRGB",
+    "notes": "constants.rs; enum u64, discriminant 81"
+  },
+  {
+    "rust": "MTLPixelFormat.RGB10A2Unorm",
+    "silk": "types.MTLPixelFormat_RGB10A2Unorm",
+    "notes": "constants.rs; enum u64, discriminant 90"
+  },
+  {
+    "rust": "MTLPixelFormat.RGB10A2Uint",
+    "silk": "types.MTLPixelFormat_RGB10A2Uint",
+    "notes": "constants.rs; enum u64, discriminant 91"
+  },
+  {
+    "rust": "MTLPixelFormat.RG11B10Float",
+    "silk": "types.MTLPixelFormat_RG11B10Float",
+    "notes": "constants.rs; enum u64, discriminant 92"
+  },
+  {
+    "rust": "MTLPixelFormat.RGB9E5Float",
+    "silk": "types.MTLPixelFormat_RGB9E5Float",
+    "notes": "constants.rs; enum u64, discriminant 93"
+  },
+  {
+    "rust": "MTLPixelFormat.BGR10A2Unorm",
+    "silk": "types.MTLPixelFormat_BGR10A2Unorm",
+    "notes": "constants.rs; enum u64, discriminant 94"
+  },
+  {
+    "rust": "MTLPixelFormat.RG32Uint",
+    "silk": "types.MTLPixelFormat_RG32Uint",
+    "notes": "constants.rs; enum u64, discriminant 103"
+  },
+  {
+    "rust": "MTLPixelFormat.RG32Sint",
+    "silk": "types.MTLPixelFormat_RG32Sint",
+    "notes": "constants.rs; enum u64, discriminant 104"
+  },
+  {
+    "rust": "MTLPixelFormat.RG32Float",
+    "silk": "types.MTLPixelFormat_RG32Float",
+    "notes": "constants.rs; enum u64, discriminant 105"
+  },
+  {
+    "rust": "MTLPixelFormat.RGBA16Unorm",
+    "silk": "types.MTLPixelFormat_RGBA16Unorm",
+    "notes": "constants.rs; enum u64, discriminant 110"
+  },
+  {
+    "rust": "MTLPixelFormat.RGBA16Snorm",
+    "silk": "types.MTLPixelFormat_RGBA16Snorm",
+    "notes": "constants.rs; enum u64, discriminant 112"
+  },
+  {
+    "rust": "MTLPixelFormat.RGBA16Uint",
+    "silk": "types.MTLPixelFormat_RGBA16Uint",
+    "notes": "constants.rs; enum u64, discriminant 113"
+  },
+  {
+    "rust": "MTLPixelFormat.RGBA16Sint",
+    "silk": "types.MTLPixelFormat_RGBA16Sint",
+    "notes": "constants.rs; enum u64, discriminant 114"
+  },
+  {
+    "rust": "MTLPixelFormat.RGBA16Float",
+    "silk": "types.MTLPixelFormat_RGBA16Float",
+    "notes": "constants.rs; enum u64, discriminant 115"
+  },
+  {
+    "rust": "MTLPixelFormat.RGBA32Uint",
+    "silk": "types.MTLPixelFormat_RGBA32Uint",
+    "notes": "constants.rs; enum u64, discriminant 123"
+  },
+  {
+    "rust": "MTLPixelFormat.RGBA32Sint",
+    "silk": "types.MTLPixelFormat_RGBA32Sint",
+    "notes": "constants.rs; enum u64, discriminant 124"
+  },
+  {
+    "rust": "MTLPixelFormat.RGBA32Float",
+    "silk": "types.MTLPixelFormat_RGBA32Float",
+    "notes": "constants.rs; enum u64, discriminant 125"
+  },
+  {
+    "rust": "MTLPixelFormat.BC1_RGBA",
+    "silk": "types.MTLPixelFormat_BC1_RGBA",
+    "notes": "constants.rs; enum u64, discriminant 130"
+  },
+  {
+    "rust": "MTLPixelFormat.BC1_RGBA_sRGB",
+    "silk": "types.MTLPixelFormat_BC1_RGBA_sRGB",
+    "notes": "constants.rs; enum u64, discriminant 131"
+  },
+  {
+    "rust": "MTLPixelFormat.BC2_RGBA",
+    "silk": "types.MTLPixelFormat_BC2_RGBA",
+    "notes": "constants.rs; enum u64, discriminant 132"
+  },
+  {
+    "rust": "MTLPixelFormat.BC2_RGBA_sRGB",
+    "silk": "types.MTLPixelFormat_BC2_RGBA_sRGB",
+    "notes": "constants.rs; enum u64, discriminant 133"
+  },
+  {
+    "rust": "MTLPixelFormat.BC3_RGBA",
+    "silk": "types.MTLPixelFormat_BC3_RGBA",
+    "notes": "constants.rs; enum u64, discriminant 134"
+  },
+  {
+    "rust": "MTLPixelFormat.BC3_RGBA_sRGB",
+    "silk": "types.MTLPixelFormat_BC3_RGBA_sRGB",
+    "notes": "constants.rs; enum u64, discriminant 135"
+  },
+  {
+    "rust": "MTLPixelFormat.BC4_RUnorm",
+    "silk": "types.MTLPixelFormat_BC4_RUnorm",
+    "notes": "constants.rs; enum u64, discriminant 140"
+  },
+  {
+    "rust": "MTLPixelFormat.BC4_RSnorm",
+    "silk": "types.MTLPixelFormat_BC4_RSnorm",
+    "notes": "constants.rs; enum u64, discriminant 141"
+  },
+  {
+    "rust": "MTLPixelFormat.BC5_RGUnorm",
+    "silk": "types.MTLPixelFormat_BC5_RGUnorm",
+    "notes": "constants.rs; enum u64, discriminant 142"
+  },
+  {
+    "rust": "MTLPixelFormat.BC5_RGSnorm",
+    "silk": "types.MTLPixelFormat_BC5_RGSnorm",
+    "notes": "constants.rs; enum u64, discriminant 143"
+  },
+  {
+    "rust": "MTLPixelFormat.BC6H_RGBFloat",
+    "silk": "types.MTLPixelFormat_BC6H_RGBFloat",
+    "notes": "constants.rs; enum u64, discriminant 150"
+  },
+  {
+    "rust": "MTLPixelFormat.BC6H_RGBUfloat",
+    "silk": "types.MTLPixelFormat_BC6H_RGBUfloat",
+    "notes": "constants.rs; enum u64, discriminant 151"
+  },
+  {
+    "rust": "MTLPixelFormat.BC7_RGBAUnorm",
+    "silk": "types.MTLPixelFormat_BC7_RGBAUnorm",
+    "notes": "constants.rs; enum u64, discriminant 152"
+  },
+  {
+    "rust": "MTLPixelFormat.BC7_RGBAUnorm_sRGB",
+    "silk": "types.MTLPixelFormat_BC7_RGBAUnorm_sRGB",
+    "notes": "constants.rs; enum u64, discriminant 153"
+  },
+  {
+    "rust": "MTLPixelFormat.PVRTC_RGB_2BPP",
+    "silk": "types.MTLPixelFormat_PVRTC_RGB_2BPP",
+    "notes": "constants.rs; enum u64, discriminant 160"
+  },
+  {
+    "rust": "MTLPixelFormat.PVRTC_RGB_2BPP_sRGB",
+    "silk": "types.MTLPixelFormat_PVRTC_RGB_2BPP_sRGB",
+    "notes": "constants.rs; enum u64, discriminant 161"
+  },
+  {
+    "rust": "MTLPixelFormat.PVRTC_RGB_4BPP",
+    "silk": "types.MTLPixelFormat_PVRTC_RGB_4BPP",
+    "notes": "constants.rs; enum u64, discriminant 162"
+  },
+  {
+    "rust": "MTLPixelFormat.PVRTC_RGB_4BPP_sRGB",
+    "silk": "types.MTLPixelFormat_PVRTC_RGB_4BPP_sRGB",
+    "notes": "constants.rs; enum u64, discriminant 163"
+  },
+  {
+    "rust": "MTLPixelFormat.PVRTC_RGBA_2BPP",
+    "silk": "types.MTLPixelFormat_PVRTC_RGBA_2BPP",
+    "notes": "constants.rs; enum u64, discriminant 164"
+  },
+  {
+    "rust": "MTLPixelFormat.PVRTC_RGBA_2BPP_sRGB",
+    "silk": "types.MTLPixelFormat_PVRTC_RGBA_2BPP_sRGB",
+    "notes": "constants.rs; enum u64, discriminant 165"
+  },
+  {
+    "rust": "MTLPixelFormat.PVRTC_RGBA_4BPP",
+    "silk": "types.MTLPixelFormat_PVRTC_RGBA_4BPP",
+    "notes": "constants.rs; enum u64, discriminant 166"
+  },
+  {
+    "rust": "MTLPixelFormat.PVRTC_RGBA_4BPP_sRGB",
+    "silk": "types.MTLPixelFormat_PVRTC_RGBA_4BPP_sRGB",
+    "notes": "constants.rs; enum u64, discriminant 167"
+  },
+  {
+    "rust": "MTLPixelFormat.EAC_R11Unorm",
+    "silk": "types.MTLPixelFormat_EAC_R11Unorm",
+    "notes": "constants.rs; enum u64, discriminant 170"
+  },
+  {
+    "rust": "MTLPixelFormat.EAC_R11Snorm",
+    "silk": "types.MTLPixelFormat_EAC_R11Snorm",
+    "notes": "constants.rs; enum u64, discriminant 172"
+  },
+  {
+    "rust": "MTLPixelFormat.EAC_RG11Unorm",
+    "silk": "types.MTLPixelFormat_EAC_RG11Unorm",
+    "notes": "constants.rs; enum u64, discriminant 174"
+  },
+  {
+    "rust": "MTLPixelFormat.EAC_RG11Snorm",
+    "silk": "types.MTLPixelFormat_EAC_RG11Snorm",
+    "notes": "constants.rs; enum u64, discriminant 176"
+  },
+  {
+    "rust": "MTLPixelFormat.EAC_RGBA8",
+    "silk": "types.MTLPixelFormat_EAC_RGBA8",
+    "notes": "constants.rs; enum u64, discriminant 178"
+  },
+  {
+    "rust": "MTLPixelFormat.EAC_RGBA8_sRGB",
+    "silk": "types.MTLPixelFormat_EAC_RGBA8_sRGB",
+    "notes": "constants.rs; enum u64, discriminant 179"
+  },
+  {
+    "rust": "MTLPixelFormat.ETC2_RGB8",
+    "silk": "types.MTLPixelFormat_ETC2_RGB8",
+    "notes": "constants.rs; enum u64, discriminant 180"
+  },
+  {
+    "rust": "MTLPixelFormat.ETC2_RGB8_sRGB",
+    "silk": "types.MTLPixelFormat_ETC2_RGB8_sRGB",
+    "notes": "constants.rs; enum u64, discriminant 181"
+  },
+  {
+    "rust": "MTLPixelFormat.ETC2_RGB8A1",
+    "silk": "types.MTLPixelFormat_ETC2_RGB8A1",
+    "notes": "constants.rs; enum u64, discriminant 182"
+  },
+  {
+    "rust": "MTLPixelFormat.ETC2_RGB8A1_sRGB",
+    "silk": "types.MTLPixelFormat_ETC2_RGB8A1_sRGB",
+    "notes": "constants.rs; enum u64, discriminant 183"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_4x4_sRGB",
+    "silk": "types.MTLPixelFormat_ASTC_4x4_sRGB",
+    "notes": "constants.rs; enum u64, discriminant 186"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_5x4_sRGB",
+    "silk": "types.MTLPixelFormat_ASTC_5x4_sRGB",
+    "notes": "constants.rs; enum u64, discriminant 187"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_5x5_sRGB",
+    "silk": "types.MTLPixelFormat_ASTC_5x5_sRGB",
+    "notes": "constants.rs; enum u64, discriminant 188"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_6x5_sRGB",
+    "silk": "types.MTLPixelFormat_ASTC_6x5_sRGB",
+    "notes": "constants.rs; enum u64, discriminant 189"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_6x6_sRGB",
+    "silk": "types.MTLPixelFormat_ASTC_6x6_sRGB",
+    "notes": "constants.rs; enum u64, discriminant 190"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_8x5_sRGB",
+    "silk": "types.MTLPixelFormat_ASTC_8x5_sRGB",
+    "notes": "constants.rs; enum u64, discriminant 192"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_8x6_sRGB",
+    "silk": "types.MTLPixelFormat_ASTC_8x6_sRGB",
+    "notes": "constants.rs; enum u64, discriminant 193"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_8x8_sRGB",
+    "silk": "types.MTLPixelFormat_ASTC_8x8_sRGB",
+    "notes": "constants.rs; enum u64, discriminant 194"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_10x5_sRGB",
+    "silk": "types.MTLPixelFormat_ASTC_10x5_sRGB",
+    "notes": "constants.rs; enum u64, discriminant 195"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_10x6_sRGB",
+    "silk": "types.MTLPixelFormat_ASTC_10x6_sRGB",
+    "notes": "constants.rs; enum u64, discriminant 196"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_10x8_sRGB",
+    "silk": "types.MTLPixelFormat_ASTC_10x8_sRGB",
+    "notes": "constants.rs; enum u64, discriminant 197"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_10x10_sRGB",
+    "silk": "types.MTLPixelFormat_ASTC_10x10_sRGB",
+    "notes": "constants.rs; enum u64, discriminant 198"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_12x10_sRGB",
+    "silk": "types.MTLPixelFormat_ASTC_12x10_sRGB",
+    "notes": "constants.rs; enum u64, discriminant 199"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_12x12_sRGB",
+    "silk": "types.MTLPixelFormat_ASTC_12x12_sRGB",
+    "notes": "constants.rs; enum u64, discriminant 200"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_4x4_LDR",
+    "silk": "types.MTLPixelFormat_ASTC_4x4_LDR",
+    "notes": "constants.rs; enum u64, discriminant 204"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_5x4_LDR",
+    "silk": "types.MTLPixelFormat_ASTC_5x4_LDR",
+    "notes": "constants.rs; enum u64, discriminant 205"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_5x5_LDR",
+    "silk": "types.MTLPixelFormat_ASTC_5x5_LDR",
+    "notes": "constants.rs; enum u64, discriminant 206"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_6x5_LDR",
+    "silk": "types.MTLPixelFormat_ASTC_6x5_LDR",
+    "notes": "constants.rs; enum u64, discriminant 207"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_6x6_LDR",
+    "silk": "types.MTLPixelFormat_ASTC_6x6_LDR",
+    "notes": "constants.rs; enum u64, discriminant 208"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_8x5_LDR",
+    "silk": "types.MTLPixelFormat_ASTC_8x5_LDR",
+    "notes": "constants.rs; enum u64, discriminant 210"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_8x6_LDR",
+    "silk": "types.MTLPixelFormat_ASTC_8x6_LDR",
+    "notes": "constants.rs; enum u64, discriminant 211"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_8x8_LDR",
+    "silk": "types.MTLPixelFormat_ASTC_8x8_LDR",
+    "notes": "constants.rs; enum u64, discriminant 212"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_10x5_LDR",
+    "silk": "types.MTLPixelFormat_ASTC_10x5_LDR",
+    "notes": "constants.rs; enum u64, discriminant 213"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_10x6_LDR",
+    "silk": "types.MTLPixelFormat_ASTC_10x6_LDR",
+    "notes": "constants.rs; enum u64, discriminant 214"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_10x8_LDR",
+    "silk": "types.MTLPixelFormat_ASTC_10x8_LDR",
+    "notes": "constants.rs; enum u64, discriminant 215"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_10x10_LDR",
+    "silk": "types.MTLPixelFormat_ASTC_10x10_LDR",
+    "notes": "constants.rs; enum u64, discriminant 216"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_12x10_LDR",
+    "silk": "types.MTLPixelFormat_ASTC_12x10_LDR",
+    "notes": "constants.rs; enum u64, discriminant 217"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_12x12_LDR",
+    "silk": "types.MTLPixelFormat_ASTC_12x12_LDR",
+    "notes": "constants.rs; enum u64, discriminant 218"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_4x4_HDR",
+    "silk": "types.MTLPixelFormat_ASTC_4x4_HDR",
+    "notes": "constants.rs; enum u64, discriminant 222"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_5x4_HDR",
+    "silk": "types.MTLPixelFormat_ASTC_5x4_HDR",
+    "notes": "constants.rs; enum u64, discriminant 223"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_5x5_HDR",
+    "silk": "types.MTLPixelFormat_ASTC_5x5_HDR",
+    "notes": "constants.rs; enum u64, discriminant 224"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_6x5_HDR",
+    "silk": "types.MTLPixelFormat_ASTC_6x5_HDR",
+    "notes": "constants.rs; enum u64, discriminant 225"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_6x6_HDR",
+    "silk": "types.MTLPixelFormat_ASTC_6x6_HDR",
+    "notes": "constants.rs; enum u64, discriminant 226"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_8x5_HDR",
+    "silk": "types.MTLPixelFormat_ASTC_8x5_HDR",
+    "notes": "constants.rs; enum u64, discriminant 228"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_8x6_HDR",
+    "silk": "types.MTLPixelFormat_ASTC_8x6_HDR",
+    "notes": "constants.rs; enum u64, discriminant 229"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_8x8_HDR",
+    "silk": "types.MTLPixelFormat_ASTC_8x8_HDR",
+    "notes": "constants.rs; enum u64, discriminant 230"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_10x5_HDR",
+    "silk": "types.MTLPixelFormat_ASTC_10x5_HDR",
+    "notes": "constants.rs; enum u64, discriminant 231"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_10x6_HDR",
+    "silk": "types.MTLPixelFormat_ASTC_10x6_HDR",
+    "notes": "constants.rs; enum u64, discriminant 232"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_10x8_HDR",
+    "silk": "types.MTLPixelFormat_ASTC_10x8_HDR",
+    "notes": "constants.rs; enum u64, discriminant 233"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_10x10_HDR",
+    "silk": "types.MTLPixelFormat_ASTC_10x10_HDR",
+    "notes": "constants.rs; enum u64, discriminant 234"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_12x10_HDR",
+    "silk": "types.MTLPixelFormat_ASTC_12x10_HDR",
+    "notes": "constants.rs; enum u64, discriminant 235"
+  },
+  {
+    "rust": "MTLPixelFormat.ASTC_12x12_HDR",
+    "silk": "types.MTLPixelFormat_ASTC_12x12_HDR",
+    "notes": "constants.rs; enum u64, discriminant 236"
+  },
+  {
+    "rust": "MTLPixelFormat.GBGR422",
+    "silk": "types.MTLPixelFormat_GBGR422",
+    "notes": "constants.rs; enum u64, discriminant 240"
+  },
+  {
+    "rust": "MTLPixelFormat.BGRG422",
+    "silk": "types.MTLPixelFormat_BGRG422",
+    "notes": "constants.rs; enum u64, discriminant 241"
+  },
+  {
+    "rust": "MTLPixelFormat.Depth16Unorm",
+    "silk": "types.MTLPixelFormat_Depth16Unorm",
+    "notes": "constants.rs; enum u64, discriminant 250"
+  },
+  {
+    "rust": "MTLPixelFormat.Depth32Float",
+    "silk": "types.MTLPixelFormat_Depth32Float",
+    "notes": "constants.rs; enum u64, discriminant 252"
+  },
+  {
+    "rust": "MTLPixelFormat.Stencil8",
+    "silk": "types.MTLPixelFormat_Stencil8",
+    "notes": "constants.rs; enum u64, discriminant 253"
+  },
+  {
+    "rust": "MTLPixelFormat.Depth24Unorm_Stencil8",
+    "silk": "types.MTLPixelFormat_Depth24Unorm_Stencil8",
+    "notes": "constants.rs; enum u64, discriminant 255"
+  },
+  {
+    "rust": "MTLPixelFormat.Depth32Float_Stencil8",
+    "silk": "types.MTLPixelFormat_Depth32Float_Stencil8",
+    "notes": "constants.rs; enum u64, discriminant 260"
+  },
+  {
+    "rust": "MTLPixelFormat.X32_Stencil8",
+    "silk": "types.MTLPixelFormat_X32_Stencil8",
+    "notes": "constants.rs; enum u64, discriminant 261"
+  },
+  {
+    "rust": "MTLPixelFormat.X24_Stencil8",
+    "silk": "types.MTLPixelFormat_X24_Stencil8",
+    "notes": "constants.rs; enum u64, discriminant 262"
+  },
+  {
+    "rust": "MTLPixelFormat.BGRA10_XR",
+    "silk": "types.MTLPixelFormat_BGRA10_XR",
+    "notes": "constants.rs; enum u64, discriminant 552"
+  },
+  {
+    "rust": "MTLPixelFormat.BGRA10_XR_SRGB",
+    "silk": "types.MTLPixelFormat_BGRA10_XR_SRGB",
+    "notes": "constants.rs; enum u64, discriminant 553"
+  },
+  {
+    "rust": "MTLPixelFormat.BGR10_XR",
+    "silk": "types.MTLPixelFormat_BGR10_XR",
+    "notes": "constants.rs; enum u64, discriminant 554"
+  },
+  {
+    "rust": "MTLPixelFormat.BGR10_XR_SRGB",
+    "silk": "types.MTLPixelFormat_BGR10_XR_SRGB",
+    "notes": "constants.rs; enum u64, discriminant 555"
+  },
+  {
+    "rust": "MTLPatchType.None",
+    "silk": "types.MTLPatchType_None",
+    "notes": "library.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLPatchType.Triangle",
+    "silk": "types.MTLPatchType_Triangle",
+    "notes": "library.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLPatchType.Quad",
+    "silk": "types.MTLPatchType_Quad",
+    "notes": "library.rs; enum u64, discriminant 2"
+  },
+  {
+    "rust": "MTLFunctionType.Vertex",
+    "silk": "types.MTLFunctionType_Vertex",
+    "notes": "library.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLFunctionType.Fragment",
+    "silk": "types.MTLFunctionType_Fragment",
+    "notes": "library.rs; enum u64, discriminant 2"
+  },
+  {
+    "rust": "MTLFunctionType.Kernel",
+    "silk": "types.MTLFunctionType_Kernel",
+    "notes": "library.rs; enum u64, discriminant 3"
+  },
+  {
+    "rust": "MTLFunctionType.Visible",
+    "silk": "types.MTLFunctionType_Visible",
+    "notes": "library.rs; enum u64, discriminant 5"
+  },
+  {
+    "rust": "MTLFunctionType.Intersection",
+    "silk": "types.MTLFunctionType_Intersection",
+    "notes": "library.rs; enum u64, discriminant 6"
+  },
+  {
+    "rust": "MTLFunctionOptions.None",
+    "silk": "types.MTLFunctionOptions_None",
+    "notes": "library.rs; flags u64, discriminant 0"
+  },
+  {
+    "rust": "MTLFunctionOptions.CompileToBinary",
+    "silk": "types.MTLFunctionOptions_CompileToBinary",
+    "notes": "library.rs; flags u64, discriminant 1"
+  },
+  {
+    "rust": "MTLLanguageVersion.V1_0",
+    "silk": "types.MTLLanguageVersion_V1_0",
+    "notes": "library.rs; enum u64, discriminant 65536"
+  },
+  {
+    "rust": "MTLLanguageVersion.V1_1",
+    "silk": "types.MTLLanguageVersion_V1_1",
+    "notes": "library.rs; enum u64, discriminant 65537"
+  },
+  {
+    "rust": "MTLLanguageVersion.V1_2",
+    "silk": "types.MTLLanguageVersion_V1_2",
+    "notes": "library.rs; enum u64, discriminant 65538"
+  },
+  {
+    "rust": "MTLLanguageVersion.V2_0",
+    "silk": "types.MTLLanguageVersion_V2_0",
+    "notes": "library.rs; enum u64, discriminant 131072"
+  },
+  {
+    "rust": "MTLLanguageVersion.V2_1",
+    "silk": "types.MTLLanguageVersion_V2_1",
+    "notes": "library.rs; enum u64, discriminant 131073"
+  },
+  {
+    "rust": "MTLLanguageVersion.V2_2",
+    "silk": "types.MTLLanguageVersion_V2_2",
+    "notes": "library.rs; enum u64, discriminant 131074"
+  },
+  {
+    "rust": "MTLLanguageVersion.V2_3",
+    "silk": "types.MTLLanguageVersion_V2_3",
+    "notes": "library.rs; enum u64, discriminant 131075"
+  },
+  {
+    "rust": "MTLLanguageVersion.V2_4",
+    "silk": "types.MTLLanguageVersion_V2_4",
+    "notes": "library.rs; enum u64, discriminant 131076"
+  },
+  {
+    "rust": "MTLLanguageVersion.V3_0",
+    "silk": "types.MTLLanguageVersion_V3_0",
+    "notes": "library.rs; enum u64, discriminant 196608"
+  },
+  {
+    "rust": "MTLLanguageVersion.V3_1",
+    "silk": "types.MTLLanguageVersion_V3_1",
+    "notes": "library.rs; enum u64, discriminant 196609"
+  },
+  {
+    "rust": "MTLLibraryType.Executable",
+    "silk": "types.MTLLibraryType_Executable",
+    "notes": "library.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLLibraryType.Dynamic",
+    "silk": "types.MTLLibraryType_Dynamic",
+    "notes": "library.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLLibraryError.Unsupported",
+    "silk": "types.MTLLibraryError_Unsupported",
+    "notes": "library.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLLibraryError.Internal",
+    "silk": "types.MTLLibraryError_Internal",
+    "notes": "library.rs; enum u64, discriminant 2"
+  },
+  {
+    "rust": "MTLLibraryError.CompileFailure",
+    "silk": "types.MTLLibraryError_CompileFailure",
+    "notes": "library.rs; enum u64, discriminant 3"
+  },
+  {
+    "rust": "MTLLibraryError.CompileWarning",
+    "silk": "types.MTLLibraryError_CompileWarning",
+    "notes": "library.rs; enum u64, discriminant 4"
+  },
+  {
+    "rust": "MTLLibraryError.FunctionNotFound",
+    "silk": "types.MTLLibraryError_FunctionNotFound",
+    "notes": "library.rs; enum u64, discriminant 5"
+  },
+  {
+    "rust": "MTLLibraryError.FileNotFound",
+    "silk": "types.MTLLibraryError_FileNotFound",
+    "notes": "library.rs; enum u64, discriminant 6"
+  },
+  {
+    "rust": "MTLDynamicLibraryError.None",
+    "silk": "types.MTLDynamicLibraryError_None",
+    "notes": "library.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLDynamicLibraryError.InvalidFile",
+    "silk": "types.MTLDynamicLibraryError_InvalidFile",
+    "notes": "library.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLDynamicLibraryError.CompilationFailure",
+    "silk": "types.MTLDynamicLibraryError_CompilationFailure",
+    "notes": "library.rs; enum u64, discriminant 2"
+  },
+  {
+    "rust": "MTLDynamicLibraryError.UnresolvedInstallName",
+    "silk": "types.MTLDynamicLibraryError_UnresolvedInstallName",
+    "notes": "library.rs; enum u64, discriminant 3"
+  },
+  {
+    "rust": "MTLDynamicLibraryError.DependencyLoadFailure",
+    "silk": "types.MTLDynamicLibraryError_DependencyLoadFailure",
+    "notes": "library.rs; enum u64, discriminant 4"
+  },
+  {
+    "rust": "MTLDynamicLibraryError.Unsupported",
+    "silk": "types.MTLDynamicLibraryError_Unsupported",
+    "notes": "library.rs; enum u64, discriminant 5"
+  },
+  {
+    "rust": "MTLHeapType.Automatic",
+    "silk": "types.MTLHeapType_Automatic",
+    "notes": "heap.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLHeapType.Placement",
+    "silk": "types.MTLHeapType_Placement",
+    "notes": "heap.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLHeapType.Sparse",
+    "silk": "types.MTLHeapType_Sparse",
+    "notes": "heap.rs; enum u64, discriminant 2"
+  },
+  {
+    "rust": "NSRange",
+    "silk": "types.NSRange",
+    "notes": "lib.rs; C layout; fields retain upstream spellings; Copy"
+  },
+  {
+    "rust": "MTLCommandBufferStatus.NotEnqueued",
+    "silk": "types.MTLCommandBufferStatus_NotEnqueued",
+    "notes": "commandbuffer.rs; enum u32, discriminant 0"
+  },
+  {
+    "rust": "MTLCommandBufferStatus.Enqueued",
+    "silk": "types.MTLCommandBufferStatus_Enqueued",
+    "notes": "commandbuffer.rs; enum u32, discriminant 1"
+  },
+  {
+    "rust": "MTLCommandBufferStatus.Committed",
+    "silk": "types.MTLCommandBufferStatus_Committed",
+    "notes": "commandbuffer.rs; enum u32, discriminant 2"
+  },
+  {
+    "rust": "MTLCommandBufferStatus.Scheduled",
+    "silk": "types.MTLCommandBufferStatus_Scheduled",
+    "notes": "commandbuffer.rs; enum u32, discriminant 3"
+  },
+  {
+    "rust": "MTLCommandBufferStatus.Completed",
+    "silk": "types.MTLCommandBufferStatus_Completed",
+    "notes": "commandbuffer.rs; enum u32, discriminant 4"
+  },
+  {
+    "rust": "MTLCommandBufferStatus.Error",
+    "silk": "types.MTLCommandBufferStatus_Error",
+    "notes": "commandbuffer.rs; enum u32, discriminant 5"
+  },
+  {
+    "rust": "MTLCommandBufferError.None",
+    "silk": "types.MTLCommandBufferError_None",
+    "notes": "commandbuffer.rs; enum u32, discriminant 0"
+  },
+  {
+    "rust": "MTLCommandBufferError.Internal",
+    "silk": "types.MTLCommandBufferError_Internal",
+    "notes": "commandbuffer.rs; enum u32, discriminant 1"
+  },
+  {
+    "rust": "MTLCommandBufferError.Timeout",
+    "silk": "types.MTLCommandBufferError_Timeout",
+    "notes": "commandbuffer.rs; enum u32, discriminant 2"
+  },
+  {
+    "rust": "MTLCommandBufferError.PageFault",
+    "silk": "types.MTLCommandBufferError_PageFault",
+    "notes": "commandbuffer.rs; enum u32, discriminant 3"
+  },
+  {
+    "rust": "MTLCommandBufferError.Blacklisted",
+    "silk": "types.MTLCommandBufferError_Blacklisted",
+    "notes": "commandbuffer.rs; enum u32, discriminant 4"
+  },
+  {
+    "rust": "MTLCommandBufferError.NotPermitted",
+    "silk": "types.MTLCommandBufferError_NotPermitted",
+    "notes": "commandbuffer.rs; enum u32, discriminant 7"
+  },
+  {
+    "rust": "MTLCommandBufferError.OutOfMemory",
+    "silk": "types.MTLCommandBufferError_OutOfMemory",
+    "notes": "commandbuffer.rs; enum u32, discriminant 8"
+  },
+  {
+    "rust": "MTLCommandBufferError.InvalidResource",
+    "silk": "types.MTLCommandBufferError_InvalidResource",
+    "notes": "commandbuffer.rs; enum u32, discriminant 9"
+  },
+  {
+    "rust": "MTLCommandBufferError.Memoryless",
+    "silk": "types.MTLCommandBufferError_Memoryless",
+    "notes": "commandbuffer.rs; enum u32, discriminant 10"
+  },
+  {
+    "rust": "MTLCommandBufferError.DeviceRemoved",
+    "silk": "types.MTLCommandBufferError_DeviceRemoved",
+    "notes": "commandbuffer.rs; enum u32, discriminant 11"
+  },
+  {
+    "rust": "MTLDispatchType.Serial",
+    "silk": "types.MTLDispatchType_Serial",
+    "notes": "commandbuffer.rs; enum u32, discriminant 0"
+  },
+  {
+    "rust": "MTLDispatchType.Concurrent",
+    "silk": "types.MTLDispatchType_Concurrent",
+    "notes": "commandbuffer.rs; enum u32, discriminant 1"
+  },
+  {
+    "rust": "MTLDataType.None",
+    "silk": "types.MTLDataType_None",
+    "notes": "argument.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLDataType.Struct",
+    "silk": "types.MTLDataType_Struct",
+    "notes": "argument.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLDataType.Array",
+    "silk": "types.MTLDataType_Array",
+    "notes": "argument.rs; enum u64, discriminant 2"
+  },
+  {
+    "rust": "MTLDataType.Float",
+    "silk": "types.MTLDataType_Float",
+    "notes": "argument.rs; enum u64, discriminant 3"
+  },
+  {
+    "rust": "MTLDataType.Float2",
+    "silk": "types.MTLDataType_Float2",
+    "notes": "argument.rs; enum u64, discriminant 4"
+  },
+  {
+    "rust": "MTLDataType.Float3",
+    "silk": "types.MTLDataType_Float3",
+    "notes": "argument.rs; enum u64, discriminant 5"
+  },
+  {
+    "rust": "MTLDataType.Float4",
+    "silk": "types.MTLDataType_Float4",
+    "notes": "argument.rs; enum u64, discriminant 6"
+  },
+  {
+    "rust": "MTLDataType.Float2x2",
+    "silk": "types.MTLDataType_Float2x2",
+    "notes": "argument.rs; enum u64, discriminant 7"
+  },
+  {
+    "rust": "MTLDataType.Float2x3",
+    "silk": "types.MTLDataType_Float2x3",
+    "notes": "argument.rs; enum u64, discriminant 8"
+  },
+  {
+    "rust": "MTLDataType.Float2x4",
+    "silk": "types.MTLDataType_Float2x4",
+    "notes": "argument.rs; enum u64, discriminant 9"
+  },
+  {
+    "rust": "MTLDataType.Float3x2",
+    "silk": "types.MTLDataType_Float3x2",
+    "notes": "argument.rs; enum u64, discriminant 10"
+  },
+  {
+    "rust": "MTLDataType.Float3x3",
+    "silk": "types.MTLDataType_Float3x3",
+    "notes": "argument.rs; enum u64, discriminant 11"
+  },
+  {
+    "rust": "MTLDataType.Float3x4",
+    "silk": "types.MTLDataType_Float3x4",
+    "notes": "argument.rs; enum u64, discriminant 12"
+  },
+  {
+    "rust": "MTLDataType.Float4x2",
+    "silk": "types.MTLDataType_Float4x2",
+    "notes": "argument.rs; enum u64, discriminant 13"
+  },
+  {
+    "rust": "MTLDataType.Float4x3",
+    "silk": "types.MTLDataType_Float4x3",
+    "notes": "argument.rs; enum u64, discriminant 14"
+  },
+  {
+    "rust": "MTLDataType.Float4x4",
+    "silk": "types.MTLDataType_Float4x4",
+    "notes": "argument.rs; enum u64, discriminant 15"
+  },
+  {
+    "rust": "MTLDataType.Half",
+    "silk": "types.MTLDataType_Half",
+    "notes": "argument.rs; enum u64, discriminant 16"
+  },
+  {
+    "rust": "MTLDataType.Half2",
+    "silk": "types.MTLDataType_Half2",
+    "notes": "argument.rs; enum u64, discriminant 17"
+  },
+  {
+    "rust": "MTLDataType.Half3",
+    "silk": "types.MTLDataType_Half3",
+    "notes": "argument.rs; enum u64, discriminant 18"
+  },
+  {
+    "rust": "MTLDataType.Half4",
+    "silk": "types.MTLDataType_Half4",
+    "notes": "argument.rs; enum u64, discriminant 19"
+  },
+  {
+    "rust": "MTLDataType.Half2x2",
+    "silk": "types.MTLDataType_Half2x2",
+    "notes": "argument.rs; enum u64, discriminant 20"
+  },
+  {
+    "rust": "MTLDataType.Half2x3",
+    "silk": "types.MTLDataType_Half2x3",
+    "notes": "argument.rs; enum u64, discriminant 21"
+  },
+  {
+    "rust": "MTLDataType.Half2x4",
+    "silk": "types.MTLDataType_Half2x4",
+    "notes": "argument.rs; enum u64, discriminant 22"
+  },
+  {
+    "rust": "MTLDataType.Half3x2",
+    "silk": "types.MTLDataType_Half3x2",
+    "notes": "argument.rs; enum u64, discriminant 23"
+  },
+  {
+    "rust": "MTLDataType.Half3x3",
+    "silk": "types.MTLDataType_Half3x3",
+    "notes": "argument.rs; enum u64, discriminant 24"
+  },
+  {
+    "rust": "MTLDataType.Half3x4",
+    "silk": "types.MTLDataType_Half3x4",
+    "notes": "argument.rs; enum u64, discriminant 25"
+  },
+  {
+    "rust": "MTLDataType.Half4x2",
+    "silk": "types.MTLDataType_Half4x2",
+    "notes": "argument.rs; enum u64, discriminant 26"
+  },
+  {
+    "rust": "MTLDataType.Half4x3",
+    "silk": "types.MTLDataType_Half4x3",
+    "notes": "argument.rs; enum u64, discriminant 27"
+  },
+  {
+    "rust": "MTLDataType.Half4x4",
+    "silk": "types.MTLDataType_Half4x4",
+    "notes": "argument.rs; enum u64, discriminant 28"
+  },
+  {
+    "rust": "MTLDataType.Int",
+    "silk": "types.MTLDataType_Int",
+    "notes": "argument.rs; enum u64, discriminant 29"
+  },
+  {
+    "rust": "MTLDataType.Int2",
+    "silk": "types.MTLDataType_Int2",
+    "notes": "argument.rs; enum u64, discriminant 30"
+  },
+  {
+    "rust": "MTLDataType.Int3",
+    "silk": "types.MTLDataType_Int3",
+    "notes": "argument.rs; enum u64, discriminant 31"
+  },
+  {
+    "rust": "MTLDataType.Int4",
+    "silk": "types.MTLDataType_Int4",
+    "notes": "argument.rs; enum u64, discriminant 32"
+  },
+  {
+    "rust": "MTLDataType.UInt",
+    "silk": "types.MTLDataType_UInt",
+    "notes": "argument.rs; enum u64, discriminant 33"
+  },
+  {
+    "rust": "MTLDataType.UInt2",
+    "silk": "types.MTLDataType_UInt2",
+    "notes": "argument.rs; enum u64, discriminant 34"
+  },
+  {
+    "rust": "MTLDataType.UInt3",
+    "silk": "types.MTLDataType_UInt3",
+    "notes": "argument.rs; enum u64, discriminant 35"
+  },
+  {
+    "rust": "MTLDataType.UInt4",
+    "silk": "types.MTLDataType_UInt4",
+    "notes": "argument.rs; enum u64, discriminant 36"
+  },
+  {
+    "rust": "MTLDataType.Short",
+    "silk": "types.MTLDataType_Short",
+    "notes": "argument.rs; enum u64, discriminant 37"
+  },
+  {
+    "rust": "MTLDataType.Short2",
+    "silk": "types.MTLDataType_Short2",
+    "notes": "argument.rs; enum u64, discriminant 38"
+  },
+  {
+    "rust": "MTLDataType.Short3",
+    "silk": "types.MTLDataType_Short3",
+    "notes": "argument.rs; enum u64, discriminant 39"
+  },
+  {
+    "rust": "MTLDataType.Short4",
+    "silk": "types.MTLDataType_Short4",
+    "notes": "argument.rs; enum u64, discriminant 40"
+  },
+  {
+    "rust": "MTLDataType.UShort",
+    "silk": "types.MTLDataType_UShort",
+    "notes": "argument.rs; enum u64, discriminant 41"
+  },
+  {
+    "rust": "MTLDataType.UShort2",
+    "silk": "types.MTLDataType_UShort2",
+    "notes": "argument.rs; enum u64, discriminant 42"
+  },
+  {
+    "rust": "MTLDataType.UShort3",
+    "silk": "types.MTLDataType_UShort3",
+    "notes": "argument.rs; enum u64, discriminant 43"
+  },
+  {
+    "rust": "MTLDataType.UShort4",
+    "silk": "types.MTLDataType_UShort4",
+    "notes": "argument.rs; enum u64, discriminant 44"
+  },
+  {
+    "rust": "MTLDataType.Char",
+    "silk": "types.MTLDataType_Char",
+    "notes": "argument.rs; enum u64, discriminant 45"
+  },
+  {
+    "rust": "MTLDataType.Char2",
+    "silk": "types.MTLDataType_Char2",
+    "notes": "argument.rs; enum u64, discriminant 46"
+  },
+  {
+    "rust": "MTLDataType.Char3",
+    "silk": "types.MTLDataType_Char3",
+    "notes": "argument.rs; enum u64, discriminant 47"
+  },
+  {
+    "rust": "MTLDataType.Char4",
+    "silk": "types.MTLDataType_Char4",
+    "notes": "argument.rs; enum u64, discriminant 48"
+  },
+  {
+    "rust": "MTLDataType.UChar",
+    "silk": "types.MTLDataType_UChar",
+    "notes": "argument.rs; enum u64, discriminant 49"
+  },
+  {
+    "rust": "MTLDataType.UChar2",
+    "silk": "types.MTLDataType_UChar2",
+    "notes": "argument.rs; enum u64, discriminant 50"
+  },
+  {
+    "rust": "MTLDataType.UChar3",
+    "silk": "types.MTLDataType_UChar3",
+    "notes": "argument.rs; enum u64, discriminant 51"
+  },
+  {
+    "rust": "MTLDataType.UChar4",
+    "silk": "types.MTLDataType_UChar4",
+    "notes": "argument.rs; enum u64, discriminant 52"
+  },
+  {
+    "rust": "MTLDataType.Bool",
+    "silk": "types.MTLDataType_Bool",
+    "notes": "argument.rs; enum u64, discriminant 53"
+  },
+  {
+    "rust": "MTLDataType.Bool2",
+    "silk": "types.MTLDataType_Bool2",
+    "notes": "argument.rs; enum u64, discriminant 54"
+  },
+  {
+    "rust": "MTLDataType.Bool3",
+    "silk": "types.MTLDataType_Bool3",
+    "notes": "argument.rs; enum u64, discriminant 55"
+  },
+  {
+    "rust": "MTLDataType.Bool4",
+    "silk": "types.MTLDataType_Bool4",
+    "notes": "argument.rs; enum u64, discriminant 56"
+  },
+  {
+    "rust": "MTLDataType.Texture",
+    "silk": "types.MTLDataType_Texture",
+    "notes": "argument.rs; enum u64, discriminant 58"
+  },
+  {
+    "rust": "MTLDataType.Sampler",
+    "silk": "types.MTLDataType_Sampler",
+    "notes": "argument.rs; enum u64, discriminant 59"
+  },
+  {
+    "rust": "MTLDataType.Pointer",
+    "silk": "types.MTLDataType_Pointer",
+    "notes": "argument.rs; enum u64, discriminant 60"
+  },
+  {
+    "rust": "MTLDataType.R8Unorm",
+    "silk": "types.MTLDataType_R8Unorm",
+    "notes": "argument.rs; enum u64, discriminant 62"
+  },
+  {
+    "rust": "MTLDataType.R8Snorm",
+    "silk": "types.MTLDataType_R8Snorm",
+    "notes": "argument.rs; enum u64, discriminant 63"
+  },
+  {
+    "rust": "MTLDataType.R16Unorm",
+    "silk": "types.MTLDataType_R16Unorm",
+    "notes": "argument.rs; enum u64, discriminant 64"
+  },
+  {
+    "rust": "MTLDataType.R16Snorm",
+    "silk": "types.MTLDataType_R16Snorm",
+    "notes": "argument.rs; enum u64, discriminant 65"
+  },
+  {
+    "rust": "MTLDataType.RG8Unorm",
+    "silk": "types.MTLDataType_RG8Unorm",
+    "notes": "argument.rs; enum u64, discriminant 66"
+  },
+  {
+    "rust": "MTLDataType.RG8Snorm",
+    "silk": "types.MTLDataType_RG8Snorm",
+    "notes": "argument.rs; enum u64, discriminant 67"
+  },
+  {
+    "rust": "MTLDataType.RG16Unorm",
+    "silk": "types.MTLDataType_RG16Unorm",
+    "notes": "argument.rs; enum u64, discriminant 68"
+  },
+  {
+    "rust": "MTLDataType.RG16Snorm",
+    "silk": "types.MTLDataType_RG16Snorm",
+    "notes": "argument.rs; enum u64, discriminant 69"
+  },
+  {
+    "rust": "MTLDataType.RGBA8Unorm",
+    "silk": "types.MTLDataType_RGBA8Unorm",
+    "notes": "argument.rs; enum u64, discriminant 70"
+  },
+  {
+    "rust": "MTLDataType.RGBA8Unorm_sRGB",
+    "silk": "types.MTLDataType_RGBA8Unorm_sRGB",
+    "notes": "argument.rs; enum u64, discriminant 71"
+  },
+  {
+    "rust": "MTLDataType.RGBA8Snorm",
+    "silk": "types.MTLDataType_RGBA8Snorm",
+    "notes": "argument.rs; enum u64, discriminant 72"
+  },
+  {
+    "rust": "MTLDataType.RGBA16Unorm",
+    "silk": "types.MTLDataType_RGBA16Unorm",
+    "notes": "argument.rs; enum u64, discriminant 73"
+  },
+  {
+    "rust": "MTLDataType.RGBA16Snorm",
+    "silk": "types.MTLDataType_RGBA16Snorm",
+    "notes": "argument.rs; enum u64, discriminant 74"
+  },
+  {
+    "rust": "MTLDataType.RGB10A2Unorm",
+    "silk": "types.MTLDataType_RGB10A2Unorm",
+    "notes": "argument.rs; enum u64, discriminant 75"
+  },
+  {
+    "rust": "MTLDataType.RG11B10Float",
+    "silk": "types.MTLDataType_RG11B10Float",
+    "notes": "argument.rs; enum u64, discriminant 76"
+  },
+  {
+    "rust": "MTLDataType.RGB9E5Float",
+    "silk": "types.MTLDataType_RGB9E5Float",
+    "notes": "argument.rs; enum u64, discriminant 77"
+  },
+  {
+    "rust": "MTLDataType.RenderPipeline",
+    "silk": "types.MTLDataType_RenderPipeline",
+    "notes": "argument.rs; enum u64, discriminant 78"
+  },
+  {
+    "rust": "MTLDataType.ComputePipeline",
+    "silk": "types.MTLDataType_ComputePipeline",
+    "notes": "argument.rs; enum u64, discriminant 79"
+  },
+  {
+    "rust": "MTLDataType.IndirectCommandBuffer",
+    "silk": "types.MTLDataType_IndirectCommandBuffer",
+    "notes": "argument.rs; enum u64, discriminant 80"
+  },
+  {
+    "rust": "MTLDataType.Long",
+    "silk": "types.MTLDataType_Long",
+    "notes": "argument.rs; enum u64, discriminant 81"
+  },
+  {
+    "rust": "MTLDataType.Long2",
+    "silk": "types.MTLDataType_Long2",
+    "notes": "argument.rs; enum u64, discriminant 82"
+  },
+  {
+    "rust": "MTLDataType.Long3",
+    "silk": "types.MTLDataType_Long3",
+    "notes": "argument.rs; enum u64, discriminant 83"
+  },
+  {
+    "rust": "MTLDataType.Long4",
+    "silk": "types.MTLDataType_Long4",
+    "notes": "argument.rs; enum u64, discriminant 84"
+  },
+  {
+    "rust": "MTLDataType.ULong",
+    "silk": "types.MTLDataType_ULong",
+    "notes": "argument.rs; enum u64, discriminant 85"
+  },
+  {
+    "rust": "MTLDataType.ULong2",
+    "silk": "types.MTLDataType_ULong2",
+    "notes": "argument.rs; enum u64, discriminant 86"
+  },
+  {
+    "rust": "MTLDataType.ULong3",
+    "silk": "types.MTLDataType_ULong3",
+    "notes": "argument.rs; enum u64, discriminant 87"
+  },
+  {
+    "rust": "MTLDataType.ULong4",
+    "silk": "types.MTLDataType_ULong4",
+    "notes": "argument.rs; enum u64, discriminant 88"
+  },
+  {
+    "rust": "MTLDataType.VisibleFunctionTable",
+    "silk": "types.MTLDataType_VisibleFunctionTable",
+    "notes": "argument.rs; enum u64, discriminant 115"
+  },
+  {
+    "rust": "MTLDataType.IntersectionFunctionTable",
+    "silk": "types.MTLDataType_IntersectionFunctionTable",
+    "notes": "argument.rs; enum u64, discriminant 116"
+  },
+  {
+    "rust": "MTLDataType.PrimitiveAccelerationStructure",
+    "silk": "types.MTLDataType_PrimitiveAccelerationStructure",
+    "notes": "argument.rs; enum u64, discriminant 117"
+  },
+  {
+    "rust": "MTLDataType.InstanceAccelerationStructure",
+    "silk": "types.MTLDataType_InstanceAccelerationStructure",
+    "notes": "argument.rs; enum u64, discriminant 118"
+  },
+  {
+    "rust": "MTLDataType.BFloat",
+    "silk": "types.MTLDataType_BFloat",
+    "notes": "argument.rs; enum u64, discriminant 121"
+  },
+  {
+    "rust": "MTLDataType.BFloat2",
+    "silk": "types.MTLDataType_BFloat2",
+    "notes": "argument.rs; enum u64, discriminant 122"
+  },
+  {
+    "rust": "MTLDataType.BFloat3",
+    "silk": "types.MTLDataType_BFloat3",
+    "notes": "argument.rs; enum u64, discriminant 123"
+  },
+  {
+    "rust": "MTLDataType.BFloat4",
+    "silk": "types.MTLDataType_BFloat4",
+    "notes": "argument.rs; enum u64, discriminant 124"
+  },
+  {
+    "rust": "MTLArgumentType.Buffer",
+    "silk": "types.MTLArgumentType_Buffer",
+    "notes": "argument.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLArgumentType.ThreadgroupMemory",
+    "silk": "types.MTLArgumentType_ThreadgroupMemory",
+    "notes": "argument.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLArgumentType.Texture",
+    "silk": "types.MTLArgumentType_Texture",
+    "notes": "argument.rs; enum u64, discriminant 2"
+  },
+  {
+    "rust": "MTLArgumentType.Sampler",
+    "silk": "types.MTLArgumentType_Sampler",
+    "notes": "argument.rs; enum u64, discriminant 3"
+  },
+  {
+    "rust": "MTLArgumentType.ImageblockData",
+    "silk": "types.MTLArgumentType_ImageblockData",
+    "notes": "argument.rs; enum u64, discriminant 16"
+  },
+  {
+    "rust": "MTLArgumentType.Imageblock",
+    "silk": "types.MTLArgumentType_Imageblock",
+    "notes": "argument.rs; enum u64, discriminant 17"
+  },
+  {
+    "rust": "MTLArgumentAccess.ReadOnly",
+    "silk": "types.MTLArgumentAccess_ReadOnly",
+    "notes": "argument.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLArgumentAccess.ReadWrite",
+    "silk": "types.MTLArgumentAccess_ReadWrite",
+    "notes": "argument.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLArgumentAccess.WriteOnly",
+    "silk": "types.MTLArgumentAccess_WriteOnly",
+    "notes": "argument.rs; enum u64, discriminant 2"
+  },
+  {
+    "rust": "MTLRenderStages.Vertex",
+    "silk": "types.MTLRenderStages_Vertex",
+    "notes": "sync.rs; flags u64, discriminant 1"
+  },
+  {
+    "rust": "MTLRenderStages.Fragment",
+    "silk": "types.MTLRenderStages_Fragment",
+    "notes": "sync.rs; flags u64, discriminant 2"
+  },
+  {
+    "rust": "MTLRenderStages.Tile",
+    "silk": "types.MTLRenderStages_Tile",
+    "notes": "sync.rs; flags u64, discriminant 4"
+  },
+  {
+    "rust": "MTLCompareFunction.Never",
+    "silk": "types.MTLCompareFunction_Never",
+    "notes": "depthstencil.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLCompareFunction.Less",
+    "silk": "types.MTLCompareFunction_Less",
+    "notes": "depthstencil.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLCompareFunction.Equal",
+    "silk": "types.MTLCompareFunction_Equal",
+    "notes": "depthstencil.rs; enum u64, discriminant 2"
+  },
+  {
+    "rust": "MTLCompareFunction.LessEqual",
+    "silk": "types.MTLCompareFunction_LessEqual",
+    "notes": "depthstencil.rs; enum u64, discriminant 3"
+  },
+  {
+    "rust": "MTLCompareFunction.Greater",
+    "silk": "types.MTLCompareFunction_Greater",
+    "notes": "depthstencil.rs; enum u64, discriminant 4"
+  },
+  {
+    "rust": "MTLCompareFunction.NotEqual",
+    "silk": "types.MTLCompareFunction_NotEqual",
+    "notes": "depthstencil.rs; enum u64, discriminant 5"
+  },
+  {
+    "rust": "MTLCompareFunction.GreaterEqual",
+    "silk": "types.MTLCompareFunction_GreaterEqual",
+    "notes": "depthstencil.rs; enum u64, discriminant 6"
+  },
+  {
+    "rust": "MTLCompareFunction.Always",
+    "silk": "types.MTLCompareFunction_Always",
+    "notes": "depthstencil.rs; enum u64, discriminant 7"
+  },
+  {
+    "rust": "MTLStencilOperation.Keep",
+    "silk": "types.MTLStencilOperation_Keep",
+    "notes": "depthstencil.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLStencilOperation.Zero",
+    "silk": "types.MTLStencilOperation_Zero",
+    "notes": "depthstencil.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLStencilOperation.Replace",
+    "silk": "types.MTLStencilOperation_Replace",
+    "notes": "depthstencil.rs; enum u64, discriminant 2"
+  },
+  {
+    "rust": "MTLStencilOperation.IncrementClamp",
+    "silk": "types.MTLStencilOperation_IncrementClamp",
+    "notes": "depthstencil.rs; enum u64, discriminant 3"
+  },
+  {
+    "rust": "MTLStencilOperation.DecrementClamp",
+    "silk": "types.MTLStencilOperation_DecrementClamp",
+    "notes": "depthstencil.rs; enum u64, discriminant 4"
+  },
+  {
+    "rust": "MTLStencilOperation.Invert",
+    "silk": "types.MTLStencilOperation_Invert",
+    "notes": "depthstencil.rs; enum u64, discriminant 5"
+  },
+  {
+    "rust": "MTLStencilOperation.IncrementWrap",
+    "silk": "types.MTLStencilOperation_IncrementWrap",
+    "notes": "depthstencil.rs; enum u64, discriminant 6"
+  },
+  {
+    "rust": "MTLStencilOperation.DecrementWrap",
+    "silk": "types.MTLStencilOperation_DecrementWrap",
+    "notes": "depthstencil.rs; enum u64, discriminant 7"
+  },
+  {
+    "rust": "MTLIndirectCommandType.Draw",
+    "silk": "types.MTLIndirectCommandType_Draw",
+    "notes": "indirect_encoder.rs; flags u64, discriminant 1"
+  },
+  {
+    "rust": "MTLIndirectCommandType.DrawIndexed",
+    "silk": "types.MTLIndirectCommandType_DrawIndexed",
+    "notes": "indirect_encoder.rs; flags u64, discriminant 2"
+  },
+  {
+    "rust": "MTLIndirectCommandType.DrawPatches",
+    "silk": "types.MTLIndirectCommandType_DrawPatches",
+    "notes": "indirect_encoder.rs; flags u64, discriminant 4"
+  },
+  {
+    "rust": "MTLIndirectCommandType.DrawIndexedPatches",
+    "silk": "types.MTLIndirectCommandType_DrawIndexedPatches",
+    "notes": "indirect_encoder.rs; flags u64, discriminant 8"
+  },
+  {
+    "rust": "MTLIndirectCommandType.ConcurrentDispatch",
+    "silk": "types.MTLIndirectCommandType_ConcurrentDispatch",
+    "notes": "indirect_encoder.rs; flags u64, discriminant 16"
+  },
+  {
+    "rust": "MTLIndirectCommandType.ConcurrentDispatchThreads",
+    "silk": "types.MTLIndirectCommandType_ConcurrentDispatchThreads",
+    "notes": "indirect_encoder.rs; flags u64, discriminant 32"
+  },
+  {
+    "rust": "MTLVertexFormat.Invalid",
+    "silk": "types.MTLVertexFormat_Invalid",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLVertexFormat.UChar2",
+    "silk": "types.MTLVertexFormat_UChar2",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLVertexFormat.UChar3",
+    "silk": "types.MTLVertexFormat_UChar3",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 2"
+  },
+  {
+    "rust": "MTLVertexFormat.UChar4",
+    "silk": "types.MTLVertexFormat_UChar4",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 3"
+  },
+  {
+    "rust": "MTLVertexFormat.Char2",
+    "silk": "types.MTLVertexFormat_Char2",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 4"
+  },
+  {
+    "rust": "MTLVertexFormat.Char3",
+    "silk": "types.MTLVertexFormat_Char3",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 5"
+  },
+  {
+    "rust": "MTLVertexFormat.Char4",
+    "silk": "types.MTLVertexFormat_Char4",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 6"
+  },
+  {
+    "rust": "MTLVertexFormat.UChar2Normalized",
+    "silk": "types.MTLVertexFormat_UChar2Normalized",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 7"
+  },
+  {
+    "rust": "MTLVertexFormat.UChar3Normalized",
+    "silk": "types.MTLVertexFormat_UChar3Normalized",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 8"
+  },
+  {
+    "rust": "MTLVertexFormat.UChar4Normalized",
+    "silk": "types.MTLVertexFormat_UChar4Normalized",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 9"
+  },
+  {
+    "rust": "MTLVertexFormat.Char2Normalized",
+    "silk": "types.MTLVertexFormat_Char2Normalized",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 10"
+  },
+  {
+    "rust": "MTLVertexFormat.Char3Normalized",
+    "silk": "types.MTLVertexFormat_Char3Normalized",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 11"
+  },
+  {
+    "rust": "MTLVertexFormat.Char4Normalized",
+    "silk": "types.MTLVertexFormat_Char4Normalized",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 12"
+  },
+  {
+    "rust": "MTLVertexFormat.UShort2",
+    "silk": "types.MTLVertexFormat_UShort2",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 13"
+  },
+  {
+    "rust": "MTLVertexFormat.UShort3",
+    "silk": "types.MTLVertexFormat_UShort3",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 14"
+  },
+  {
+    "rust": "MTLVertexFormat.UShort4",
+    "silk": "types.MTLVertexFormat_UShort4",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 15"
+  },
+  {
+    "rust": "MTLVertexFormat.Short2",
+    "silk": "types.MTLVertexFormat_Short2",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 16"
+  },
+  {
+    "rust": "MTLVertexFormat.Short3",
+    "silk": "types.MTLVertexFormat_Short3",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 17"
+  },
+  {
+    "rust": "MTLVertexFormat.Short4",
+    "silk": "types.MTLVertexFormat_Short4",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 18"
+  },
+  {
+    "rust": "MTLVertexFormat.UShort2Normalized",
+    "silk": "types.MTLVertexFormat_UShort2Normalized",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 19"
+  },
+  {
+    "rust": "MTLVertexFormat.UShort3Normalized",
+    "silk": "types.MTLVertexFormat_UShort3Normalized",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 20"
+  },
+  {
+    "rust": "MTLVertexFormat.UShort4Normalized",
+    "silk": "types.MTLVertexFormat_UShort4Normalized",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 21"
+  },
+  {
+    "rust": "MTLVertexFormat.Short2Normalized",
+    "silk": "types.MTLVertexFormat_Short2Normalized",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 22"
+  },
+  {
+    "rust": "MTLVertexFormat.Short3Normalized",
+    "silk": "types.MTLVertexFormat_Short3Normalized",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 23"
+  },
+  {
+    "rust": "MTLVertexFormat.Short4Normalized",
+    "silk": "types.MTLVertexFormat_Short4Normalized",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 24"
+  },
+  {
+    "rust": "MTLVertexFormat.Half2",
+    "silk": "types.MTLVertexFormat_Half2",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 25"
+  },
+  {
+    "rust": "MTLVertexFormat.Half3",
+    "silk": "types.MTLVertexFormat_Half3",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 26"
+  },
+  {
+    "rust": "MTLVertexFormat.Half4",
+    "silk": "types.MTLVertexFormat_Half4",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 27"
+  },
+  {
+    "rust": "MTLVertexFormat.Float",
+    "silk": "types.MTLVertexFormat_Float",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 28"
+  },
+  {
+    "rust": "MTLVertexFormat.Float2",
+    "silk": "types.MTLVertexFormat_Float2",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 29"
+  },
+  {
+    "rust": "MTLVertexFormat.Float3",
+    "silk": "types.MTLVertexFormat_Float3",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 30"
+  },
+  {
+    "rust": "MTLVertexFormat.Float4",
+    "silk": "types.MTLVertexFormat_Float4",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 31"
+  },
+  {
+    "rust": "MTLVertexFormat.Int",
+    "silk": "types.MTLVertexFormat_Int",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 32"
+  },
+  {
+    "rust": "MTLVertexFormat.Int2",
+    "silk": "types.MTLVertexFormat_Int2",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 33"
+  },
+  {
+    "rust": "MTLVertexFormat.Int3",
+    "silk": "types.MTLVertexFormat_Int3",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 34"
+  },
+  {
+    "rust": "MTLVertexFormat.Int4",
+    "silk": "types.MTLVertexFormat_Int4",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 35"
+  },
+  {
+    "rust": "MTLVertexFormat.UInt",
+    "silk": "types.MTLVertexFormat_UInt",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 36"
+  },
+  {
+    "rust": "MTLVertexFormat.UInt2",
+    "silk": "types.MTLVertexFormat_UInt2",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 37"
+  },
+  {
+    "rust": "MTLVertexFormat.UInt3",
+    "silk": "types.MTLVertexFormat_UInt3",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 38"
+  },
+  {
+    "rust": "MTLVertexFormat.UInt4",
+    "silk": "types.MTLVertexFormat_UInt4",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 39"
+  },
+  {
+    "rust": "MTLVertexFormat.Int1010102Normalized",
+    "silk": "types.MTLVertexFormat_Int1010102Normalized",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 40"
+  },
+  {
+    "rust": "MTLVertexFormat.UInt1010102Normalized",
+    "silk": "types.MTLVertexFormat_UInt1010102Normalized",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 41"
+  },
+  {
+    "rust": "MTLVertexFormat.UChar4Normalized_BGRA",
+    "silk": "types.MTLVertexFormat_UChar4Normalized_BGRA",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 42"
+  },
+  {
+    "rust": "MTLVertexFormat.UChar",
+    "silk": "types.MTLVertexFormat_UChar",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 45"
+  },
+  {
+    "rust": "MTLVertexFormat.Char",
+    "silk": "types.MTLVertexFormat_Char",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 46"
+  },
+  {
+    "rust": "MTLVertexFormat.UCharNormalized",
+    "silk": "types.MTLVertexFormat_UCharNormalized",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 47"
+  },
+  {
+    "rust": "MTLVertexFormat.CharNormalized",
+    "silk": "types.MTLVertexFormat_CharNormalized",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 48"
+  },
+  {
+    "rust": "MTLVertexFormat.UShort",
+    "silk": "types.MTLVertexFormat_UShort",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 49"
+  },
+  {
+    "rust": "MTLVertexFormat.Short",
+    "silk": "types.MTLVertexFormat_Short",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 50"
+  },
+  {
+    "rust": "MTLVertexFormat.UShortNormalized",
+    "silk": "types.MTLVertexFormat_UShortNormalized",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 51"
+  },
+  {
+    "rust": "MTLVertexFormat.ShortNormalized",
+    "silk": "types.MTLVertexFormat_ShortNormalized",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 52"
+  },
+  {
+    "rust": "MTLVertexFormat.Half",
+    "silk": "types.MTLVertexFormat_Half",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 53"
+  },
+  {
+    "rust": "MTLVertexStepFunction.Constant",
+    "silk": "types.MTLVertexStepFunction_Constant",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLVertexStepFunction.PerVertex",
+    "silk": "types.MTLVertexStepFunction_PerVertex",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLVertexStepFunction.PerInstance",
+    "silk": "types.MTLVertexStepFunction_PerInstance",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 2"
+  },
+  {
+    "rust": "MTLVertexStepFunction.PerPatch",
+    "silk": "types.MTLVertexStepFunction_PerPatch",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 3"
+  },
+  {
+    "rust": "MTLVertexStepFunction.PerPatchControlPoint",
+    "silk": "types.MTLVertexStepFunction_PerPatchControlPoint",
+    "notes": "vertexdescriptor.rs; enum u64, discriminant 4"
+  },
+  {
+    "rust": "MTLSamplerMinMagFilter.Nearest",
+    "silk": "types.MTLSamplerMinMagFilter_Nearest",
+    "notes": "sampler.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLSamplerMinMagFilter.Linear",
+    "silk": "types.MTLSamplerMinMagFilter_Linear",
+    "notes": "sampler.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLSamplerMipFilter.NotMipmapped",
+    "silk": "types.MTLSamplerMipFilter_NotMipmapped",
+    "notes": "sampler.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLSamplerMipFilter.Nearest",
+    "silk": "types.MTLSamplerMipFilter_Nearest",
+    "notes": "sampler.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLSamplerMipFilter.Linear",
+    "silk": "types.MTLSamplerMipFilter_Linear",
+    "notes": "sampler.rs; enum u64, discriminant 2"
+  },
+  {
+    "rust": "MTLSamplerAddressMode.ClampToEdge",
+    "silk": "types.MTLSamplerAddressMode_ClampToEdge",
+    "notes": "sampler.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLSamplerAddressMode.MirrorClampToEdge",
+    "silk": "types.MTLSamplerAddressMode_MirrorClampToEdge",
+    "notes": "sampler.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLSamplerAddressMode.Repeat",
+    "silk": "types.MTLSamplerAddressMode_Repeat",
+    "notes": "sampler.rs; enum u64, discriminant 2"
+  },
+  {
+    "rust": "MTLSamplerAddressMode.MirrorRepeat",
+    "silk": "types.MTLSamplerAddressMode_MirrorRepeat",
+    "notes": "sampler.rs; enum u64, discriminant 3"
+  },
+  {
+    "rust": "MTLSamplerAddressMode.ClampToZero",
+    "silk": "types.MTLSamplerAddressMode_ClampToZero",
+    "notes": "sampler.rs; enum u64, discriminant 4"
+  },
+  {
+    "rust": "MTLSamplerAddressMode.ClampToBorderColor",
+    "silk": "types.MTLSamplerAddressMode_ClampToBorderColor",
+    "notes": "sampler.rs; enum u64, discriminant 5"
+  },
+  {
+    "rust": "MTLSamplerBorderColor.TransparentBlack",
+    "silk": "types.MTLSamplerBorderColor_TransparentBlack",
+    "notes": "sampler.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLSamplerBorderColor.OpaqueBlack",
+    "silk": "types.MTLSamplerBorderColor_OpaqueBlack",
+    "notes": "sampler.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLSamplerBorderColor.OpaqueWhite",
+    "silk": "types.MTLSamplerBorderColor_OpaqueWhite",
+    "notes": "sampler.rs; enum u64, discriminant 2"
+  },
+  {
+    "rust": "MTLTextureType.D1",
+    "silk": "types.MTLTextureType_D1",
+    "notes": "texture.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLTextureType.D1Array",
+    "silk": "types.MTLTextureType_D1Array",
+    "notes": "texture.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLTextureType.D2",
+    "silk": "types.MTLTextureType_D2",
+    "notes": "texture.rs; enum u64, discriminant 2"
+  },
+  {
+    "rust": "MTLTextureType.D2Array",
+    "silk": "types.MTLTextureType_D2Array",
+    "notes": "texture.rs; enum u64, discriminant 3"
+  },
+  {
+    "rust": "MTLTextureType.D2Multisample",
+    "silk": "types.MTLTextureType_D2Multisample",
+    "notes": "texture.rs; enum u64, discriminant 4"
+  },
+  {
+    "rust": "MTLTextureType.Cube",
+    "silk": "types.MTLTextureType_Cube",
+    "notes": "texture.rs; enum u64, discriminant 5"
+  },
+  {
+    "rust": "MTLTextureType.CubeArray",
+    "silk": "types.MTLTextureType_CubeArray",
+    "notes": "texture.rs; enum u64, discriminant 6"
+  },
+  {
+    "rust": "MTLTextureType.D3",
+    "silk": "types.MTLTextureType_D3",
+    "notes": "texture.rs; enum u64, discriminant 7"
+  },
+  {
+    "rust": "MTLTextureType.D2MultisampleArray",
+    "silk": "types.MTLTextureType_D2MultisampleArray",
+    "notes": "texture.rs; enum u64, discriminant 8"
+  },
+  {
+    "rust": "MTLTextureCompressionType.Lossless",
+    "silk": "types.MTLTextureCompressionType_Lossless",
+    "notes": "texture.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLTextureCompressionType.Lossy",
+    "silk": "types.MTLTextureCompressionType_Lossy",
+    "notes": "texture.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLTextureUsage.Unknown",
+    "silk": "types.MTLTextureUsage_Unknown",
+    "notes": "texture.rs; flags u64, discriminant 0"
+  },
+  {
+    "rust": "MTLTextureUsage.ShaderRead",
+    "silk": "types.MTLTextureUsage_ShaderRead",
+    "notes": "texture.rs; flags u64, discriminant 1"
+  },
+  {
+    "rust": "MTLTextureUsage.ShaderWrite",
+    "silk": "types.MTLTextureUsage_ShaderWrite",
+    "notes": "texture.rs; flags u64, discriminant 2"
+  },
+  {
+    "rust": "MTLTextureUsage.RenderTarget",
+    "silk": "types.MTLTextureUsage_RenderTarget",
+    "notes": "texture.rs; flags u64, discriminant 4"
+  },
+  {
+    "rust": "MTLTextureUsage.PixelFormatView",
+    "silk": "types.MTLTextureUsage_PixelFormatView",
+    "notes": "texture.rs; flags u64, discriminant 16"
+  },
+  {
+    "rust": "MTLTextureUsage.ShaderAtomic",
+    "silk": "types.MTLTextureUsage_ShaderAtomic",
+    "notes": "texture.rs; flags u64, discriminant 32"
+  },
+  {
+    "rust": "MTLLoadAction.DontCare",
+    "silk": "types.MTLLoadAction_DontCare",
+    "notes": "renderpass.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLLoadAction.Load",
+    "silk": "types.MTLLoadAction_Load",
+    "notes": "renderpass.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLLoadAction.Clear",
+    "silk": "types.MTLLoadAction_Clear",
+    "notes": "renderpass.rs; enum u64, discriminant 2"
+  },
+  {
+    "rust": "MTLStoreAction.DontCare",
+    "silk": "types.MTLStoreAction_DontCare",
+    "notes": "renderpass.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLStoreAction.Store",
+    "silk": "types.MTLStoreAction_Store",
+    "notes": "renderpass.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLStoreAction.MultisampleResolve",
+    "silk": "types.MTLStoreAction_MultisampleResolve",
+    "notes": "renderpass.rs; enum u64, discriminant 2"
+  },
+  {
+    "rust": "MTLStoreAction.StoreAndMultisampleResolve",
+    "silk": "types.MTLStoreAction_StoreAndMultisampleResolve",
+    "notes": "renderpass.rs; enum u64, discriminant 3"
+  },
+  {
+    "rust": "MTLStoreAction.Unknown",
+    "silk": "types.MTLStoreAction_Unknown",
+    "notes": "renderpass.rs; enum u64, discriminant 4"
+  },
+  {
+    "rust": "MTLStoreAction.CustomSampleDepthStore",
+    "silk": "types.MTLStoreAction_CustomSampleDepthStore",
+    "notes": "renderpass.rs; enum u64, discriminant 5"
+  },
+  {
+    "rust": "MTLClearColor",
+    "silk": "types.MTLClearColor",
+    "notes": "renderpass.rs; C layout; fields retain upstream spellings; Copy"
+  },
+  {
+    "rust": "MTLMultisampleStencilResolveFilter.Sample0",
+    "silk": "types.MTLMultisampleStencilResolveFilter_Sample0",
+    "notes": "renderpass.rs; enum u32, discriminant 0"
+  },
+  {
+    "rust": "MTLMultisampleStencilResolveFilter.DepthResolvedSample",
+    "silk": "types.MTLMultisampleStencilResolveFilter_DepthResolvedSample",
+    "notes": "renderpass.rs; enum u32, discriminant 1"
+  },
+  {
+    "rust": "MTLCaptureDestination.DeveloperTools",
+    "silk": "types.MTLCaptureDestination_DeveloperTools",
+    "notes": "capturedescriptor.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLCaptureDestination.GpuTraceDocument",
+    "silk": "types.MTLCaptureDestination_GpuTraceDocument",
+    "notes": "capturedescriptor.rs; enum u64, discriminant 2"
+  },
+  {
+    "rust": "MTLBlendFactor.Zero",
+    "silk": "types.MTLBlendFactor_Zero",
+    "notes": "pipeline/render.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLBlendFactor.One",
+    "silk": "types.MTLBlendFactor_One",
+    "notes": "pipeline/render.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLBlendFactor.SourceColor",
+    "silk": "types.MTLBlendFactor_SourceColor",
+    "notes": "pipeline/render.rs; enum u64, discriminant 2"
+  },
+  {
+    "rust": "MTLBlendFactor.OneMinusSourceColor",
+    "silk": "types.MTLBlendFactor_OneMinusSourceColor",
+    "notes": "pipeline/render.rs; enum u64, discriminant 3"
+  },
+  {
+    "rust": "MTLBlendFactor.SourceAlpha",
+    "silk": "types.MTLBlendFactor_SourceAlpha",
+    "notes": "pipeline/render.rs; enum u64, discriminant 4"
+  },
+  {
+    "rust": "MTLBlendFactor.OneMinusSourceAlpha",
+    "silk": "types.MTLBlendFactor_OneMinusSourceAlpha",
+    "notes": "pipeline/render.rs; enum u64, discriminant 5"
+  },
+  {
+    "rust": "MTLBlendFactor.DestinationColor",
+    "silk": "types.MTLBlendFactor_DestinationColor",
+    "notes": "pipeline/render.rs; enum u64, discriminant 6"
+  },
+  {
+    "rust": "MTLBlendFactor.OneMinusDestinationColor",
+    "silk": "types.MTLBlendFactor_OneMinusDestinationColor",
+    "notes": "pipeline/render.rs; enum u64, discriminant 7"
+  },
+  {
+    "rust": "MTLBlendFactor.DestinationAlpha",
+    "silk": "types.MTLBlendFactor_DestinationAlpha",
+    "notes": "pipeline/render.rs; enum u64, discriminant 8"
+  },
+  {
+    "rust": "MTLBlendFactor.OneMinusDestinationAlpha",
+    "silk": "types.MTLBlendFactor_OneMinusDestinationAlpha",
+    "notes": "pipeline/render.rs; enum u64, discriminant 9"
+  },
+  {
+    "rust": "MTLBlendFactor.SourceAlphaSaturated",
+    "silk": "types.MTLBlendFactor_SourceAlphaSaturated",
+    "notes": "pipeline/render.rs; enum u64, discriminant 10"
+  },
+  {
+    "rust": "MTLBlendFactor.BlendColor",
+    "silk": "types.MTLBlendFactor_BlendColor",
+    "notes": "pipeline/render.rs; enum u64, discriminant 11"
+  },
+  {
+    "rust": "MTLBlendFactor.OneMinusBlendColor",
+    "silk": "types.MTLBlendFactor_OneMinusBlendColor",
+    "notes": "pipeline/render.rs; enum u64, discriminant 12"
+  },
+  {
+    "rust": "MTLBlendFactor.BlendAlpha",
+    "silk": "types.MTLBlendFactor_BlendAlpha",
+    "notes": "pipeline/render.rs; enum u64, discriminant 13"
+  },
+  {
+    "rust": "MTLBlendFactor.OneMinusBlendAlpha",
+    "silk": "types.MTLBlendFactor_OneMinusBlendAlpha",
+    "notes": "pipeline/render.rs; enum u64, discriminant 14"
+  },
+  {
+    "rust": "MTLBlendFactor.Source1Color",
+    "silk": "types.MTLBlendFactor_Source1Color",
+    "notes": "pipeline/render.rs; enum u64, discriminant 15"
+  },
+  {
+    "rust": "MTLBlendFactor.OneMinusSource1Color",
+    "silk": "types.MTLBlendFactor_OneMinusSource1Color",
+    "notes": "pipeline/render.rs; enum u64, discriminant 16"
+  },
+  {
+    "rust": "MTLBlendFactor.Source1Alpha",
+    "silk": "types.MTLBlendFactor_Source1Alpha",
+    "notes": "pipeline/render.rs; enum u64, discriminant 17"
+  },
+  {
+    "rust": "MTLBlendFactor.OneMinusSource1Alpha",
+    "silk": "types.MTLBlendFactor_OneMinusSource1Alpha",
+    "notes": "pipeline/render.rs; enum u64, discriminant 18"
+  },
+  {
+    "rust": "MTLBlendOperation.Add",
+    "silk": "types.MTLBlendOperation_Add",
+    "notes": "pipeline/render.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLBlendOperation.Subtract",
+    "silk": "types.MTLBlendOperation_Subtract",
+    "notes": "pipeline/render.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLBlendOperation.ReverseSubtract",
+    "silk": "types.MTLBlendOperation_ReverseSubtract",
+    "notes": "pipeline/render.rs; enum u64, discriminant 2"
+  },
+  {
+    "rust": "MTLBlendOperation.Min",
+    "silk": "types.MTLBlendOperation_Min",
+    "notes": "pipeline/render.rs; enum u64, discriminant 3"
+  },
+  {
+    "rust": "MTLBlendOperation.Max",
+    "silk": "types.MTLBlendOperation_Max",
+    "notes": "pipeline/render.rs; enum u64, discriminant 4"
+  },
+  {
+    "rust": "MTLColorWriteMask.None",
+    "silk": "types.MTLColorWriteMask_None",
+    "notes": "pipeline/render.rs; flags u64, discriminant 0"
+  },
+  {
+    "rust": "MTLColorWriteMask.Red",
+    "silk": "types.MTLColorWriteMask_Red",
+    "notes": "pipeline/render.rs; flags u64, discriminant 8"
+  },
+  {
+    "rust": "MTLColorWriteMask.Green",
+    "silk": "types.MTLColorWriteMask_Green",
+    "notes": "pipeline/render.rs; flags u64, discriminant 4"
+  },
+  {
+    "rust": "MTLColorWriteMask.Blue",
+    "silk": "types.MTLColorWriteMask_Blue",
+    "notes": "pipeline/render.rs; flags u64, discriminant 2"
+  },
+  {
+    "rust": "MTLColorWriteMask.Alpha",
+    "silk": "types.MTLColorWriteMask_Alpha",
+    "notes": "pipeline/render.rs; flags u64, discriminant 1"
+  },
+  {
+    "rust": "MTLColorWriteMask.All",
+    "silk": "types.MTLColorWriteMask_All",
+    "notes": "pipeline/render.rs; flags u64, discriminant 15"
+  },
+  {
+    "rust": "MTLPrimitiveTopologyClass.Unspecified",
+    "silk": "types.MTLPrimitiveTopologyClass_Unspecified",
+    "notes": "pipeline/render.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLPrimitiveTopologyClass.Point",
+    "silk": "types.MTLPrimitiveTopologyClass_Point",
+    "notes": "pipeline/render.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLPrimitiveTopologyClass.Line",
+    "silk": "types.MTLPrimitiveTopologyClass_Line",
+    "notes": "pipeline/render.rs; enum u64, discriminant 2"
+  },
+  {
+    "rust": "MTLPrimitiveTopologyClass.Triangle",
+    "silk": "types.MTLPrimitiveTopologyClass_Triangle",
+    "notes": "pipeline/render.rs; enum u64, discriminant 3"
+  },
+  {
+    "rust": "MTLMutability.Default",
+    "silk": "types.MTLMutability_Default",
+    "notes": "pipeline/mod.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLMutability.Mutable",
+    "silk": "types.MTLMutability_Mutable",
+    "notes": "pipeline/mod.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLMutability.Immutable",
+    "silk": "types.MTLMutability_Immutable",
+    "notes": "pipeline/mod.rs; enum u64, discriminant 2"
+  },
+  {
+    "rust": "MTLAttributeFormat.Invalid",
+    "silk": "types.MTLAttributeFormat_Invalid",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLAttributeFormat.UChar2",
+    "silk": "types.MTLAttributeFormat_UChar2",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLAttributeFormat.UChar3",
+    "silk": "types.MTLAttributeFormat_UChar3",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 2"
+  },
+  {
+    "rust": "MTLAttributeFormat.UChar4",
+    "silk": "types.MTLAttributeFormat_UChar4",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 3"
+  },
+  {
+    "rust": "MTLAttributeFormat.Char2",
+    "silk": "types.MTLAttributeFormat_Char2",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 4"
+  },
+  {
+    "rust": "MTLAttributeFormat.Char3",
+    "silk": "types.MTLAttributeFormat_Char3",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 5"
+  },
+  {
+    "rust": "MTLAttributeFormat.Char4",
+    "silk": "types.MTLAttributeFormat_Char4",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 6"
+  },
+  {
+    "rust": "MTLAttributeFormat.UChar2Normalized",
+    "silk": "types.MTLAttributeFormat_UChar2Normalized",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 7"
+  },
+  {
+    "rust": "MTLAttributeFormat.UChar3Normalized",
+    "silk": "types.MTLAttributeFormat_UChar3Normalized",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 8"
+  },
+  {
+    "rust": "MTLAttributeFormat.UChar4Normalized",
+    "silk": "types.MTLAttributeFormat_UChar4Normalized",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 9"
+  },
+  {
+    "rust": "MTLAttributeFormat.Char2Normalized",
+    "silk": "types.MTLAttributeFormat_Char2Normalized",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 10"
+  },
+  {
+    "rust": "MTLAttributeFormat.Char3Normalized",
+    "silk": "types.MTLAttributeFormat_Char3Normalized",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 11"
+  },
+  {
+    "rust": "MTLAttributeFormat.Char4Normalized",
+    "silk": "types.MTLAttributeFormat_Char4Normalized",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 12"
+  },
+  {
+    "rust": "MTLAttributeFormat.UShort2",
+    "silk": "types.MTLAttributeFormat_UShort2",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 13"
+  },
+  {
+    "rust": "MTLAttributeFormat.UShort3",
+    "silk": "types.MTLAttributeFormat_UShort3",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 14"
+  },
+  {
+    "rust": "MTLAttributeFormat.UShort4",
+    "silk": "types.MTLAttributeFormat_UShort4",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 15"
+  },
+  {
+    "rust": "MTLAttributeFormat.Short2",
+    "silk": "types.MTLAttributeFormat_Short2",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 16"
+  },
+  {
+    "rust": "MTLAttributeFormat.Short3",
+    "silk": "types.MTLAttributeFormat_Short3",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 17"
+  },
+  {
+    "rust": "MTLAttributeFormat.Short4",
+    "silk": "types.MTLAttributeFormat_Short4",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 18"
+  },
+  {
+    "rust": "MTLAttributeFormat.UShort2Normalized",
+    "silk": "types.MTLAttributeFormat_UShort2Normalized",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 19"
+  },
+  {
+    "rust": "MTLAttributeFormat.UShort3Normalized",
+    "silk": "types.MTLAttributeFormat_UShort3Normalized",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 20"
+  },
+  {
+    "rust": "MTLAttributeFormat.UShort4Normalized",
+    "silk": "types.MTLAttributeFormat_UShort4Normalized",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 21"
+  },
+  {
+    "rust": "MTLAttributeFormat.Short2Normalized",
+    "silk": "types.MTLAttributeFormat_Short2Normalized",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 22"
+  },
+  {
+    "rust": "MTLAttributeFormat.Short3Normalized",
+    "silk": "types.MTLAttributeFormat_Short3Normalized",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 23"
+  },
+  {
+    "rust": "MTLAttributeFormat.Short4Normalized",
+    "silk": "types.MTLAttributeFormat_Short4Normalized",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 24"
+  },
+  {
+    "rust": "MTLAttributeFormat.Half2",
+    "silk": "types.MTLAttributeFormat_Half2",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 25"
+  },
+  {
+    "rust": "MTLAttributeFormat.Half3",
+    "silk": "types.MTLAttributeFormat_Half3",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 26"
+  },
+  {
+    "rust": "MTLAttributeFormat.Half4",
+    "silk": "types.MTLAttributeFormat_Half4",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 27"
+  },
+  {
+    "rust": "MTLAttributeFormat.Float",
+    "silk": "types.MTLAttributeFormat_Float",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 28"
+  },
+  {
+    "rust": "MTLAttributeFormat.Float2",
+    "silk": "types.MTLAttributeFormat_Float2",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 29"
+  },
+  {
+    "rust": "MTLAttributeFormat.Float3",
+    "silk": "types.MTLAttributeFormat_Float3",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 30"
+  },
+  {
+    "rust": "MTLAttributeFormat.Float4",
+    "silk": "types.MTLAttributeFormat_Float4",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 31"
+  },
+  {
+    "rust": "MTLAttributeFormat.Int",
+    "silk": "types.MTLAttributeFormat_Int",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 32"
+  },
+  {
+    "rust": "MTLAttributeFormat.Int2",
+    "silk": "types.MTLAttributeFormat_Int2",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 33"
+  },
+  {
+    "rust": "MTLAttributeFormat.Int3",
+    "silk": "types.MTLAttributeFormat_Int3",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 34"
+  },
+  {
+    "rust": "MTLAttributeFormat.Int4",
+    "silk": "types.MTLAttributeFormat_Int4",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 35"
+  },
+  {
+    "rust": "MTLAttributeFormat.UInt",
+    "silk": "types.MTLAttributeFormat_UInt",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 36"
+  },
+  {
+    "rust": "MTLAttributeFormat.UInt2",
+    "silk": "types.MTLAttributeFormat_UInt2",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 37"
+  },
+  {
+    "rust": "MTLAttributeFormat.UInt3",
+    "silk": "types.MTLAttributeFormat_UInt3",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 38"
+  },
+  {
+    "rust": "MTLAttributeFormat.UInt4",
+    "silk": "types.MTLAttributeFormat_UInt4",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 39"
+  },
+  {
+    "rust": "MTLAttributeFormat.Int1010102Normalized",
+    "silk": "types.MTLAttributeFormat_Int1010102Normalized",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 40"
+  },
+  {
+    "rust": "MTLAttributeFormat.UInt1010102Normalized",
+    "silk": "types.MTLAttributeFormat_UInt1010102Normalized",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 41"
+  },
+  {
+    "rust": "MTLAttributeFormat.UChar4Normalized_BGRA",
+    "silk": "types.MTLAttributeFormat_UChar4Normalized_BGRA",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 42"
+  },
+  {
+    "rust": "MTLAttributeFormat.UChar",
+    "silk": "types.MTLAttributeFormat_UChar",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 45"
+  },
+  {
+    "rust": "MTLAttributeFormat.Char",
+    "silk": "types.MTLAttributeFormat_Char",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 46"
+  },
+  {
+    "rust": "MTLAttributeFormat.UCharNormalized",
+    "silk": "types.MTLAttributeFormat_UCharNormalized",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 47"
+  },
+  {
+    "rust": "MTLAttributeFormat.CharNormalized",
+    "silk": "types.MTLAttributeFormat_CharNormalized",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 48"
+  },
+  {
+    "rust": "MTLAttributeFormat.UShort",
+    "silk": "types.MTLAttributeFormat_UShort",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 49"
+  },
+  {
+    "rust": "MTLAttributeFormat.Short",
+    "silk": "types.MTLAttributeFormat_Short",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 50"
+  },
+  {
+    "rust": "MTLAttributeFormat.UShortNormalized",
+    "silk": "types.MTLAttributeFormat_UShortNormalized",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 51"
+  },
+  {
+    "rust": "MTLAttributeFormat.ShortNormalized",
+    "silk": "types.MTLAttributeFormat_ShortNormalized",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 52"
+  },
+  {
+    "rust": "MTLAttributeFormat.Half",
+    "silk": "types.MTLAttributeFormat_Half",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 53"
+  },
+  {
+    "rust": "MTLStepFunction.Constant",
+    "silk": "types.MTLStepFunction_Constant",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 0"
+  },
+  {
+    "rust": "MTLStepFunction.PerInstance",
+    "silk": "types.MTLStepFunction_PerInstance",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 1"
+  },
+  {
+    "rust": "MTLStepFunction.PerPatch",
+    "silk": "types.MTLStepFunction_PerPatch",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 2"
+  },
+  {
+    "rust": "MTLStepFunction.PerPatchControlPoint",
+    "silk": "types.MTLStepFunction_PerPatchControlPoint",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 3"
+  },
+  {
+    "rust": "MTLStepFunction.PerVertex",
+    "silk": "types.MTLStepFunction_PerVertex",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 4"
+  },
+  {
+    "rust": "MTLStepFunction.ThreadPositionInGridX",
+    "silk": "types.MTLStepFunction_ThreadPositionInGridX",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 5"
+  },
+  {
+    "rust": "MTLStepFunction.ThreadPositionInGridXIndexed",
+    "silk": "types.MTLStepFunction_ThreadPositionInGridXIndexed",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 6"
+  },
+  {
+    "rust": "MTLStepFunction.ThreadPositionInGridY",
+    "silk": "types.MTLStepFunction_ThreadPositionInGridY",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 7"
+  },
+  {
+    "rust": "MTLStepFunction.ThreadPositionInGridYIndexed",
+    "silk": "types.MTLStepFunction_ThreadPositionInGridYIndexed",
+    "notes": "pipeline/compute.rs; enum u64, discriminant 8"
+  },
+  {
+    "rust": "CGSize",
+    "silk": "types.CGSize",
+    "notes": "CoreGraphics record used in public layer API; 64-bit CGFloat fields"
+  },
+  {
+    "rust": "MTLSize.new",
+    "silk": "types.MTLSize.new",
+    "notes": "Value constructor; returns a Copy value; no ownership or foreign call"
+  },
+  {
+    "rust": "MTLSize.default",
+    "silk": "types.MTLSize.default",
+    "notes": "Value constructor; returns a Copy value; no ownership or foreign call"
+  },
+  {
+    "rust": "MTLRegion.new_1d",
+    "silk": "types.MTLRegion.new_1d",
+    "notes": "Value constructor; returns a Copy value; no ownership or foreign call"
+  },
+  {
+    "rust": "MTLRegion.new_2d",
+    "silk": "types.MTLRegion.new_2d",
+    "notes": "Value constructor; returns a Copy value; no ownership or foreign call"
+  },
+  {
+    "rust": "MTLRegion.new_3d",
+    "silk": "types.MTLRegion.new_3d",
+    "notes": "Value constructor; returns a Copy value; no ownership or foreign call"
+  },
+  {
+    "rust": "MTLRegion.default",
+    "silk": "types.MTLRegion.default",
+    "notes": "Value constructor; returns a Copy value; no ownership or foreign call"
+  },
+  {
+    "rust": "NSRange.new",
+    "silk": "types.NSRange.new",
+    "notes": "Value constructor; returns a Copy value; no ownership or foreign call"
+  },
+  {
+    "rust": "MTLClearColor.new",
+    "silk": "types.MTLClearColor.new",
+    "notes": "Value constructor; returns a Copy value; no ownership or foreign call"
+  },
+  {
+    "rust": "CGSize.new",
+    "silk": "types.CGSize.new",
+    "notes": "Value constructor; returns a Copy value; no ownership or foreign call"
+  },
+  {
+    "rust": "MTLAccelerationStructureInstanceOptions.default",
+    "silk": "types.MTLAccelerationStructureInstanceOptions.default",
+    "notes": "Value constructor; returns a Copy value; no ownership or foreign call"
+  },
+  {
+    "rust": "MTLAccelerationStructureInstanceDescriptor.default",
+    "silk": "types.MTLAccelerationStructureInstanceDescriptor.default",
+    "notes": "Value constructor; returns a Copy value; no ownership or foreign call"
+  },
+  {
+    "rust": "MTLAccelerationStructureUserIDInstanceDescriptor.default",
+    "silk": "types.MTLAccelerationStructureUserIDInstanceDescriptor.default",
+    "notes": "Value constructor; returns a Copy value; no ownership or foreign call"
+  },
+  {
+    "rust": "MTLIndirectAccelerationStructureInstanceDescriptor.default",
+    "silk": "types.MTLIndirectAccelerationStructureInstanceDescriptor.default",
+    "notes": "Value constructor; returns a Copy value; no ownership or foreign call"
+  },
+  {
+    "rust": "MTLOrigin.default",
+    "silk": "types.MTLOrigin.default",
+    "notes": "Value constructor; returns a Copy value; no ownership or foreign call"
+  },
+  {
+    "rust": "MTLSamplePosition.default",
+    "silk": "types.MTLSamplePosition.default",
+    "notes": "Value constructor; returns a Copy value; no ownership or foreign call"
+  },
+  {
+    "rust": "MTLResourceID.default",
+    "silk": "types.MTLResourceID.default",
+    "notes": "Value constructor; returns a Copy value; no ownership or foreign call"
+  },
+  {
+    "rust": "MTLMutability.default",
+    "silk": "types.MTLMutability.default",
+    "notes": "Value constructor; returns a Copy value; no ownership or foreign call"
+  }
+]

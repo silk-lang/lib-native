@@ -1,0 +1,11 @@
+//! The browser smoke test: browser/test.mjs loads this module in Chromium and calls
+//! `smoke_main` through JSPI, so the shared test's waits suspend instead of spinning.
+import smoke.smoke { runSmoke }
+
+export "C" fn smokeMain() -> i32 as "smoke_main" {
+  return runSmoke()
+}
+
+pub fn main() -> i32 {
+  return 0
+}

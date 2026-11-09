@@ -1,0 +1,1128 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Ported from metal-rs, Copyright GFX developers.
+// Upstream e47bc888d3837f85ea8b01c9e66ccf73236293b9.
+// Apple 64-bit ABI: NSUInteger/usize = u64, NSInteger/isize = i64.
+// Enum and flag constants use Type_Variant because Silk has no associated constants.
+// MPS enums without Rust repr use the SDK NSUInteger ABI (u64).
+
+import silk.core.ownership { Copy }
+
+pub const MTLResourceCPUCacheModeShift: u64 = 0
+pub const MTLResourceCPUCacheModeMask: u64 = 15
+pub const MTLResourceStorageModeShift: u64 = 4
+pub const MTLResourceStorageModeMask: u64 = 240
+pub const MTLResourceHazardTrackingModeShift: u64 = 8
+pub const MTLResourceHazardTrackingModeMask: u64 = 768
+pub const COUNTER_DONT_SAMPLE: u64 = 18446744073709551615
+
+// resource.rs
+pub const MTLPurgeableState_KeepCurrent: u64 = 1
+pub const MTLPurgeableState_NonVolatile: u64 = 2
+pub const MTLPurgeableState_Volatile: u64 = 3
+pub const MTLPurgeableState_Empty: u64 = 4
+
+// resource.rs
+pub const MTLCPUCacheMode_DefaultCache: u64 = 0
+pub const MTLCPUCacheMode_WriteCombined: u64 = 1
+
+// resource.rs
+pub const MTLStorageMode_Shared: u64 = 0
+pub const MTLStorageMode_Managed: u64 = 1
+pub const MTLStorageMode_Private: u64 = 2
+pub const MTLStorageMode_Memoryless: u64 = 3
+
+// resource.rs
+pub const MTLHazardTrackingMode_Default: u64 = 0
+pub const MTLHazardTrackingMode_Untracked: u64 = 1
+pub const MTLHazardTrackingMode_Tracked: u64 = 2
+
+// resource.rs
+pub const MTLResourceOptions_CPUCacheModeDefaultCache: u64 = 0
+pub const MTLResourceOptions_CPUCacheModeWriteCombined: u64 = 1
+pub const MTLResourceOptions_StorageModeShared: u64 = 0
+pub const MTLResourceOptions_StorageModeManaged: u64 = 16
+pub const MTLResourceOptions_StorageModePrivate: u64 = 32
+pub const MTLResourceOptions_StorageModeMemoryless: u64 = 48
+pub const MTLResourceOptions_HazardTrackingModeDefault: u64 = 0
+pub const MTLResourceOptions_HazardTrackingModeUntracked: u64 = 256
+pub const MTLResourceOptions_HazardTrackingModeTracked: u64 = 512
+
+// resource.rs
+pub const MTLResourceUsage_Read: u64 = 1
+pub const MTLResourceUsage_Write: u64 = 2
+pub const MTLResourceUsage_Sample: u64 = 4
+
+// resource.rs
+pub extern "C" struct MTLSizeAndAlign {
+    pub size: u64,
+    pub align: u64,
+}
+impl Copy for MTLSizeAndAlign {}
+
+// acceleration_structure.rs
+pub const MTLAccelerationStructureInstanceOptions_None: u32 = 0
+pub const MTLAccelerationStructureInstanceOptions_DisableTriangleCulling: u32 = 1
+pub const MTLAccelerationStructureInstanceOptions_TriangleFrontFacingWindingCounterClockwise: u32 = 2
+pub const MTLAccelerationStructureInstanceOptions_Opaque: u32 = 4
+pub const MTLAccelerationStructureInstanceOptions_NonOpaque: u32 = 8
+
+// acceleration_structure.rs
+pub const MTLAccelerationStructureInstanceDescriptorType_Default: u64 = 0
+pub const MTLAccelerationStructureInstanceDescriptorType_UserID: u64 = 1
+pub const MTLAccelerationStructureInstanceDescriptorType_Motion: u64 = 2
+pub const MTLAccelerationStructureInstanceDescriptorType_Indirect: u64 = 3
+
+// acceleration_structure.rs
+pub extern "C" struct MTLAccelerationStructureInstanceDescriptor {
+    pub transformation_matrix: [[f32; 3]; 4],
+    pub options: u32,
+    pub mask: u32,
+    pub intersection_function_table_offset: u32,
+    pub acceleration_structure_index: u32,
+}
+impl Copy for MTLAccelerationStructureInstanceDescriptor {}
+
+// acceleration_structure.rs
+pub extern "C" struct MTLAccelerationStructureUserIDInstanceDescriptor {
+    pub transformation_matrix: [[f32; 3]; 4],
+    pub options: u32,
+    pub mask: u32,
+    pub intersection_function_table_offset: u32,
+    pub acceleration_structure_index: u32,
+    pub user_id: u32,
+}
+impl Copy for MTLAccelerationStructureUserIDInstanceDescriptor {}
+
+// acceleration_structure.rs
+pub extern "C" struct MTLIndirectAccelerationStructureInstanceDescriptor {
+    pub transformation_matrix: [[f32; 3]; 4],
+    pub options: u32,
+    pub mask: u32,
+    pub intersection_function_table_offset: u32,
+    pub user_id: u32,
+    pub acceleration_structure_id: u64,
+}
+impl Copy for MTLIndirectAccelerationStructureInstanceDescriptor {}
+
+// encoder.rs
+pub const MTLPrimitiveType_Point: u64 = 0
+pub const MTLPrimitiveType_Line: u64 = 1
+pub const MTLPrimitiveType_LineStrip: u64 = 2
+pub const MTLPrimitiveType_Triangle: u64 = 3
+pub const MTLPrimitiveType_TriangleStrip: u64 = 4
+
+// encoder.rs
+pub const MTLIndexType_UInt16: u64 = 0
+pub const MTLIndexType_UInt32: u64 = 1
+
+// encoder.rs
+pub const MTLVisibilityResultMode_Disabled: u64 = 0
+pub const MTLVisibilityResultMode_Boolean: u64 = 1
+pub const MTLVisibilityResultMode_Counting: u64 = 2
+
+// encoder.rs
+pub const MTLCullMode_None: u64 = 0
+pub const MTLCullMode_Front: u64 = 1
+pub const MTLCullMode_Back: u64 = 2
+
+// encoder.rs
+pub const MTLWinding_Clockwise: u64 = 0
+pub const MTLWinding_CounterClockwise: u64 = 1
+
+// encoder.rs
+pub const MTLDepthClipMode_Clip: u64 = 0
+pub const MTLDepthClipMode_Clamp: u64 = 1
+
+// encoder.rs
+pub const MTLTriangleFillMode_Fill: u64 = 0
+pub const MTLTriangleFillMode_Lines: u64 = 1
+
+// encoder.rs
+pub const MTLBlitOption_None: u64 = 0
+pub const MTLBlitOption_DepthFromDepthStencil: u64 = 1
+pub const MTLBlitOption_StencilFromDepthStencil: u64 = 2
+pub const MTLBlitOption_RowLinearPVRTC: u64 = 4
+
+// encoder.rs
+pub extern "C" struct MTLScissorRect {
+    pub x: u64,
+    pub y: u64,
+    pub width: u64,
+    pub height: u64,
+}
+impl Copy for MTLScissorRect {}
+
+// encoder.rs
+pub extern "C" struct MTLViewport {
+    pub originX: f64,
+    pub originY: f64,
+    pub width: f64,
+    pub height: f64,
+    pub znear: f64,
+    pub zfar: f64,
+}
+impl Copy for MTLViewport {}
+
+// encoder.rs
+pub extern "C" struct MTLDrawPrimitivesIndirectArguments {
+    pub vertexCount: u32,
+    pub instanceCount: u32,
+    pub vertexStart: u32,
+    pub baseInstance: u32,
+}
+impl Copy for MTLDrawPrimitivesIndirectArguments {}
+
+// encoder.rs
+pub extern "C" struct MTLDrawIndexedPrimitivesIndirectArguments {
+    pub indexCount: u32,
+    pub instanceCount: u32,
+    pub indexStart: u32,
+    pub baseVertex: i32,
+    pub baseInstance: u32,
+}
+impl Copy for MTLDrawIndexedPrimitivesIndirectArguments {}
+
+// encoder.rs
+pub extern "C" struct VertexAmplificationViewMapping {
+    pub viewportArrayIndexOffset: u32,
+    pub renderTargetArrayIndexOffset: u32,
+}
+impl Copy for VertexAmplificationViewMapping {}
+
+// types.rs
+pub extern "C" struct MTLOrigin {
+    pub x: u64,
+    pub y: u64,
+    pub z: u64,
+}
+impl Copy for MTLOrigin {}
+
+// types.rs
+pub extern "C" struct MTLSize {
+    pub width: u64,
+    pub height: u64,
+    pub depth: u64,
+}
+impl Copy for MTLSize {}
+
+// types.rs
+pub extern "C" struct MTLRegion {
+    pub origin: MTLOrigin,
+    pub size: MTLSize,
+}
+impl Copy for MTLRegion {}
+
+// types.rs
+pub extern "C" struct MTLSamplePosition {
+    pub x: f32,
+    pub y: f32,
+}
+impl Copy for MTLSamplePosition {}
+
+// types.rs
+pub extern "C" struct MTLResourceID {
+    pub _impl: u64
+}
+impl Copy for MTLResourceID {}
+
+// mps.rs
+pub const MPSRayDataType_OriginDirection: u64 = 0
+pub const MPSRayDataType_OriginMinDistanceDirectionMaxDistance: u64 = 1
+pub const MPSRayDataType_OriginMaskDirectionMaxDistance: u64 = 2
+
+// mps.rs
+pub const MPSRayMaskOptions_Primitive: u64 = 1
+pub const MPSRayMaskOptions_Instance: u64 = 2
+
+// mps.rs
+pub const MPSIntersectionDataType_Distance: u64 = 0
+pub const MPSIntersectionDataType_DistancePrimitiveIndex: u64 = 1
+pub const MPSIntersectionDataType_DistancePrimitiveIndexCoordinates: u64 = 2
+pub const MPSIntersectionDataType_DistancePrimitiveIndexInstanceIndex: u64 = 3
+pub const MPSIntersectionDataType_DistancePrimitiveIndexInstanceIndexCoordinates: u64 = 4
+
+// mps.rs
+pub const MPSIntersectionType_Nearest: u64 = 0
+pub const MPSIntersectionType_Any: u64 = 1
+
+// mps.rs
+pub const MPSRayMaskOperator_And: u64 = 0
+pub const MPSRayMaskOperator_NotAnd: u64 = 1
+pub const MPSRayMaskOperator_Or: u64 = 2
+pub const MPSRayMaskOperator_NotOr: u64 = 3
+pub const MPSRayMaskOperator_Xor: u64 = 4
+pub const MPSRayMaskOperator_NotXor: u64 = 5
+pub const MPSRayMaskOperator_LessThan: u64 = 6
+pub const MPSRayMaskOperator_LessThanOrEqualTo: u64 = 7
+pub const MPSRayMaskOperator_GreaterThan: u64 = 8
+pub const MPSRayMaskOperator_GreaterThanOrEqualTo: u64 = 9
+
+// mps.rs
+pub const MPSTriangleIntersectionTestType_Default: u64 = 0
+pub const MPSTriangleIntersectionTestType_Watertight: u64 = 1
+
+// mps.rs
+pub const MPSAccelerationStructureStatus_Unbuilt: u64 = 0
+pub const MPSAccelerationStructureStatus_Built: u64 = 1
+
+// mps.rs
+pub const MPSAccelerationStructureUsage_None: u64 = 0
+pub const MPSAccelerationStructureUsage_Refit: u64 = 1
+pub const MPSAccelerationStructureUsage_FrequentRebuild: u64 = 2
+pub const MPSAccelerationStructureUsage_PreferGPUBuild: u64 = 4
+pub const MPSAccelerationStructureUsage_PreferCPUBuild: u64 = 8
+
+// mps.rs
+pub const MPSDataType_Invalid: u64 = 0
+pub const MPSDataType_Float32: u64 = 268435488
+pub const MPSDataType_Float16: u64 = 268435472
+pub const MPSDataType_Int8: u64 = 536870920
+pub const MPSDataType_Int16: u64 = 536870928
+pub const MPSDataType_Int32: u64 = 536870944
+pub const MPSDataType_UInt8: u64 = 8
+pub const MPSDataType_UInt16: u64 = 16
+pub const MPSDataType_UInt32: u64 = 32
+pub const MPSDataType_Unorm1: u64 = 1073741825
+pub const MPSDataType_Unorm8: u64 = 1073741832
+
+// mps.rs
+pub const MPSTransformType_Float4x4: u64 = 0
+pub const MPSTransformType_Identity: u64 = 1
+
+// mps.rs
+pub extern "C" struct MPSPackedFloat3 {
+    pub elements: [f32; 3]
+}
+impl Copy for MPSPackedFloat3 {}
+
+// mps.rs
+pub extern "C" struct MPSRayOriginMinDistanceDirectionMaxDistance {
+    pub origin: MPSPackedFloat3,
+    pub min_distance: f32,
+    pub direction: MPSPackedFloat3,
+    pub max_distance: f32,
+}
+impl Copy for MPSRayOriginMinDistanceDirectionMaxDistance {}
+
+// mps.rs
+pub extern "C" struct MPSIntersectionDistancePrimitiveIndexCoordinates {
+    pub distance: f32,
+    pub primitive_index: u32,
+    pub coordinates: [f32; 2],
+}
+impl Copy for MPSIntersectionDistancePrimitiveIndexCoordinates {}
+
+// device.rs
+pub const MTLFeatureSet_iOS_GPUFamily1_v1: u64 = 0
+pub const MTLFeatureSet_iOS_GPUFamily2_v1: u64 = 1
+pub const MTLFeatureSet_iOS_GPUFamily1_v2: u64 = 2
+pub const MTLFeatureSet_iOS_GPUFamily2_v2: u64 = 3
+pub const MTLFeatureSet_iOS_GPUFamily3_v1: u64 = 4
+pub const MTLFeatureSet_iOS_GPUFamily1_v3: u64 = 5
+pub const MTLFeatureSet_iOS_GPUFamily2_v3: u64 = 6
+pub const MTLFeatureSet_iOS_GPUFamily3_v2: u64 = 7
+pub const MTLFeatureSet_iOS_GPUFamily1_v4: u64 = 8
+pub const MTLFeatureSet_iOS_GPUFamily2_v4: u64 = 9
+pub const MTLFeatureSet_iOS_GPUFamily3_v3: u64 = 10
+pub const MTLFeatureSet_iOS_GPUFamily4_v1: u64 = 11
+pub const MTLFeatureSet_iOS_GPUFamily1_v5: u64 = 12
+pub const MTLFeatureSet_iOS_GPUFamily2_v5: u64 = 13
+pub const MTLFeatureSet_iOS_GPUFamily3_v4: u64 = 14
+pub const MTLFeatureSet_iOS_GPUFamily4_v2: u64 = 15
+pub const MTLFeatureSet_iOS_GPUFamily5_v1: u64 = 16
+pub const MTLFeatureSet_tvOS_GPUFamily1_v1: u64 = 30000
+pub const MTLFeatureSet_tvOS_GPUFamily1_v2: u64 = 30001
+pub const MTLFeatureSet_tvOS_GPUFamily1_v3: u64 = 30002
+pub const MTLFeatureSet_tvOS_GPUFamily2_v1: u64 = 30003
+pub const MTLFeatureSet_tvOS_GPUFamily1_v4: u64 = 30004
+pub const MTLFeatureSet_tvOS_GPUFamily2_v2: u64 = 30005
+pub const MTLFeatureSet_macOS_GPUFamily1_v1: u64 = 10000
+pub const MTLFeatureSet_macOS_GPUFamily1_v2: u64 = 10001
+pub const MTLFeatureSet_macOS_ReadWriteTextureTier2: u64 = 10002
+pub const MTLFeatureSet_macOS_GPUFamily1_v3: u64 = 10003
+pub const MTLFeatureSet_macOS_GPUFamily1_v4: u64 = 10004
+pub const MTLFeatureSet_macOS_GPUFamily2_v1: u64 = 10005
+
+// device.rs
+pub const MTLGPUFamily_Common1: i64 = 3001
+pub const MTLGPUFamily_Common2: i64 = 3002
+pub const MTLGPUFamily_Common3: i64 = 3003
+pub const MTLGPUFamily_Apple1: i64 = 1001
+pub const MTLGPUFamily_Apple2: i64 = 1002
+pub const MTLGPUFamily_Apple3: i64 = 1003
+pub const MTLGPUFamily_Apple4: i64 = 1004
+pub const MTLGPUFamily_Apple5: i64 = 1005
+pub const MTLGPUFamily_Apple6: i64 = 1006
+pub const MTLGPUFamily_Apple7: i64 = 1007
+pub const MTLGPUFamily_Apple8: i64 = 1008
+pub const MTLGPUFamily_Apple9: i64 = 1009
+pub const MTLGPUFamily_Mac1: i64 = 2001
+pub const MTLGPUFamily_Mac2: i64 = 2002
+pub const MTLGPUFamily_MacCatalyst1: i64 = 4001
+pub const MTLGPUFamily_MacCatalyst2: i64 = 4002
+pub const MTLGPUFamily_Metal3: i64 = 5001
+pub const MTLGPUFamily_Metal4: i64 = 5002
+
+// device.rs
+pub const MTLDeviceLocation_BuiltIn: u64 = 0
+pub const MTLDeviceLocation_Slot: u64 = 1
+pub const MTLDeviceLocation_External: u64 = 2
+pub const MTLDeviceLocation_Unspecified: u64 = 18446744073709551615
+
+// device.rs
+pub const PixelFormatCapabilities_Filter: u32 = 1
+pub const PixelFormatCapabilities_Write: u32 = 2
+pub const PixelFormatCapabilities_Color: u32 = 4
+pub const PixelFormatCapabilities_Blend: u32 = 8
+pub const PixelFormatCapabilities_Msaa: u32 = 16
+pub const PixelFormatCapabilities_Resolve: u32 = 32
+
+// device.rs
+pub const MTLArgumentBuffersTier_Tier1: u64 = 0
+pub const MTLArgumentBuffersTier_Tier2: u64 = 1
+
+// device.rs
+pub const MTLReadWriteTextureTier_TierNone: u64 = 0
+pub const MTLReadWriteTextureTier_Tier1: u64 = 1
+pub const MTLReadWriteTextureTier_Tier2: u64 = 2
+
+// device.rs
+pub const MTLCounterSamplingPoint_AtStageBoundary: u64 = 0
+pub const MTLCounterSamplingPoint_AtDrawBoundary: u64 = 1
+pub const MTLCounterSamplingPoint_AtDispatchBoundary: u64 = 2
+pub const MTLCounterSamplingPoint_AtTileDispatchBoundary: u64 = 3
+pub const MTLCounterSamplingPoint_AtBlitBoundary: u64 = 4
+
+// device.rs
+pub const MTLSparseTextureRegionAlignmentMode_Outward: u64 = 0
+pub const MTLSparseTextureRegionAlignmentMode_Inward: u64 = 1
+
+// device.rs
+pub const MTLPipelineOption_None: u64 = 0
+pub const MTLPipelineOption_ArgumentInfo: u64 = 1
+pub const MTLPipelineOption_BufferTypeInfo: u64 = 2
+pub const MTLPipelineOption_FailOnBinaryArchiveMiss: u64 = 4
+
+// device.rs
+pub extern "C" struct MTLAccelerationStructureSizes {
+    pub acceleration_structure_size: u64,
+    pub build_scratch_buffer_size: u64,
+    pub refit_scratch_buffer_size: u64,
+}
+impl Copy for MTLAccelerationStructureSizes {}
+
+// constants.rs
+pub const MTLPixelFormat_Invalid: u64 = 0
+pub const MTLPixelFormat_A8Unorm: u64 = 1
+pub const MTLPixelFormat_R8Unorm: u64 = 10
+pub const MTLPixelFormat_R8Unorm_sRGB: u64 = 11
+pub const MTLPixelFormat_R8Snorm: u64 = 12
+pub const MTLPixelFormat_R8Uint: u64 = 13
+pub const MTLPixelFormat_R8Sint: u64 = 14
+pub const MTLPixelFormat_R16Unorm: u64 = 20
+pub const MTLPixelFormat_R16Snorm: u64 = 22
+pub const MTLPixelFormat_R16Uint: u64 = 23
+pub const MTLPixelFormat_R16Sint: u64 = 24
+pub const MTLPixelFormat_R16Float: u64 = 25
+pub const MTLPixelFormat_RG8Unorm: u64 = 30
+pub const MTLPixelFormat_RG8Unorm_sRGB: u64 = 31
+pub const MTLPixelFormat_RG8Snorm: u64 = 32
+pub const MTLPixelFormat_RG8Uint: u64 = 33
+pub const MTLPixelFormat_RG8Sint: u64 = 34
+pub const MTLPixelFormat_B5G6R5Unorm: u64 = 40
+pub const MTLPixelFormat_A1BGR5Unorm: u64 = 41
+pub const MTLPixelFormat_ABGR4Unorm: u64 = 42
+pub const MTLPixelFormat_BGR5A1Unorm: u64 = 43
+pub const MTLPixelFormat_R32Uint: u64 = 53
+pub const MTLPixelFormat_R32Sint: u64 = 54
+pub const MTLPixelFormat_R32Float: u64 = 55
+pub const MTLPixelFormat_RG16Unorm: u64 = 60
+pub const MTLPixelFormat_RG16Snorm: u64 = 62
+pub const MTLPixelFormat_RG16Uint: u64 = 63
+pub const MTLPixelFormat_RG16Sint: u64 = 64
+pub const MTLPixelFormat_RG16Float: u64 = 65
+pub const MTLPixelFormat_RGBA8Unorm: u64 = 70
+pub const MTLPixelFormat_RGBA8Unorm_sRGB: u64 = 71
+pub const MTLPixelFormat_RGBA8Snorm: u64 = 72
+pub const MTLPixelFormat_RGBA8Uint: u64 = 73
+pub const MTLPixelFormat_RGBA8Sint: u64 = 74
+pub const MTLPixelFormat_BGRA8Unorm: u64 = 80
+pub const MTLPixelFormat_BGRA8Unorm_sRGB: u64 = 81
+pub const MTLPixelFormat_RGB10A2Unorm: u64 = 90
+pub const MTLPixelFormat_RGB10A2Uint: u64 = 91
+pub const MTLPixelFormat_RG11B10Float: u64 = 92
+pub const MTLPixelFormat_RGB9E5Float: u64 = 93
+pub const MTLPixelFormat_BGR10A2Unorm: u64 = 94
+pub const MTLPixelFormat_RG32Uint: u64 = 103
+pub const MTLPixelFormat_RG32Sint: u64 = 104
+pub const MTLPixelFormat_RG32Float: u64 = 105
+pub const MTLPixelFormat_RGBA16Unorm: u64 = 110
+pub const MTLPixelFormat_RGBA16Snorm: u64 = 112
+pub const MTLPixelFormat_RGBA16Uint: u64 = 113
+pub const MTLPixelFormat_RGBA16Sint: u64 = 114
+pub const MTLPixelFormat_RGBA16Float: u64 = 115
+pub const MTLPixelFormat_RGBA32Uint: u64 = 123
+pub const MTLPixelFormat_RGBA32Sint: u64 = 124
+pub const MTLPixelFormat_RGBA32Float: u64 = 125
+pub const MTLPixelFormat_BC1_RGBA: u64 = 130
+pub const MTLPixelFormat_BC1_RGBA_sRGB: u64 = 131
+pub const MTLPixelFormat_BC2_RGBA: u64 = 132
+pub const MTLPixelFormat_BC2_RGBA_sRGB: u64 = 133
+pub const MTLPixelFormat_BC3_RGBA: u64 = 134
+pub const MTLPixelFormat_BC3_RGBA_sRGB: u64 = 135
+pub const MTLPixelFormat_BC4_RUnorm: u64 = 140
+pub const MTLPixelFormat_BC4_RSnorm: u64 = 141
+pub const MTLPixelFormat_BC5_RGUnorm: u64 = 142
+pub const MTLPixelFormat_BC5_RGSnorm: u64 = 143
+pub const MTLPixelFormat_BC6H_RGBFloat: u64 = 150
+pub const MTLPixelFormat_BC6H_RGBUfloat: u64 = 151
+pub const MTLPixelFormat_BC7_RGBAUnorm: u64 = 152
+pub const MTLPixelFormat_BC7_RGBAUnorm_sRGB: u64 = 153
+pub const MTLPixelFormat_PVRTC_RGB_2BPP: u64 = 160
+pub const MTLPixelFormat_PVRTC_RGB_2BPP_sRGB: u64 = 161
+pub const MTLPixelFormat_PVRTC_RGB_4BPP: u64 = 162
+pub const MTLPixelFormat_PVRTC_RGB_4BPP_sRGB: u64 = 163
+pub const MTLPixelFormat_PVRTC_RGBA_2BPP: u64 = 164
+pub const MTLPixelFormat_PVRTC_RGBA_2BPP_sRGB: u64 = 165
+pub const MTLPixelFormat_PVRTC_RGBA_4BPP: u64 = 166
+pub const MTLPixelFormat_PVRTC_RGBA_4BPP_sRGB: u64 = 167
+pub const MTLPixelFormat_EAC_R11Unorm: u64 = 170
+pub const MTLPixelFormat_EAC_R11Snorm: u64 = 172
+pub const MTLPixelFormat_EAC_RG11Unorm: u64 = 174
+pub const MTLPixelFormat_EAC_RG11Snorm: u64 = 176
+pub const MTLPixelFormat_EAC_RGBA8: u64 = 178
+pub const MTLPixelFormat_EAC_RGBA8_sRGB: u64 = 179
+pub const MTLPixelFormat_ETC2_RGB8: u64 = 180
+pub const MTLPixelFormat_ETC2_RGB8_sRGB: u64 = 181
+pub const MTLPixelFormat_ETC2_RGB8A1: u64 = 182
+pub const MTLPixelFormat_ETC2_RGB8A1_sRGB: u64 = 183
+pub const MTLPixelFormat_ASTC_4x4_sRGB: u64 = 186
+pub const MTLPixelFormat_ASTC_5x4_sRGB: u64 = 187
+pub const MTLPixelFormat_ASTC_5x5_sRGB: u64 = 188
+pub const MTLPixelFormat_ASTC_6x5_sRGB: u64 = 189
+pub const MTLPixelFormat_ASTC_6x6_sRGB: u64 = 190
+pub const MTLPixelFormat_ASTC_8x5_sRGB: u64 = 192
+pub const MTLPixelFormat_ASTC_8x6_sRGB: u64 = 193
+pub const MTLPixelFormat_ASTC_8x8_sRGB: u64 = 194
+pub const MTLPixelFormat_ASTC_10x5_sRGB: u64 = 195
+pub const MTLPixelFormat_ASTC_10x6_sRGB: u64 = 196
+pub const MTLPixelFormat_ASTC_10x8_sRGB: u64 = 197
+pub const MTLPixelFormat_ASTC_10x10_sRGB: u64 = 198
+pub const MTLPixelFormat_ASTC_12x10_sRGB: u64 = 199
+pub const MTLPixelFormat_ASTC_12x12_sRGB: u64 = 200
+pub const MTLPixelFormat_ASTC_4x4_LDR: u64 = 204
+pub const MTLPixelFormat_ASTC_5x4_LDR: u64 = 205
+pub const MTLPixelFormat_ASTC_5x5_LDR: u64 = 206
+pub const MTLPixelFormat_ASTC_6x5_LDR: u64 = 207
+pub const MTLPixelFormat_ASTC_6x6_LDR: u64 = 208
+pub const MTLPixelFormat_ASTC_8x5_LDR: u64 = 210
+pub const MTLPixelFormat_ASTC_8x6_LDR: u64 = 211
+pub const MTLPixelFormat_ASTC_8x8_LDR: u64 = 212
+pub const MTLPixelFormat_ASTC_10x5_LDR: u64 = 213
+pub const MTLPixelFormat_ASTC_10x6_LDR: u64 = 214
+pub const MTLPixelFormat_ASTC_10x8_LDR: u64 = 215
+pub const MTLPixelFormat_ASTC_10x10_LDR: u64 = 216
+pub const MTLPixelFormat_ASTC_12x10_LDR: u64 = 217
+pub const MTLPixelFormat_ASTC_12x12_LDR: u64 = 218
+pub const MTLPixelFormat_ASTC_4x4_HDR: u64 = 222
+pub const MTLPixelFormat_ASTC_5x4_HDR: u64 = 223
+pub const MTLPixelFormat_ASTC_5x5_HDR: u64 = 224
+pub const MTLPixelFormat_ASTC_6x5_HDR: u64 = 225
+pub const MTLPixelFormat_ASTC_6x6_HDR: u64 = 226
+pub const MTLPixelFormat_ASTC_8x5_HDR: u64 = 228
+pub const MTLPixelFormat_ASTC_8x6_HDR: u64 = 229
+pub const MTLPixelFormat_ASTC_8x8_HDR: u64 = 230
+pub const MTLPixelFormat_ASTC_10x5_HDR: u64 = 231
+pub const MTLPixelFormat_ASTC_10x6_HDR: u64 = 232
+pub const MTLPixelFormat_ASTC_10x8_HDR: u64 = 233
+pub const MTLPixelFormat_ASTC_10x10_HDR: u64 = 234
+pub const MTLPixelFormat_ASTC_12x10_HDR: u64 = 235
+pub const MTLPixelFormat_ASTC_12x12_HDR: u64 = 236
+pub const MTLPixelFormat_GBGR422: u64 = 240
+pub const MTLPixelFormat_BGRG422: u64 = 241
+pub const MTLPixelFormat_Depth16Unorm: u64 = 250
+pub const MTLPixelFormat_Depth32Float: u64 = 252
+pub const MTLPixelFormat_Stencil8: u64 = 253
+pub const MTLPixelFormat_Depth24Unorm_Stencil8: u64 = 255
+pub const MTLPixelFormat_Depth32Float_Stencil8: u64 = 260
+pub const MTLPixelFormat_X32_Stencil8: u64 = 261
+pub const MTLPixelFormat_X24_Stencil8: u64 = 262
+pub const MTLPixelFormat_BGRA10_XR: u64 = 552
+pub const MTLPixelFormat_BGRA10_XR_SRGB: u64 = 553
+pub const MTLPixelFormat_BGR10_XR: u64 = 554
+pub const MTLPixelFormat_BGR10_XR_SRGB: u64 = 555
+
+// library.rs
+pub const MTLPatchType_None: u64 = 0
+pub const MTLPatchType_Triangle: u64 = 1
+pub const MTLPatchType_Quad: u64 = 2
+
+// library.rs
+pub const MTLFunctionType_Vertex: u64 = 1
+pub const MTLFunctionType_Fragment: u64 = 2
+pub const MTLFunctionType_Kernel: u64 = 3
+pub const MTLFunctionType_Visible: u64 = 5
+pub const MTLFunctionType_Intersection: u64 = 6
+
+// library.rs
+pub const MTLFunctionOptions_None: u64 = 0
+pub const MTLFunctionOptions_CompileToBinary: u64 = 1
+
+// library.rs
+pub const MTLLanguageVersion_V1_0: u64 = 65536
+pub const MTLLanguageVersion_V1_1: u64 = 65537
+pub const MTLLanguageVersion_V1_2: u64 = 65538
+pub const MTLLanguageVersion_V2_0: u64 = 131072
+pub const MTLLanguageVersion_V2_1: u64 = 131073
+pub const MTLLanguageVersion_V2_2: u64 = 131074
+pub const MTLLanguageVersion_V2_3: u64 = 131075
+pub const MTLLanguageVersion_V2_4: u64 = 131076
+pub const MTLLanguageVersion_V3_0: u64 = 196608
+pub const MTLLanguageVersion_V3_1: u64 = 196609
+
+// library.rs
+pub const MTLLibraryType_Executable: u64 = 0
+pub const MTLLibraryType_Dynamic: u64 = 1
+
+// library.rs
+pub const MTLLibraryError_Unsupported: u64 = 1
+pub const MTLLibraryError_Internal: u64 = 2
+pub const MTLLibraryError_CompileFailure: u64 = 3
+pub const MTLLibraryError_CompileWarning: u64 = 4
+pub const MTLLibraryError_FunctionNotFound: u64 = 5
+pub const MTLLibraryError_FileNotFound: u64 = 6
+
+// library.rs
+pub const MTLDynamicLibraryError_None: u64 = 0
+pub const MTLDynamicLibraryError_InvalidFile: u64 = 1
+pub const MTLDynamicLibraryError_CompilationFailure: u64 = 2
+pub const MTLDynamicLibraryError_UnresolvedInstallName: u64 = 3
+pub const MTLDynamicLibraryError_DependencyLoadFailure: u64 = 4
+pub const MTLDynamicLibraryError_Unsupported: u64 = 5
+
+// heap.rs
+pub const MTLHeapType_Automatic: u64 = 0
+pub const MTLHeapType_Placement: u64 = 1
+pub const MTLHeapType_Sparse: u64 = 2
+
+// lib.rs
+pub extern "C" struct NSRange {
+    pub location: u64,
+    pub length: u64,
+}
+impl Copy for NSRange {}
+
+// commandbuffer.rs
+pub const MTLCommandBufferStatus_NotEnqueued: u32 = 0
+pub const MTLCommandBufferStatus_Enqueued: u32 = 1
+pub const MTLCommandBufferStatus_Committed: u32 = 2
+pub const MTLCommandBufferStatus_Scheduled: u32 = 3
+pub const MTLCommandBufferStatus_Completed: u32 = 4
+pub const MTLCommandBufferStatus_Error: u32 = 5
+
+// commandbuffer.rs
+pub const MTLCommandBufferError_None: u32 = 0
+pub const MTLCommandBufferError_Internal: u32 = 1
+pub const MTLCommandBufferError_Timeout: u32 = 2
+pub const MTLCommandBufferError_PageFault: u32 = 3
+pub const MTLCommandBufferError_Blacklisted: u32 = 4
+pub const MTLCommandBufferError_NotPermitted: u32 = 7
+pub const MTLCommandBufferError_OutOfMemory: u32 = 8
+pub const MTLCommandBufferError_InvalidResource: u32 = 9
+pub const MTLCommandBufferError_Memoryless: u32 = 10
+pub const MTLCommandBufferError_DeviceRemoved: u32 = 11
+
+// commandbuffer.rs
+pub const MTLDispatchType_Serial: u32 = 0
+pub const MTLDispatchType_Concurrent: u32 = 1
+
+// argument.rs
+pub const MTLDataType_None: u64 = 0
+pub const MTLDataType_Struct: u64 = 1
+pub const MTLDataType_Array: u64 = 2
+pub const MTLDataType_Float: u64 = 3
+pub const MTLDataType_Float2: u64 = 4
+pub const MTLDataType_Float3: u64 = 5
+pub const MTLDataType_Float4: u64 = 6
+pub const MTLDataType_Float2x2: u64 = 7
+pub const MTLDataType_Float2x3: u64 = 8
+pub const MTLDataType_Float2x4: u64 = 9
+pub const MTLDataType_Float3x2: u64 = 10
+pub const MTLDataType_Float3x3: u64 = 11
+pub const MTLDataType_Float3x4: u64 = 12
+pub const MTLDataType_Float4x2: u64 = 13
+pub const MTLDataType_Float4x3: u64 = 14
+pub const MTLDataType_Float4x4: u64 = 15
+pub const MTLDataType_Half: u64 = 16
+pub const MTLDataType_Half2: u64 = 17
+pub const MTLDataType_Half3: u64 = 18
+pub const MTLDataType_Half4: u64 = 19
+pub const MTLDataType_Half2x2: u64 = 20
+pub const MTLDataType_Half2x3: u64 = 21
+pub const MTLDataType_Half2x4: u64 = 22
+pub const MTLDataType_Half3x2: u64 = 23
+pub const MTLDataType_Half3x3: u64 = 24
+pub const MTLDataType_Half3x4: u64 = 25
+pub const MTLDataType_Half4x2: u64 = 26
+pub const MTLDataType_Half4x3: u64 = 27
+pub const MTLDataType_Half4x4: u64 = 28
+pub const MTLDataType_Int: u64 = 29
+pub const MTLDataType_Int2: u64 = 30
+pub const MTLDataType_Int3: u64 = 31
+pub const MTLDataType_Int4: u64 = 32
+pub const MTLDataType_UInt: u64 = 33
+pub const MTLDataType_UInt2: u64 = 34
+pub const MTLDataType_UInt3: u64 = 35
+pub const MTLDataType_UInt4: u64 = 36
+pub const MTLDataType_Short: u64 = 37
+pub const MTLDataType_Short2: u64 = 38
+pub const MTLDataType_Short3: u64 = 39
+pub const MTLDataType_Short4: u64 = 40
+pub const MTLDataType_UShort: u64 = 41
+pub const MTLDataType_UShort2: u64 = 42
+pub const MTLDataType_UShort3: u64 = 43
+pub const MTLDataType_UShort4: u64 = 44
+pub const MTLDataType_Char: u64 = 45
+pub const MTLDataType_Char2: u64 = 46
+pub const MTLDataType_Char3: u64 = 47
+pub const MTLDataType_Char4: u64 = 48
+pub const MTLDataType_UChar: u64 = 49
+pub const MTLDataType_UChar2: u64 = 50
+pub const MTLDataType_UChar3: u64 = 51
+pub const MTLDataType_UChar4: u64 = 52
+pub const MTLDataType_Bool: u64 = 53
+pub const MTLDataType_Bool2: u64 = 54
+pub const MTLDataType_Bool3: u64 = 55
+pub const MTLDataType_Bool4: u64 = 56
+pub const MTLDataType_Texture: u64 = 58
+pub const MTLDataType_Sampler: u64 = 59
+pub const MTLDataType_Pointer: u64 = 60
+pub const MTLDataType_R8Unorm: u64 = 62
+pub const MTLDataType_R8Snorm: u64 = 63
+pub const MTLDataType_R16Unorm: u64 = 64
+pub const MTLDataType_R16Snorm: u64 = 65
+pub const MTLDataType_RG8Unorm: u64 = 66
+pub const MTLDataType_RG8Snorm: u64 = 67
+pub const MTLDataType_RG16Unorm: u64 = 68
+pub const MTLDataType_RG16Snorm: u64 = 69
+pub const MTLDataType_RGBA8Unorm: u64 = 70
+pub const MTLDataType_RGBA8Unorm_sRGB: u64 = 71
+pub const MTLDataType_RGBA8Snorm: u64 = 72
+pub const MTLDataType_RGBA16Unorm: u64 = 73
+pub const MTLDataType_RGBA16Snorm: u64 = 74
+pub const MTLDataType_RGB10A2Unorm: u64 = 75
+pub const MTLDataType_RG11B10Float: u64 = 76
+pub const MTLDataType_RGB9E5Float: u64 = 77
+pub const MTLDataType_RenderPipeline: u64 = 78
+pub const MTLDataType_ComputePipeline: u64 = 79
+pub const MTLDataType_IndirectCommandBuffer: u64 = 80
+pub const MTLDataType_Long: u64 = 81
+pub const MTLDataType_Long2: u64 = 82
+pub const MTLDataType_Long3: u64 = 83
+pub const MTLDataType_Long4: u64 = 84
+pub const MTLDataType_ULong: u64 = 85
+pub const MTLDataType_ULong2: u64 = 86
+pub const MTLDataType_ULong3: u64 = 87
+pub const MTLDataType_ULong4: u64 = 88
+pub const MTLDataType_VisibleFunctionTable: u64 = 115
+pub const MTLDataType_IntersectionFunctionTable: u64 = 116
+pub const MTLDataType_PrimitiveAccelerationStructure: u64 = 117
+pub const MTLDataType_InstanceAccelerationStructure: u64 = 118
+pub const MTLDataType_BFloat: u64 = 121
+pub const MTLDataType_BFloat2: u64 = 122
+pub const MTLDataType_BFloat3: u64 = 123
+pub const MTLDataType_BFloat4: u64 = 124
+
+// argument.rs
+pub const MTLArgumentType_Buffer: u64 = 0
+pub const MTLArgumentType_ThreadgroupMemory: u64 = 1
+pub const MTLArgumentType_Texture: u64 = 2
+pub const MTLArgumentType_Sampler: u64 = 3
+pub const MTLArgumentType_ImageblockData: u64 = 16
+pub const MTLArgumentType_Imageblock: u64 = 17
+
+// argument.rs
+pub const MTLArgumentAccess_ReadOnly: u64 = 0
+pub const MTLArgumentAccess_ReadWrite: u64 = 1
+pub const MTLArgumentAccess_WriteOnly: u64 = 2
+
+// sync.rs
+pub const MTLRenderStages_Vertex: u64 = 1
+pub const MTLRenderStages_Fragment: u64 = 2
+pub const MTLRenderStages_Tile: u64 = 4
+
+// depthstencil.rs
+pub const MTLCompareFunction_Never: u64 = 0
+pub const MTLCompareFunction_Less: u64 = 1
+pub const MTLCompareFunction_Equal: u64 = 2
+pub const MTLCompareFunction_LessEqual: u64 = 3
+pub const MTLCompareFunction_Greater: u64 = 4
+pub const MTLCompareFunction_NotEqual: u64 = 5
+pub const MTLCompareFunction_GreaterEqual: u64 = 6
+pub const MTLCompareFunction_Always: u64 = 7
+
+// depthstencil.rs
+pub const MTLStencilOperation_Keep: u64 = 0
+pub const MTLStencilOperation_Zero: u64 = 1
+pub const MTLStencilOperation_Replace: u64 = 2
+pub const MTLStencilOperation_IncrementClamp: u64 = 3
+pub const MTLStencilOperation_DecrementClamp: u64 = 4
+pub const MTLStencilOperation_Invert: u64 = 5
+pub const MTLStencilOperation_IncrementWrap: u64 = 6
+pub const MTLStencilOperation_DecrementWrap: u64 = 7
+
+// indirect_encoder.rs
+pub const MTLIndirectCommandType_Draw: u64 = 1
+pub const MTLIndirectCommandType_DrawIndexed: u64 = 2
+pub const MTLIndirectCommandType_DrawPatches: u64 = 4
+pub const MTLIndirectCommandType_DrawIndexedPatches: u64 = 8
+pub const MTLIndirectCommandType_ConcurrentDispatch: u64 = 16
+pub const MTLIndirectCommandType_ConcurrentDispatchThreads: u64 = 32
+
+// vertexdescriptor.rs
+pub const MTLVertexFormat_Invalid: u64 = 0
+pub const MTLVertexFormat_UChar2: u64 = 1
+pub const MTLVertexFormat_UChar3: u64 = 2
+pub const MTLVertexFormat_UChar4: u64 = 3
+pub const MTLVertexFormat_Char2: u64 = 4
+pub const MTLVertexFormat_Char3: u64 = 5
+pub const MTLVertexFormat_Char4: u64 = 6
+pub const MTLVertexFormat_UChar2Normalized: u64 = 7
+pub const MTLVertexFormat_UChar3Normalized: u64 = 8
+pub const MTLVertexFormat_UChar4Normalized: u64 = 9
+pub const MTLVertexFormat_Char2Normalized: u64 = 10
+pub const MTLVertexFormat_Char3Normalized: u64 = 11
+pub const MTLVertexFormat_Char4Normalized: u64 = 12
+pub const MTLVertexFormat_UShort2: u64 = 13
+pub const MTLVertexFormat_UShort3: u64 = 14
+pub const MTLVertexFormat_UShort4: u64 = 15
+pub const MTLVertexFormat_Short2: u64 = 16
+pub const MTLVertexFormat_Short3: u64 = 17
+pub const MTLVertexFormat_Short4: u64 = 18
+pub const MTLVertexFormat_UShort2Normalized: u64 = 19
+pub const MTLVertexFormat_UShort3Normalized: u64 = 20
+pub const MTLVertexFormat_UShort4Normalized: u64 = 21
+pub const MTLVertexFormat_Short2Normalized: u64 = 22
+pub const MTLVertexFormat_Short3Normalized: u64 = 23
+pub const MTLVertexFormat_Short4Normalized: u64 = 24
+pub const MTLVertexFormat_Half2: u64 = 25
+pub const MTLVertexFormat_Half3: u64 = 26
+pub const MTLVertexFormat_Half4: u64 = 27
+pub const MTLVertexFormat_Float: u64 = 28
+pub const MTLVertexFormat_Float2: u64 = 29
+pub const MTLVertexFormat_Float3: u64 = 30
+pub const MTLVertexFormat_Float4: u64 = 31
+pub const MTLVertexFormat_Int: u64 = 32
+pub const MTLVertexFormat_Int2: u64 = 33
+pub const MTLVertexFormat_Int3: u64 = 34
+pub const MTLVertexFormat_Int4: u64 = 35
+pub const MTLVertexFormat_UInt: u64 = 36
+pub const MTLVertexFormat_UInt2: u64 = 37
+pub const MTLVertexFormat_UInt3: u64 = 38
+pub const MTLVertexFormat_UInt4: u64 = 39
+pub const MTLVertexFormat_Int1010102Normalized: u64 = 40
+pub const MTLVertexFormat_UInt1010102Normalized: u64 = 41
+pub const MTLVertexFormat_UChar4Normalized_BGRA: u64 = 42
+pub const MTLVertexFormat_UChar: u64 = 45
+pub const MTLVertexFormat_Char: u64 = 46
+pub const MTLVertexFormat_UCharNormalized: u64 = 47
+pub const MTLVertexFormat_CharNormalized: u64 = 48
+pub const MTLVertexFormat_UShort: u64 = 49
+pub const MTLVertexFormat_Short: u64 = 50
+pub const MTLVertexFormat_UShortNormalized: u64 = 51
+pub const MTLVertexFormat_ShortNormalized: u64 = 52
+pub const MTLVertexFormat_Half: u64 = 53
+
+// vertexdescriptor.rs
+pub const MTLVertexStepFunction_Constant: u64 = 0
+pub const MTLVertexStepFunction_PerVertex: u64 = 1
+pub const MTLVertexStepFunction_PerInstance: u64 = 2
+pub const MTLVertexStepFunction_PerPatch: u64 = 3
+pub const MTLVertexStepFunction_PerPatchControlPoint: u64 = 4
+
+// sampler.rs
+pub const MTLSamplerMinMagFilter_Nearest: u64 = 0
+pub const MTLSamplerMinMagFilter_Linear: u64 = 1
+
+// sampler.rs
+pub const MTLSamplerMipFilter_NotMipmapped: u64 = 0
+pub const MTLSamplerMipFilter_Nearest: u64 = 1
+pub const MTLSamplerMipFilter_Linear: u64 = 2
+
+// sampler.rs
+pub const MTLSamplerAddressMode_ClampToEdge: u64 = 0
+pub const MTLSamplerAddressMode_MirrorClampToEdge: u64 = 1
+pub const MTLSamplerAddressMode_Repeat: u64 = 2
+pub const MTLSamplerAddressMode_MirrorRepeat: u64 = 3
+pub const MTLSamplerAddressMode_ClampToZero: u64 = 4
+pub const MTLSamplerAddressMode_ClampToBorderColor: u64 = 5
+
+// sampler.rs
+pub const MTLSamplerBorderColor_TransparentBlack: u64 = 0
+pub const MTLSamplerBorderColor_OpaqueBlack: u64 = 1
+pub const MTLSamplerBorderColor_OpaqueWhite: u64 = 2
+
+// texture.rs
+pub const MTLTextureType_D1: u64 = 0
+pub const MTLTextureType_D1Array: u64 = 1
+pub const MTLTextureType_D2: u64 = 2
+pub const MTLTextureType_D2Array: u64 = 3
+pub const MTLTextureType_D2Multisample: u64 = 4
+pub const MTLTextureType_Cube: u64 = 5
+pub const MTLTextureType_CubeArray: u64 = 6
+pub const MTLTextureType_D3: u64 = 7
+pub const MTLTextureType_D2MultisampleArray: u64 = 8
+
+// texture.rs
+pub const MTLTextureCompressionType_Lossless: u64 = 0
+pub const MTLTextureCompressionType_Lossy: u64 = 1
+
+// texture.rs
+pub const MTLTextureUsage_Unknown: u64 = 0
+pub const MTLTextureUsage_ShaderRead: u64 = 1
+pub const MTLTextureUsage_ShaderWrite: u64 = 2
+pub const MTLTextureUsage_RenderTarget: u64 = 4
+pub const MTLTextureUsage_PixelFormatView: u64 = 16
+pub const MTLTextureUsage_ShaderAtomic: u64 = 32
+
+// renderpass.rs
+pub const MTLLoadAction_DontCare: u64 = 0
+pub const MTLLoadAction_Load: u64 = 1
+pub const MTLLoadAction_Clear: u64 = 2
+
+// renderpass.rs
+pub const MTLStoreAction_DontCare: u64 = 0
+pub const MTLStoreAction_Store: u64 = 1
+pub const MTLStoreAction_MultisampleResolve: u64 = 2
+pub const MTLStoreAction_StoreAndMultisampleResolve: u64 = 3
+pub const MTLStoreAction_Unknown: u64 = 4
+pub const MTLStoreAction_CustomSampleDepthStore: u64 = 5
+
+// renderpass.rs
+pub extern "C" struct MTLClearColor {
+    pub red: f64,
+    pub green: f64,
+    pub blue: f64,
+    pub alpha: f64,
+}
+impl Copy for MTLClearColor {}
+
+// renderpass.rs
+pub const MTLMultisampleStencilResolveFilter_Sample0: u32 = 0
+pub const MTLMultisampleStencilResolveFilter_DepthResolvedSample: u32 = 1
+
+// capturedescriptor.rs
+pub const MTLCaptureDestination_DeveloperTools: u64 = 1
+pub const MTLCaptureDestination_GpuTraceDocument: u64 = 2
+
+// pipeline/render.rs
+pub const MTLBlendFactor_Zero: u64 = 0
+pub const MTLBlendFactor_One: u64 = 1
+pub const MTLBlendFactor_SourceColor: u64 = 2
+pub const MTLBlendFactor_OneMinusSourceColor: u64 = 3
+pub const MTLBlendFactor_SourceAlpha: u64 = 4
+pub const MTLBlendFactor_OneMinusSourceAlpha: u64 = 5
+pub const MTLBlendFactor_DestinationColor: u64 = 6
+pub const MTLBlendFactor_OneMinusDestinationColor: u64 = 7
+pub const MTLBlendFactor_DestinationAlpha: u64 = 8
+pub const MTLBlendFactor_OneMinusDestinationAlpha: u64 = 9
+pub const MTLBlendFactor_SourceAlphaSaturated: u64 = 10
+pub const MTLBlendFactor_BlendColor: u64 = 11
+pub const MTLBlendFactor_OneMinusBlendColor: u64 = 12
+pub const MTLBlendFactor_BlendAlpha: u64 = 13
+pub const MTLBlendFactor_OneMinusBlendAlpha: u64 = 14
+pub const MTLBlendFactor_Source1Color: u64 = 15
+pub const MTLBlendFactor_OneMinusSource1Color: u64 = 16
+pub const MTLBlendFactor_Source1Alpha: u64 = 17
+pub const MTLBlendFactor_OneMinusSource1Alpha: u64 = 18
+
+// pipeline/render.rs
+pub const MTLBlendOperation_Add: u64 = 0
+pub const MTLBlendOperation_Subtract: u64 = 1
+pub const MTLBlendOperation_ReverseSubtract: u64 = 2
+pub const MTLBlendOperation_Min: u64 = 3
+pub const MTLBlendOperation_Max: u64 = 4
+
+// pipeline/render.rs
+pub const MTLColorWriteMask_None: u64 = 0
+pub const MTLColorWriteMask_Red: u64 = 8
+pub const MTLColorWriteMask_Green: u64 = 4
+pub const MTLColorWriteMask_Blue: u64 = 2
+pub const MTLColorWriteMask_Alpha: u64 = 1
+pub const MTLColorWriteMask_All: u64 = 15
+
+// pipeline/render.rs
+pub const MTLPrimitiveTopologyClass_Unspecified: u64 = 0
+pub const MTLPrimitiveTopologyClass_Point: u64 = 1
+pub const MTLPrimitiveTopologyClass_Line: u64 = 2
+pub const MTLPrimitiveTopologyClass_Triangle: u64 = 3
+
+// pipeline/mod.rs
+pub const MTLMutability_Default: u64 = 0
+pub const MTLMutability_Mutable: u64 = 1
+pub const MTLMutability_Immutable: u64 = 2
+
+// pipeline/compute.rs
+pub const MTLAttributeFormat_Invalid: u64 = 0
+pub const MTLAttributeFormat_UChar2: u64 = 1
+pub const MTLAttributeFormat_UChar3: u64 = 2
+pub const MTLAttributeFormat_UChar4: u64 = 3
+pub const MTLAttributeFormat_Char2: u64 = 4
+pub const MTLAttributeFormat_Char3: u64 = 5
+pub const MTLAttributeFormat_Char4: u64 = 6
+pub const MTLAttributeFormat_UChar2Normalized: u64 = 7
+pub const MTLAttributeFormat_UChar3Normalized: u64 = 8
+pub const MTLAttributeFormat_UChar4Normalized: u64 = 9
+pub const MTLAttributeFormat_Char2Normalized: u64 = 10
+pub const MTLAttributeFormat_Char3Normalized: u64 = 11
+pub const MTLAttributeFormat_Char4Normalized: u64 = 12
+pub const MTLAttributeFormat_UShort2: u64 = 13
+pub const MTLAttributeFormat_UShort3: u64 = 14
+pub const MTLAttributeFormat_UShort4: u64 = 15
+pub const MTLAttributeFormat_Short2: u64 = 16
+pub const MTLAttributeFormat_Short3: u64 = 17
+pub const MTLAttributeFormat_Short4: u64 = 18
+pub const MTLAttributeFormat_UShort2Normalized: u64 = 19
+pub const MTLAttributeFormat_UShort3Normalized: u64 = 20
+pub const MTLAttributeFormat_UShort4Normalized: u64 = 21
+pub const MTLAttributeFormat_Short2Normalized: u64 = 22
+pub const MTLAttributeFormat_Short3Normalized: u64 = 23
+pub const MTLAttributeFormat_Short4Normalized: u64 = 24
+pub const MTLAttributeFormat_Half2: u64 = 25
+pub const MTLAttributeFormat_Half3: u64 = 26
+pub const MTLAttributeFormat_Half4: u64 = 27
+pub const MTLAttributeFormat_Float: u64 = 28
+pub const MTLAttributeFormat_Float2: u64 = 29
+pub const MTLAttributeFormat_Float3: u64 = 30
+pub const MTLAttributeFormat_Float4: u64 = 31
+pub const MTLAttributeFormat_Int: u64 = 32
+pub const MTLAttributeFormat_Int2: u64 = 33
+pub const MTLAttributeFormat_Int3: u64 = 34
+pub const MTLAttributeFormat_Int4: u64 = 35
+pub const MTLAttributeFormat_UInt: u64 = 36
+pub const MTLAttributeFormat_UInt2: u64 = 37
+pub const MTLAttributeFormat_UInt3: u64 = 38
+pub const MTLAttributeFormat_UInt4: u64 = 39
+pub const MTLAttributeFormat_Int1010102Normalized: u64 = 40
+pub const MTLAttributeFormat_UInt1010102Normalized: u64 = 41
+pub const MTLAttributeFormat_UChar4Normalized_BGRA: u64 = 42
+pub const MTLAttributeFormat_UChar: u64 = 45
+pub const MTLAttributeFormat_Char: u64 = 46
+pub const MTLAttributeFormat_UCharNormalized: u64 = 47
+pub const MTLAttributeFormat_CharNormalized: u64 = 48
+pub const MTLAttributeFormat_UShort: u64 = 49
+pub const MTLAttributeFormat_Short: u64 = 50
+pub const MTLAttributeFormat_UShortNormalized: u64 = 51
+pub const MTLAttributeFormat_ShortNormalized: u64 = 52
+pub const MTLAttributeFormat_Half: u64 = 53
+
+// pipeline/compute.rs
+pub const MTLStepFunction_Constant: u64 = 0
+pub const MTLStepFunction_PerInstance: u64 = 1
+pub const MTLStepFunction_PerPatch: u64 = 2
+pub const MTLStepFunction_PerPatchControlPoint: u64 = 3
+pub const MTLStepFunction_PerVertex: u64 = 4
+pub const MTLStepFunction_ThreadPositionInGridX: u64 = 5
+pub const MTLStepFunction_ThreadPositionInGridXIndexed: u64 = 6
+pub const MTLStepFunction_ThreadPositionInGridY: u64 = 7
+pub const MTLStepFunction_ThreadPositionInGridYIndexed: u64 = 8
+
+// CoreGraphics CGSize used by MetalLayer drawable_size.
+pub extern "C" struct CGSize {
+    pub width: f64,
+    pub height: f64,
+}
+impl Copy for CGSize {}
+
+impl MTLSize {
+    pub fn new(width: u64, height: u64, depth: u64) -> MTLSize {
+        return MTLSize { width: width, height: height, depth: depth }
+    }
+    pub fn default() -> MTLSize {
+        return MTLSize { width: 0, height: 0, depth: 0 }
+    }
+}
+
+impl MTLRegion {
+    pub fn new_1d(x: u64, width: u64) -> MTLRegion {
+        return MTLRegion.new_2d(x, 0, width, 1)
+    }
+    pub fn new_2d(x: u64, y: u64, width: u64, height: u64) -> MTLRegion {
+        return MTLRegion.new_3d(x, y, 0, width, height, 1)
+    }
+    pub fn new_3d(x: u64, y: u64, z: u64, width: u64, height: u64, depth: u64) -> MTLRegion {
+        return MTLRegion { origin: MTLOrigin { x: x, y: y, z: z }, size: MTLSize { width: width, height: height, depth: depth } }
+    }
+    pub fn default() -> MTLRegion {
+        return MTLRegion { origin: MTLOrigin { x: 0, y: 0, z: 0 }, size: MTLSize { width: 0, height: 0, depth: 0 } }
+    }
+}
+
+impl NSRange {
+    pub fn new(location: u64, length: u64) -> NSRange {
+        return NSRange { location: location, length: length }
+    }
+}
+
+impl MTLClearColor {
+    pub fn new(red: f64, green: f64, blue: f64, alpha: f64) -> MTLClearColor {
+        return MTLClearColor { red: red, green: green, blue: blue, alpha: alpha }
+    }
+}
+
+impl CGSize {
+    pub fn new(width: f64, height: f64) -> CGSize {
+        return CGSize { width: width, height: height }
+    }
+}
+
+pub struct MTLAccelerationStructureInstanceOptions {}
+impl MTLAccelerationStructureInstanceOptions {
+    pub fn default() -> u32 {
+        return 0
+    }
+}
+
+impl MTLAccelerationStructureInstanceDescriptor {
+    pub fn default() -> MTLAccelerationStructureInstanceDescriptor {
+        return MTLAccelerationStructureInstanceDescriptor { transformation_matrix: [[0.0; 3]; 4], options: 0, mask: 0, intersection_function_table_offset: 0, acceleration_structure_index: 0 }
+    }
+}
+
+impl MTLAccelerationStructureUserIDInstanceDescriptor {
+    pub fn default() -> MTLAccelerationStructureUserIDInstanceDescriptor {
+        return MTLAccelerationStructureUserIDInstanceDescriptor { transformation_matrix: [[0.0; 3]; 4], options: 0, mask: 0, intersection_function_table_offset: 0, acceleration_structure_index: 0, user_id: 0 }
+    }
+}
+
+impl MTLIndirectAccelerationStructureInstanceDescriptor {
+    pub fn default() -> MTLIndirectAccelerationStructureInstanceDescriptor {
+        return MTLIndirectAccelerationStructureInstanceDescriptor { transformation_matrix: [[0.0; 3]; 4], options: 0, mask: 0, intersection_function_table_offset: 0, user_id: 0, acceleration_structure_id: 0 }
+    }
+}
+
+impl MTLOrigin {
+    pub fn default() -> MTLOrigin {
+        return MTLOrigin { x: 0, y: 0, z: 0 }
+    }
+}
+
+impl MTLSamplePosition {
+    pub fn default() -> MTLSamplePosition {
+        return MTLSamplePosition { x: 0.0, y: 0.0 }
+    }
+}
+
+impl MTLResourceID {
+    pub fn default() -> MTLResourceID {
+        return MTLResourceID { _impl: 0 }
+    }
+}
+
+pub struct MTLMutability {}
+impl MTLMutability {
+    pub fn default() -> u64 {
+        return MTLMutability_Default
+    }
+}
+

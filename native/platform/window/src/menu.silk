@@ -1,0 +1,227 @@
+//! Native menus and file dialogs. A menu bar is a flat list of entries the app builds once
+//! and installs with `Platform.setMenuBar`; dialog options are borrowed while one opens.
+import event { Modifiers }
+import keys { NamedKey }
+import types { WindowId }
+import silk.collections.list { List }
+import silk.core.option { Option }
+import silk.core.ownership { Copy }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.text.string { String }
+
+/// The key of a menu shortcut.
+pub union ShortcutKey {
+  /// A character key, lowercase: 'o' with `shift` set for Shift+O.
+  Character { pub character: char },
+  Named { pub key: NamedKey },
+}
+
+impl Copy for ShortcutKey {}
+
+pub struct Shortcut {
+  pub key: ShortcutKey,
+  pub modifiers: Modifiers,
+}
+
+impl Copy for Shortcut {}
+
+impl Shortcut {
+  /// The platform's command modifier with `key`: Command+key on macOS, Control+key elsewhere.
+  pub fn command(key: char) -> Shortcut {
+    let mut modifiers = Modifiers.none()
+    static if Intrinsic.targetOperatingSystem() == "darwin" {
+      modifiers.meta = true
+    } else {
+      modifiers.control = true
+    }
+    return Shortcut { key: ShortcutKey.Character { character: key }, modifiers: modifiers }
+  }
+
+  pub fn withShift(self: Self) -> Shortcut {
+    let mut copy = self
+    copy.modifiers.shift = true
+    return copy
+  }
+}
+
+/// Items the system implements itself. Items a platform has no counterpart for are left out.
+pub enum SystemItem {
+  /// The standard About panel (macOS).
+  About,
+  /// The Services submenu (macOS).
+  Services,
+  Hide,
+  HideOthers,
+  ShowAll,
+  /// Delivers `Event.QuitRequested`.
+  Quit,
+  /// Delivers `Event.CloseRequested` for the key window.
+  CloseWindow,
+  Minimize,
+  Zoom,
+  ToggleFullScreen,
+  BringAllToFront,
+}
+
+/// One step of a menu bar's description, in order.
+pub union MenuEntry {
+  /// Opens a menu, or a submenu inside the open one, until the matching `End`.
+  Begin { pub title: String },
+  End,
+  /// Delivers `Event.MenuAction` with `action` when chosen.
+  Action {
+    pub title: String,
+    pub action: u32,
+    pub shortcut: Option<Shortcut>,
+    pub enabled: bool,
+    pub checked: bool,
+  },
+  Separator,
+  System { pub item: SystemItem },
+}
+
+/// A menu bar, built in order. On macOS the first menu is the app menu, whose title the
+/// system replaces with the app's name.
+///
+/// ```silk,ignore
+/// let mut bar = MenuBar.make()
+/// run bar.begin("App")
+/// run bar.system(SystemItem.Quit)
+/// run bar.end()
+/// run bar.begin("File")
+/// run bar.action("Open…", OPEN, Option<Shortcut>.some(Shortcut.command('o')))
+/// run bar.end()
+/// ```
+pub struct MenuBar {
+  pub entries: List<MenuEntry>,
+  depth: u32,
+}
+
+impl MenuBar {
+  pub fn make() -> MenuBar {
+    return MenuBar { entries: List<MenuEntry>.make(), depth: 0 }
+  }
+
+  pub effect fn begin(self: &mut Self, title: string) -> ()
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let owned = run String.copy(title)
+    run self.entries.append(MenuEntry.Begin { title: move owned })
+    self.depth = self.depth + 1
+  }
+
+  /// Closes the innermost open menu. Extra calls are ignored.
+  pub effect fn end(self: &mut Self) -> ()
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    if self.depth == 0 {
+      return ()
+    }
+    run self.entries.append(MenuEntry.End)
+    self.depth = self.depth - 1
+  }
+
+  /// An enabled, unchecked action.
+  pub effect fn action(
+    self: &mut Self,
+    title: string,
+    action: u32,
+    shortcut: Option<Shortcut>,
+  ) -> ()
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    run self.item(title, action, shortcut, true, false)
+  }
+
+  pub effect fn item(
+    self: &mut Self,
+    title: string,
+    action: u32,
+    shortcut: Option<Shortcut>,
+    enabled: bool,
+    checked: bool,
+  ) -> ()
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let owned = run String.copy(title)
+    run self.entries.append(
+      MenuEntry.Action {
+        title: move owned,
+        action: action,
+        shortcut: shortcut,
+        enabled: enabled,
+        checked: checked,
+      },
+    )
+  }
+
+  pub effect fn separator(self: &mut Self) -> ()
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    run self.entries.append(MenuEntry.Separator)
+  }
+
+  pub effect fn system(self: &mut Self, item: SystemItem) -> ()
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    run self.entries.append(MenuEntry.System { item: item })
+  }
+
+  /// Whether every `begin` has its `end`.
+  pub fn isClosed(self: &Self) -> bool {
+    return self.depth == 0
+  }
+}
+
+/// Options for choosing files or directories to open.
+pub struct OpenDialog<'a> {
+  pub title: string<'a>,
+  /// The directory shown first; the system's choice when `None`.
+  pub directory: Option<string<'a>>,
+  pub files: bool,
+  pub directories: bool,
+  pub multiple: bool,
+  /// File name extensions without dots, separated by commas: "png,jpg". Empty allows
+  /// every file.
+  pub extensions: string<'a>,
+  /// Attach the dialog to this window as a sheet, where the platform has sheets.
+  pub parent: Option<WindowId>,
+}
+
+impl<'a> OpenDialog<'a> {
+  /// Choose one file with one of `extensions`, or of any type when it is empty.
+  pub fn file(title: string<'a>, extensions: string<'a>) -> OpenDialog<'a> {
+    return OpenDialog {
+      title: title,
+      directory: Option<string<'a>>.None,
+      files: true,
+      directories: false,
+      multiple: false,
+      extensions: extensions,
+      parent: Option<WindowId>.None,
+    }
+  }
+}
+
+/// Options for choosing where to save a file.
+pub struct SaveDialog<'a> {
+  pub title: string<'a>,
+  pub directory: Option<string<'a>>,
+  /// The file name filled in at first.
+  pub name: string<'a>,
+  /// Extensions as in `OpenDialog.extensions`; the first is the default.
+  pub extensions: string<'a>,
+  pub parent: Option<WindowId>,
+}
+
+impl<'a> SaveDialog<'a> {
+  pub fn named(title: string<'a>, name: string<'a>, extensions: string<'a>) -> SaveDialog<'a> {
+    return SaveDialog {
+      title: title,
+      directory: Option<string<'a>>.None,
+      name: name,
+      extensions: extensions,
+      parent: Option<WindowId>.None,
+    }
+  }
+}

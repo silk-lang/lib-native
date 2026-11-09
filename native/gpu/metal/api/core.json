@@ -1,0 +1,492 @@
+[
+  {
+    "rust": "CommandQueue.label",
+    "silk": "core.CommandQueue.label",
+    "notes": ""
+  },
+  {
+    "rust": "CommandQueue.set_label",
+    "silk": "core.CommandQueue.set_label",
+    "notes": ""
+  },
+  {
+    "rust": "CommandQueue.device",
+    "silk": "core.CommandQueue.device",
+    "notes": ""
+  },
+  {
+    "rust": "CommandQueue.new_command_buffer",
+    "silk": "core.CommandQueue.new_command_buffer",
+    "notes": "Borrowed/autoreleased result, despite new_ name."
+  },
+  {
+    "rust": "CommandQueue.new_command_buffer_with_unretained_references",
+    "silk": "core.CommandQueue.new_command_buffer_with_unretained_references",
+    "notes": "Borrowed/autoreleased result, despite new_ name."
+  },
+  {
+    "rust": "CommandBuffer.label",
+    "silk": "core.CommandBuffer.label",
+    "notes": ""
+  },
+  {
+    "rust": "CommandBuffer.set_label",
+    "silk": "core.CommandBuffer.set_label",
+    "notes": ""
+  },
+  {
+    "rust": "CommandBuffer.enqueue",
+    "silk": "core.CommandBuffer.enqueue",
+    "notes": ""
+  },
+  {
+    "rust": "CommandBuffer.commit",
+    "silk": "core.CommandBuffer.commit",
+    "notes": ""
+  },
+  {
+    "rust": "CommandBuffer.wait_until_completed",
+    "silk": "core.CommandBuffer.wait_until_completed",
+    "notes": ""
+  },
+  {
+    "rust": "CommandBuffer.wait_until_scheduled",
+    "silk": "core.CommandBuffer.wait_until_scheduled",
+    "notes": ""
+  },
+  {
+    "rust": "CommandBuffer.pop_debug_group",
+    "silk": "core.CommandBuffer.pop_debug_group",
+    "notes": ""
+  },
+  {
+    "rust": "CommandBuffer.status",
+    "silk": "core.CommandBuffer.status",
+    "notes": ""
+  },
+  {
+    "rust": "CommandBuffer.present_drawable",
+    "silk": "core.CommandBuffer.present_drawable",
+    "notes": ""
+  },
+  {
+    "rust": "CommandBuffer.push_debug_group",
+    "silk": "core.CommandBuffer.push_debug_group",
+    "notes": ""
+  },
+  {
+    "rust": "CommandBuffer.new_blit_command_encoder",
+    "silk": "core.CommandBuffer.new_blit_command_encoder",
+    "notes": "Borrowed/autoreleased encoder."
+  },
+  {
+    "rust": "CommandBuffer.new_compute_command_encoder",
+    "silk": "core.CommandBuffer.new_compute_command_encoder",
+    "notes": "Borrowed/autoreleased encoder."
+  },
+  {
+    "rust": "CommandBuffer.new_acceleration_structure_command_encoder",
+    "silk": "core.CommandBuffer.new_acceleration_structure_command_encoder",
+    "notes": "Borrowed/autoreleased encoder."
+  },
+  {
+    "rust": "CommandBuffer.blit_command_encoder_with_descriptor",
+    "silk": "core.CommandBuffer.blit_command_encoder_with_descriptor",
+    "notes": "Borrowed/autoreleased encoder."
+  },
+  {
+    "rust": "CommandBuffer.compute_command_encoder_with_descriptor",
+    "silk": "core.CommandBuffer.compute_command_encoder_with_descriptor",
+    "notes": "Borrowed/autoreleased encoder."
+  },
+  {
+    "rust": "CommandBuffer.new_render_command_encoder",
+    "silk": "core.CommandBuffer.new_render_command_encoder",
+    "notes": "Borrowed/autoreleased encoder."
+  },
+  {
+    "rust": "CommandBuffer.new_parallel_render_command_encoder",
+    "silk": "core.CommandBuffer.new_parallel_render_command_encoder",
+    "notes": "Borrowed/autoreleased encoder."
+  },
+  {
+    "rust": "CommandBuffer.acceleration_structure_command_encoder_with_descriptor",
+    "silk": "core.CommandBuffer.acceleration_structure_command_encoder_with_descriptor",
+    "notes": "Borrowed/autoreleased encoder."
+  },
+  {
+    "rust": "CommandBuffer.compute_command_encoder_with_dispatch_type",
+    "silk": "core.CommandBuffer.compute_command_encoder_with_dispatch_type",
+    "notes": ""
+  },
+  {
+    "rust": "CommandBuffer.encode_signal_event",
+    "silk": "core.CommandBuffer.encode_signal_event",
+    "notes": ""
+  },
+  {
+    "rust": "CommandBuffer.encode_wait_for_event",
+    "silk": "core.CommandBuffer.encode_wait_for_event",
+    "notes": ""
+  },
+  {
+    "rust": "CommandBuffer.add_completed_handler",
+    "silk": "core.CommandBuffer.add_completed_handler",
+    "notes": "Callback/context must remain valid until invocation. Called by Metal on an arbitrary thread; do not unwind or suspend."
+  },
+  {
+    "rust": "CommandBuffer.add_scheduled_handler",
+    "silk": "core.CommandBuffer.add_scheduled_handler",
+    "notes": "Callback/context must remain valid until invocation. Called by Metal on an arbitrary thread; do not unwind or suspend."
+  },
+  {
+    "rust": "Fence.label",
+    "silk": "core.Fence.label",
+    "notes": ""
+  },
+  {
+    "rust": "Fence.set_label",
+    "silk": "core.Fence.set_label",
+    "notes": ""
+  },
+  {
+    "rust": "Fence.device",
+    "silk": "core.Fence.device",
+    "notes": ""
+  },
+  {
+    "rust": "Event.device",
+    "silk": "core.Event.device",
+    "notes": ""
+  },
+  {
+    "rust": "MetalLayer.device",
+    "silk": "core.MetalLayer.device",
+    "notes": ""
+  },
+  {
+    "rust": "MetalLayer.set_device",
+    "silk": "core.MetalLayer.set_device",
+    "notes": ""
+  },
+  {
+    "rust": "MetalLayer.new",
+    "silk": "core.MetalLayer.new",
+    "notes": "Owned +1 result."
+  },
+  {
+    "rust": "MetalLayer.pixel_format",
+    "silk": "core.MetalLayer.pixel_format",
+    "notes": ""
+  },
+  {
+    "rust": "MetalLayer.set_pixel_format",
+    "silk": "core.MetalLayer.set_pixel_format",
+    "notes": ""
+  },
+  {
+    "rust": "MetalLayer.presents_with_transaction",
+    "silk": "core.MetalLayer.presents_with_transaction",
+    "notes": ""
+  },
+  {
+    "rust": "MetalLayer.set_presents_with_transaction",
+    "silk": "core.MetalLayer.set_presents_with_transaction",
+    "notes": ""
+  },
+  {
+    "rust": "MetalLayer.display_sync_enabled",
+    "silk": "core.MetalLayer.display_sync_enabled",
+    "notes": ""
+  },
+  {
+    "rust": "MetalLayer.set_display_sync_enabled",
+    "silk": "core.MetalLayer.set_display_sync_enabled",
+    "notes": ""
+  },
+  {
+    "rust": "MetalLayer.maximum_drawable_count",
+    "silk": "core.MetalLayer.maximum_drawable_count",
+    "notes": ""
+  },
+  {
+    "rust": "MetalLayer.set_maximum_drawable_count",
+    "silk": "core.MetalLayer.set_maximum_drawable_count",
+    "notes": ""
+  },
+  {
+    "rust": "MetalLayer.contents_scale",
+    "silk": "core.MetalLayer.contents_scale",
+    "notes": ""
+  },
+  {
+    "rust": "MetalLayer.set_contents_scale",
+    "silk": "core.MetalLayer.set_contents_scale",
+    "notes": ""
+  },
+  {
+    "rust": "MetalLayer.framebuffer_only",
+    "silk": "core.MetalLayer.framebuffer_only",
+    "notes": ""
+  },
+  {
+    "rust": "MetalLayer.set_framebuffer_only",
+    "silk": "core.MetalLayer.set_framebuffer_only",
+    "notes": ""
+  },
+  {
+    "rust": "MetalLayer.wants_extended_dynamic_range_content",
+    "silk": "core.MetalLayer.wants_extended_dynamic_range_content",
+    "notes": ""
+  },
+  {
+    "rust": "MetalLayer.set_wants_extended_dynamic_range_content",
+    "silk": "core.MetalLayer.set_wants_extended_dynamic_range_content",
+    "notes": ""
+  },
+  {
+    "rust": "MetalLayer.is_opaque",
+    "silk": "core.MetalLayer.is_opaque",
+    "notes": ""
+  },
+  {
+    "rust": "MetalLayer.set_opaque",
+    "silk": "core.MetalLayer.set_opaque",
+    "notes": ""
+  },
+  {
+    "rust": "MetalLayer.drawable_size",
+    "silk": "core.MetalLayer.drawable_size",
+    "notes": "Returns the drawable dimensions by value."
+  },
+  {
+    "rust": "MetalLayer.set_drawable_size",
+    "silk": "core.MetalLayer.set_drawable_size",
+    "notes": "Copies the drawable dimensions by value."
+  },
+  {
+    "rust": "MetalLayer.set_edge_antialiasing_mask",
+    "silk": "core.MetalLayer.set_edge_antialiasing_mask",
+    "notes": ""
+  },
+  {
+    "rust": "MetalLayer.set_masks_to_bounds",
+    "silk": "core.MetalLayer.set_masks_to_bounds",
+    "notes": ""
+  },
+  {
+    "rust": "MetalLayer.remove_all_animations",
+    "silk": "core.MetalLayer.remove_all_animations",
+    "notes": ""
+  },
+  {
+    "rust": "MetalLayer.next_drawable",
+    "silk": "core.MetalLayer.next_drawable",
+    "notes": "Nullable borrowed drawable; nil is a normal timeout/unavailable result."
+  },
+  {
+    "rust": "Drawable.add_presented_handler",
+    "silk": "core.Drawable.add_presented_handler",
+    "notes": "Callback/context must remain valid until invocation. Called by Metal on an arbitrary thread; do not unwind or suspend."
+  },
+  {
+    "rust": "Drawable.present",
+    "silk": "core.Drawable.present",
+    "notes": ""
+  },
+  {
+    "rust": "Drawable.drawable_id",
+    "silk": "core.Drawable.drawable_id",
+    "notes": ""
+  },
+  {
+    "rust": "Drawable.presented_time",
+    "silk": "core.Drawable.presented_time",
+    "notes": ""
+  },
+  {
+    "rust": "MetalDrawable.texture",
+    "silk": "core.MetalDrawable.texture",
+    "notes": ""
+  },
+  {
+    "rust": "SharedEvent.signaled_value",
+    "silk": "core.SharedEvent.signaled_value",
+    "notes": ""
+  },
+  {
+    "rust": "SharedEvent.set_signaled_value",
+    "silk": "core.SharedEvent.set_signaled_value",
+    "notes": ""
+  },
+  {
+    "rust": "SharedEvent.notify",
+    "silk": "core.SharedEvent.notify",
+    "notes": "Context must outlive notification. Callback runs on listener queue; no unwind/suspension."
+  },
+  {
+    "rust": "SharedEventListener.from_queue_handle",
+    "silk": "core.SharedEventListener.from_queue_handle",
+    "notes": "Owned +1 result; queue is a dispatch_queue_t."
+  },
+  {
+    "rust": "SharedEventListener.from_queue",
+    "silk": "core.SharedEventListener.from_queue",
+    "notes": "Owned +1 result; queue is a dispatch_queue_t."
+  },
+  {
+    "rust": "CaptureScope.begin_scope",
+    "silk": "core.CaptureScope.begin_scope",
+    "notes": ""
+  },
+  {
+    "rust": "CaptureScope.end_scope",
+    "silk": "core.CaptureScope.end_scope",
+    "notes": ""
+  },
+  {
+    "rust": "CaptureScope.label",
+    "silk": "core.CaptureScope.label",
+    "notes": ""
+  },
+  {
+    "rust": "CaptureManager.shared",
+    "silk": "core.CaptureManager.shared",
+    "notes": ""
+  },
+  {
+    "rust": "CaptureManager.new_capture_scope_with_device",
+    "silk": "core.CaptureManager.new_capture_scope_with_device",
+    "notes": "Owned +1 scope."
+  },
+  {
+    "rust": "CaptureManager.new_capture_scope_with_command_queue",
+    "silk": "core.CaptureManager.new_capture_scope_with_command_queue",
+    "notes": "Owned +1 scope."
+  },
+  {
+    "rust": "CaptureManager.default_capture_scope",
+    "silk": "core.CaptureManager.default_capture_scope",
+    "notes": ""
+  },
+  {
+    "rust": "CaptureManager.set_default_capture_scope",
+    "silk": "core.CaptureManager.set_default_capture_scope",
+    "notes": ""
+  },
+  {
+    "rust": "CaptureManager.start_capture",
+    "silk": "core.CaptureManager.start_capture",
+    "notes": "NSError output is borrowed. Metal capture must be enabled before starting."
+  },
+  {
+    "rust": "CaptureManager.start_capture_with_device",
+    "silk": "core.CaptureManager.start_capture_with_device",
+    "notes": ""
+  },
+  {
+    "rust": "CaptureManager.start_capture_with_command_queue",
+    "silk": "core.CaptureManager.start_capture_with_command_queue",
+    "notes": ""
+  },
+  {
+    "rust": "CaptureManager.start_capture_with_scope",
+    "silk": "core.CaptureManager.start_capture_with_scope",
+    "notes": ""
+  },
+  {
+    "rust": "CaptureManager.stop_capture",
+    "silk": "core.CaptureManager.stop_capture",
+    "notes": ""
+  },
+  {
+    "rust": "CaptureManager.is_capturing",
+    "silk": "core.CaptureManager.is_capturing",
+    "notes": ""
+  },
+  {
+    "rust": "CaptureManager.supports_destination",
+    "silk": "core.CaptureManager.supports_destination",
+    "notes": ""
+  },
+  {
+    "rust": "CaptureDescriptor.new",
+    "silk": "core.CaptureDescriptor.new",
+    "notes": "Owned +1 descriptor."
+  },
+  {
+    "rust": "CaptureDescriptor.set_capture_device",
+    "silk": "core.CaptureDescriptor.set_capture_device",
+    "notes": ""
+  },
+  {
+    "rust": "CaptureDescriptor.set_capture_scope",
+    "silk": "core.CaptureDescriptor.set_capture_scope",
+    "notes": ""
+  },
+  {
+    "rust": "CaptureDescriptor.set_capture_command_queue",
+    "silk": "core.CaptureDescriptor.set_capture_command_queue",
+    "notes": ""
+  },
+  {
+    "rust": "CaptureDescriptor.output_url",
+    "silk": "core.CaptureDescriptor.output_url",
+    "notes": ""
+  },
+  {
+    "rust": "CaptureDescriptor.set_output_url",
+    "silk": "core.CaptureDescriptor.set_output_url",
+    "notes": ""
+  },
+  {
+    "rust": "CaptureDescriptor.destination",
+    "silk": "core.CaptureDescriptor.destination",
+    "notes": ""
+  },
+  {
+    "rust": "CaptureDescriptor.set_destination",
+    "silk": "core.CaptureDescriptor.set_destination",
+    "notes": ""
+  },
+  {
+    "rust": "URL.new_with_string",
+    "silk": "core.URL.new_with_string",
+    "notes": "Owned +1 URL; malformed input may return nil."
+  },
+  {
+    "rust": "URL.absolute_string",
+    "silk": "core.URL.absolute_string",
+    "notes": ""
+  },
+  {
+    "rust": "URL.path",
+    "silk": "core.URL.path",
+    "notes": ""
+  },
+  {
+    "rust": "Array.from_slice",
+    "silk": "core.Array.from_slice",
+    "notes": "Autoreleased array retains its elements; caller retains ownership of input objects."
+  },
+  {
+    "rust": "Array.from_owned_slice",
+    "silk": "core.Array.from_owned_slice",
+    "notes": "Autoreleased array retains its elements; caller retains ownership of input objects."
+  },
+  {
+    "rust": "Array.count",
+    "silk": "core.Array.count",
+    "notes": ""
+  },
+  {
+    "rust": "Array.object_at",
+    "silk": "core.Array.object_at",
+    "notes": "Borrowed element; index must be less than count."
+  },
+  {
+    "rust": "NsObject.conforms_to_protocol",
+    "silk": "core.NsObject.conforms_to_protocol",
+    "notes": "Returns 0=false, 1=true, 2=unknown protocol (upstream error)."
+  }
+]

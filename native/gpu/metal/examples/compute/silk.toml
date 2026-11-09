@@ -1,0 +1,9 @@
+[package]
+name = "gpu-metal-examples-compute"
+version = "0.1.0"
+silk-version = "0.1.0-dev.61+91f335268900"
+source = "src"
+main = "main.silk"
+
+[dependencies]
+metal = { path = "../..", package = "gpu-metal" }

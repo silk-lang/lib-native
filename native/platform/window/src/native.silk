@@ -1,0 +1,50 @@
+//! The backend for the compilation target.
+//!
+//! - macOS: `macos.MacPlatform` (AppKit).
+//! - Windows, Linux and the browser (wasm32 outside WASI): `bridge.BridgePlatform`, over the
+//!   Win32, Wayland or X11, and canvas libraries in native/ and browser/.
+//! - Anything else: `headless.HeadlessPlatform`, which opens no real windows.
+//!
+//! [`Waker`] ends a `nextEvent` wait from another thread.
+import bridge_sys
+import macos_sys
+import silk.core.ownership { Copy }
+import silk.concurrency.thread { Transferable }
+
+static if Intrinsic.targetOperatingSystem() == "darwin" {
+  import macos { MacPlatform }
+  pub type NativePlatform = MacPlatform
+} else {
+  static if Intrinsic.targetOperatingSystem() == "windows"
+    || Intrinsic.targetOperatingSystem() == "linux"
+    || Intrinsic.targetArchitecture() == "wasm32" && Intrinsic.targetOperatingSystem() != "wasi" {
+    import bridge { BridgePlatform }
+    pub type NativePlatform = BridgePlatform
+  } else {
+    import headless { HeadlessPlatform }
+    pub type NativePlatform = HeadlessPlatform
+  }
+}
+
+/// Wakes the thread that waits in `NativePlatform.nextEvent`, from any thread: the wait ends
+/// soon, with or without an event. A copy can go to other threads; it does nothing on a
+/// backend without threads (the browser, headless).
+pub struct Waker {}
+
+impl Copy for Waker {}
+
+impl Transferable for Waker {}
+
+impl Waker {
+  pub fn make() -> Waker {
+    return Waker {}
+  }
+
+  pub fn wake(self: &Self) -> () {
+    static if Intrinsic.targetOperatingSystem() == "darwin" {
+      unsafe macos_sys.silk_macos_wake()
+    } else {
+      unsafe bridge_sys.silk_window_wake()
+    }
+  }
+}

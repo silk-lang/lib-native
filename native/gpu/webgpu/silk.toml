@@ -1,0 +1,10 @@
+[package]
+name = "gpu-webgpu"
+description = "WebGPU through Dawn natively and navigator.gpu in browsers, with one API"
+version = "0.1.0"
+silk-version = "0.1.0-dev.61+91f335268900"
+kind = "library"
+exports = ["runtime", "resources", "descriptors", "surface", "diagnostics", "capabilities", "host_memory"]
+
+[dependencies]
+webgpu_sys = { path = "sys", package = "gpu-webgpu-sys" }

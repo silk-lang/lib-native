@@ -1,0 +1,9 @@
+[package]
+name = "gpu-webgpu-tests-native"
+version = "0.1.0"
+silk-version = "0.1.0-dev.61+91f335268900"
+
+[dependencies]
+webgpu_sys = { path = "../../sys", package = "gpu-webgpu-sys" }
+webgpu = { path = "../..", package = "gpu-webgpu" }
+

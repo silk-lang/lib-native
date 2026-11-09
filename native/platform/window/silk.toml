@@ -1,0 +1,55 @@
+[package]
+name = "platform-window"
+description = "Native windows, input, IME, menus, dialogs and display-paced frames"
+version = "0.1.0"
+silk-version = "0.1.0-dev.61+91f335268900"
+kind = "library"
+exports = ["lib", "types", "event", "keys", "menu", "platform", "headless", "accessibility", "macos", "native", "bridge", "bridge_sys"]
+
+# The native bridges reach every executable that depends on this package. macOS compiles the
+# AppKit bridge (NSView.displayLink(target:selector:) needs macOS 14). Linux compiles the X11 and
+# Wayland bridge, which needs the libX11, libxkbcommon and libwayland development packages; the
+# Wayland protocol glue in native/linux/protocols is committed (see [[generate]] below). The Win32
+# bridge needs the Windows SDK, which Silk does not pass to Clang, so scripts/prepare-windows.ps1
+# builds it and names it as the `win32-bridge` archive's override.
+[native]
+sources = [
+  { c = "native/linux/protocols/*.c", flags = ["-std=c11", "-O2"], os = "linux" },
+  { c = ["native/common/core.c", "native/linux/*.c"], include = ["native/linux/protocols"], flags = ["-std=c11", "-O2", "-Wall", "-Wextra", "-Werror", "-Wno-unused-parameter", "-Wno-missing-field-initializers"], os = "linux" },
+  { objc = "native/macos/bridge.m", flags = ["-fobjc-arc", "-fblocks", "-O2", "-Wall", "-Wextra", "-Werror", "-Wno-unused-parameter", "-Wno-deprecated-declarations", "-mmacosx-version-min=14.0"], os = "macos" },
+]
+link = [
+  { framework = "Cocoa", os = "macos" },
+  { framework = "QuartzCore", os = "macos" },
+  { framework = "UniformTypeIdentifiers", os = "macos" },
+  { library = "X11", mode = "dynamic", os = "linux" },
+  { library = "xkbcommon", mode = "dynamic", os = "linux" },
+  { library = "wayland-client", mode = "dynamic", os = "linux" },
+  { library = "wayland-cursor", mode = "dynamic", os = "linux" },
+  { static-archive = "win32-bridge:silkwindow.lib", os = "windows" },
+  { library = "user32", mode = "dynamic", os = "windows" },
+  { library = "gdi32", mode = "dynamic", os = "windows" },
+  { library = "imm32", mode = "dynamic", os = "windows" },
+  { library = "dwmapi", mode = "dynamic", os = "windows" },
+  { library = "shell32", mode = "dynamic", os = "windows" },
+  { library = "comdlg32", mode = "dynamic", os = "windows" },
+  { library = "ole32", mode = "dynamic", os = "windows" },
+  { library = "uxtheme", mode = "dynamic", os = "windows" },
+  { library = "uuid", mode = "dynamic", os = "windows" },
+  { library = "advapi32", mode = "dynamic", os = "windows" },
+  # A `library` entry for these does not reach the Windows linker, so the override carries them.
+  { static-archive = "win32-bridge:kernel32.lib", os = "windows" },
+  { static-archive = "win32-bridge:ucrt.lib", os = "windows" },
+  { static-archive = "win32-bridge:vcruntime.lib", os = "windows" },
+]
+
+# The Wayland protocol glue, from wayland-scanner and wayland-protocols.
+[[generate]]
+run = ["scripts/generate-wayland"]
+outputs = ["native/linux/protocols/*"]
+
+# Built on the machine by scripts/prepare-windows.ps1 and always supplied as an override, never
+# downloaded: the URL only names what to run when the override is missing.
+[native.archive.win32-bridge]
+url = "file:///run-lib-native-scripts-prepare-windows.ps1"
+sha256 = "0000000000000000000000000000000000000000000000000000000000000000"

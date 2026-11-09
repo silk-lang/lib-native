@@ -1,0 +1,8 @@
+//! Native windows, input, and frame pacing for Silk UIs. See the README for the model.
+//!
+//! - `platform`: the `Platform` interface every backend implements.
+//! - `event`, `keys`: what `Platform.nextEvent` delivers.
+//! - `types`: window options, waiting, cursors, IME state, raw surface handles, errors.
+//! - `menu`: menu bars and file dialogs.
+//! - `native`: `NativePlatform`, the backend for the compilation target.
+//! - `macos`: the AppKit backend. `headless`: a backend without a display, for tests.
