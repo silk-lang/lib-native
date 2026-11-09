@@ -47,7 +47,7 @@ function Invoke-Native([string] $Program, [string[]] $Arguments) {
 }
 
 function Resolve-Tool([string] $Name) {
-    $Command = Get-Command $Name -CommandType Application -ErrorAction Stop
+    $Command = Get-Command $Name -CommandType Application -ErrorAction Stop | Select-Object -First 1
     return $Command.Source
 }
 
