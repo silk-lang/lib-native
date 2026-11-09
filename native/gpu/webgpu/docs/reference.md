@@ -49,11 +49,11 @@ Builds take Dawn from `sys/silk.toml`'s pinned `dawn` archive, which Silk fetche
 `$SILK_HOME/archives` (default `~/.silk/archives`). Windows preparation is the root
 `scripts/prepare-windows.ps1`; stage its runtime DLLs with `-RuntimeDirectory`.
 
-- `install-silk` pins **0.1.0-dev.61+91f335268900**, verifies the release archive and `native-seed.json`, then checks the extracted `bin/silkc` checksum against the native seed on every invocation (a target missing from the seed relies on the archive checksum; dev.45 and dev.46 published one for x86-64 Linux only). It prints the compiler's **bin directory**.
+- `install-silk` pins **0.1.0-dev.63+657e3c900f65**, verifies the release archive and `native-seed.json`, then checks the extracted `bin/silkc` checksum against the native seed on every invocation (a target missing from the seed relies on the archive checksum; dev.45 and dev.46 published one for x86-64 Linux only). It prints the compiler's **bin directory**.
 - `install-webgpu` pins Dawn's Release archives and prints the **installation root**. macOS has `lib/libwebgpu_dawn.a`; Linux has `lib64/libwebgpu_dawn.a`; Windows has `lib/webgpu_dawn.lib`.
 - `install-llvm` accepts a working absolute `SILK_CLANG` pointing to LLVM 22, or discovers Homebrew LLVM / `clang-22`; otherwise it downloads checksum-pinned **LLVM 22.1.8**. It prints the **absolute clang executable path**. Published LLVM archives are large (Linux x86_64: 1,938,859,476 bytes); preinstall LLVM 22 for a short cold gate. The full downloaded distribution includes resource headers and `wasm-ld`; a supplied system toolchain must also provide `wasm-ld` for browser builds.
 
-| Native host | Silk dev.61 release | Dawn release | Current prerequisite |
+| Native host | Silk dev.63 release | Dawn release | Current prerequisite |
 | --- | --- | --- | --- |
 | macOS arm64 | Available | Available | macOS 26+, LLVM 22 and Apple SDK |
 | macOS x86_64 | Available | Available | LLVM 22 and Apple SDK; native runtime not verified here |

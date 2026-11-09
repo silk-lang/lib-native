@@ -2,7 +2,7 @@
 name = "platform-window"
 description = "Native windows, input, IME, menus, dialogs and display-paced frames"
 version = "0.1.0"
-silk-version = "0.1.0-dev.61+91f335268900"
+silk-version = "0.1.0-dev.63+657e3c900f65"
 kind = "library"
 exports = ["lib", "types", "event", "keys", "menu", "platform", "headless", "accessibility", "macos", "native", "bridge", "bridge_sys"]
 

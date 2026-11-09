@@ -14,7 +14,7 @@ From `native/gpu/metal`, with:
 
 - Apple Silicon macOS with a Metal device.
 - Xcode/macOS SDK 15.4 or newer for the complete declaration surface.
-- Silk `0.1.0-dev.61+91f335268900`, as pinned by the workspace.
+- Silk `0.1.0-dev.63+657e3c900f65`, as pinned by the workspace.
 - LLVM 22 clang (`SILK_CLANG`). The build compiles the Objective-C bridge in `native/` with it,
   as `[native].sources` in `silk.toml`.
 - Python 3.9+ only for inventory checks or regeneration.

@@ -3,7 +3,7 @@
 Standalone native GPU and window libraries for [Silk](https://github.com/silk-lang/silk).
 Extracted from `silk-lang/nonstd` commit
 `7d6c3693a9ad1fec24127985626ab4224f9f1995`; package names and source layout are retained.
-The compiler pin is **0.1.0-dev.61+91f335268900** (`toolchains.lock.json`).
+The compiler pin is **0.1.0-dev.63+657e3c900f65** (`toolchains.lock.json`).
 
 ## Products and internal support
 

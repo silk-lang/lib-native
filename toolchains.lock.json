@@ -1,36 +1,36 @@
 {
   "silk": {
-    "version": "0.1.0-dev.61+91f335268900",
+    "version": "0.1.0-dev.63+657e3c900f65",
     "platforms": {
       "aarch64-apple-darwin": {
-        "url": "https://github.com/silk-lang/silk/releases/download/v0.1.0-dev.61%2B91f335268900/silk-0.1.0-dev.61%2B91f335268900-aarch64-apple-darwin.tar.gz",
-        "sha256": "a896a923986f0585f4d73cbdb320d5fcf490368549f0df1d82cbfaef6760e319",
-        "bytes": 14117187
+        "url": "https://github.com/silk-lang/silk/releases/download/v0.1.0-dev.63%2B657e3c900f65/silk-0.1.0-dev.63%2B657e3c900f65-aarch64-apple-darwin.tar.gz",
+        "sha256": "6d4c16b29dfa981a02ff28953e912bfad4bec02e7257a1d38ecf0dad8a91b951",
+        "bytes": 14301034
       },
       "aarch64-unknown-linux-gnu": {
-        "url": "https://github.com/silk-lang/silk/releases/download/v0.1.0-dev.61%2B91f335268900/silk-0.1.0-dev.61%2B91f335268900-aarch64-unknown-linux-gnu.tar.gz",
-        "sha256": "427597983ad53932d572862d8492776782fd8edb01f748114342e5596f4735c4",
-        "bytes": 14225353
+        "url": "https://github.com/silk-lang/silk/releases/download/v0.1.0-dev.63%2B657e3c900f65/silk-0.1.0-dev.63%2B657e3c900f65-aarch64-unknown-linux-gnu.tar.gz",
+        "sha256": "3fb4ac6412ab33780706bf7d8148a5734e94387ebcda11db621b33fcfff6d249",
+        "bytes": 14406942
       },
       "x86_64-apple-darwin": {
-        "url": "https://github.com/silk-lang/silk/releases/download/v0.1.0-dev.61%2B91f335268900/silk-0.1.0-dev.61%2B91f335268900-x86_64-apple-darwin.tar.gz",
-        "sha256": "c0364ba6787c6bf1179fefb0cd87c26b356b2e4813602eba8ca4f85229360e9f",
-        "bytes": 13744261
+        "url": "https://github.com/silk-lang/silk/releases/download/v0.1.0-dev.63%2B657e3c900f65/silk-0.1.0-dev.63%2B657e3c900f65-x86_64-apple-darwin.tar.gz",
+        "sha256": "1bb81f8adf85ea8b69708dbddfe26dc0c42f52918ab651899335e56057a328f7",
+        "bytes": 13884210
       },
       "x86_64-pc-windows-msvc": {
-        "url": "https://github.com/silk-lang/silk/releases/download/v0.1.0-dev.61%2B91f335268900/silk-0.1.0-dev.61%2B91f335268900-x86_64-pc-windows-msvc.zip",
-        "sha256": "480d99eec43add17c1092dfa32bac56f97b58a13c665d29a1168181b2e1a681e",
-        "bytes": 13822625
+        "url": "https://github.com/silk-lang/silk/releases/download/v0.1.0-dev.63%2B657e3c900f65/silk-0.1.0-dev.63%2B657e3c900f65-x86_64-pc-windows-msvc.zip",
+        "sha256": "68d690efdb7d5d7f17209e21483e9c78c5f3849ea803331c1760fa06c235e030",
+        "bytes": 13936393
       },
       "x86_64-unknown-linux-gnu": {
-        "url": "https://github.com/silk-lang/silk/releases/download/v0.1.0-dev.61%2B91f335268900/silk-0.1.0-dev.61%2B91f335268900-x86_64-unknown-linux-gnu.tar.gz",
-        "sha256": "bd5a1bf5ab9ba84b958d163143c343fb6f673e75597c9ea8bd4153b27f3b62ec",
-        "bytes": 13125534
+        "url": "https://github.com/silk-lang/silk/releases/download/v0.1.0-dev.63%2B657e3c900f65/silk-0.1.0-dev.63%2B657e3c900f65-x86_64-unknown-linux-gnu.tar.gz",
+        "sha256": "ffdf5dfc9e038d371eeba0cdd4101a78bdd34bdc841d3cff63436c8d86bc55a8",
+        "bytes": 13305044
       }
     },
     "native_seed": {
-      "url": "https://github.com/silk-lang/silk/releases/download/v0.1.0-dev.61%2B91f335268900/native-seed.json",
-      "sha256": "a99841662b384f8c6c6081579025cbf8b80ee10e583facca888007517df771c8",
+      "url": "https://github.com/silk-lang/silk/releases/download/v0.1.0-dev.63%2B657e3c900f65/native-seed.json",
+      "sha256": "34acc3fc1c5ad77eee00b3cd4d1773aee346e7270d3320220dba1ee8171cbd8a",
       "bytes": 1961
     }
   },
