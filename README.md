@@ -54,8 +54,8 @@ silkc build --manifest-path native/gpu/webgpu/examples/silk.toml --target wasm32
   `-RuntimeDirectory <executable-directory>` to stage Dawn, DXC and GLFW runtime DLLs
   beside an executable; keep those DLLs with distributed programs. This preparation
   exists because the pinned toolchain's native SDK/archive integration needs it.
-  Preparation selects the first matching tool on `PATH` and preserves unrelated
-  entries in `$SILK_HOME/native-overrides.toml`, including other repositories' archives.
+  Preparation is repeatable, selects the first matching tool on `PATH`, and preserves
+  unrelated entries in `$SILK_HOME/native-overrides.toml`, including other repositories' archives.
 - **Browser:** LLVM's `wasm-ld`, an actual WebGPU-capable browser and a secure context
   (HTTPS or localhost). The window host's suspending interface requires JSPI;
   a non-JSPI application must explicitly poll rather than block.

@@ -246,7 +246,8 @@ $PendingOverrides = "$Overrides.$([Guid]::NewGuid().ToString('N')).tmp"
 try {
     [IO.File]::WriteAllText($PendingOverrides, $Text, $Utf8)
     if (Test-Path -LiteralPath $Overrides) {
-        [IO.File]::Replace($PendingOverrides, $Overrides, $null)
+        # PowerShell converts $null to an empty string for this .NET parameter.
+        [IO.File]::Replace($PendingOverrides, $Overrides, [NullString]::Value)
     } else {
         [IO.File]::Move($PendingOverrides, $Overrides)
     }
