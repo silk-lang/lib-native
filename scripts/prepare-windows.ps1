@@ -13,7 +13,7 @@ configuration (including SQLite) is retained. No compiler or SDK is installed.
 .EXAMPLE
 .\scripts\prepare-windows.ps1
 .EXAMPLE
-silk build --manifest-path native/gpu/webgpu/tests/native/silk.toml
+silk build --manifest-path modules/gpu/webgpu/tests/native/silk.toml
 .\scripts\prepare-windows.ps1 -RuntimeDirectory C:\path\to\executable-directory
 Copies nonstd_dawn.dll, dxcompiler.dll, dxil.dll and glfw3.dll beside the executable.
 The selected MSVC toolset's x64 VC runtime must also be installed on the run host.
@@ -35,7 +35,7 @@ if ($env:VSCMD_ARG_TGT_ARCH -ne 'x64' -or -not $env:INCLUDE -or -not $env:LIB) {
 }
 
 $Repo = Split-Path -Parent $PSScriptRoot
-$Webgpu = Join-Path $Repo 'native/gpu/webgpu'
+$Webgpu = Join-Path $Repo 'modules/gpu/webgpu'
 $Cache = Join-Path $Repo '.cache/windows'
 $Lock = Get-Content -LiteralPath (Join-Path $Repo 'toolchains.lock.json') -Raw | ConvertFrom-Json
 $Utf8 = New-Object System.Text.UTF8Encoding($false)
@@ -189,7 +189,7 @@ foreach ($Source in @('common/core.c', 'windows/bridge.c')) {
     $Object = Join-Path $Bridge (([IO.Path]::GetFileNameWithoutExtension($Source)) + '.obj')
     Invoke-Native $Clang @('--target=x86_64-pc-windows-msvc', '-fms-runtime-lib=dll', '-std=c11', '-O2',
         '-Wall', '-Wextra', '-Werror', '-Wno-unused-parameter', '-Wno-missing-field-initializers',
-        '-D_CRT_SECURE_NO_WARNINGS', '-c', (Join-Path $Repo "native/platform/window/native/$Source"), '-o', $Object)
+        '-D_CRT_SECURE_NO_WARNINGS', '-c', (Join-Path $Repo "modules/platform/window/native/$Source"), '-o', $Object)
     $Objects += $Object
 }
 New-StaticArchive "$Bridge/silkwindow.lib" $Objects

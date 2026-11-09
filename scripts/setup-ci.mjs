@@ -10,7 +10,7 @@ import { spawnSync } from 'node:child_process';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const cache = join(root, '.cache', 'ci');
 const lock = JSON.parse(await readFile(join(root, 'toolchains.lock.json'), 'utf8'));
-const ci = JSON.parse(await readFile(join(root, 'native/gpu/webgpu/scripts/ci-lock.json'), 'utf8'));
+const ci = JSON.parse(await readFile(join(root, 'modules/gpu/webgpu/scripts/ci-lock.json'), 'utf8'));
 const options = new Set(process.argv.slice(2));
 for (const option of options) if (!['--browser', '--linux-gpu'].includes(option)) throw new Error(`Unknown option: ${option}`);
 const suffix = process.platform === 'win32' ? '.exe' : '';

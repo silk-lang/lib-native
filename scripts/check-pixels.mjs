@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { inflateSync } from 'node:zlib';
-const root = resolve(dirname(fileURLToPath(import.meta.url)), '../native/gpu/webgpu');
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '../modules/gpu/webgpu');
 const actual = process.argv[2];
 if (!actual || process.argv.length !== 3) throw new Error('Usage: node scripts/check-pixels.mjs RAW-OUTPUT-DIRECTORY');
 function png(bytes) {

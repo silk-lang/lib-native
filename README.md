@@ -2,17 +2,17 @@
 
 Standalone native GPU and window libraries for [Silk](https://github.com/silk-lang/silk).
 Extracted from `silk-lang/nonstd` commit
-`7d6c3693a9ad1fec24127985626ab4224f9f1995`; package names and source layout are retained.
+`7d6c3693a9ad1fec24127985626ab4224f9f1995`; package names are retained under the `modules/` root.
 The compiler pin is **0.1.0-dev.63+657e3c900f65** (`toolchains.lock.json`).
 
 ## Products and internal support
 
 | Path | Product |
 | --- | --- |
-| `native/gpu/webgpu` | `gpu-webgpu`: owned WebGPU API, Dawn natively and browser WebGPU |
-| `native/gpu/webgpu/sys` | `gpu-webgpu-sys`: pinned raw WebGPU C ABI |
-| `native/gpu/metal` | `gpu-metal`: direct Apple Metal bindings |
-| `native/platform/window` | `platform-window`: AppKit, Win32, Wayland/X11, browser canvas and headless windows |
+| `modules/gpu/webgpu` | `gpu-webgpu`: owned WebGPU API, Dawn natively and browser WebGPU |
+| `modules/gpu/webgpu/sys` | `gpu-webgpu-sys`: pinned raw WebGPU C ABI |
+| `modules/gpu/metal` | `gpu-metal`: direct Apple Metal bindings |
+| `modules/platform/window` | `platform-window`: AppKit, Win32, Wayland/X11, browser canvas and headless windows |
 
 The WebGPU and window `browser/` runtime files are **supported product payloads**, not
 build-tool implementation details. C/Objective-C bridges and generated declarations are
@@ -36,8 +36,8 @@ Generated inputs are committed; run `silk generate` only when intentionally refr
 
 ```sh
 silkc check --workspace
-silkc build --manifest-path native/gpu/webgpu/tests/native/silk.toml
-silkc build --manifest-path native/gpu/webgpu/examples/silk.toml --target wasm32-unknown-unknown
+silkc build --manifest-path modules/gpu/webgpu/tests/native/silk.toml
+silkc build --manifest-path modules/gpu/webgpu/examples/silk.toml --target wasm32-unknown-unknown
 ```
 
 - **macOS arm64:** macOS 26+ for the pinned Dawn binary, Apple SDK/Command Line Tools,
@@ -61,33 +61,33 @@ silkc build --manifest-path native/gpu/webgpu/examples/silk.toml --target wasm32
   a non-JSPI application must explicitly poll rather than block.
 
 Archive availability is not a claim of tested runtime support on every architecture.
-See the package [WebGPU prerequisites](native/gpu/webgpu/docs/reference.md#toolchain-and-platform-prerequisites).
+See the package [WebGPU prerequisites](modules/gpu/webgpu/docs/reference.md#toolchain-and-platform-prerequisites).
 
 ## Browser artifact contract
 
 Consume these files from the **same exact lib-native Git revision as the Silk dependency**:
 
-- `native/gpu/webgpu/browser/host.ts` and `generated_schema.ts`, retaining their relative
+- `modules/gpu/webgpu/browser/host.ts` and `generated_schema.ts`, retaining their relative
   paths. They are browser-loadable ECMAScript despite the `.ts` extension: serve with a
   JavaScript MIME type, or bundle them together. `runner.ts` and `canvas-test.ts` are
   sample/test drivers, not required application hosts.
-- `native/gpu/webgpu/browser/generated_webgpu_exports.silk` is the root-application
+- `modules/gpu/webgpu/browser/generated_webgpu_exports.silk` is the root-application
   forwarding template. Copy it into the consuming application's source tree and import
   that module from the application root. The root must depend on the packages under
   aliases `webgpu` and `webgpu_sys`. Dependency-only symbols are not exported from wasm.
-- `native/platform/window/browser/window-host.js`, `imports.js` and `keys.js`, retaining
+- `modules/platform/window/browser/window-host.js`, `imports.js` and `keys.js`, retaining
   their relative imports, provide the browser window/input host.
 
 The WebGPU module forwards ten `webgpu_callback_*` entrypoints plus `webgpu_alloc` and
 `webgpu_free`. Enter wasm through `WebGPUHost.call`; promises enqueue results, and only
 explicit pumping invokes callbacks. Keep callback userdata pinned until completion or
 cancellation; no outstanding loans may survive a pump. See the
-[browser ABI](native/gpu/webgpu/docs/reference.md#browser-embedding-abi).
+[browser ABI](modules/gpu/webgpu/docs/reference.md#browser-embedding-abi).
 
 Consumers can resolve their pinned checkout at `$SILK_HOME/git/<revision>` (default
 `~/.silk/git/<revision>`) after `silkc build` or `silkc check` has fetched the dependency.
 Copying the checked-in template needs neither Python nor schema regeneration.
-For intentional maintenance, `python3 native/gpu/webgpu/scripts/generate-browser
+For intentional maintenance, `python3 modules/gpu/webgpu/scripts/generate-browser
 --exports-output /absolute/consumer/src/generated_webgpu_exports.silk` explicitly writes
 one additional consumer file; `--check` compares without writing. With no destination,
 this generator touches only native-owned outputs. `embed-shaders` likewise only embeds
@@ -98,17 +98,17 @@ the native sample shaders, never graphics or UI siblings.
 From the repository root, with the native prerequisites installed:
 
 ```sh
-(cd native/platform/window && silkc test --root src/tests.silk)
-silkc run --manifest-path native/gpu/webgpu/sys/abi/silk.toml
-silkc run --manifest-path native/gpu/webgpu/tests/native/silk.toml
+(cd modules/platform/window && silkc test --root src/tests.silk)
+silkc run --manifest-path modules/gpu/webgpu/sys/abi/silk.toml
+silkc run --manifest-path modules/gpu/webgpu/tests/native/silk.toml
 # macOS:
-silkc run --manifest-path native/gpu/metal/examples/compute/silk.toml
-silkc run --manifest-path native/gpu/metal/examples/headless-render/silk.toml
-silkc run --manifest-path native/platform/window/tests/macos/silk.toml
+silkc run --manifest-path modules/gpu/metal/examples/compute/silk.toml
+silkc run --manifest-path modules/gpu/metal/examples/headless-render/silk.toml
+silkc run --manifest-path modules/platform/window/tests/macos/silk.toml
 # Linux, with a display:
-silkc run --manifest-path native/platform/window/tests/linux/silk.toml
+silkc run --manifest-path modules/platform/window/tests/linux/silk.toml
 # Windows, after runtime DLL staging:
-silkc run --manifest-path native/platform/window/tests/windows/silk.toml
+silkc run --manifest-path modules/platform/window/tests/windows/silk.toml
 ```
 
 The [native workflow](.github/workflows/native.yml) invokes Silk directly. It checks the

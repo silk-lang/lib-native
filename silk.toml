@@ -1,20 +1,20 @@
 [workspace]
 members = [
-  "native/gpu/metal",
-  "native/gpu/metal/examples/compute",
-  "native/gpu/metal/examples/headless-render",
-  "native/gpu/webgpu",
-  "native/gpu/webgpu/bench",
-  "native/gpu/webgpu/examples",
-  "native/gpu/webgpu/sys",
-  "native/gpu/webgpu/sys/abi",
-  "native/gpu/webgpu/tests/native",
-  "native/platform/window",
-  "native/platform/window/examples/demo",
-  "native/platform/window/tests/browser",
-  "native/platform/window/tests/linux",
-  "native/platform/window/tests/macos",
-  "native/platform/window/tests/smoke",
-  "native/platform/window/tests/windows"
+  "modules/gpu/metal",
+  "modules/gpu/metal/examples/compute",
+  "modules/gpu/metal/examples/headless-render",
+  "modules/gpu/webgpu",
+  "modules/gpu/webgpu/bench",
+  "modules/gpu/webgpu/examples",
+  "modules/gpu/webgpu/sys",
+  "modules/gpu/webgpu/sys/abi",
+  "modules/gpu/webgpu/tests/native",
+  "modules/platform/window",
+  "modules/platform/window/examples/demo",
+  "modules/platform/window/tests/browser",
+  "modules/platform/window/tests/linux",
+  "modules/platform/window/tests/macos",
+  "modules/platform/window/tests/smoke",
+  "modules/platform/window/tests/windows"
 ]
 silk-version = "0.1.0-dev.63+657e3c900f65"
