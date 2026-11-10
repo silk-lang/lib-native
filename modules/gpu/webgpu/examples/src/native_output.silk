@@ -7,6 +7,7 @@ static if Intrinsic.targetArchitecture() != "wasm32" {
   import silk.system.host_input { HostInput, HostInputError }
   static if Intrinsic.targetOperatingSystem() == "windows" {
     import silk.platform.windows.host_input { WindowsHostInput }
+    import silk.collections.slice { Slice }
   } else {
     import silk.system.host_input_native { OsHostInput }
     import silk.platform.native.host_input { NativeHostInput }
@@ -35,7 +36,19 @@ static if Intrinsic.targetArchitecture() != "wasm32" {
     ? &mut Allocator {
     static if Intrinsic.targetOperatingSystem() == "windows" {
       let mut inputs = run WindowsHostInput.capture()
-      return run HostInput.workingDirectory() |> Effect.provideMut<HostInput>(&mut inputs)
+      let directory = run HostInput.workingDirectory() |> Effect.provideMut<HostInput>(&mut inputs)
+      // A launcher that passes an extended working directory (`\\?\C:\...`, as the standard
+      // library's Windows process image does) gives a name OsFileSystem rejects as a root.
+      let bytes = Bytes.asSlice(&directory)
+      if bytes.length > 4 && bytes[0] == 92 && bytes[1] == 92 && bytes[2] == 63 && bytes[3] == 92 {
+        if bytes.length > 8 && bytes[4] == 85 && bytes[5] == 78 && bytes[6] == 67 && bytes[7] == 92 {
+          let mut share = run Bytes.copy(b"\\\\")
+          run Bytes.append(&mut share, Slice.view(bytes, 8, bytes.length - 8))
+          return move share
+        }
+        return run Bytes.copy(Slice.view(bytes, 4, bytes.length - 4))
+      }
+      return move directory
     } else {
       let snapshot = run unsafe NativeHostInput.environmentSnapshot()
       let mut inputs = OsHostInput.make(move snapshot)
