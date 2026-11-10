@@ -57,7 +57,23 @@ pub effect fn env(name: string) -> String
 pub effect fn absolute(value: string) -> Path
   ! FileError | OutOfMemoryError ? &mut Allocator {
   static if Intrinsic.targetOperatingSystem() == "windows" {
-    if !String.startsWith(value, "/") { return run WindowsPath.fromNative(value) }
+    if !String.startsWith(value, "/") {
+      if String.startsWith(value, "\\\\?\\") { return run WindowsPath.fromNative(value) }
+      // The Visual Studio environment writes LIB entries such as `Windows Kits\10\\lib`; Win32
+      // reads repeated separators as one, so collapse them after a leading UNC `\\`.
+      let source = String.utf8Bytes(value)
+      let mut collapsed = Bytes.make()
+      let mut index: usize = 0
+      while index < source.length {
+        let byte = source[index]
+        let written = Bytes.asSlice(&collapsed)
+        let repeated = index >= 2 && (byte == 92 || byte == 47) && written.length > 0
+          && (written[written.length - 1] == 92 || written[written.length - 1] == 47)
+        if !repeated { run Bytes.append(&mut collapsed, &[byte]) }
+        index = index + 1
+      }
+      return run WindowsPath.fromNativeBytes(Bytes.asSlice(&collapsed))
+    }
   }
   let source = String.utf8Bytes(value)
   let path = run Path.root()
