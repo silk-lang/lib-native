@@ -205,6 +205,18 @@ pub fn target() -> string<'static> {
   }
 }
 
+// Whether `path` names something; a lookup the filesystem refuses (a PATH entry that is a file, an
+// unreadable directory) means it is not there, as for a shell.
+effect fn present(path: &Path) -> bool ! OutOfMemoryError ? &mut Allocator | &mut FileSystem {
+  return match move run Effect.result(FileSystem.exists(path)) {
+    Result<bool, FileError>.Success { value } => value
+    Result<bool, FileError>.Failure { error } => {
+      drop error
+      false
+    }
+  }
+}
+
 pub effect fn which(name: string) -> Option<Path>
   ! TaskError | FileError | HostInputError | OutOfMemoryError ? &mut HostInput | &mut Allocator | &mut FileSystem {
   if String.contains(name, "/") || String.contains(name, "\\") {
@@ -221,11 +233,11 @@ pub effect fn which(name: string) -> Option<Path>
       Option<Path>.None => { continue }
     }
     let candidate = run Path.join(&directory, name)
-    if run FileSystem.exists(&candidate) { return Option<Path>.some(move candidate) }
+    if run present(&candidate) { return Option<Path>.some(move candidate) }
     static if Intrinsic.targetOperatingSystem() == "windows" {
       let executable = run concat(&[name, ".exe"])
       let candidate = run Path.join(&directory, String.view(&executable))
-      if run FileSystem.exists(&candidate) { return Option<Path>.some(move candidate) }
+      if run present(&candidate) { return Option<Path>.some(move candidate) }
     }
   }
   return Option<Path>.none()

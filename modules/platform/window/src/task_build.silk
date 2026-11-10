@@ -2,6 +2,7 @@ import silk.cli.task { Task, TaskError }
 import silk.collections.bytes { Bytes }
 import silk.core.option { Option }
 import silk.core.effect { Effect }
+import silk.core.result { Result }
 import silk.io.writer { Writer, WriterError }
 import silk.io.writer_native { StderrWriter }
 import silk.mem.allocator { Allocator, OutOfMemoryError }
@@ -56,11 +57,23 @@ pub effect fn variable(name: string) -> String ! TaskError | ProcessError | File
     Option<Bytes>.None => run String.copy("")
   }
 }
+// Whether `path` names something; a lookup the filesystem refuses (a PATH entry that is a file, an
+// unreadable directory) means it is not there, as for a shell.
+effect fn present(path: &Path) -> bool ! OutOfMemoryError ? &mut Allocator | &mut FileSystem {
+  return match move run Effect.result(FileSystem.exists(path)) {
+    Result<bool, FileError>.Success { value } => value
+    Result<bool, FileError>.Failure { error } => {
+      drop error
+      false
+    }
+  }
+}
+
 pub effect fn which(name: string) -> Option<Path> ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
   ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
   if String.startsWith(name, "/") {
     let p = run Path.make(name)
-    return if run FileSystem.exists(&p) { Option<Path>.some(move p) } else { Option<Path>.none() }
+    return if run present(&p) { Option<Path>.some(move p) } else { Option<Path>.none() }
   }
   let search = run variable("PATH")
   let mut directories = String.split(String.view(&search), ":")
@@ -68,9 +81,11 @@ pub effect fn which(name: string) -> Option<Path> ! TaskError | ProcessError | F
     match move directories.next() {
       Option<string>.Some { value } => {
         if String.startsWith(value, "/") {
-          let directory = run Path.make(value)
-          let p = run Path.join(&directory, name)
-          if run FileSystem.exists(&p) { return Option<Path>.some(move p) }
+          let made = run Effect.result(Path.make(value))
+          if let Result<Path, FileError | OutOfMemoryError>.Success { value: directory } = move made {
+            let p = run Path.join(&directory, name)
+            if run present(&p) { return Option<Path>.some(move p) }
+          }
         }
       }
       Option<string>.None => { return Option<Path>.none() }
