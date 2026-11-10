@@ -71,7 +71,7 @@ effect fn runX11(program: string) -> () ! TaskError | ProcessError | FileError |
     run decimal(&mut lockText, number)
     run String.append(&mut lockText, "-lock")
     let lock = run Path.make(String.view(&lockText))
-    if !run FileSystem.exists(&socket) && !run FileSystem.exists(&lock) { break }
+    if !(run FileSystem.exists(&socket)) && !(run FileSystem.exists(&lock)) { break }
     number = number + 1
   }
   if number == 140 { run Task.abort("no free X11 display in :90 through :139") }
@@ -92,9 +92,9 @@ effect fn x11Child(program: string, display: string, socket: string) -> () ! Tas
   run Task.exec("env", &["-u", "WAYLAND_DISPLAY", String.view(&variable), "SILK_WINDOW_BACKEND=x11", "SILK_WINDOW_SCALE=1", "SILK_WINDOW_DIALOG=printf \"/tmp/%s-%s.svg\\n\" \"$1\" \"$2\"", "timeout", "--signal=KILL", "120", program])
 }
 effect fn decimal(out: &mut String, value: usize) -> () ! OutOfMemoryError ? &mut Allocator {
-  if value >= 10 { run decimal(out, value / 10) }
+  if value >= 10 { run decimal(&mut out, value / 10) }
   let digits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
-  run String.append(out, digits[value % 10])
+  run String.append(&mut out, digits[value % 10])
 }
 effect fn runWayland(program: string) -> () ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError | SubprocessError
   ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
@@ -167,14 +167,14 @@ pub effect fn smoke(program: string, backend: string) -> () ! TaskError | Proces
     match move result {
       Result<(), TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError | SubprocessError>.Success { .. } => ()
       Result<(), TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError | SubprocessError>.Failure { error } => match move error {
-        SubprocessError error => { drop error
+        SubprocessError failed => { drop failed
           run Task.abort("display subprocess failed") }
-        TaskError error => { fail move error }
-        ProcessError error => { fail move error }
-        FileError error => { fail move error }
-        HostInputError error => { fail move error }
-        OutOfMemoryError error => { fail move error }
-        WriterError error => { fail move error }
+        TaskError failed => { fail move failed }
+        ProcessError failed => { fail move failed }
+        FileError failed => { fail move failed }
+        HostInputError failed => { fail move failed }
+        OutOfMemoryError failed => { fail move failed }
+        WriterError failed => { fail move failed }
       }
     }
   } else { run Task.abort("the Linux smoke test requires Linux") }

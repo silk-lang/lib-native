@@ -49,6 +49,7 @@ jobs:
       - name: Bootstrap pinned Silk
         env:
           SILK_RELEASE: v0.1.0-dev.64+8214c402307b
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           curl --fail --location --output "$RUNNER_TEMP/install-silk.sh" https://raw.githubusercontent.com/silk-lang/silk/8214c402307b/install.sh
           sh "$RUNNER_TEMP/install-silk.sh"
@@ -93,6 +94,7 @@ jobs:
       - name: Bootstrap pinned Silk
         env:
           SILK_RELEASE: v0.1.0-dev.64+8214c402307b
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           curl --fail --location --output "$RUNNER_TEMP/install-silk.sh" https://raw.githubusercontent.com/silk-lang/silk/8214c402307b/install.sh
           sh "$RUNNER_TEMP/install-silk.sh"
@@ -147,6 +149,7 @@ jobs:
       - name: Bootstrap pinned Silk
         env:
           SILK_RELEASE: v0.1.0-dev.64+8214c402307b
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           Invoke-WebRequest https://raw.githubusercontent.com/silk-lang/silk/8214c402307b/install.ps1 -OutFile "$env:RUNNER_TEMP/install-silk.ps1"
           & "$env:RUNNER_TEMP/install-silk.ps1"
