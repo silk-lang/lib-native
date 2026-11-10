@@ -1,420 +1,665 @@
 static if Intrinsic.targetOperatingSystem() != "windows" {
-import silk.cli.task { Task, TaskError }
-import silk.collections.bytes { Bytes }
-import silk.collections.list { List }
-import silk.collections.slice { Slice }
-import silk.core.effect { Effect }
-import silk.core.option { Option }
-import silk.core.result { Result }
-import silk.core.ownership { Drop }
-import silk.io.writer { Writer, WriterError }
-import silk.io.writer_native { StderrWriter }
-import silk.json.scanner { JsonError }
-import silk.json.value { Json, JsonEntry, JsonNumber, Value }
-import silk.mem.allocator { Allocator, OutOfMemoryError }
-import silk.mem.pointer { Pointer }
-import silk.num.i32
-import silk.num.isize
-import silk.num.u64
-import silk.system.child_process { ChildProcess, ProcessError }
-import silk.system.filesystem { FileError, FileSystem, Path, TemporaryDirectory }
-import silk.system.host_input { HostInput, HostInputError }
-import silk.system.monotonic_clock { MonotonicClock, ReadyWatch }
-import silk.system.monotonic_clock_native { OsMonotonicClock }
-import silk.system.system_clock { Instant, SystemClock }
-import silk.system.subprocess { Subprocess, SubprocessError, SpawnOptions, Stdio, ExitStatus }
-import silk.text.string { String, InvalidUtf8 }
-import task_support { pathText, rootPath }
-import task_browser_pipe { writeSocket }
+  import silk.cli.task { Task, TaskError }
+  import silk.collections.bytes { Bytes }
+  import silk.collections.list { List }
+  import silk.collections.slice { Slice }
+  import silk.core.effect { Effect }
+  import silk.core.option { Option }
+  import silk.core.result { Result }
+  import silk.core.ownership { Drop }
+  import silk.io.writer { Writer, WriterError }
+  import silk.io.writer_native { StderrWriter }
+  import silk.json.scanner { JsonError }
+  import silk.json.value { Json, JsonEntry, JsonNumber, Value }
+  import silk.mem.allocator { Allocator, OutOfMemoryError }
+  import silk.mem.pointer { Pointer }
+  import silk.num.i32
+  import silk.num.isize
+  import silk.num.u64
+  import silk.system.child_process { ChildProcess, ProcessError }
+  import silk.system.filesystem { FileError, FileSystem, Path, TemporaryDirectory }
+  import silk.system.host_input { HostInput, HostInputError }
+  import silk.system.monotonic_clock { MonotonicClock, ReadyWatch }
+  import silk.system.monotonic_clock_native { OsMonotonicClock }
+  import silk.system.system_clock { Instant, SystemClock }
+  import silk.system.subprocess { Subprocess, SubprocessError, SpawnOptions, Stdio, ExitStatus }
+  import silk.text.string { String, InvalidUtf8 }
+  import task_support { pathText, rootPath }
+  import task_browser_pipe { writeSocket }
 
-@foreign(noCapture: .("buffer"))
-unsafe extern "C" fn read(fd: i32, buffer: ?[*]mut u8, count: usize) -> isize
-unsafe extern "C" fn kill(pid: i32, signal: i32) -> i32
-@foreign(noCapture: .("status"))
-unsafe extern "C" fn waitpid(pid: i32, status: *mut i32, options: i32) -> i32
-static if Intrinsic.targetOperatingSystem() == "darwin" {
-  unsafe extern "C" fn __error() -> *mut i32
-} else {
-  unsafe extern "C" fn __errno_location() -> *mut i32
-}
-fn errno() -> i32 {
-  static if Intrinsic.targetOperatingSystem() == "darwin" { return unsafe Pointer.read(unsafe __error()) }
-  else { return unsafe Pointer.read(unsafe __errno_location()) }
-}
-fn transient(code: i32) -> bool {
-  static if Intrinsic.targetOperatingSystem() == "darwin" { return code == 4 || code == 35 }
-  else { return code == 4 || code == 11 }
-}
+  @foreign(noCapture: .("buffer"))
+  unsafe extern "C" fn read(fd: i32, buffer: ?[*]mut u8, count: usize) -> isize
+  unsafe extern "C" fn kill(pid: i32, signal: i32) -> i32
+  @foreign(noCapture: .("status"))
+  unsafe extern "C" fn waitpid(pid: i32, status: *mut i32, options: i32) -> i32
+  static if Intrinsic.targetOperatingSystem() == "darwin" {
+    unsafe extern "C" fn __error() -> *mut i32
+  } else {
+    unsafe extern "C" fn __errno_location() -> *mut i32
+  }
 
-// The service writer owns its allocation source: Writer itself has no Allocator requirement.
-struct JsonWriter { bytes: Bytes }
-impl Writer for JsonWriter {
-  effect fn writeAll(self: &mut Self, value: &[u8]) -> () ! WriterError ? &mut Writer {
-    let mut allocator = Allocator.systemAllocatorProvider()
-    let outcome = run Effect.result(Bytes.append(&mut self.bytes, value)) |> Effect.provideMut<Allocator>(&mut allocator)
+  fn errno() -> i32 {
+    static if Intrinsic.targetOperatingSystem() == "darwin" {
+      return unsafe Pointer.read(unsafe __error())
+    } else {
+      return unsafe Pointer.read(unsafe __errno_location())
+    }
+  }
+
+  fn transient(code: i32) -> bool {
+    static if Intrinsic.targetOperatingSystem() == "darwin" {
+      return code == 4 || code == 35
+    } else {
+      return code == 4 || code == 11
+    }
+  }
+
+  // The service writer owns its allocation source: Writer itself has no Allocator requirement.
+  struct JsonWriter {
+    bytes: Bytes
+  }
+  impl Writer for JsonWriter {
+    effect fn writeAll(self: &mut Self, value: &[u8]) -> ()
+      ! WriterError
+      ? &mut Writer {
+      let mut allocator = Allocator.systemAllocatorProvider()
+      let outcome = run Effect.result(Bytes.append(&mut self.bytes, value))
+        |> Effect.provideMut<Allocator>(&mut allocator)
+      match move outcome {
+        Result<(), OutOfMemoryError>.Success { .. } => ()
+        Result<(), OutOfMemoryError>.Failure { .. } => {
+          fail Writer.failure()
+        }
+      }
+    }
+
+    effect fn flush(self: &mut Self) -> ()
+      ! WriterError
+      ? &mut Writer {
+      return ()
+    }
+  }
+
+  pub effect fn parse(bytes: &[u8]) -> Value
+    ! TaskError | OutOfMemoryError
+    ? &mut Allocator {
+    return match move run Effect.result(Json.parse(bytes)) {
+      Result<Value, JsonError | OutOfMemoryError>.Success { value } => move value
+      Result<Value, JsonError | OutOfMemoryError>.Failure { error } => match move error {
+        OutOfMemoryError allocation => {
+          fail move allocation
+        }
+        JsonError invalid => {
+          drop invalid
+          return run Task.abort("Invalid JSON in browser protocol")
+        }
+      }
+    }
+  }
+
+  pub effect fn stringify(value: &Value) -> String
+    ! TaskError | OutOfMemoryError | WriterError
+    ? &mut Allocator {
+    let mut writer = JsonWriter { bytes: Bytes.make() }
+    let outcome = run Effect.result(Json.write(value)) |> Effect.provideMut<Writer>(&mut writer)
     match move outcome {
-      Result<(), OutOfMemoryError>.Success {..} => ()
-      Result<(), OutOfMemoryError>.Failure {..} => { fail Writer.failure() }
-    }
-  }
-  effect fn flush(self: &mut Self) -> () ! WriterError ? &mut Writer { return () }
-}
-pub effect fn parse(bytes: &[u8]) -> Value ! TaskError | OutOfMemoryError ? &mut Allocator {
-  return match move run Effect.result(Json.parse(bytes)) {
-    Result<Value, JsonError | OutOfMemoryError>.Success { value } => move value
-    Result<Value, JsonError | OutOfMemoryError>.Failure { error } => match move error {
-      OutOfMemoryError allocation => { fail move allocation }
-      JsonError invalid => { drop invalid return run Task.abort("Invalid JSON in browser protocol") }
-    }
-  }
-}
-pub effect fn stringify(value: &Value) -> String ! TaskError | OutOfMemoryError | WriterError ? &mut Allocator {
-  let mut writer = JsonWriter { bytes: Bytes.make() }
-  let outcome = run Effect.result(Json.write(value)) |> Effect.provideMut<Writer>(&mut writer)
-  match move outcome {
-    Result<(), JsonError | WriterError>.Success {..} => ()
-    Result<(), JsonError | WriterError>.Failure { error } => match move error {
-      WriterError output => { fail move output }
-      JsonError invalid => { drop invalid return run Task.abort("Cannot encode browser protocol JSON") }
-    }
-  }
-  let JsonWriter {bytes} = move writer
-  return unsafe String.fromBytesUnchecked(move bytes)
-}
-pub effect fn quoted(value: string) -> String ! TaskError | OutOfMemoryError | WriterError ? &mut Allocator {
-  let node = Value.String { text: run String.copy(value) }
-  return run stringify(&node)
-}
-pub effect fn sleep(milliseconds: u64) -> () {
-  let mut clock = OsMonotonicClock.make()
-  run MonotonicClock.waitFor(milliseconds * 1000000) |> Effect.provideMut<MonotonicClock>(&mut clock)
-}
-effect fn deadline(milliseconds: u64) -> Instant {
-  let mut clock = OsMonotonicClock.make()
-  let now = run MonotonicClock.now() |> Effect.provideMut<MonotonicClock>(&mut clock)
-  return MonotonicClock.deadlineAfter(&now, milliseconds * 1000000)
-}
-effect fn ready(fd: i32, writing: bool, until: &Instant) -> () ! TaskError | OutOfMemoryError ? &mut Allocator {
-  let mut clock = OsMonotonicClock.make()
-  let watch = if writing { ReadyWatch.forWrite(i32.toUsize(fd)) } else { ReadyWatch.forRead(i32.toUsize(fd)) }
-  let mut watches = [watch]
-  let copy = SystemClock.make(SystemClock.seconds(until), SystemClock.nanoseconds(until))
-  let count = run MonotonicClock.waitReady(&mut watches, Option<Instant>.some(move copy)) |> Effect.provideMut<MonotonicClock>(&mut clock)
-  if count == 0 { run Task.abort("Chrome DevTools Protocol timed out") }
-  if watches[0].invalid() { run Task.abort("Chrome DevTools Protocol descriptor closed") }
-}
-
-pub struct Browser {
-  child: Subprocess,
-  input: i32,
-  output: i32,
-  pending: Bytes,
-  consumed: usize,
-  scanned: usize,
-  nextId: u64,
-  profile: TemporaryDirectory,
-  stopped: bool,
-  pub errors: List<Value>,
-  pub timeoutMs: u64,
-  runtimeLimit: Option<Instant>,
-}
-impl Drop for Browser {
-  fn drop(self: &mut Self) -> () {
-    Subprocess.closeDescriptor(self.input)
-    Subprocess.closeDescriptor(self.output)
-    // Error unwinding must not leave Chrome or zombies behind. Explicit close handles profile removal.
-    if !self.stopped {
-      let _sent = unsafe kill(self.child.pid(), 9)
-      let mut status: i32 = 0
-      while unsafe waitpid(self.child.pid(), Pointer.fromMutRef(&mut status), 0) < 0 && errno() == 4 {}
-    }
-  }
-}
-effect fn processFailure(error: SubprocessError) -> never ! TaskError | OutOfMemoryError ? &mut Allocator {
-  let code = Value.Number { value: JsonNumber.Integer { value: i32.toI64(error.code) } }
-  drop error
-  let encoded = run Intrinsic.catchFailure<WriterError>(stringify(&code), writerFailure)
-  let mut message = run String.copy("Chromium subprocess operation failed (errno ")
-  run String.append(&mut message, String.view(&encoded))
-  run String.append(&mut message, ")")
-  fail TaskError { message: move message, status: 1 }
-}
-effect fn writerFailure(error: WriterError) -> never ! TaskError | OutOfMemoryError ? &mut Allocator {
-  drop error
-  return run Task.abort("Cannot format Chromium subprocess failure")
-}
-
-pub effect fn findChrome(explicit: string) -> String
-! TaskError | FileError | HostInputError | OutOfMemoryError
-? &mut HostInput | &mut Allocator | &mut FileSystem {
-  if explicit != "" { return run absolute(explicit) }
-  if let Option<Bytes>.Some {value} = move run HostInput.variableNamed("CHROMIUM_EXECUTABLE") {
-    return run absolute(run utf8(Bytes.asSlice(&value)))
-  }
-  let candidates = ["/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", "/Applications/Chromium.app/Contents/MacOS/Chromium", "/usr/bin/google-chrome", "/usr/bin/google-chrome-stable", "/usr/bin/chromium", "/usr/bin/chromium-browser"]
-  let mut at: usize = 0
-  while at < candidates.length {
-    let path = run Path.make(candidates[at])
-    if run FileSystem.exists(&path) { return run String.copy(candidates[at]) }
-    at = at + 1
-  }
-  return run Task.abort("Chromium not found; select its executable explicitly or set CHROMIUM_EXECUTABLE")
-}
-fn starts(value: string, prefix: string) -> bool {
-  let bytes = String.utf8Bytes(value)
-  let first = String.utf8Bytes(prefix)
-  if bytes.length < first.length { return false }
-  let mut at: usize = 0
-  while at < first.length { if bytes[at] != first[at] { return false } at = at + 1 }
-  return true
-}
-pub effect fn utf8(bytes: &[u8]) -> string ! TaskError | OutOfMemoryError ? &mut Allocator {
-  return match move String.fromUtf8(bytes) {
-    Result<string, InvalidUtf8>.Success {value} => value
-    Result<string, InvalidUtf8>.Failure {..} => run Task.abort("Browser input is not UTF-8")
-  }
-}
-effect fn absolute(value: string) -> String ! TaskError | FileError | HostInputError | OutOfMemoryError ? &mut HostInput | &mut Allocator | &mut FileSystem {
-  let path = if starts(value, "/") { run Path.make(value) } else { run rootPath(value) }
-  if !run FileSystem.exists(&path) { return run Task.abort("Configured Chromium executable does not exist") }
-  return run String.copy(pathText(&path))
-}
-
-pub effect fn open(executable: string, headless: bool, arguments: &[string]) -> Browser
-! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
-? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
-  return run openWithEnvironment(executable, headless, arguments, &[])
-}
-
-pub effect fn openWithEnvironment(executable: string, headless: bool, arguments: &[string], environment: &[String]) -> Browser
-! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
-? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
-  let parent = run Path.make("/tmp")
-  let profile = run FileSystem.temporaryDirectory(&parent, "silk-browser-")
-  let executablePath = run Path.make(if environment.length == 0 { executable } else { "/usr/bin/env" })
-  let mut request = run ChildProcess.request(&executablePath)
-  run Subprocess.inheritEnvironment(&mut request)
-  // env is a native argument-vector operation, not a shell or an interpreter.
-  let mut variable: usize = 0
-  while variable < environment.length {
-    let entry = String.view(&environment[variable])
-    if String.startsWith(entry, "-u") {
-      run ChildProcess.addArgument(&mut request, "-u")
-      run ChildProcess.addArgumentBytes(&mut request, Slice.view<u8>(String.utf8Bytes(entry), 2, String.utf8Bytes(entry).length - 2))
-    }
-    variable = variable + 1
-  }
-  variable = 0
-  while variable < environment.length {
-    let entry = String.view(&environment[variable])
-    if !String.startsWith(entry, "-u") { run ChildProcess.addArgument(&mut request, entry) }
-    variable = variable + 1
-  }
-  if environment.length > 0 { run ChildProcess.addArgument(&mut request, executable) }
-  if headless { run ChildProcess.addArgument(&mut request, "--headless=new") }
-  run ChildProcess.addArgument(&mut request, "--remote-debugging-pipe")
-  let mut profileArgument = run String.copy("--user-data-dir=")
-  run String.append(&mut profileArgument, pathText(&profile.path))
-  run ChildProcess.addArgument(&mut request, String.view(&profileArgument))
-  let defaults = ["--no-first-run", "--no-default-browser-check", "--disable-background-networking", "--disable-component-update", "--disable-extensions"]
-  let mut at: usize = 0
-  while at < defaults.length { run ChildProcess.addArgument(&mut request, defaults[at]) at = at + 1 }
-  at = 0
-  while at < arguments.length { run ChildProcess.addArgument(&mut request, arguments[at]) at = at + 1 }
-  run ChildProcess.addArgument(&mut request, "about:blank")
-  let mut options = SpawnOptions.make()
-  run options.setStdio(2, Stdio.inherit(2))
-  run options.setStdio(3, Stdio.pipe())
-  run options.setStdio(4, Stdio.pipe())
-  let mut child = run Intrinsic.catchFailure<SubprocessError>(Subprocess.spawn(&request, &options), processFailure)
-  let input = child.takePipe(3) |> Option<i32>.unwrapOr(-1)
-  let output = child.takePipe(4) |> Option<i32>.unwrapOr(-1)
-  return Browser { child: move child, input: input, output: output, pending: Bytes.make(), consumed: 0, scanned: 0, nextId: 0, profile: move profile, stopped: false, errors: List<Value>.make(), timeoutMs: 30000, runtimeLimit: Option<Instant>.none() }
-}
-
-pub effect fn limitRuntime(browser: &mut Browser, milliseconds: u64) -> () {
-  browser.runtimeLimit = Option<Instant>.some(run deadline(milliseconds))
-}
-fn before(left: &Instant, right: &Instant) -> bool {
-  return SystemClock.seconds(left) < SystemClock.seconds(right)
-    || (SystemClock.seconds(left) == SystemClock.seconds(right) && SystemClock.nanoseconds(left) < SystemClock.nanoseconds(right))
-}
-
-pub effect fn send(browser: &mut Browser, method: string, params: &Value, session: string) -> Value
-! TaskError | OutOfMemoryError | WriterError ? &mut Allocator {
-  browser.nextId = browser.nextId + 1
-  let id = browser.nextId
-  let mut fields = List<JsonEntry>.make()
-  run fields.append(JsonEntry { key: run String.copy("id"), value: Value.Number { value: JsonNumber.Unsigned { value: id } } })
-  run fields.append(JsonEntry { key: run String.copy("method"), value: Value.String { text: run String.copy(method) } })
-  // Serialize borrowed params separately: page payloads can contain large encoded font files.
-  if session != "" { run fields.append(JsonEntry { key: run String.copy("sessionId"), value: Value.String { text: run String.copy(session) } }) }
-  let envelope = Value.Object { entries: move fields }
-  let prefix = run stringify(&envelope)
-  let data = run stringify(params)
-  let mut wire = run Bytes.copy(Slice.view<u8>(String.ownedUtf8Bytes(&prefix), 0, String.ownedUtf8Bytes(&prefix).length - 1))
-  run wire.append(b",\"params\":")
-  run wire.append(String.ownedUtf8Bytes(&data))
-  run wire.append(b"}\0")
-  let mut until = run deadline(browser.timeoutMs)
-  match &browser.runtimeLimit {
-    Option<Instant>.Some { value } => { if before(&value, &until) { until = SystemClock.make(SystemClock.seconds(&value), SystemClock.nanoseconds(&value)) } }
-    Option<Instant>.None => {}
-  }
-  let now = run deadline(0)
-  if !before(&now, &until) { run Task.abort("Chrome DevTools Protocol exceeded its runtime deadline") }
-  let bytes = wire.asSlice()
-  let mut offset: usize = 0
-  while offset < bytes.length {
-    run ready(browser.input, true, &until)
-    let remaining = Slice.view<u8>(bytes, offset, bytes.length - offset)
-    let count = writeSocket(browser.input, remaining)
-    if count > 0 { offset = offset + isize.toUsize(count) }
-    else if count == 0 || !transient(errno()) { return run Task.abort("Cannot write Chrome DevTools Protocol request") }
-  }
-  while true {
-    let message = run receive(&mut browser, &until)
-    let responseId = Json.field(&message, "id") |> Json.asU64 |> Option<u64>.unwrapOr(0)
-    if responseId == id {
-      if let Option<&Value>.Some {value} = Json.field(&message, "error") {
-        let detail = run stringify(value)
-        let mut error = run String.copy(method)
-        run error.append(": ")
-        run error.append(String.view(&detail))
-        fail TaskError {message: move error, status: 1}
-      }
-      if let Option<&Value>.None = Json.field(&message, "result") { return run Task.abort("CDP response has no result") }
-      return takeField(move message, "result")
-    }
-    let event = Json.field(&message, "method") |> Json.asString |> Option<string>.unwrapOr("")
-    let consoleType = Json.field(&message, "params") |> Json.fieldAt("type") |> Json.asString |> Option<string>.unwrapOr("")
-    if event == "Runtime.exceptionThrown" || (event == "Runtime.consoleAPICalled" && consoleType == "error") {
-      run browser.errors.append(move message)
-    } else if event == "Runtime.consoleAPICalled" && consoleType != "log" {
-      // Page logs are the tests' own report lines; other levels are forwarded as diagnostics.
-      let mut line = run String.copy("[Chromium ")
-      run line.append(consoleType)
-      run line.append("]")
-      let args = Json.field(&message, "params") |> Json.fieldAt("args")
-      if let Option<&Value>.Some { value: list } = args {
-        let mut at: usize = 0
-        while let Option<&Value>.Some { value: argument } = Json.item(list, at) {
-          run line.append(" ")
-          run line.append(Json.field(argument, "value") |> Json.asString |> Option<string>.unwrapOr(""))
-          at = at + 1
+      Result<(), JsonError | WriterError>.Success { .. } => ()
+      Result<(), JsonError | WriterError>.Failure { error } => match move error {
+        WriterError output => {
+          fail move output
+        }
+        JsonError invalid => {
+          drop invalid
+          return run Task.abort("Cannot encode browser protocol JSON")
         }
       }
-      let mut stderr = StderrWriter.make()
-      run Writer.writeString(String.view(&line)) |> Effect.provideMut<Writer>(&mut stderr)
-      run Writer.writeString("\n") |> Effect.provideMut<Writer>(&mut stderr)
+    }
+    let JsonWriter { bytes } = move writer
+    return unsafe String.fromBytesUnchecked(move bytes)
+  }
+
+  pub effect fn quoted(value: string) -> String
+    ! TaskError | OutOfMemoryError | WriterError
+    ? &mut Allocator {
+    let node = Value.String { text: run String.copy(value) }
+    return run stringify(&node)
+  }
+
+  pub effect fn sleep(milliseconds: u64) -> () {
+    let mut clock = OsMonotonicClock.make()
+    run MonotonicClock.waitFor(milliseconds * 1000000)
+      |> Effect.provideMut<MonotonicClock>(&mut clock)
+  }
+
+  effect fn deadline(milliseconds: u64) -> Instant {
+    let mut clock = OsMonotonicClock.make()
+    let now = run MonotonicClock.now() |> Effect.provideMut<MonotonicClock>(&mut clock)
+    return MonotonicClock.deadlineAfter(&now, milliseconds * 1000000)
+  }
+
+  effect fn ready(fd: i32, writing: bool, until: &Instant) -> ()
+    ! TaskError | OutOfMemoryError
+    ? &mut Allocator {
+    let mut clock = OsMonotonicClock.make()
+    let watch = if writing {
+      ReadyWatch.forWrite(i32.toUsize(fd))
+    } else {
+      ReadyWatch.forRead(i32.toUsize(fd))
+    }
+    let mut watches = [watch]
+    let copy = SystemClock.make(SystemClock.seconds(until), SystemClock.nanoseconds(until))
+    let count = run MonotonicClock.waitReady(&mut watches, Option<Instant>.some(move copy))
+      |> Effect.provideMut<MonotonicClock>(&mut clock)
+    if count == 0 {
+      run Task.abort("Chrome DevTools Protocol timed out")
+    }
+    if watches[0].invalid() {
+      run Task.abort("Chrome DevTools Protocol descriptor closed")
     }
   }
-}
-fn takeField(document: Value, key: string) -> Value {
-  return match move document {
-    Value.Object {entries} => {
-      let mut owned = move entries
-      let mut at: usize = 0
-      while at < owned.length() {
-        if String.view(&owned.asSlice()[at].key) == key {
-          let JsonEntry {key: _, value} = owned.remove(at)
-          return move value
-        }
-        at = at + 1
+
+  pub struct Browser {
+    child: Subprocess,
+    input: i32,
+    output: i32,
+    pending: Bytes,
+    consumed: usize,
+    scanned: usize,
+    nextId: u64,
+    profile: TemporaryDirectory,
+    stopped: bool,
+    pub errors: List<Value>,
+    pub timeoutMs: u64,
+    runtimeLimit: Option<Instant>,
+  }
+  impl Drop for Browser {
+    fn drop(self: &mut Self) -> () {
+      Subprocess.closeDescriptor(self.input)
+      Subprocess.closeDescriptor(self.output)
+
+      // Error unwinding must not leave Chrome or zombies behind. Explicit close handles profile removal.
+      if !self.stopped {
+        let _sent = unsafe kill(self.child.pid(), 9)
+        let mut status: i32 = 0
+        while unsafe waitpid(self.child.pid(), Pointer.fromMutRef(&mut status), 0) < 0
+          && errno() == 4 {}
       }
-      return Value.Null
     }
-    _ => Value.Null
   }
-}
-effect fn receive(browser: &mut Browser, until: &Instant) -> Value ! TaskError | OutOfMemoryError ? &mut Allocator {
-  while true {
-    let all = Bytes.asSlice(&browser.pending)
-    let mut at = browser.scanned
-    while at < all.length {
-      if all[at] == 0 {
-        let start = browser.consumed
-        browser.consumed = at + 1
-        browser.scanned = at + 1
-        if at > start { return run parse(Slice.view<u8>(all, start, at - start)) }
+
+  effect fn processFailure(error: SubprocessError) -> never
+    ! TaskError | OutOfMemoryError
+    ? &mut Allocator {
+    let code = Value.Number { value: JsonNumber.Integer { value: i32.toI64(error.code) } }
+    drop error
+    let encoded = run Intrinsic.catchFailure<WriterError>(stringify(&code), writerFailure)
+    let mut message = run String.copy("Chromium subprocess operation failed (errno ")
+    run String.append(&mut message, String.view(&encoded))
+    run String.append(&mut message, ")")
+    fail TaskError { message: move message, status: 1 }
+  }
+
+  effect fn writerFailure(error: WriterError) -> never
+    ! TaskError | OutOfMemoryError
+    ? &mut Allocator {
+    drop error
+    return run Task.abort("Cannot format Chromium subprocess failure")
+  }
+
+  pub effect fn findChrome(explicit: string) -> String
+    ! TaskError | FileError | HostInputError | OutOfMemoryError
+    ? &mut HostInput | &mut Allocator | &mut FileSystem {
+    if explicit != "" {
+      return run absolute(explicit)
+    }
+    if let Option<Bytes>.Some { value } = move run HostInput.variableNamed("CHROMIUM_EXECUTABLE") {
+      return run absolute(run utf8(Bytes.asSlice(&value)))
+    }
+    let candidates = [
+      "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+      "/Applications/Chromium.app/Contents/MacOS/Chromium",
+      "/usr/bin/google-chrome",
+      "/usr/bin/google-chrome-stable",
+      "/usr/bin/chromium",
+      "/usr/bin/chromium-browser",
+    ]
+    let mut at: usize = 0
+    while at < candidates.length {
+      let path = run Path.make(candidates[at])
+      if run FileSystem.exists(&path) {
+        return run String.copy(candidates[at])
       }
       at = at + 1
     }
-    browser.scanned = all.length
-    if browser.consumed > 0 {
-      let remaining = run Bytes.copy(Slice.view<u8>(all, browser.consumed, all.length - browser.consumed))
-      browser.pending = move remaining
-      browser.scanned = browser.scanned - browser.consumed
-      browser.consumed = 0
+    return run Task.abort(
+      "Chromium not found; select its executable explicitly or set CHROMIUM_EXECUTABLE",
+    )
+  }
+
+  fn starts(value: string, prefix: string) -> bool {
+    let bytes = String.utf8Bytes(value)
+    let first = String.utf8Bytes(prefix)
+    if bytes.length < first.length {
+      return false
     }
-    run ready(browser.output, false, until)
-    let mut buffer: [u8; 16384] = [0; 16384]
-    let count = unsafe read(browser.output, Pointer.fromMutSlice(&mut buffer), buffer.length)
-    if count == 0 { return run Task.abort("Chromium exited while waiting for a CDP response; see browser stderr") }
-    if count < 0 {
-      if !transient(errno()) { return run Task.abort("Cannot read Chrome DevTools Protocol response") }
-    } else { run browser.pending.append(Slice.view<u8>(&buffer, 0, isize.toUsize(count))) }
+    let mut at: usize = 0
+    while at < first.length {
+      if bytes[at] != first[at] {
+        return false
+      }
+      at = at + 1
+    }
+    return true
   }
-}
-pub effect fn page(browser: &mut Browser) -> String ! TaskError | OutOfMemoryError | WriterError ? &mut Allocator {
-  let create = run parse(b"{\"url\":\"about:blank\"}")
-  let target = run send(&mut browser, "Target.createTarget", &create, "")
-  let targetId = Json.field(&target, "targetId") |> Json.asString |> Option<string>.unwrapOr("")
-  if targetId == "" { return run Task.abort("Chromium did not create a target") }
-  let targetText = run quoted(targetId)
-  let mut attach = run String.copy("{\"targetId\":")
-  run attach.append(String.view(&targetText))
-  run attach.append(",\"flatten\":true}")
-  let parameters = run parse(String.ownedUtf8Bytes(&attach))
-  let attached = run send(&mut browser, "Target.attachToTarget", &parameters, "")
-  let session = Json.field(&attached, "sessionId") |> Json.asString |> Option<string>.unwrapOr("")
-  if session == "" { return run Task.abort("Chromium did not attach to a target") }
-  let owned = run String.copy(session)
-  let empty = run parse(b"{}")
-  let _runtime = run send(&mut browser, "Runtime.enable", &empty, String.view(&owned))
-  let _page = run send(&mut browser, "Page.enable", &empty, String.view(&owned))
-  return move owned
-}
-pub effect fn evaluate(browser: &mut Browser, source: string, session: string) -> Value
-! TaskError | OutOfMemoryError | WriterError ? &mut Allocator {
-  let text = run quoted(source)
-  let mut params = run String.copy("{\"expression\":")
-  run params.append(String.view(&text))
-  run params.append(",\"awaitPromise\":true,\"returnByValue\":true}")
-  let arguments = run parse(String.ownedUtf8Bytes(&params))
-  let result = run send(&mut browser, "Runtime.evaluate", &arguments, session)
-  if let Option<&Value>.Some {value} = Json.field(&result, "exceptionDetails") {
-    let message = run stringify(value)
-    fail TaskError {message: move message, status: 1}
+
+  pub effect fn utf8(bytes: &[u8]) -> string
+    ! TaskError | OutOfMemoryError
+    ? &mut Allocator {
+    return match move String.fromUtf8(bytes) {
+      Result<string, InvalidUtf8>.Success { value } => value
+      Result<string, InvalidUtf8>.Failure { .. } => run Task.abort("Browser input is not UTF-8")
+    }
   }
-  let remote = takeField(move result, "result")
-  return takeField(move remote, "value")
-}
-pub effect fn close(browser: &mut Browser) -> ()
-! TaskError | FileError | OutOfMemoryError ? &mut Allocator | &mut FileSystem {
-  if browser.stopped { return () }
-  run Intrinsic.catchFailure<SubprocessError>(Subprocess.kill(browser.child.pid(), 15), processFailure)
-  let mut attempts: usize = 0
-  while true {
-    let status = run Intrinsic.catchFailure<SubprocessError>(Subprocess.tryWait(browser.child.pid()), processFailure)
-    if let Option<ExitStatus>.Some {..} = move status { break }
-    if attempts == 500 { run Intrinsic.catchFailure<SubprocessError>(Subprocess.kill(browser.child.pid(), 9), processFailure) }
-    run sleep(10)
-    attempts = attempts + 1
+
+  effect fn absolute(value: string) -> String
+    ! TaskError | FileError | HostInputError | OutOfMemoryError
+    ? &mut HostInput | &mut Allocator | &mut FileSystem {
+    let path = if starts(value, "/") {
+      run Path.make(value)
+    } else {
+      run rootPath(value)
+    }
+    if !run FileSystem.exists(&path) {
+      return run Task.abort("Configured Chromium executable does not exist")
+    }
+    return run String.copy(pathText(&path))
   }
-  browser.stopped = true
-  let mut retry: usize = 0
-  while true {
-    let outcome = run Effect.result(FileSystem.removeDirectoryRecursively(&browser.profile.path))
-    match move outcome {
-      Result<(), FileError | OutOfMemoryError>.Success {..} => { return () }
-      Result<(), FileError | OutOfMemoryError>.Failure {error} => {
-        if retry == 10 { fail move error }
-        drop error
-        retry = retry + 1
-        run sleep(200)
+
+  pub effect fn open(executable: string, headless: bool, arguments: &[string]) -> Browser
+    ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+    ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+    return run openWithEnvironment(executable, headless, arguments, &[])
+  }
+
+  pub effect fn openWithEnvironment(
+    executable: string,
+    headless: bool,
+    arguments: &[string],
+    environment: &[String],
+  ) -> Browser
+    ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+    ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+    let parent = run Path.make("/tmp")
+    let profile = run FileSystem.temporaryDirectory(&parent, "silk-browser-")
+    let executablePath = run Path.make(
+      if environment.length == 0 {
+        executable
+      } else {
+        "/usr/bin/env"
+      },
+    )
+    let mut request = run ChildProcess.request(&executablePath)
+    run Subprocess.inheritEnvironment(&mut request)
+
+    // env is a native argument-vector operation, not a shell or an interpreter.
+    let mut variable: usize = 0
+    while variable < environment.length {
+      let entry = String.view(&environment[variable])
+      if String.startsWith(entry, "-u") {
+        run ChildProcess.addArgument(&mut request, "-u")
+        run ChildProcess.addArgumentBytes(
+          &mut request,
+          Slice.view<u8>(String.utf8Bytes(entry), 2, String.utf8Bytes(entry).length - 2),
+        )
+      }
+      variable = variable + 1
+    }
+    variable = 0
+    while variable < environment.length {
+      let entry = String.view(&environment[variable])
+      if !String.startsWith(entry, "-u") {
+        run ChildProcess.addArgument(&mut request, entry)
+      }
+      variable = variable + 1
+    }
+    if environment.length > 0 {
+      run ChildProcess.addArgument(&mut request, executable)
+    }
+    if headless {
+      run ChildProcess.addArgument(&mut request, "--headless=new")
+    }
+    run ChildProcess.addArgument(&mut request, "--remote-debugging-pipe")
+    let mut profileArgument = run String.copy("--user-data-dir=")
+    run String.append(&mut profileArgument, pathText(&profile.path))
+    run ChildProcess.addArgument(&mut request, String.view(&profileArgument))
+    let defaults = [
+      "--no-first-run",
+      "--no-default-browser-check",
+      "--disable-background-networking",
+      "--disable-component-update",
+      "--disable-extensions",
+    ]
+    let mut at: usize = 0
+    while at < defaults.length {
+      run ChildProcess.addArgument(&mut request, defaults[at])
+      at = at + 1
+    }
+    at = 0
+    while at < arguments.length {
+      run ChildProcess.addArgument(&mut request, arguments[at])
+      at = at + 1
+    }
+    run ChildProcess.addArgument(&mut request, "about:blank")
+    let mut options = SpawnOptions.make()
+    run options.setStdio(2, Stdio.inherit(2))
+    run options.setStdio(3, Stdio.pipe())
+    run options.setStdio(4, Stdio.pipe())
+    let mut child = run Intrinsic.catchFailure<SubprocessError>(
+      Subprocess.spawn(&request, &options),
+      processFailure,
+    )
+    let input = child.takePipe(3) |> Option<i32>.unwrapOr(-1)
+    let output = child.takePipe(4) |> Option<i32>.unwrapOr(-1)
+    return Browser {
+      child: move child,
+      input: input,
+      output: output,
+      pending: Bytes.make(),
+      consumed: 0,
+      scanned: 0,
+      nextId: 0,
+      profile: move profile,
+      stopped: false,
+      errors: List<Value>.make(),
+      timeoutMs: 30000,
+      runtimeLimit: Option<Instant>.none(),
+    }
+  }
+
+  pub effect fn limitRuntime(browser: &mut Browser, milliseconds: u64) -> () {
+    browser.runtimeLimit = Option<Instant>.some(run deadline(milliseconds))
+  }
+
+  fn before(left: &Instant, right: &Instant) -> bool {
+    return SystemClock.seconds(left) < SystemClock.seconds(right)
+      || (SystemClock.seconds(left) == SystemClock.seconds(right)
+        && SystemClock.nanoseconds(left) < SystemClock.nanoseconds(right))
+  }
+
+  pub effect fn send(
+    browser: &mut Browser,
+    method: string,
+    params: &Value,
+    session: string,
+  ) -> Value
+    ! TaskError | OutOfMemoryError | WriterError
+    ? &mut Allocator {
+    browser.nextId = browser.nextId + 1
+    let id = browser.nextId
+    let mut fields = List<JsonEntry>.make()
+    run fields.append(
+      JsonEntry {
+        key: run String.copy("id"),
+        value: Value.Number { value: JsonNumber.Unsigned { value: id } },
+      },
+    )
+    run fields.append(
+      JsonEntry {
+        key: run String.copy("method"),
+        value: Value.String { text: run String.copy(method) },
+      },
+    )
+
+    // Serialize borrowed params separately: page payloads can contain large encoded font files.
+    if session != "" {
+      run fields.append(
+        JsonEntry {
+          key: run String.copy("sessionId"),
+          value: Value.String { text: run String.copy(session) },
+        },
+      )
+    }
+    let envelope = Value.Object { entries: move fields }
+    let prefix = run stringify(&envelope)
+    let data = run stringify(params)
+    let mut wire = run Bytes.copy(
+      Slice.view<u8>(String.ownedUtf8Bytes(&prefix), 0, String.ownedUtf8Bytes(&prefix).length - 1),
+    )
+    run wire.append(b",\"params\":")
+    run wire.append(String.ownedUtf8Bytes(&data))
+    run wire.append(b"}\0")
+    let mut until = run deadline(browser.timeoutMs)
+    match &browser.runtimeLimit {
+      Option<Instant>.Some { value } => {
+        if before(&value, &until) {
+          until = SystemClock.make(SystemClock.seconds(&value), SystemClock.nanoseconds(&value))
+        }
+      }
+      Option<Instant>.None => {}
+    }
+    let now = run deadline(0)
+    if !before(&now, &until) {
+      run Task.abort("Chrome DevTools Protocol exceeded its runtime deadline")
+    }
+    let bytes = wire.asSlice()
+    let mut offset: usize = 0
+    while offset < bytes.length {
+      run ready(browser.input, true, &until)
+      let remaining = Slice.view<u8>(bytes, offset, bytes.length - offset)
+      let count = writeSocket(browser.input, remaining)
+      if count > 0 {
+        offset = offset + isize.toUsize(count)
+      } else if count == 0 || !transient(errno()) {
+        return run Task.abort("Cannot write Chrome DevTools Protocol request")
+      }
+    }
+    while true {
+      let message = run receive(&mut browser, &until)
+      let responseId = Json.field(&message, "id")
+        |> Json.asU64
+        |> Option<u64>.unwrapOr(0)
+      if responseId == id {
+        if let Option<&Value>.Some { value } = Json.field(&message, "error") {
+          let detail = run stringify(value)
+          let mut error = run String.copy(method)
+          run error.append(": ")
+          run error.append(String.view(&detail))
+          fail TaskError { message: move error, status: 1 }
+        }
+        if let Option<&Value>.None = Json.field(&message, "result") {
+          return run Task.abort("CDP response has no result")
+        }
+        return takeField(move message, "result")
+      }
+      let event = Json.field(&message, "method")
+        |> Json.asString
+        |> Option<string>.unwrapOr("")
+      let consoleType = Json.field(&message, "params")
+        |> Json.fieldAt("type")
+        |> Json.asString
+        |> Option<string>.unwrapOr("")
+      if event == "Runtime.exceptionThrown"
+        || (event == "Runtime.consoleAPICalled" && consoleType == "error") {
+        run browser.errors.append(move message)
+      } else if event == "Runtime.consoleAPICalled" && consoleType != "log" {
+        // Page logs are the tests' own report lines; other levels are forwarded as diagnostics.
+        let mut line = run String.copy("[Chromium ")
+        run line.append(consoleType)
+        run line.append("]")
+        let args = Json.field(&message, "params") |> Json.fieldAt("args")
+        if let Option<&Value>.Some { value: list } = args {
+          let mut at: usize = 0
+          while let Option<&Value>.Some { value: argument } = Json.item(list, at) {
+            run line.append(" ")
+            run line.append(
+              Json.field(argument, "value")
+                |> Json.asString
+                |> Option<string>.unwrapOr(""),
+            )
+            at = at + 1
+          }
+        }
+        let mut stderr = StderrWriter.make()
+        run Writer.writeString(String.view(&line)) |> Effect.provideMut<Writer>(&mut stderr)
+        run Writer.writeString("\n") |> Effect.provideMut<Writer>(&mut stderr)
       }
     }
   }
-}
+
+  fn takeField(document: Value, key: string) -> Value {
+    return match move document {
+      Value.Object { entries } => {
+        let mut owned = move entries
+        let mut at: usize = 0
+        while at < owned.length() {
+          if String.view(&owned.asSlice()[at].key) == key {
+            let JsonEntry { value, .. } = owned.remove(at)
+            return move value
+          }
+          at = at + 1
+        }
+        return Value.Null
+      }
+      _ => Value.Null
+    }
+  }
+
+  effect fn receive(browser: &mut Browser, until: &Instant) -> Value
+    ! TaskError | OutOfMemoryError
+    ? &mut Allocator {
+    while true {
+      let all = Bytes.asSlice(&browser.pending)
+      let mut at = browser.scanned
+      while at < all.length {
+        if all[at] == 0 {
+          let start = browser.consumed
+          browser.consumed = at + 1
+          browser.scanned = at + 1
+          if at > start {
+            return run parse(Slice.view<u8>(all, start, at - start))
+          }
+        }
+        at = at + 1
+      }
+      browser.scanned = all.length
+      if browser.consumed > 0 {
+        let remaining = run Bytes.copy(
+          Slice.view<u8>(all, browser.consumed, all.length - browser.consumed),
+        )
+        browser.pending = move remaining
+        browser.scanned = browser.scanned - browser.consumed
+        browser.consumed = 0
+      }
+      run ready(browser.output, false, until)
+      let mut buffer: [u8; 16384] = [0; 16384]
+      let count = unsafe read(browser.output, Pointer.fromMutSlice(&mut buffer), buffer.length)
+      if count == 0 {
+        return run Task.abort(
+          "Chromium exited while waiting for a CDP response; see browser stderr",
+        )
+      }
+      if count < 0 {
+        if !transient(errno()) {
+          return run Task.abort("Cannot read Chrome DevTools Protocol response")
+        }
+      } else {
+        run browser.pending.append(Slice.view<u8>(&buffer, 0, isize.toUsize(count)))
+      }
+    }
+  }
+
+  pub effect fn page(browser: &mut Browser) -> String
+    ! TaskError | OutOfMemoryError | WriterError
+    ? &mut Allocator {
+    let create = run parse(b"{\"url\":\"about:blank\"}")
+    let target = run send(&mut browser, "Target.createTarget", &create, "")
+    let targetId = Json.field(&target, "targetId")
+      |> Json.asString
+      |> Option<string>.unwrapOr("")
+    if targetId == "" {
+      return run Task.abort("Chromium did not create a target")
+    }
+    let targetText = run quoted(targetId)
+    let mut attach = run String.copy("{\"targetId\":")
+    run attach.append(String.view(&targetText))
+    run attach.append(",\"flatten\":true}")
+    let parameters = run parse(String.ownedUtf8Bytes(&attach))
+    let attached = run send(&mut browser, "Target.attachToTarget", &parameters, "")
+    let session = Json.field(&attached, "sessionId")
+      |> Json.asString
+      |> Option<string>.unwrapOr("")
+    if session == "" {
+      return run Task.abort("Chromium did not attach to a target")
+    }
+    let owned = run String.copy(session)
+    let empty = run parse(b"{}")
+    let _runtime = run send(&mut browser, "Runtime.enable", &empty, String.view(&owned))
+    let _page = run send(&mut browser, "Page.enable", &empty, String.view(&owned))
+    return move owned
+  }
+
+  pub effect fn evaluate(browser: &mut Browser, source: string, session: string) -> Value
+    ! TaskError | OutOfMemoryError | WriterError
+    ? &mut Allocator {
+    let text = run quoted(source)
+    let mut params = run String.copy("{\"expression\":")
+    run params.append(String.view(&text))
+    run params.append(",\"awaitPromise\":true,\"returnByValue\":true}")
+    let arguments = run parse(String.ownedUtf8Bytes(&params))
+    let result = run send(&mut browser, "Runtime.evaluate", &arguments, session)
+    if let Option<&Value>.Some { value } = Json.field(&result, "exceptionDetails") {
+      let message = run stringify(value)
+      fail TaskError { message: move message, status: 1 }
+    }
+    let remote = takeField(move result, "result")
+    return takeField(move remote, "value")
+  }
+
+  pub effect fn close(browser: &mut Browser) -> ()
+    ! TaskError | FileError | OutOfMemoryError
+    ? &mut Allocator | &mut FileSystem {
+    if browser.stopped {
+      return ()
+    }
+    run Intrinsic.catchFailure<SubprocessError>(
+      Subprocess.kill(browser.child.pid(), 15),
+      processFailure,
+    )
+    let mut attempts: usize = 0
+    while true {
+      let status = run Intrinsic.catchFailure<SubprocessError>(
+        Subprocess.tryWait(browser.child.pid()),
+        processFailure,
+      )
+      if let Option<ExitStatus>.Some { .. } = move status {
+        break
+      }
+      if attempts == 500 {
+        run Intrinsic.catchFailure<SubprocessError>(
+          Subprocess.kill(browser.child.pid(), 9),
+          processFailure,
+        )
+      }
+      run sleep(10)
+      attempts = attempts + 1
+    }
+    browser.stopped = true
+    let mut retry: usize = 0
+    while true {
+      let outcome = run Effect.result(FileSystem.removeDirectoryRecursively(&browser.profile.path))
+      match move outcome {
+        Result<(), FileError | OutOfMemoryError>.Success { .. } => {
+          return ()
+        }
+        Result<(), FileError | OutOfMemoryError>.Failure { error } => {
+          if retry == 10 {
+            fail move error
+          }
+          drop error
+          retry = retry + 1
+          run sleep(200)
+        }
+      }
+    }
+  }
 }

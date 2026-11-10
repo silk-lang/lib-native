@@ -1,102 +1,161 @@
 static if Intrinsic.targetOperatingSystem() == "linux" {
-import silk.cli.task { Task, TaskError }
-import silk.collections.bytes { Bytes }
-import silk.collections.list { List }
-import silk.core.option { Option }
-import silk.core.ownership { Drop }
-import silk.io.writer { WriterError }
-import silk.mem.allocator { Allocator, OutOfMemoryError }
-import silk.mem.pointer { Pointer }
-import silk.system.child_process { ChildProcess, ProcessError }
-import silk.system.filesystem { FileError, FileSystem, Path, TemporaryDirectory }
-import silk.system.host_input { HostInput, HostInputError }
-import silk.system.subprocess { Subprocess, SubprocessError, SpawnOptions, Stdio }
-import silk.text.string { String }
-import silk.num.i32
-import cdp
-import task_support { pathText }
+  import silk.cli.task { Task, TaskError }
+  import silk.collections.bytes { Bytes }
+  import silk.collections.list { List }
+  import silk.core.option { Option }
+  import silk.core.ownership { Drop }
+  import silk.io.writer { WriterError }
+  import silk.mem.allocator { Allocator, OutOfMemoryError }
+  import silk.mem.pointer { Pointer }
+  import silk.system.child_process { ChildProcess, ProcessError }
+  import silk.system.filesystem { FileError, FileSystem, Path, TemporaryDirectory }
+  import silk.system.host_input { HostInput, HostInputError }
+  import silk.system.subprocess { Subprocess, SubprocessError, SpawnOptions, Stdio }
+  import silk.text.string { String }
+  import silk.num.i32
+  import cdp
+  import task_support { pathText }
 
-@foreign(noCapture: .("buffer"))
-unsafe extern "C" fn read(fd: i32, buffer: ?[*]mut u8, count: usize) -> isize
-unsafe extern "C" fn kill(pid: i32, signal: i32) -> i32
-@foreign(noCapture: .("status"))
-unsafe extern "C" fn waitpid(pid: i32, status: *mut i32, options: i32) -> i32
+  @foreign(noCapture: .("buffer"))
+  unsafe extern "C" fn read(fd: i32, buffer: ?[*]mut u8, count: usize) -> isize
+  unsafe extern "C" fn kill(pid: i32, signal: i32) -> i32
+  @foreign(noCapture: .("status"))
+  unsafe extern "C" fn waitpid(pid: i32, status: *mut i32, options: i32) -> i32
 
-pub struct Display { child: Subprocess, directory: TemporaryDirectory, pub environment: List<String>, pub authorization: Bytes }
-impl Drop for Display {
-  fn drop(self: &mut Self) -> () {
-    let _signal = unsafe kill(self.child.pid(), 9)
-    let mut status: i32 = 0
-    let _wait = unsafe waitpid(self.child.pid(), Pointer.fromMutRef(&mut status), 0)
+  pub struct Display {
+    child: Subprocess,
+    directory: TemporaryDirectory,
+    pub environment: List<String>,
+    pub authorization: Bytes
   }
-}
-effect fn failure(error: SubprocessError) -> never ! TaskError | OutOfMemoryError ? &mut Allocator {
-  drop error
-  return run Task.abort("cannot start private Xvfb")
-}
-pub effect fn start() -> Display
-  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
-  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
-  let parent = run Path.make("/tmp")
-  let directory = run FileSystem.temporaryDirectory(&parent, "silk-xvfb-")
-  let authority = run Path.join(&directory.path, "Xauthority")
-  run FileSystem.writeFile(&authority, b"")
-  let random = run Task.capture("openssl", &["rand", "-hex", "16"])
-  let cookie = String.trim(run cdp.utf8(Bytes.asSlice(&random)))
-  let digits = String.utf8Bytes(cookie)
-  if digits.length != 32 { run Task.abort("openssl did not return a 128-bit Xauthority cookie") }
-  let mut authorization = run Bytes.zeroed(16)
+  impl Drop for Display {
+    fn drop(self: &mut Self) -> () {
+      let _signal = unsafe kill(self.child.pid(), 9)
+      let mut status: i32 = 0
+      let _wait = unsafe waitpid(self.child.pid(), Pointer.fromMutRef(&mut status), 0)
+    }
+  }
+
+  effect fn failure(error: SubprocessError) -> never
+    ! TaskError | OutOfMemoryError
+    ? &mut Allocator {
+    drop error
+    return run Task.abort("cannot start private Xvfb")
+  }
+
+  pub effect fn start() -> Display
+    ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+    ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+    let parent = run Path.make("/tmp")
+    let directory = run FileSystem.temporaryDirectory(&parent, "silk-xvfb-")
+    let authority = run Path.join(&directory.path, "Xauthority")
+    run FileSystem.writeFile(&authority, b"")
+    let random = run Task.capture("openssl", &["rand", "-hex", "16"])
+    let cookie = String.trim(run cdp.utf8(Bytes.asSlice(&random)))
+    let digits = String.utf8Bytes(cookie)
+    if digits.length != 32 {
+      run Task.abort("openssl did not return a 128-bit Xauthority cookie")
+    }
+    let mut authorization = run Bytes.zeroed(16)
     let mut byteIndex: usize = 0
-  while byteIndex < 16 {
-    let high = digits[byteIndex * 2]
+    while byteIndex < 16 {
+      let high = digits[byteIndex * 2]
       let low = digits[byteIndex * 2 + 1]
-    if !((high >= 48 && high <= 57) || (high >= 97 && high <= 102)) || !((low >= 48 && low <= 57) || (low >= 97 && low <= 102)) { run Task.abort("invalid hexadecimal Xauthority cookie") }
-    let bytesAt56 = Bytes.asMutSlice(&mut authorization)
-    bytesAt56[byteIndex] = (if high <= 57 { high - 48 } else { high - 87 }) * 16 + (if low <= 57 { low - 48 } else { low - 87 })
+      if !((high >= 48 && high <= 57) || (high >= 97 && high <= 102))
+        || !((low >= 48 && low <= 57) || (low >= 97 && low <= 102)) {
+        run Task.abort("invalid hexadecimal Xauthority cookie")
+      }
+      let bytesAt56 = Bytes.asMutSlice(&mut authorization)
+      bytesAt56[byteIndex] = (if high <= 57 {
+        high - 48
+      } else {
+        high - 87
+      })
+        * 16
+        + (if low <= 57 {
+          low - 48
+        } else {
+          low - 87
+        })
       byteIndex = byteIndex + 1
+    }
+    run Task.exec("xauth", &["-f", pathText(&authority), "add", ":0", ".", cookie])
+    let path = run Path.make("/usr/bin/Xvfb")
+    let mut request = run ChildProcess.request(&path)
+    run Subprocess.inheritEnvironment(&mut request)
+    let arguments = [
+      "-displayfd",
+      "3",
+      "-screen",
+      "0",
+      "1280x800x24",
+      "-nolisten",
+      "tcp",
+      "-auth",
+      pathText(&authority),
+    ]
+    let mut index: usize = 0
+    while index < arguments.length {
+      run ChildProcess.addArgument(&mut request, arguments[index])
+      index = index + 1
+    }
+    let mut options = SpawnOptions.make()
+    run options.setStdio(2, Stdio.inherit(2))
+    run options.setStdio(3, Stdio.pipe())
+    let mut child = run Intrinsic.catchFailure<SubprocessError>(
+      Subprocess.spawn(&request, &options),
+      failure,
+    )
+    let descriptor = child.takePipe(3) |> Option<i32>.unwrapOr(-1)
+    let mut display = Display {
+      child: move child,
+      directory: move directory,
+      environment: List<String>.make(),
+      authorization: move authorization,
+    }
+    let mut number = Bytes.make()
+    let mut attempt: usize = 0
+    let mut complete = false
+    while attempt < 1000 && !complete {
+      let mut byte: [u8; 1] = [0]
+      let count = unsafe read(descriptor, Pointer.fromMutSlice(&mut byte), 1)
+      if count == 1 {
+        if byte[0] == 10 {
+          complete = true
+        } else if byte[0] >= 48 && byte[0] <= 57 {
+          run Bytes.append(&mut number, &byte)
+        } else {
+          break
+        }
+      } else if count == 0 {
+        break
+      } else {
+        run cdp.sleep(10)
+      }
+      attempt = attempt + 1
+    }
+    Subprocess.closeDescriptor(descriptor)
+    if !complete || Bytes.length(&number) == 0 {
+      run Task.abort("private Xvfb did not publish its display within ten seconds")
+    }
+    let mut selected = run String.copy(":")
+    run String.append(&mut selected, run cdp.utf8(Bytes.asSlice(&number)))
+    run Task.exec(
+      "xauth",
+      &["-f", pathText(&authority), "add", String.view(&selected), ".", cookie],
+    )
+    let mut displayVariable = run String.copy("DISPLAY=:")
+    run String.append(&mut displayVariable, run cdp.utf8(Bytes.asSlice(&number)))
+    run List<String>.append(&mut display.environment, move displayVariable)
+    let mut authorityVariable = run String.copy("XAUTHORITY=")
+    run String.append(&mut authorityVariable, pathText(&authority))
+    run List<String>.append(&mut display.environment, move authorityVariable)
+    return move display
   }
-  run Task.exec("xauth", &["-f", pathText(&authority), "add", ":0", ".", cookie])
-  let path = run Path.make("/usr/bin/Xvfb")
-  let mut request = run ChildProcess.request(&path)
-  run Subprocess.inheritEnvironment(&mut request)
-  let arguments = ["-displayfd", "3", "-screen", "0", "1280x800x24", "-nolisten", "tcp", "-auth", pathText(&authority)]
-  let mut index: usize = 0
-  while index < arguments.length { run ChildProcess.addArgument(&mut request, arguments[index])
-      index = index + 1 }
-  let mut options = SpawnOptions.make()
-  run options.setStdio(2, Stdio.inherit(2))
-  run options.setStdio(3, Stdio.pipe())
-  let mut child = run Intrinsic.catchFailure<SubprocessError>(Subprocess.spawn(&request, &options), failure)
-  let descriptor = child.takePipe(3) |> Option<i32>.unwrapOr(-1)
-  let mut display = Display { child: move child, directory: move directory, environment: List<String>.make(), authorization: move authorization }
-  let mut number = Bytes.make()
-  let mut attempt: usize = 0
-  let mut complete = false
-  while attempt < 1000 && !complete {
-    let mut byte: [u8; 1] = [0]
-    let count = unsafe read(descriptor, Pointer.fromMutSlice(&mut byte), 1)
-    if count == 1 {
-      if byte[0] == 10 { complete = true }
-      else if byte[0] >= 48 && byte[0] <= 57 { run Bytes.append(&mut number, &byte) }
-      else { break }
-    } else if count == 0 { break }
-    else { run cdp.sleep(10) }
-    attempt = attempt + 1
+
+  pub effect fn release(display: &Display) -> ()
+    ! FileError | OutOfMemoryError
+    ? &mut FileSystem | &mut Allocator {
+    run FileSystem.removeDirectoryRecursively(&display.directory.path)
   }
-  Subprocess.closeDescriptor(descriptor)
-  if !complete || Bytes.length(&number) == 0 { run Task.abort("private Xvfb did not publish its display within ten seconds") }
-  let mut selected = run String.copy(":")
-  run String.append(&mut selected, run cdp.utf8(Bytes.asSlice(&number)))
-  run Task.exec("xauth", &["-f", pathText(&authority), "add", String.view(&selected), ".", cookie])
-  let mut displayVariable = run String.copy("DISPLAY=:")
-  run String.append(&mut displayVariable, run cdp.utf8(Bytes.asSlice(&number)))
-  run List<String>.append(&mut display.environment, move displayVariable)
-  let mut authorityVariable = run String.copy("XAUTHORITY=")
-  run String.append(&mut authorityVariable, pathText(&authority))
-  run List<String>.append(&mut display.environment, move authorityVariable)
-  return move display
-}
-pub effect fn release(display: &Display) -> () ! FileError | OutOfMemoryError ? &mut FileSystem | &mut Allocator {
-  run FileSystem.removeDirectoryRecursively(&display.directory.path)
-}
 }
