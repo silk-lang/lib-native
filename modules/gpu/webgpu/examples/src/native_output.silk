@@ -38,7 +38,7 @@ static if Intrinsic.targetArchitecture() != "wasm32" {
       let mut inputs = run WindowsHostInput.capture()
       let directory = run HostInput.workingDirectory() |> Effect.provideMut<HostInput>(&mut inputs)
       // A launcher that passes an extended working directory (`\\?\C:\...`, as the standard
-      // library's Windows process image does) gives a name OsFileSystem rejects as a root.
+      // library's Windows process image does) gives a name OsFileSystem rejects as a root: silk#3042.
       let bytes = Bytes.asSlice(&directory)
       if bytes.length > 4 && bytes[0] == 92 && bytes[1] == 92 && bytes[2] == 63 && bytes[3] == 92 {
         if bytes.length > 8 && bytes[4] == 85 && bytes[5] == 78 && bytes[6] == 67 && bytes[7] == 92 {

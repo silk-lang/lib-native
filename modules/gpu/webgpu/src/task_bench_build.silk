@@ -14,8 +14,9 @@ import task_build as Build
 import task_process as Process
 import task_shaders as Shaders
 
-// Windows programs link only the kernel32 functions silkc imports for the standard library, so
-// the copy goes through FileSystem there; `cp -p` keeps the executable bit elsewhere.
+// Windows programs link only the kernel32 functions silkc imports for the standard library
+// (silk#3041), so the copy goes through FileSystem there; `cp -p` keeps the executable bit
+// elsewhere.
 pub effect fn copy(from: string, to: string) -> ()
   ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
   ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {

@@ -286,7 +286,8 @@ effect fn importLibrary(name: string) -> Path
 
 // Inherits the entire developer-shell environment and the task's standard handles. Clang and
 // llvm-lib report only on stderr, so stdout stays the JSON record. (Windows programs link only the
-// kernel32 functions silkc imports for the standard library, which leaves out SetStdHandle.)
+// kernel32 functions silkc imports for the standard library, which leaves out SetStdHandle:
+// silk#3041.)
 effect fn invoke(program: &Path, arguments: &[string]) -> ()
   ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
   ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
