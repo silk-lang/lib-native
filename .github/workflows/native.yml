@@ -99,6 +99,10 @@ jobs:
           echo "$HOME/.silk/bin" >> "$GITHUB_PATH"
       - run: silk task system-prerequisites --browser
       - run: silk task setup-ci --browser
+      # Ubuntu's AppArmor profile denies unprivileged user namespaces, which Chromium's sandbox
+      # needs. Without this Chromium aborts at startup with "No usable sandbox".
+      - name: Allow the Chromium sandbox
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
       - name: Compile real wasm applications and exercise canvas surfaces
         run: silk task test-browser
   windows:

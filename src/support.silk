@@ -18,6 +18,7 @@ import silk.num.usize
 import silk.num.u64
 static if Intrinsic.targetOperatingSystem() == "windows" {
   import windows
+  import silk.platform.windows.path { WindowsPath }
 } else {
   import silk.platform.native.file { NativeFile, NativeFileError }
   import silk.system.subprocess { Subprocess }
@@ -51,37 +52,22 @@ pub effect fn env(name: string) -> String
   }
 }
 
-// Accept both host spelling (C:\\...) and the filesystem's /C:/... namespace.
+// Accept both host spelling (C:\..., \\server\share\..., \\?\C:\...) and the filesystem's
+// /C:/... namespace.
 pub effect fn absolute(value: string) -> Path
   ! FileError | OutOfMemoryError ? &mut Allocator {
-  let mut normalized = Bytes.make()
-  let source = String.utf8Bytes(value)
   static if Intrinsic.targetOperatingSystem() == "windows" {
-    if source.length >= 2 && source[1] == 58 { run Bytes.append(&mut normalized, b"/") }
-    if source.length >= 2 && (source[0] == 92 || source[0] == 47) && (source[1] == 92 || source[1] == 47) {
-      run Bytes.append(&mut normalized, b"/UNC/")
-    }
+    if !String.startsWith(value, "/") { return run WindowsPath.fromNative(value) }
   }
-  let mut index: usize = 0
-  while index < source.length {
-    let value = source[index]
-    static if Intrinsic.targetOperatingSystem() == "windows" {
-      if index == 0 && source.length >= 2 && (value == 92 || value == 47) && (source[1] == 92 || source[1] == 47) { index = index + 1 }
-      else { run Bytes.append(&mut normalized, &[if value == 92 { 47 } else { value }]) }
-    } else { run Bytes.append(&mut normalized, &[value]) }
-    index = index + 1
-  }
+  let source = String.utf8Bytes(value)
   let path = run Path.root()
-  let bytes = Bytes.asSlice(&normalized)
-  if bytes.length == 0 || bytes[0] != 47 { fail FileSystem.error(FileSystem.pathOperation(), FileSystem.invalidPath()) }
-  return run Path.resolveBytes(&path, Slice.view(bytes, 1, bytes.length - 1))
+  if source.length == 0 || source[0] != 47 { fail FileSystem.error(FileSystem.pathOperation(), FileSystem.invalidPath()) }
+  return run Path.resolveBytes(&path, Slice.view(source, 1, source.length - 1))
 }
 
 pub effect fn root() -> Path
   ! TaskError | FileError | HostInputError | OutOfMemoryError ? &mut HostInput | &mut Allocator {
-  let value = run env("SILK_PROJECT_ROOT")
-  if String.view(&value) == "" { run Task.abort("Run this program with silk task") }
-  return run absolute(String.view(&value))
+  return run Task.root()
 }
 
 pub effect fn resolveInput(value: string) -> Path
@@ -112,6 +98,25 @@ effect fn resolveFrom(value: string, invocation: bool) -> Path
     }
     return run Path.resolveBytes(&base, Bytes.asSlice(&normalized))
   } else { return run Path.resolve(&base, value) }
+}
+
+/// The directory a PATH or LIB entry names, or none when the entry is empty or not a usable path
+/// (`..` components, unexpanded variables): a search skips such entries, as a shell does.
+pub effect fn searchDirectory(value: string) -> Option<Path>
+  ! TaskError | HostInputError | OutOfMemoryError ? &mut HostInput | &mut Allocator {
+  if value == "" { return Option<Path>.none() }
+  return match move run Effect.result(resolve(value)) {
+    Result<Path, TaskError | FileError | HostInputError | OutOfMemoryError>.Success { value: path } => Option<Path>.some(move path)
+    Result<Path, TaskError | FileError | HostInputError | OutOfMemoryError>.Failure { error } => match move error {
+      FileError invalid => {
+        drop invalid
+        Option<Path>.none()
+      }
+      TaskError failed => { fail move failed }
+      HostInputError unreadable => { fail move unreadable }
+      OutOfMemoryError exhausted => { fail move exhausted }
+    }
+  }
 }
 
 pub effect fn print(value: string) -> () ! WriterError {
@@ -195,8 +200,10 @@ pub effect fn which(name: string) -> Option<Path>
   let separator = if os() == "windows" { ";" } else { ":" }
   let mut directories = String.split(String.view(&path), separator)
   while let Option<string>.Some { value } = Split.next(&mut directories) {
-    if value == "" { continue }
-    let directory = run resolve(value)
+    let directory = match move run searchDirectory(value) {
+      Option<Path>.Some { value: found } => move found
+      Option<Path>.None => { continue }
+    }
     let candidate = run Path.join(&directory, name)
     if run FileSystem.exists(&candidate) { return Option<Path>.some(move candidate) }
     static if Intrinsic.targetOperatingSystem() == "windows" {

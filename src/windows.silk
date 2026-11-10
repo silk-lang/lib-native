@@ -246,8 +246,10 @@ effect fn tool(name: string) -> Path
     let path = run support.env("PATH")
     let mut parts = String.split(String.view(&path), ";")
     while let Option<string>.Some { value } = parts.next() {
-      if value == "" { continue }
-      let directory = run support.resolve(unquote(value))
+      let directory = match move run support.searchDirectory(unquote(value)) {
+        Option<Path>.Some { value: found } => move found
+        Option<Path>.None => { continue }
+      }
       let candidate = run Path.join(&directory, name)
       if run regular(&candidate) { return move candidate }
       if !String.endsWith(name, ".exe") {
@@ -269,8 +271,10 @@ effect fn importLibrary(name: string) -> Path
   let lib = run support.env("LIB")
   let mut parts = String.split(String.view(&lib), ";")
   while let Option<string>.Some { value } = parts.next() {
-    if value == "" { continue }
-    let directory = run support.resolve(unquote(value))
+    let directory = match move run support.searchDirectory(unquote(value)) {
+      Option<Path>.Some { value: found } => move found
+      Option<Path>.None => { continue }
+    }
     let candidate = run Path.join(&directory, name)
     if run regular(&candidate) { return move candidate }
   }
