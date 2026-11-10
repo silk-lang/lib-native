@@ -6,6 +6,7 @@
   "mesa": {
     "version": "26.0.8-1ubuntu0.3",
     "url": "https://snapshot.ubuntu.com/ubuntu/20261027T000000Z/pool/main/m/mesa/mesa-vulkan-drivers_26.0.8-1ubuntu0.3_amd64.deb",
+    "mirrors": ["http://archive.ubuntu.com/ubuntu/pool/main/m/mesa/mesa-vulkan-drivers_26.0.8-1ubuntu0.3_amd64.deb"],
     "sha256": "27db5fa34d50d208b58cc94317b573065329740bb98d0e12b7947b06a9d02a4e",
     "bytes": 19109714
   }

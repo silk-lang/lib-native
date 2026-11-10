@@ -390,12 +390,46 @@ pub effect fn download(asset: &Value) -> Path
   return move archive
 }
 
+// The pinned URL first, then each of the asset's optional `mirrors`; whichever answers must match
+// the pinned digest.
 effect fn downloadPending(asset: &Value, pending: &Path, archive: &Path) -> ()
   ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
   ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
-  run exec("curl", &["--fail", "--location", "--silent", "--show-error", "--retry", "3", "--output", text(pending), run stringField(asset, "url")])
-  run verify(asset, pending)
-  run rename(pending, archive)
+  let mut urls = List<string>.make()
+  run urls.append(run stringField(asset, "url"))
+  if let Option<&Value>.Some { value: mirrors } = Json.field(asset, "mirrors") {
+    match &mirrors.* {
+      Value.Array { values } => {
+        let items = List<Value>.asSlice(&values)
+        let mut index: usize = 0
+        while index < items.length {
+          match Json.asString(Option<&Value>.some(&items[index])) {
+            Option<string>.Some { value } => run urls.append(value)
+            Option<string>.None => run Task.abort("Invalid asset mirror")
+          }
+          index = index + 1
+        }
+      }
+      _ => run Task.abort("Invalid asset mirrors")
+    }
+  }
+  let candidates = List<string>.asSlice(&urls)
+  let mut index: usize = 0
+  while index < candidates.length {
+    let fetched = run Effect.result(exec("curl", &["--fail", "--location", "--silent", "--show-error", "--retry", "3", "--output", text(pending), candidates[index]]))
+    match move fetched {
+      Result<(), TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError>.Success { .. } => {
+        run verify(asset, pending)
+        run rename(pending, archive)
+        return ()
+      }
+      Result<(), TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError>.Failure { error } => {
+        if index + 1 == candidates.length { fail move error }
+        drop error
+      }
+    }
+    index = index + 1
+  }
 }
 
 pub effect fn installAsset(asset: &Value, destination: &Path, required: string) -> ()

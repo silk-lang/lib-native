@@ -107,7 +107,9 @@ Linux tests explicitly select **Mesa lavapipe 26.0.8-1ubuntu0.3**.
 `scripts/ci-lock.json` pins the 19,109,714-byte amd64 `.deb` from Ubuntu's
 [`20261027T000000Z` snapshot](https://snapshot.ubuntu.com/ubuntu/20261027T000000Z/),
 SHA-256 `27db5fa34d50d208b58cc94317b573065329740bb98d0e12b7947b06a9d02a4e`.
-The actual package was downloaded and its checksum verified during setup research.
+The actual package was downloaded and its checksum verified during setup research. The snapshot
+service is intermittently unavailable, so setup falls back to the same file in the Ubuntu archive
+(`mirrors`) while that version is current; either copy must match the pinned digest.
 The installer verifies it again, installs its runtime dependencies with apt,
 checks the installed version, and sets `VK_DRIVER_FILES`/`VK_ICD_FILENAMES` to
 the package's lavapipe ICD. The Mesa binary is fixed; hosted-runner images and
