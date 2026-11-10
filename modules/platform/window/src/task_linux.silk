@@ -20,7 +20,8 @@ unsafe extern "C" fn usleep(microseconds: u32) -> i32
 unsafe extern "C" fn access(path: ?[*]const u8, mode: i32) -> i32
 
 // Whether something, including a Unix socket, exists at `path`. FileSystem.exists reports a
-// socket as a wrong-type lookup error, so display sockets are probed with access(2), as lib-ui does.
+// socket as a wrong-type lookup error (silk#3043), so display sockets are probed with access(2),
+// as lib-ui does.
 effect fn socketPresent(path: &Path) -> bool ! OutOfMemoryError ? &mut Allocator {
   let mut name = run Bytes.copy(Path.rawBytes(path))
   run Bytes.append(&mut name, b"\0")
