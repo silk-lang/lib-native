@@ -14,23 +14,16 @@ import task_build as Build
 import task_process as Process
 import task_shaders as Shaders
 
-static if Intrinsic.targetOperatingSystem() == "windows" {
-  import silk.core.effect { Effect }
-  import silk.core.result { Result }
-  import silk.platform.windows.wtf8 { Wtf8, InvalidWtf8 }
-  import silk.mem.pointer { Pointer }
-  @foreign(noCapture: ("existing", "created"))
-  unsafe extern "C" fn CopyFileW(existing: ?[*]const u16, created: ?[*]const u16, failIfExists: i32) -> i32
-}
+// Windows programs link only the kernel32 functions silkc imports for the standard library, so
+// the copy goes through FileSystem there; `cp -p` keeps the executable bit elsewhere.
 pub effect fn copy(from: string, to: string) -> ()
   ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
   ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
   static if Intrinsic.targetOperatingSystem() == "windows" {
-    let mut a = match move run Effect.result(Wtf8.decodeBytes(String.utf8Bytes(from))) { Result<List<u16>, InvalidWtf8 | OutOfMemoryError>.Success { value } => move value Result<List<u16>, InvalidWtf8 | OutOfMemoryError>.Failure { .. } => run Task.abort("invalid Windows copy source") }
-    let mut b = match move run Effect.result(Wtf8.decodeBytes(String.utf8Bytes(to))) { Result<List<u16>, InvalidWtf8 | OutOfMemoryError>.Success { value } => move value Result<List<u16>, InvalidWtf8 | OutOfMemoryError>.Failure { .. } => run Task.abort("invalid Windows copy destination") }
-    run List<u16>.append(&mut a, 0)
-    run List<u16>.append(&mut b, 0)
-    if unsafe CopyFileW(Pointer.fromSlice(List<u16>.asSlice(&a)), Pointer.fromSlice(List<u16>.asSlice(&b)), 0) == 0 { run Task.abort("cannot copy benchmark executable") }
+    let source = run Path.make(from)
+    let destination = run Path.make(to)
+    let bytes = run FileSystem.readFile(&source)
+    run FileSystem.writeFile(&destination, Bytes.asSlice(&bytes))
   } else { run Task.exec("cp", &["-p", from, to]) }
 }
 effect fn installed(name: string) -> String

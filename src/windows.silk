@@ -37,12 +37,8 @@ static if Intrinsic.targetOperatingSystem() == "windows" {
     while unsafe Pointer.read(unsafe Pointer.at(pointer, length)) != 0 { length = length + 1 }
     return length
   }
-  unsafe extern "C" fn GetStdHandle(which: u32) -> ?*mut u8
-  unsafe extern "C" fn SetStdHandle(which: u32, handle: ?*mut u8) -> i32
   @foreign(noCapture: ("from", "to"))
   unsafe extern "C" fn MoveFileExW(from: ?[*]const u16, to: ?[*]const u16, flags: u32) -> i32
-  @foreign(noCapture: ("from", "to"))
-  unsafe extern "C" fn CopyFileW(from: ?[*]const u16, to: ?[*]const u16, failIfExists: i32) -> i32
 }
 
 fn suffix(value: string, start: usize) -> string {
@@ -223,21 +219,8 @@ effect fn fileText(path: &Path) -> String
 effect fn copyFile(from: &Path, to: &Path) -> ()
   ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
   ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
-  static if Intrinsic.targetOperatingSystem() == "windows" {
-    let source = match move run WindowsHostPath.wide(from) {
-      Option<List<u16>>.Some { value } => move value
-      Option<List<u16>>.None => run Task.abort("Invalid copy source path.")
-    }
-    let destination = match move run WindowsHostPath.wide(to) {
-      Option<List<u16>>.Some { value } => move value
-      Option<List<u16>>.None => run Task.abort("Invalid copy destination path.")
-    }
-    if unsafe CopyFileW(Pointer.fromSlice(source.asSlice()), Pointer.fromSlice(destination.asSlice()), 0) == 0 {
-      run Task.abort("Cannot copy native library.")
-    }
-  } else {
-    run Task.abort("Windows file copying requires Windows.")
-  }
+  let bytes = run FileSystem.readFile(from)
+  run FileSystem.writeFile(to, Bytes.asSlice(&bytes))
 }
 
 effect fn regular(path: &Path) -> bool
@@ -297,8 +280,9 @@ effect fn importLibrary(name: string) -> Path
   run Task.abort(String.view(&message))
 }
 
-// Child stdout goes to stderr, with the entire developer-shell environment inherited.
-// Restore stdout even when allocation or launching fails; JSON remains the sole stdout record.
+// Inherits the entire developer-shell environment and the task's standard handles. Clang and
+// llvm-lib report only on stderr, so stdout stays the JSON record. (Windows programs link only the
+// kernel32 functions silkc imports for the standard library, which leaves out SetStdHandle.)
 effect fn invoke(program: &Path, arguments: &[string]) -> ()
   ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
   ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
@@ -309,12 +293,7 @@ effect fn invoke(program: &Path, arguments: &[string]) -> ()
       run words.append(run Bytes.copy(String.utf8Bytes(arguments[at])))
       at = at + 1
     }
-    let stdout = unsafe GetStdHandle(4294967285)
-    let stderr = unsafe GetStdHandle(4294967284)
-    if unsafe SetStdHandle(4294967285, stderr) == 0 { run Task.abort("Cannot redirect compiler output to stderr.") }
     let outcome = run Effect.result(WindowsProcessImage.execute(program, words.asSlice(), Option<&Path>.none()))
-    let restored = unsafe SetStdHandle(4294967285, stdout)
-    if restored == 0 { run Task.abort("Cannot restore task stdout.") }
     let status = match move outcome {
       Result<Option<u32>, OutOfMemoryError>.Success { value } => move value
       Result<Option<u32>, OutOfMemoryError>.Failure { error } => { fail move error }

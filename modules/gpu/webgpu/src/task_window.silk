@@ -168,7 +168,7 @@ effect fn smoke(binary: string, output: &Path, inherited: &[String], authorizati
       if observedWidth == width && observedHeight == height {
         if unsafe X11.silk_task_x11_capture(connection.pointer, window, usize.toU32(width), usize.toU32(height), Pointer.fromMutSlice(Bytes.asMutSlice(&mut pixels)), width * height * 4) != 0 { run Task.abort("XGetImage failed or Xvfb is not depth-24 RGB8") }
         let actual = Bytes.asSlice(&pixels)
-          let family = if matches(actual, &unorm) { 0 } else if matches(actual, &srgb) { 1 } else { 2 }
+          let family: usize = if matches(actual, &unorm) { 0 } else if matches(actual, &srgb) { 1 } else { 2 }
         if family < 2 {
           if selected < 2 && selected != family { run Task.abort("surface color encoding changed during resize") }
             selected = family
