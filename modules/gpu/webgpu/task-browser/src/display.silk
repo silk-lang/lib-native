@@ -2,9 +2,7 @@ static if Intrinsic.targetOperatingSystem() == "linux" {
 import silk.cli.task { Task, TaskError }
 import silk.collections.bytes { Bytes }
 import silk.collections.list { List }
-import silk.core.effect { Effect }
 import silk.core.option { Option }
-import silk.core.result { Result }
 import silk.core.ownership { Drop }
 import silk.io.writer { WriterError }
 import silk.mem.allocator { Allocator, OutOfMemoryError }

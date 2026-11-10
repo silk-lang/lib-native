@@ -1,3 +1,5 @@
+// Consumers import `capture` by path; importing it here makes checking this library
+// check the module.
 static if Intrinsic.targetOperatingSystem() == "linux" {
-  import capture
+  import capture as _capture
 }

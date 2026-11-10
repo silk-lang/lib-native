@@ -17,7 +17,6 @@ import silk.mem.allocator { OutOfMemoryError }
 import silk.num.i32
 import silk.core.effect { Effect }
 import silk.text.string { String }
-import silk.core.option { Option }
 
 // These two local owners only arrange teardown; they do not abstract windowing.
 struct GlfwLifetime {}
@@ -101,7 +100,7 @@ effect fn windowLoop(instance: &Instance) -> ()
   if unsafe glfw.glfwInit() == 0 {
     fail GpuError.status(sys.WGPUStatus_Error)
   }
-  let glfwLifetime = GlfwLifetime {}
+  let _glfwLifetime = GlfwLifetime {}
   unsafe glfw.glfwWindowHint(0x00022001, 0) // GLFW_CLIENT_API = GLFW_NO_API
   let handle = unsafe glfw.glfwCreateWindow(
     800,
