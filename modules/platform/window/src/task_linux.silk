@@ -12,8 +12,20 @@ import silk.num.usize
 import task_build { which }
 
 static if Intrinsic.targetOperatingSystem() == "linux" {
+import silk.collections.bytes { Bytes }
+import silk.mem.pointer { Pointer }
 import silk.system.subprocess { Subprocess, SubprocessError, SpawnOptions, ExitWatch }
 unsafe extern "C" fn usleep(microseconds: u32) -> i32
+@foreign(noCapture: .("path"))
+unsafe extern "C" fn access(path: ?[*]const u8, mode: i32) -> i32
+
+// Whether something, including a Unix socket, exists at `path`. FileSystem.exists reports a
+// socket as a wrong-type lookup error, so display sockets are probed with access(2), as lib-ui does.
+effect fn socketPresent(path: &Path) -> bool ! OutOfMemoryError ? &mut Allocator {
+  let mut name = run Bytes.copy(Path.rawBytes(path))
+  run Bytes.append(&mut name, b"\0")
+  return unsafe access(Pointer.fromSlice(Bytes.asSlice(&name)), 0) == 0
+}
 
 effect fn start(program: &Path, arguments: &[string]) -> Subprocess ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError | SubprocessError
   ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
@@ -42,7 +54,7 @@ effect fn waitFor(path: &Path) -> () ! TaskError | ProcessError | FileError | Ho
   ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
   let mut attempt: usize = 0
   while attempt < 200 {
-    if run FileSystem.exists(path) { return () }
+    if run socketPresent(path) { return () }
     let ignored = unsafe usleep(50000)
     drop ignored
     attempt = attempt + 1
@@ -71,7 +83,7 @@ effect fn runX11(program: string) -> () ! TaskError | ProcessError | FileError |
     run decimal(&mut lockText, number)
     run String.append(&mut lockText, "-lock")
     let lock = run Path.make(String.view(&lockText))
-    if !(run FileSystem.exists(&socket)) && !(run FileSystem.exists(&lock)) { break }
+    if !(run socketPresent(&socket)) && !(run socketPresent(&lock)) { break }
     number = number + 1
   }
   if number == 140 { run Task.abort("no free X11 display in :90 through :139") }
