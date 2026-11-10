@@ -181,7 +181,8 @@ pub effect fn systemPrerequisites(browser: bool) -> ()
   static if Intrinsic.targetOperatingSystem() != "linux" { run Task.abort("System prerequisites require an Ubuntu runner") }
   run support.exec("sudo", &["apt-get", "update"])
   if browser {
-    run support.exec("sudo", &["apt-get", "install", "-y", "--no-install-recommends", "xvfb", "xauth"])
+    // The window package's browser smoke task builds its Linux bridge, which needs these headers.
+    run support.exec("sudo", &["apt-get", "install", "-y", "--no-install-recommends", "libx11-dev", "libxkbcommon-dev", "libwayland-dev", "wayland-protocols", "xvfb", "xauth"])
   } else {
     run support.exec("sudo", &["apt-get", "install", "-y", "--no-install-recommends", "libx11-dev", "libxkbcommon-dev", "libwayland-dev", "libglfw3-dev", "libvulkan1", "xvfb", "xauth", "weston"])
   }
