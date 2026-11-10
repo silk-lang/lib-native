@@ -1,0 +1,475 @@
+import silk.cli.task { Task, TaskError }
+import silk.collections.bytes { Bytes }
+import silk.collections.list { List }
+import silk.collections.slice { Slice }
+import silk.core.effect { Effect }
+import silk.core.option { Option }
+import silk.core.result { Result }
+import silk.io.writer { Writer, WriterError }
+import silk.io.writer_native { StdoutWriter, StderrWriter }
+import silk.json.scanner { JsonError }
+import silk.json.value { Json, Value }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.system.child_process { ChildProcess, Exited, ProcessError, ProcessOutcome, Signaled }
+import silk.system.filesystem { DirectoryEntry, DirectoryInfo, FileError, FileInfo, FileSystem, Path }
+import silk.system.host_input { HostInput, HostInputError }
+import silk.text.string { InvalidUtf8, Split, String }
+import silk.num.usize
+import silk.num.u64
+static if Intrinsic.targetOperatingSystem() == "windows" {
+  import windows
+} else {
+  import silk.platform.native.file { NativeFile, NativeFileError }
+  import silk.system.subprocess { Subprocess }
+}
+
+pub fn text(path: &Path) -> string {
+  let value = match Path.view(path) {
+    Option<string>.Some { value } => value
+    Option<string>.None => Intrinsic.trap("non-UTF-8 task path")
+  }
+  static if Intrinsic.targetOperatingSystem() == "windows" {
+    if String.byteLength(value) >= 3 && String.utf8Bytes(value)[2] == 58 {
+      return String.slice(value, 1, String.byteLength(value) - 1)
+    }
+  }
+  return value
+}
+
+pub effect fn utf8(bytes: &Bytes) -> string ! TaskError | OutOfMemoryError ? &mut Allocator {
+  return match String.fromUtf8(Bytes.asSlice(bytes)) {
+    Result<string, InvalidUtf8>.Success { value } => value
+    Result<string, InvalidUtf8>.Failure { .. } => run Task.abort("Expected UTF-8 text")
+  }
+}
+
+pub effect fn env(name: string) -> String
+  ! TaskError | HostInputError | OutOfMemoryError ? &mut HostInput | &mut Allocator {
+  return match move run HostInput.variableNamed(name) {
+    Option<Bytes>.Some { value } => run String.copy(run utf8(&value))
+    Option<Bytes>.None => run String.copy("")
+  }
+}
+
+// Accept both host spelling (C:\\...) and the filesystem's /C:/... namespace.
+pub effect fn absolute(value: string) -> Path
+  ! FileError | OutOfMemoryError ? &mut Allocator {
+  let mut normalized = Bytes.make()
+  let source = String.utf8Bytes(value)
+  static if Intrinsic.targetOperatingSystem() == "windows" {
+    if source.length >= 2 && source[1] == 58 { run Bytes.append(&mut normalized, b"/") }
+    if source.length >= 2 && (source[0] == 92 || source[0] == 47) && (source[1] == 92 || source[1] == 47) {
+      run Bytes.append(&mut normalized, b"/UNC/")
+    }
+  }
+  let mut index: usize = 0
+  while index < source.length {
+    let value = source[index]
+    static if Intrinsic.targetOperatingSystem() == "windows" {
+      if index == 0 && source.length >= 2 && (value == 92 || value == 47) && (source[1] == 92 || source[1] == 47) { index = index + 1 }
+      else { run Bytes.append(&mut normalized, &[if value == 92 { 47 } else { value }]) }
+    } else { run Bytes.append(&mut normalized, &[value]) }
+    index = index + 1
+  }
+  let path = run Path.root()
+  let bytes = Bytes.asSlice(&normalized)
+  if bytes.length == 0 || bytes[0] != 47 { fail FileSystem.error(FileSystem.pathOperation(), FileSystem.invalidPath()) }
+  return run Path.resolveBytes(&path, Slice.view(bytes, 1, bytes.length - 1))
+}
+
+pub effect fn root() -> Path
+  ! TaskError | FileError | HostInputError | OutOfMemoryError ? &mut HostInput | &mut Allocator {
+  let value = run env("SILK_PROJECT_ROOT")
+  if String.view(&value) == "" { run Task.abort("Run this program with silk task") }
+  return run absolute(String.view(&value))
+}
+
+pub effect fn resolveInput(value: string) -> Path
+  ! TaskError | FileError | HostInputError | OutOfMemoryError ? &mut HostInput | &mut Allocator {
+  return run resolveFrom(value, true)
+}
+
+pub effect fn resolve(value: string) -> Path
+  ! TaskError | FileError | HostInputError | OutOfMemoryError ? &mut HostInput | &mut Allocator {
+  return run resolveFrom(value, false)
+}
+
+effect fn resolveFrom(value: string, invocation: bool) -> Path
+  ! TaskError | FileError | HostInputError | OutOfMemoryError ? &mut HostInput | &mut Allocator {
+  let bytes = String.utf8Bytes(value)
+  if String.startsWith(value, "/") { return run absolute(value) }
+  static if Intrinsic.targetOperatingSystem() == "windows" {
+    if (bytes.length >= 2 && bytes[1] == 58) || String.startsWith(value, "\\\\") { return run absolute(value) }
+  }
+  let base = if invocation { run Task.invocationDirectory() } else { run root() }
+  static if Intrinsic.targetOperatingSystem() == "windows" {
+    let mut normalized = Bytes.make()
+    let mut index: usize = 0
+    while index < bytes.length {
+      let byte = bytes[index]
+      run Bytes.append(&mut normalized, &[if byte == 92 { 47 } else { byte }])
+      index = index + 1
+    }
+    return run Path.resolveBytes(&base, Bytes.asSlice(&normalized))
+  } else { return run Path.resolve(&base, value) }
+}
+
+pub effect fn print(value: string) -> () ! WriterError {
+  let mut output = StdoutWriter.make()
+  run Writer.writeAll(String.utf8Bytes(value)) |> Effect.provideMut<Writer>(&mut output)
+  run Writer.writeAll(b"\n") |> Effect.provideMut<Writer>(&mut output)
+}
+
+pub effect fn concat(parts: &[string]) -> String ! OutOfMemoryError ? &mut Allocator {
+  let mut value = run String.copy("")
+  let mut index: usize = 0
+  while index < parts.length {
+    run String.append(&mut value, parts[index])
+    index = index + 1
+  }
+  return move value
+}
+
+pub effect fn readJson(path: &Path) -> Value
+  ! TaskError | FileError | OutOfMemoryError ? &mut FileSystem | &mut Allocator {
+  let bytes = run FileSystem.readFile(path)
+  return match move run Effect.result(Json.parse(Bytes.asSlice(&bytes))) {
+    Result<Value, JsonError | OutOfMemoryError>.Success { value } => move value
+    Result<Value, JsonError | OutOfMemoryError>.Failure { error: failure } => match move failure {
+      OutOfMemoryError error => { fail move error }
+      JsonError error => {
+        drop error
+        run Task.abort("Invalid JSON task input")
+      }
+    }
+  }
+}
+
+pub effect fn field<'a>(value: &'a Value, name: string) -> &'a Value
+  ! TaskError | OutOfMemoryError ? &mut Allocator {
+  return match Json.field(value, name) {
+    Option<&'a Value>.Some { value: found } => found
+    Option<&'a Value>.None => run Task.abort(name)
+  }
+}
+
+pub effect fn stringField<'a>(value: &'a Value, name: string) -> string<'a>
+  ! TaskError | OutOfMemoryError ? &mut Allocator {
+  return match Json.asString(Json.field(value, name)) {
+    Option<string<'a>>.Some { value: found } => found
+    Option<string<'a>>.None => run Task.abort(name)
+  }
+}
+
+pub fn os() -> string<'static> {
+  static if Intrinsic.targetOperatingSystem() == "windows" { return "windows" }
+  else {
+    static if Intrinsic.targetOperatingSystem() == "darwin" { return "darwin" }
+    else { return "linux" }
+  }
+}
+
+pub fn target() -> string<'static> {
+  static if Intrinsic.targetOperatingSystem() == "darwin" {
+    static if Intrinsic.targetArchitecture() == "aarch64" { return "aarch64-apple-darwin" }
+    else { return "x86_64-apple-darwin" }
+  } else {
+    static if Intrinsic.targetOperatingSystem() == "windows" {
+      static if Intrinsic.targetArchitecture() == "aarch64" { return "aarch64-pc-windows-msvc" }
+      else { return "x86_64-pc-windows-msvc" }
+    } else {
+      static if Intrinsic.targetArchitecture() == "aarch64" { return "aarch64-unknown-linux-gnu" }
+      else { return "x86_64-unknown-linux-gnu" }
+    }
+  }
+}
+
+pub effect fn which(name: string) -> Option<Path>
+  ! TaskError | FileError | HostInputError | OutOfMemoryError ? &mut HostInput | &mut Allocator | &mut FileSystem {
+  if String.contains(name, "/") || String.contains(name, "\\") {
+    let path = run resolve(name)
+    if run FileSystem.exists(&path) { return Option<Path>.some(move path) }
+    return Option<Path>.none()
+  }
+  let path = run env("PATH")
+  let separator = if os() == "windows" { ";" } else { ":" }
+  let mut directories = String.split(String.view(&path), separator)
+  while let Option<string>.Some { value } = Split.next(&mut directories) {
+    if value == "" { continue }
+    let directory = run resolve(value)
+    let candidate = run Path.join(&directory, name)
+    if run FileSystem.exists(&candidate) { return Option<Path>.some(move candidate) }
+    static if Intrinsic.targetOperatingSystem() == "windows" {
+      let executable = run concat(&[name, ".exe"])
+      let candidate = run Path.join(&directory, String.view(&executable))
+      if run FileSystem.exists(&candidate) { return Option<Path>.some(move candidate) }
+    }
+  }
+  return Option<Path>.none()
+}
+
+pub effect fn capture(program: string, args: &[string]) -> Bytes
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let path = match move run which(program) {
+    Option<Path>.Some { value } => move value
+    Option<Path>.None => run Task.abort(program)
+  }
+  let mut request = run ChildProcess.request(&path)
+  let mut index: usize = 0
+  while index < args.length {
+    run ChildProcess.addArgument(&mut request, args[index])
+    index = index + 1
+  }
+  static if Intrinsic.targetOperatingSystem() == "windows" {
+    run windows.inheritEnvironment(&mut request)
+  } else { run Subprocess.inheritEnvironment(&mut request) }
+  let ProcessOutcome { value } = move run ChildProcess.submit(&request)
+  let mut errors = StderrWriter.make()
+  match move value {
+    Exited outcome => {
+      let Exited { code, output, errors: diagnostic } = move outcome
+      run Writer.writeAll(Bytes.asSlice(&diagnostic)) |> Effect.provideMut<Writer>(&mut errors)
+      if code != 0 { fail TaskError { message: run concat(&[program, " failed"]), status: code } }
+      return move output
+    }
+    Signaled outcome => {
+      run Writer.writeAll(Bytes.asSlice(&outcome.errors)) |> Effect.provideMut<Writer>(&mut errors)
+      fail TaskError { message: run concat(&[program, " terminated by signal"]), status: 128 + outcome.signal }
+    }
+  }
+}
+
+pub effect fn exec(program: string, args: &[string]) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let path = match move run which(program) {
+    Option<Path>.Some { value } => move value
+    Option<Path>.None => run Task.abort(program)
+  }
+  let spelling = match Path.view(&path) {
+    Option<string>.Some { value } => value
+    Option<string>.None => run Task.abort("Invalid program path")
+  }
+  run Task.exec(spelling, args)
+}
+
+
+pub effect fn copyTree(from: &Path, to: &Path) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  match move run FileSystem.stat(from) {
+    FileInfo info => {
+      drop info
+      let bytes = run FileSystem.readFile(from)
+      run FileSystem.writeFileWithParents(to, Bytes.asSlice(&bytes))
+    }
+    DirectoryInfo info => {
+      drop info
+      run FileSystem.createDirectoriesRecursively(to)
+      let children = run FileSystem.listDirectory(from)
+      let values = List<DirectoryEntry>.asSlice(&children)
+      let mut index: usize = 0
+      while index < values.length {
+        let child = &values[index]
+        let name = match Path.name(&child.path) {
+          Option<string>.Some { value } => value
+          Option<string>.None => run Task.abort("Invalid filename")
+        }
+        let destination = run Path.join(to, name)
+        run copyTree(&child.path, &destination)
+        index = index + 1
+      }
+    }
+  }
+}
+
+pub effect fn rename(from: &Path, to: &Path) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  static if Intrinsic.targetOperatingSystem() == "windows" { run windows.rename(from, to) }
+  else {
+    match move run Effect.result(NativeFile.rename(Path.rawBytes(from), Path.rawBytes(to))) {
+      Result<(), NativeFileError>.Success { .. } => {}
+      Result<(), NativeFileError>.Failure { error } => {
+        drop error
+        run Task.abort("Cannot publish the downloaded archive or installation")
+      }
+    }
+  }
+}
+
+// Native digest tools stream multi-gigabyte LLVM distributions without loading them into RAM.
+pub effect fn digest(path: &Path) -> String
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let output = if os() == "windows" {
+    run capture("certutil", &["-hashfile", text(path), "SHA256"])
+  } else { run capture("openssl", &["dgst", "-sha256", text(path)]) }
+  let value = run utf8(&output)
+  let mut lines = String.split(value, "\n")
+  let mut found = String.slice(value, 0, 0)
+  while let Option<string>.Some { value: line } = Split.next(&mut lines) {
+    let mut words = String.split(String.trim(line), " ")
+    while let Option<string>.Some { value: word } = Split.next(&mut words) {
+      if String.byteLength(word) == 64 {
+        let bytes = String.utf8Bytes(word)
+        let mut index: usize = 0
+        while index < bytes.length {
+          let byte = bytes[index]
+          if !((byte >= 48 && byte <= 57) || (byte >= 65 && byte <= 70) || (byte >= 97 && byte <= 102)) { break }
+          index = index + 1
+        }
+        if index == 64 { found = word }
+      }
+    }
+  }
+  if found == "" { run Task.abort("SHA-256 tool did not return a digest") }
+  let mut digest = run Bytes.copy(String.utf8Bytes(found))
+  let values = Bytes.asMutSlice(&mut digest)
+  let mut index: usize = 0
+  while index < values.length {
+    if values[index] >= 65 && values[index] <= 70 { values[index] = values[index] + 32 }
+    index = index + 1
+  }
+  drop values
+  return match move String.fromBytes(move digest) {
+    Result<String, InvalidUtf8>.Success { value: digestText } => move digestText
+    Result<String, InvalidUtf8>.Failure { .. } => run Task.abort("Invalid SHA-256 output")
+  }
+}
+
+pub effect fn verify(asset: &Value, path: &Path) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let checksum = run digest(path)
+  if String.view(&checksum) != run stringField(asset, "sha256") { run Task.abort("SHA-256 mismatch; remove the cached archive and retry") }
+  if let Option<u64>.Some { value } = Json.asU64(Json.field(asset, "bytes")) {
+    match move run FileSystem.stat(path) {
+      FileInfo info => { if usize.toU64(info.byteLength) != value { run Task.abort("Archive byte length mismatch") } }
+      DirectoryInfo info => {
+        drop info
+        run Task.abort("Expected an archive file")
+      }
+    }
+  }
+}
+
+pub effect fn download(asset: &Value) -> Path
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let url = run stringField(asset, "url")
+  let hash = run stringField(asset, "sha256")
+  let end = match String.findLast(url, "/") {
+    Option<usize>.Some { value } => value + 1
+    Option<usize>.None => run Task.abort("Invalid asset URL")
+  }
+  let name = run concat(&[hash, "-", String.slice(url, end, String.byteLength(url) - end)])
+  let cache = run resolve(".cache/downloads")
+  run FileSystem.createDirectoriesRecursively(&cache)
+  let archive = run Path.join(&cache, String.view(&name))
+  if run FileSystem.exists(&archive) {
+    run verify(asset, &archive)
+    return move archive
+  }
+  let temporary = run FileSystem.createTemporaryDirectory(&cache, b"download-")
+  let pending = run Path.join(&temporary, "archive")
+  let completed = run Effect.result(downloadPending(asset, &pending, &archive))
+  run FileSystem.removeDirectoryRecursively(&temporary)
+  match move completed {
+    Result<(), TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError>.Success { .. } => {}
+    Result<(), TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError>.Failure { error } => { fail move error }
+  }
+  return move archive
+}
+
+effect fn downloadPending(asset: &Value, pending: &Path, archive: &Path) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  run exec("curl", &["--fail", "--location", "--silent", "--show-error", "--retry", "3", "--output", text(pending), run stringField(asset, "url")])
+  run verify(asset, pending)
+  run rename(pending, archive)
+}
+
+pub effect fn installAsset(asset: &Value, destination: &Path, required: string) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let hash = run stringField(asset, "sha256")
+  let marker = run Path.join(destination, ".nonstd-archive-sha256")
+  if run FileSystem.exists(destination) {
+    if !run FileSystem.exists(&marker) { run Task.abort("Incomplete installation; remove it and retry") }
+    let bytes = run FileSystem.readFile(&marker)
+    if String.trim(run utf8(&bytes)) != hash { run Task.abort("Unverified installation; remove it and retry") }
+  } else {
+    let archive = run download(asset)
+    let parent = match move run Path.parent(destination) {
+      Option<Path>.Some { value } => move value
+      Option<Path>.None => run Task.abort("Invalid installation destination")
+    }
+    run FileSystem.createDirectoriesRecursively(&parent)
+    let staging = run FileSystem.createTemporaryDirectory(&parent, b"extract-")
+    let outcome = run Effect.result(extract(asset, &archive, &staging, destination, required))
+    if run FileSystem.exists(&staging) { run FileSystem.removeDirectoryRecursively(&staging) }
+    match move outcome {
+      Result<(), TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError>.Success { .. } => {}
+      Result<(), TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError>.Failure { error } => { fail move error }
+    }
+  }
+  if required != "" {
+    let requiredPath = run Path.join(destination, required)
+    if !run FileSystem.exists(&requiredPath) { run Task.abort("Pinned release lacks required file") }
+  }
+}
+
+effect fn extract(asset: &Value, archive: &Path, staging: &Path, destination: &Path, required: string) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  // tar's default safe extraction rejects traversal and symlink escapes; all input bytes are pinned.
+  let listing = run capture("tar", &["-tf", text(archive)])
+  let mut lines = String.split(run utf8(&listing), "\n")
+  while let Option<string>.Some { value } = Split.next(&mut lines) {
+    if String.startsWith(value, "/") || String.contains(value, "\\") { run Task.abort("Unsafe archive member") }
+    let mut segments = String.split(value, "/")
+    while let Option<string>.Some { value: segment } = Split.next(&mut segments) {
+      if segment == ".." { run Task.abort("Unsafe archive member") }
+    }
+  }
+  run exec("tar", &["-xf", text(archive), "-C", text(staging)])
+  let strip = match Json.field(asset, "strip_root") {
+    Option<&Value>.Some { value } => match &value.* {
+      Value.Bool { value: enabled } => enabled
+      _ => true
+    }
+    Option<&Value>.None => true
+  }
+  let tree = if strip {
+    let entries = run FileSystem.listDirectory(staging)
+    let values = List<DirectoryEntry>.asSlice(&entries)
+    if values.length != 1 || values[0].kind.code != 1 { run Task.abort("Expected exactly one release directory") }
+    run Path.fromBytes(Path.rawBytes(&values[0].path))
+  } else { run Path.fromBytes(Path.rawBytes(staging)) }
+  if required != "" {
+    let file = run Path.join(&tree, required)
+    if !run FileSystem.exists(&file) { run Task.abort("Pinned release lacks required file") }
+  }
+  let marker = run Path.join(&tree, ".nonstd-archive-sha256")
+  run FileSystem.writeFile(&marker, String.utf8Bytes(run stringField(asset, "sha256")))
+  run rename(&tree, destination)
+}
+
+pub effect fn install(component: string, required: string) -> Path
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let lockPath = run resolve("toolchains.lock.json")
+  let lock = run readJson(&lockPath)
+  let info = run field(&lock, component)
+  let platforms = run field(info, "platforms")
+  let asset = match Json.field(platforms, target()) {
+    Option<&Value>.Some { value } => value
+    Option<&Value>.None => run Task.abort("No pinned binary for this platform; supply LLVM 22 or see README prerequisites")
+  }
+  let path = run concat(&[".cache/", component, "/", run stringField(info, "version"), "/", target()])
+  let destination = run resolve(String.view(&path))
+  run installAsset(asset, &destination, required)
+  return move destination
+}

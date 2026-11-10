@@ -1,0 +1,82 @@
+import silk.cli.task { Task, TaskError }
+import silk.core.option { Option }
+import silk.io.writer { WriterError }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.system.child_process { ChildProcess, ProcessError }
+import silk.system.filesystem { FileError, FileSystem, Path }
+import silk.system.host_input { HostInput, HostInputError }
+import silk.text.string { String }
+import silk.num.f64
+import task_build as Build
+import task_data as D
+import task_pixels as Pixels
+import task_process as Process
+import task_schema as Schema
+import task_schema_browser as BrowserSchema
+import task_shaders as Shaders
+
+pub effect fn abi() -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  static if Intrinsic.targetOperatingSystem() == "windows" { run Task.abort("Windows timeout-managed ABI tests are unsupported: silk#3034") }
+  else { let binary = run Build.build("sys/abi/silk.toml", "gpu-webgpu-abi", "modules/gpu/webgpu/sys/abi", false, false)
+    let root = run Task.root()
+    run Process.timed(String.view(&binary), &[], &root, 60000) }
+}
+pub effect fn native() -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  static if Intrinsic.targetOperatingSystem() == "windows" { run Task.abort("Windows timeout-managed native tests are unsupported: silk#3034") }
+  else { let binary = run Build.build("tests/native/silk.toml", "gpu-webgpu-tests-native", "modules/gpu/webgpu/tests/native", false, false)
+    let root = run Task.root()
+    run Process.timed(String.view(&binary), &[], &root, 120000) }
+}
+pub effect fn pixels(binary: string, actual: string, output: string, timeout: f64) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  if binary != "" && actual != "" { run Task.abort("--binary and --actual are mutually exclusive") }
+  if actual != "" { let directory = run Process.resolve(actual)
+    run Pixels.check(&directory)
+    return () }
+  static if Intrinsic.targetOperatingSystem() == "windows" { run Task.abort("Windows timeout-managed pixel execution is unsupported: silk#3034; --actual remains available for existing output") }
+  else {
+    if !(timeout > 0.0) { run Task.abort("pixel timeout must be positive") }
+    let milliseconds = match f64.checkedToU64(timeout * 1000.0) { Option<u64>.Some { value } => value Option<u64>.None => run Task.abort("pixel timeout is not finite or representable") }
+    let binary = if binary == "" { run Build.build("examples/silk.toml", "gpu-webgpu-examples", "modules/gpu/webgpu/examples", false, false) } else { let path = run Process.resolve(binary)
+      run String.copy(Process.text(&path)) }
+    let directory = run Process.resolve(output)
+    run FileSystem.createDirectoriesRecursively(&directory)
+    let mut index: usize = 0
+    let suffixes = [".rgba", ".png"]
+    while index < Pixels.NAMES.length {
+      let mut suffix: usize = 0
+      while suffix < suffixes.length {
+        let name = run D.format("{}{}", &(Pixels.NAMES[index], suffixes[suffix]))
+        let file = run Path.join(&directory, String.view(&name))
+        if run FileSystem.exists(&file) { run FileSystem.removeFile(&file) }
+        suffix = suffix + 1
+      }
+      index = index + 1
+    }
+    let computed = run Path.join(&directory, "compute.u32")
+    if run FileSystem.exists(&computed) { run FileSystem.removeFile(&computed) }
+    run Process.timed(String.view(&binary), &[], &directory, milliseconds)
+    run Pixels.check(&directory)
+  }
+}
+pub effect fn checks(skipNative: bool) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  run Schema.generate(true)
+  run BrowserSchema.generate(true, "")
+  run Shaders.embed(true)
+  run Pixels.tests()
+  let packages = ["silk.toml", "sys/silk.toml", "tests/native/silk.toml", "examples/silk.toml", "examples-window/silk.toml", "bench/silk.toml"]
+  let mut index: usize = 0
+  while index < packages.length { run Task.silk(&["check", "--manifest-path", packages[index]])
+    index = index + 1 }
+  run Task.silk(&["generate", "--check", "--manifest-path", "bench/silk.toml"])
+  if !skipNative { run abi()
+    run native()
+    run pixels("", "", ".cache/pixels/native", 120.0) }
+}

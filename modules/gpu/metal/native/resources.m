@@ -8,9 +8,6 @@
 #include <math.h>
 
 // Private selectors exposed upstream behind its private feature. Availability is the caller contract.
-@interface MTLSamplerDescriptor (SilkPrivateResourceSelectors)
-- (void)setLodBias:(float)bias;
-@end
 @interface MTLVertexDescriptor (SilkPrivateResourceSelectors)
 - (id)newSerializedDescriptor;
 @end
@@ -605,8 +602,8 @@ void metal_SamplerDescriptor_set_border_color(void * object, uint64_t value) {
 }
 
 void metal_SamplerDescriptor_set_lod_bias(void * object, float value) {
-    MTLSamplerDescriptor * receiver = (MTLSamplerDescriptor *)object;
-    [receiver setLodBias:value];
+    // Upstream also exposes this as a private selector before macOS 26; callers check availability.
+    ((void (*)(id, SEL, float))objc_msgSend)((id)object, sel_registerName("setLodBias:"), value);
 }
 
 void metal_SamplerDescriptor_set_lod_min_clamp(void * object, float value) {

@@ -1,0 +1,253 @@
+import silk.cli.task { Task, TaskError }
+import silk.collections.bytes { Bytes }
+import silk.collections.slice { Slice }
+import silk.compress.checksum { CompressionChecksum }
+import silk.compress.deflate { Encoder, EncodeError, Options }
+import silk.compress.inflate { Format }
+import silk.core.effect { Effect }
+import silk.core.result { Result }
+import silk.encoding.endian as Endian
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.system.filesystem { FileError, FileSystem, Path }
+import silk.system.host_input { HostInput, HostInputError }
+import silk.io.writer { WriterError }
+import silk.text.string { String }
+import silk.num.i32
+import silk.num.u8
+import silk.num.usize
+import task_data as D
+import task_png as Png
+
+pub const NAMES: [string<'static>; 6] = ["clear", "triangle", "textured-quad", "instanced-rects", "compute", "msaa"]
+fn inside(x: i32, y: i32) -> bool { return y >= 64 && y < 448 && 2 * x >= 576 - y && 2 * x < 448 + y }
+fn clamp(value: i32) -> i32 { return if value < 4 { 4 } else if value > 8 { 8 } else { value } }
+pub effect fn reference(sample: usize) -> Bytes ! TaskError | OutOfMemoryError ? &mut Allocator {
+  if sample >= NAMES.length { run Task.abort("unknown pixel sample") }
+  let mut result = run Bytes.zeroed(64 * 64 * 4)
+  let pixels = Bytes.asMutSlice(&mut result)
+  let mut y: usize = 0
+  while y < 64 {
+    let mut x: usize = 0
+    while x < 64 {
+      let offset = (y * 64 + x) * 4
+      let mut red: u8 = 0
+      let mut green: u8 = 0
+      let mut blue: u8 = 0
+      if sample == 0 { red = 64
+        green = 128
+        blue = 191 }
+      else if sample == 1 { if inside(usize.toI32(x * 8 + 4), usize.toI32(y * 8 + 4)) { red = 64
+          green = 191
+          blue = 128 } }
+      else if sample == 2 {
+        let quadrant = (y / 32) * 2 + x / 32
+        if quadrant == 0 || quadrant == 3 { red = 255 }
+        if quadrant == 1 || quadrant == 3 { green = 255 }
+        if quadrant == 2 || quadrant == 3 { blue = 255 }
+      } else if sample == 3 {
+        let localX = usize.toI32((x % 8) * 2) - 1
+        let localY = usize.toI32((y % 8) * 2) - 1
+        let dx = localX - clamp(localX)
+        let dy = localY - clamp(localY)
+        if localX >= 0 && localX < 12 && localY >= 0 && localY < 12 && dx * dx + dy * dy <= 16 { red = 255
+          green = 128
+          blue = 64 }
+      } else if sample == 4 {
+        let value = (y * 64 + x) * 3 + 7
+        red = usize.toU8(value % 256)
+        green = usize.toU8((value / 256) % 256)
+      } else {
+        let xs = [3, 7, 1, 5]
+        let ys = [1, 3, 5, 7]
+        let mut coverage: i32 = 0
+        let mut index: usize = 0
+        while index < 4 { if inside(usize.toI32(x * 8) + xs[index], usize.toI32(y * 8) + ys[index]) { coverage = coverage + 1 }
+          index = index + 1 }
+        red = i32.toU8((255 * coverage + 8) / 16)
+        green = i32.toU8((765 * coverage + 8) / 16)
+        blue = i32.toU8((510 * coverage + 8) / 16)
+      }
+      pixels[offset] = red
+      pixels[offset + 1] = green
+      pixels[offset + 2] = blue
+      pixels[offset + 3] = 255
+      x = x + 1
+    }
+    y = y + 1
+  }
+  drop pixels
+  return move result
+}
+fn cap(sample: usize) -> usize { return if sample == 1 { 48 } else if sample == 5 { 128 } else { 0 } }
+pub struct Difference { pub pixels: usize, pub maximum: i32 }
+pub effect fn compare(sample: usize, expected: &[u8], actual: &[u8]) -> Difference ! TaskError | OutOfMemoryError | WriterError ? &mut Allocator {
+  if expected.length != 16384 || actual.length != expected.length { run Task.abort("pixel gate expected 16384 RGBA bytes") }
+  let mut different: usize = 0
+  let mut maximum: i32 = 0
+  let mut offset: usize = 0
+  while offset < expected.length {
+    let mut channel: usize = 0
+    let mut mismatch = false
+    while channel < 4 {
+      let signed = u8.toI32(actual[offset + channel]) - u8.toI32(expected[offset + channel])
+      let delta = if signed < 0 { -signed } else { signed }
+      if delta > maximum { maximum = delta }
+      if delta > 2 { mismatch = true }
+      channel = channel + 1
+    }
+    if mismatch { different = different + 1 }
+    offset = offset + 4
+  }
+  if different > cap(sample) {
+    let message = run D.format("{}: {} differing pixels exceed cap {}; max channel delta {}, tolerance 2", &(NAMES[sample], different, cap(sample), maximum))
+    fail TaskError { message: move message, status: 1 }
+  }
+  return Difference { pixels: different, maximum: maximum }
+}
+pub effect fn compute(bytes: &[u8]) -> () ! TaskError | OutOfMemoryError ? &mut Allocator {
+  if bytes.length != 16384 { run Task.abort("compute output must contain 4096 u32 values") }
+  let mut index: usize = 0
+  while index < 4096 { if Endian.readU32LittleEndian(bytes, index * 4) != usize.toU32(index * 3 + 7) { run Task.abort("compute output differs, including nonvisualized high bits") }
+    index = index + 1 }
+}
+effect fn chunk(output: &mut Bytes, kind: &[u8], data: &[u8]) -> () ! OutOfMemoryError ? &mut Allocator {
+  let mut length: [u8; 4] = [0; 4]
+  Endian.writeU32BigEndian(&mut length, 0, usize.toU32(data.length))
+  run Bytes.append(&mut output, &length)
+  run Bytes.append(&mut output, kind)
+  run Bytes.append(&mut output, data)
+  let checksum = CompressionChecksum.crc32Update(CompressionChecksum.crc32(kind), data)
+  Endian.writeU32BigEndian(&mut length, 0, checksum)
+  run Bytes.append(&mut output, &length)
+}
+pub effect fn png(rgba: &[u8], width: usize, height: usize) -> Bytes ! TaskError | OutOfMemoryError ? &mut Allocator {
+  if rgba.length != width * height * 4 { run Task.abort("RGBA byte length does not match PNG dimensions") }
+  let stride = width * 4
+  let mut rows = run Bytes.makeWithCapacity(rgba.length + height)
+  let mut y: usize = 0
+  while y < height { run Bytes.append(&mut rows, b"\0")
+    run Bytes.append(&mut rows, Slice.view<u8>(rgba, y * stride, stride))
+    y = y + 1 }
+  let mut compressed = run Bytes.zeroed(Bytes.length(&rows) * 2 + 1024)
+  let length = match move run Effect.result(Encoder.encode(Bytes.asSlice(&rows), Bytes.asMutSlice(&mut compressed), Format.Zlib, Options.make(9))) {
+    Result<usize, EncodeError | OutOfMemoryError>.Success { value } => value
+    Result<usize, EncodeError | OutOfMemoryError>.Failure { .. } => run Task.abort("cannot encode PNG")
+  }
+  Bytes.truncate(&mut compressed, length)
+  let mut output = run Bytes.copy(b"\x89PNG\r\n\x1a\n")
+  let mut header: [u8; 13] = [0; 13]
+  Endian.writeU32BigEndian(&mut header, 0, usize.toU32(width))
+  Endian.writeU32BigEndian(&mut header, 4, usize.toU32(height))
+  header[8] = 8
+  header[9] = 6
+  run chunk(&mut output, b"IHDR", &header)
+  run chunk(&mut output, b"IDAT", Bytes.asSlice(&compressed))
+  run chunk(&mut output, b"IEND", b"")
+  return move output
+}
+pub effect fn decode(bytes: &[u8]) -> Bytes ! TaskError | OutOfMemoryError ? &mut Allocator {
+  let Png.Image { width, height, rgba } = move run Png.decode(bytes, true)
+  if width != 64 || height != 64 { run Task.abort("fixture must contain a complete 64x64 image") }
+  return move rgba
+}
+pub effect fn regenerate() -> () ! TaskError | FileError | HostInputError | OutOfMemoryError | WriterError ? &mut HostInput | &mut Allocator | &mut FileSystem {
+  let root = run Task.root()
+  let mut index: usize = 0
+  while index < NAMES.length {
+    let raw = run reference(index)
+    let encoded = run png(Bytes.asSlice(&raw), 64, 64)
+    let name = run D.format("tests/pixels/expected/{}.png", &.(NAMES[index]))
+    let path = run Path.join(&root, String.view(&name))
+    run FileSystem.writeFileWithParents(&path, Bytes.asSlice(&encoded))
+    index = index + 1
+  }
+}
+pub effect fn check(directory: &Path) -> () ! TaskError | FileError | HostInputError | OutOfMemoryError | WriterError ? &mut HostInput | &mut Allocator | &mut FileSystem {
+  let root = run Task.root()
+  let mut index: usize = 0
+  while index < NAMES.length {
+    let fixture = run D.format("tests/pixels/expected/{}.png", &.(NAMES[index]))
+    let expectedPath = run Path.join(&root, String.view(&fixture))
+    let expectedFile = run FileSystem.readFile(&expectedPath)
+    let expected = run decode(Bytes.asSlice(&expectedFile))
+    let rawName = run D.format("{}.rgba", &.(NAMES[index]))
+    let rawPath = run Path.join(directory, String.view(&rawName))
+    let actual = run FileSystem.readFile(&rawPath)
+    let imageName = run D.format("{}.png", &.(NAMES[index]))
+    let imagePath = run Path.join(directory, String.view(&imageName))
+    let encoded = run png(Bytes.asSlice(&actual), 64, 64)
+    run FileSystem.writeFile(&imagePath, Bytes.asSlice(&encoded))
+    let different = run compare(index, Bytes.asSlice(&expected), Bytes.asSlice(&actual))
+    if index == 4 { let computedPath = run Path.join(directory, "compute.u32")
+      let computed = run FileSystem.readFile(&computedPath)
+      run compute(Bytes.asSlice(&computed)) }
+    let message = run D.format("{}: {}/{} differing pixels; max channel delta {}", &(NAMES[index], different.pixels, cap(index), different.maximum))
+    run D.print(String.view(&message))
+    index = index + 1
+  }
+}
+pub effect fn tests() -> () ! TaskError | FileError | HostInputError | OutOfMemoryError | WriterError ? &mut HostInput | &mut Allocator | &mut FileSystem {
+  let root = run Task.root()
+  let mut index: usize = 0
+  while index < NAMES.length {
+    let name = run D.format("tests/pixels/expected/{}.png", &.(NAMES[index]))
+    let path = run Path.join(&root, String.view(&name))
+    let source = run FileSystem.readFile(&path)
+    let pixels = run decode(Bytes.asSlice(&source))
+    let expected = run reference(index)
+    let a = Bytes.asSlice(&pixels)
+    let b = Bytes.asSlice(&expected)
+    let mut byte: usize = 0
+    while byte < a.length { if a[byte] != b[byte] { run Task.abort("committed PNG differs from independent CPU oracle") }
+      byte = byte + 1 }
+    let mut changed = run Bytes.copy(b)
+    let mut pixel: usize = 0
+    while pixel < cap(index) { let bytesAt205 = Bytes.asMutSlice(&mut changed)
+    bytesAt205[pixel * 4 + 3] = 0
+      pixel = pixel + 1 }
+    let accepted = run compare(index, b, Bytes.asSlice(&changed))
+    if accepted.pixels != cap(index) { run Task.abort("pixel budget is not inclusive") }
+    let bytesAt209 = Bytes.asMutSlice(&mut changed)
+    bytesAt209[cap(index) * 4 + 3] = 0
+    let rejected = run Effect.result(compare(index, b, Bytes.asSlice(&changed)))
+    match move rejected { Result<Difference, TaskError | OutOfMemoryError | WriterError>.Failure { error } => run expectedRejection(move error) Result<Difference, TaskError | OutOfMemoryError | WriterError>.Success { .. } => run Task.abort("pixel budget accepts excess edge pixels") }
+    index = index + 1
+  }
+  let expected = run reference(0)
+  let mut actual = run Bytes.copy(Bytes.asSlice(&expected))
+  let bytesAt216 = Bytes.asMutSlice(&mut actual)
+  bytesAt216[0] = 66
+  let bytesAt217 = Bytes.asMutSlice(&mut actual)
+  bytesAt217[3] = 253
+  let accepted = run compare(0, Bytes.asSlice(&expected), Bytes.asSlice(&actual))
+  if accepted.pixels != 0 { run Task.abort("per-channel tolerance excludes its boundary") }
+  let bytesAt220 = Bytes.asMutSlice(&mut actual)
+  bytesAt220[3] = 252
+  match move run Effect.result(compare(0, Bytes.asSlice(&expected), Bytes.asSlice(&actual))) { Result<Difference, TaskError | OutOfMemoryError | WriterError>.Failure { error } => run expectedRejection(move error) Result<Difference, TaskError | OutOfMemoryError | WriterError>.Success { .. } => run Task.abort("alpha channel is ignored") }
+  match move run Effect.result(compare(0, Bytes.asSlice(&expected), b"")) { Result<Difference, TaskError | OutOfMemoryError | WriterError>.Failure { error } => run expectedRejection(move error) Result<Difference, TaskError | OutOfMemoryError | WriterError>.Success { .. } => run Task.abort("size mismatch is ignored") }
+  let mut computed = run Bytes.zeroed(16384)
+  index = 0
+  while index < 4096 { Endian.writeU32LittleEndian(Bytes.asMutSlice(&mut computed), index * 4, usize.toU32(index * 3 + 7))
+    index = index + 1 }
+  run compute(Bytes.asSlice(&computed))
+  let bytesAt228 = Bytes.asMutSlice(&mut computed)
+  bytesAt228[3] = 1
+  match move run Effect.result(compute(Bytes.asSlice(&computed))) { Result<(), TaskError | OutOfMemoryError>.Failure { error } => run expectedRejection(move error) Result<(), TaskError | OutOfMemoryError>.Success { .. } => run Task.abort("compute high bits are ignored") }
+  run landmark(1, 32, 32, &[64, 191, 128, 255])
+  run landmark(1, 0, 0, &[0, 0, 0, 255])
+  run landmark(3, 1, 1, &[0, 0, 0, 255])
+  run landmark(3, 3, 3, &[255, 128, 64, 255])
+  run landmark(4, 63, 63, &[4, 48, 0, 255])
+  run landmark(2, 63, 0, &[0, 255, 0, 255])
+  run D.print("PASS independent pixel oracle, tolerance, budgets, dimensions and full compute storage")
+}
+effect fn landmark(sample: usize, x: usize, y: usize, expected: &[u8]) -> () ! TaskError | OutOfMemoryError ? &mut Allocator {
+  let pixels = run reference(sample)
+  let bytes = Bytes.asSlice(&pixels)
+  let mut channel: usize = 0
+  while channel < 4 { if bytes[(y * 64 + x) * 4 + channel] != expected[channel] { run Task.abort("CPU oracle semantic landmark changed") }
+    channel = channel + 1 }
+}
+effect fn expectedRejection(error: TaskError | OutOfMemoryError | WriterError) -> () ! OutOfMemoryError | WriterError {
+  match move error { TaskError expected => { drop expected } OutOfMemoryError failure => { fail move failure } WriterError failure => { fail move failure } }
+}

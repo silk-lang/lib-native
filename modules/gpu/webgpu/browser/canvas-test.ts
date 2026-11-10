@@ -1,7 +1,7 @@
 import { WebGPUHost } from './host.ts';
 import { schema } from './generated_schema.ts';
 
-// Playwright serializes Error.message/stack, but not AggregateError.errors.
+// Browser protocol boundaries serialize Error.message/stack, but not AggregateError.errors.
 // Keep all nested diagnostics in the thrown message at the browser boundary.
 function describeError(error, seen = new Set()) {
   if (error === null || typeof error !== 'object') return String(error);
@@ -14,7 +14,7 @@ function describeError(error, seen = new Set()) {
   return details.join('\n');
 }
 
-// Test-only helper. The caller owns the returned cleanup operation so Playwright
+// Test-only helper. The caller owns the returned cleanup operation so the harness
 // can screenshot the real last-presented canvas before unconfiguration/teardown.
 export async function runCanvas(wasmBytes, timeout = 30000) {
   if (document.getElementById('gpu-test')) throw new Error('Canvas test requires an unused #gpu-test id');

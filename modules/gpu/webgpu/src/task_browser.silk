@@ -1,0 +1,205 @@
+import silk.cli.task { Task, TaskError }
+import silk.collections.bytes { Bytes }
+import silk.collections.list { List }
+import silk.core.effect { Effect }
+import silk.core.option { Option }
+import silk.core.result { Result }
+import silk.io.writer { WriterError }
+import silk.json.value { Json, Value }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.system.child_process { ChildProcess, ProcessError }
+import silk.system.filesystem { FileError, FileSystem, Path }
+import silk.system.host_input { HostInput, HostInputError }
+import silk.text.string { String }
+import silk.num.i64
+import silk.num.u8
+import silk.num.u64
+import silk.num.usize
+import task_data as D
+import task_browser_bytes as Encoding
+import task_png as Png
+static if Intrinsic.targetOperatingSystem() != "windows" {
+import browser_driver.cdp as Cdp
+import browser_driver.display as Display
+
+fn pathText(path: &Path) -> string { return Path.view(path) |> Option<string>.unwrapOr("") }
+effect fn resolve(value: string) -> Path ! TaskError | FileError | HostInputError | OutOfMemoryError ? &mut HostInput | &mut Allocator {
+  if String.startsWith(value, "/") { return run Path.make(value) }
+  let root = run Task.root()
+  return run Path.resolve(&root, value)
+}
+effect fn numeric(value: &Value, key: string, fallback: i64) -> i64 ! TaskError | OutOfMemoryError ? &mut Allocator {
+  return Json.field(value, key) |> Json.asI64 |> Option<i64>.unwrapOr(fallback)
+}
+effect fn compare(fixture: &Value, expected: &Png.Image, actual: &Value) -> () ! TaskError | WriterError | OutOfMemoryError ? &mut Allocator {
+  let name = run D.requiredString(run D.field(fixture, "name"))
+  let width = usize.toI64(expected.width)
+  let height = usize.toI64(expected.height)
+  if width <= 0 || height <= 0 || (run numeric(actual, "width", -2)) != width || (run numeric(actual, "height", -2)) != height { run Task.abort("browser image dimensions differ") }
+  let wanted = Bytes.asSlice(&expected.rgba)
+  let got = D.array(run D.field(actual, "rgba"))
+  if wanted.length != got.length || usize.toI64(wanted.length) != width * height * 4 { run Task.abort("browser image byte length differs") }
+  let tolerance = run numeric(fixture, "tolerance", 2)
+  let cap = run numeric(fixture, "maxDifferentPixels", 0)
+  let mut different: i64 = 0
+  let mut pixel: usize = 0
+  while pixel < wanted.length {
+    let mut channel: usize = 0
+    while channel < 4 {
+      let delta = D.integer(&got[pixel + channel]) - u8.toI64(wanted[pixel + channel])
+      if delta > tolerance || delta < -tolerance { different = different + 1
+          break }
+      channel = channel + 1
+    }
+    pixel = pixel + 4
+  }
+  if different > cap {
+    let message = run D.format("{}: {} pixels exceed tolerance {} (cap {})", &(name, different, tolerance, cap))
+    fail TaskError { message: move message, status: 1 }
+  }
+  if let Option<&Value>.Some { value: compute } = Json.field(fixture, "compute") {
+    if let Option<&Value>.Some { value: values } = Json.field(actual, "compute") {
+      let array = D.array(values)
+      if usize.toI64(array.length) != run numeric(compute, "count", -1) { run Task.abort("browser compute output length differs") }
+      let multiplier = run numeric(compute, "multiplier", 0)
+      let addend = run numeric(compute, "addend", 0)
+      let mut index: usize = 0
+      while index < array.length {
+        if D.integer(&array[index]) != usize.toI64(index) * multiplier + addend { run Task.abort("browser compute output differs") }
+        index = index + 1
+      }
+    }
+  }
+  let message = run D.format("PASS {}: {} differing pixels", &(name, different))
+  run D.print(String.view(&message))
+}
+effect fn exercise(browser: &mut Cdp.Browser, session: string, wasm: &Path, manifest: &Path, timeout: u64) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let root = run Task.root()
+  let pagePath = run Path.join(&root, ".cache/browser-task.html")
+  run FileSystem.writeFileWithParents(&pagePath, b"<!doctype html><meta charset=utf-8><title>Silk WebGPU test</title>")
+  let url = run Encoding.fileUrl(pathText(&pagePath))
+  let mut navigate = D.object()
+    run D.set(&mut navigate, "url", run D.str(String.view(&url)))
+  let _navigation = run Cdp.send(&mut browser, "Page.navigate", &navigate, session)
+  let quotedUrl = run Cdp.quoted(String.view(&url))
+  let ready = run D.format("location.href === {} && document.readyState === 'complete'", &.(String.view(&quotedUrl)))
+  let mut loaded = false
+  let mut attempt: usize = 0
+  while attempt < 1000 && !loaded {
+    loaded = D.boolean(&run Cdp.evaluate(&mut browser, String.view(&ready), session))
+    if !loaded { run Cdp.sleep(10) }
+    attempt = attempt + 1
+  }
+  if !loaded { run Task.abort("browser test page did not load") }
+  let files = ["generated_schema.ts", "host.ts", "runner.ts", "canvas-test.ts"]
+  let mut payload = D.object()
+  let mut modules = D.object()
+  let mut index: usize = 0
+  while index < files.length {
+    let relative = run D.format("browser/{}", &.(files[index]))
+    let source = run D.text(run D.read(String.view(&relative)))
+    run D.set(&mut modules, files[index], run D.str(String.view(&source)))
+    index = index + 1
+  }
+  run D.set(&mut payload, "modules", move modules)
+  let wasmBytes = run FileSystem.readFile(wasm)
+  let wasmText = run Encoding.encode(Bytes.asSlice(&wasmBytes))
+  let wasmUrl = run D.format("data:application/wasm;base64,{}", &.(String.view(&wasmText)))
+  run D.set(&mut payload, "wasm", run D.str(String.view(&wasmUrl)))
+  let payloadText = run Cdp.stringify(&payload)
+  let mut bootstrap = run String.copy("(async data => { const urls = new Map(); for (const [name, original] of Object.entries(data.modules)) { let source = original; for (const [dependency,url] of urls) { source = source.replaceAll(\"'./\"+dependency+\"'\", JSON.stringify(url)).replaceAll('\"./'+dependency+'\"',JSON.stringify(url)); } urls.set(name,URL.createObjectURL(new Blob([source],{type:'text/javascript'}))); } globalThis.silkTask = { wasm:data.wasm, samples:await import(urls.get('runner.ts')), canvas:await import(urls.get('canvas-test.ts')) }; return true; })(")
+  run String.append(&mut bootstrap, String.view(&payloadText))
+    run String.append(&mut bootstrap, ")")
+  let _bootstrapped = run Cdp.evaluate(&mut browser, String.view(&bootstrap), session)
+  let fixtureBytes = run FileSystem.readFile(manifest)
+  let fixtures = run D.parse(Bytes.asSlice(&fixtureBytes))
+  let samples = D.array(run D.field(&fixtures, "samples"))
+  let mut indices = D.list()
+  index = 0
+  while index < samples.length { run D.push(&mut indices, run Json.copy(run D.field(&samples[index], "index")))
+      index = index + 1 }
+  let indicesText = run Cdp.stringify(&indices)
+  let source = run D.format("silkTask.samples.runSamples(silkTask.wasm,{}, {})", &(String.view(&indicesText), timeout))
+  let results = run Cdp.evaluate(&mut browser, String.view(&source), session)
+  let rows = D.array(&results)
+  if rows.length != samples.length { run Task.abort("browser sample matrix differs") }
+  let fixtureDirectory = run Path.resolve(manifest, "..")
+  index = 0
+  while index < rows.length {
+    let sample = &samples[index]
+    if (run numeric(&rows[index], "index", -1)) != run numeric(sample, "index", -2) { run Task.abort("browser sample index differs") }
+    let filename = run D.requiredString(run D.field(sample, "png"))
+    let path = run Path.resolve(&fixtureDirectory, filename)
+    let png = run FileSystem.readFile(&path)
+    let expected = run Png.decode(Bytes.asSlice(&png), false)
+    run compare(sample, &expected, &rows[index])
+    index = index + 1
+  }
+  let canvasSource = run D.format("(async()=>{{const bytes=await(await fetch(silkTask.wasm)).arrayBuffer(); silkTask.live=await silkTask.canvas.runCanvas(bytes,{}); const r=silkTask.live.canvas.getBoundingClientRect(); return {{width:silkTask.live.frames.at(-1).width,height:silkTask.live.frames.at(-1).height,rgba:silkTask.live.expectedRGBA,clip:{{x:r.x,y:r.y,width:r.width,height:r.height,scale:1}}}};}})()", &.(timeout))
+  let canvas = run Cdp.evaluate(&mut browser, String.view(&canvasSource), session)
+  let capture = run Effect.result(captureCanvas(&mut browser, session, &canvas))
+  let cleanup = run Effect.result(Cdp.evaluate(&mut browser, "(async()=>{await silkTask.live.cleanup(); delete silkTask.live; return true;})()", session))
+  match move capture { Result<(), TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError>.Success { .. } => {} Result<(), TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError>.Failure { error } => { fail move error } }
+  match move cleanup { Result<Value, TaskError | OutOfMemoryError | WriterError>.Success { .. } => {} Result<Value, TaskError | OutOfMemoryError | WriterError>.Failure { error } => { fail move error } }
+  if List<Value>.length(&browser.errors) != 0 { run Task.abort("browser reported an uncaught exception or console error") }
+  run FileSystem.removeFile(&pagePath)
+}
+effect fn captureCanvas(browser: &mut Cdp.Browser, session: string, canvas: &Value) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let mut parameters = D.object()
+  run D.set(&mut parameters, "format", run D.str("png"))
+  run D.set(&mut parameters, "fromSurface", Value.Bool { value: true })
+  run D.set(&mut parameters, "captureBeyondViewport", Value.Bool { value: true })
+  run D.set(&mut parameters, "clip", run Json.copy(run D.field(canvas, "clip")))
+  let captured = run Cdp.send(&mut browser, "Page.captureScreenshot", &parameters, session)
+  let data = run D.requiredString(run D.field(&captured, "data"))
+  let bytes = run Encoding.decode(data)
+  let root = run Task.root()
+  let destination = run Path.join(&root, ".cache/pixels/browser-canvas.png")
+  run FileSystem.writeFileWithParents(&destination, Bytes.asSlice(&bytes))
+  let actual = run Png.decode(Bytes.asSlice(&bytes), false)
+  let width = run numeric(canvas, "width", -1)
+  let height = run numeric(canvas, "height", -1)
+  if usize.toI64(actual.width) != width || usize.toI64(actual.height) != height { run Task.abort("canvas presentation dimensions differ after resize") }
+  let pixels = Bytes.asSlice(&actual.rgba)
+  let color = D.array(run D.field(canvas, "rgba"))
+  if color.length != 4 || usize.toI64(pixels.length) != width * height * 4 { run Task.abort("canvas presentation byte length differs") }
+  let mut index: usize = 0
+  while index < pixels.length {
+    let delta = u8.toI64(pixels[index]) - D.integer(&color[index % 4])
+    if delta < -2 || delta > 2 { run Task.abort("canvas presentation pixel differs") }
+    index = index + 1
+  }
+  run D.print("PASS canvas: configure/present/resize, compositor pixels, validation and cleanup")
+}
+
+pub effect fn test(wasm: string, fixtures: string, chromium: string, timeout: u64) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let wasmPath = run resolve(wasm)
+  let fixturesPath = run resolve(fixtures)
+  let executable = run Cdp.findChrome(chromium)
+  let arguments = ["--enable-unsafe-webgpu", "--use-angle=swiftshader", "--enable-features=Vulkan,CDPScreenshotNewSurface", "--disable-vulkan-surface", "--enable-unsafe-swiftshader", "--allow-file-access-from-files"]
+  static if Intrinsic.targetOperatingSystem() == "linux" {
+    let display = run Display.start()
+    let extra = ["--enable-unsafe-webgpu", "--use-angle=swiftshader", "--enable-features=Vulkan,CDPScreenshotNewSurface", "--disable-vulkan-surface", "--enable-unsafe-swiftshader", "--allow-file-access-from-files", "--use-vulkan=swiftshader"]
+    let outcome = run Effect.result(session(String.view(&executable), false, &extra, List<String>.asSlice(&display.environment), &wasmPath, &fixturesPath, timeout))
+    run Display.release(&display)
+    match move outcome { Result<(), TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError>.Success { .. } => {} Result<(), TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError>.Failure { error } => { fail move error } }
+  } else { run session(String.view(&executable), true, &arguments, &[], &wasmPath, &fixturesPath, timeout) }
+}
+effect fn session(executable: string, headless: bool, arguments: &[string], environment: &[String], wasm: &Path, fixtures: &Path, timeout: u64) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let mut browser = run Cdp.openWithEnvironment(executable, headless, arguments, environment)
+  run Cdp.limitRuntime(&mut browser, 180000)
+  browser.timeoutMs = if timeout > 20000 { 180000 } else { timeout * 9 }
+  let session = run Cdp.page(&mut browser)
+  let outcome = run Effect.result(exercise(&mut browser, String.view(&session), wasm, fixtures, timeout))
+  run Cdp.close(&mut browser)
+  match move outcome { Result<(), TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError>.Success { .. } => {} Result<(), TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError>.Failure { error } => { fail move error } }
+}
+}

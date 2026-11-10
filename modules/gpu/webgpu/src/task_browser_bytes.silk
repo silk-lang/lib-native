@@ -1,0 +1,43 @@
+import silk.cli.task { Task, TaskError }
+import silk.collections.bytes { Bytes }
+import silk.core.result { Result }
+import silk.encoding.base64 { Base64, Base64Error }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.text.string { String }
+import silk.num.u8
+import silk.num.usize
+import task_data as D
+
+pub effect fn encode(bytes: &[u8]) -> String ! TaskError | OutOfMemoryError ? &mut Allocator {
+  let length = match Base64.encodedLength(bytes.length) { Result<usize, Base64Error>.Success { value } => value Result<usize, Base64Error>.Failure { .. } => run Task.abort("base64 input is too large") }
+  let mut output = run Bytes.zeroed(length)
+  match Base64.encodeInto(Bytes.asMutSlice(&mut output), bytes) {
+    Result<usize, Base64Error>.Success { .. } => {}
+    Result<usize, Base64Error>.Failure { .. } => run Task.abort("cannot encode browser input")
+  }
+  return run D.text(move output)
+}
+pub effect fn decode(text: string) -> Bytes ! TaskError | OutOfMemoryError ? &mut Allocator {
+  let bytes = String.utf8Bytes(text)
+  let length = match Base64.decodedLength(bytes) { Result<usize, Base64Error>.Success { value } => value Result<usize, Base64Error>.Failure { .. } => run Task.abort("invalid browser base64 output") }
+  let mut output = run Bytes.zeroed(length)
+  match Base64.decodeInto(Bytes.asMutSlice(&mut output), bytes) {
+    Result<usize, Base64Error>.Success { .. } => {}
+    Result<usize, Base64Error>.Failure { .. } => run Task.abort("invalid browser base64 output")
+  }
+  return move output
+}
+pub effect fn fileUrl(path: string) -> String ! TaskError | OutOfMemoryError ? &mut Allocator {
+  let mut result = run Bytes.copy(b"file://")
+  let bytes = String.utf8Bytes(path)
+  let hex = b"0123456789ABCDEF"
+  let mut index: usize = 0
+  while index < bytes.length {
+    let byte = bytes[index]
+    if (byte >= 65 && byte <= 90) || (byte >= 97 && byte <= 122) || (byte >= 48 && byte <= 57) || byte == 47 || byte == 45 || byte == 46 || byte == 95 || byte == 126 || byte == 58 {
+      run Bytes.append(&mut result, &[byte])
+    } else { run Bytes.append(&mut result, &[37, hex[u8.toUsize(byte / 16)], hex[u8.toUsize(byte % 16)]]) }
+    index = index + 1
+  }
+  return run D.text(move result)
+}

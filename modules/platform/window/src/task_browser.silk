@@ -1,0 +1,149 @@
+import silk.cli.task { Task, TaskError }
+import silk.collections.bytes { Bytes }
+import silk.core.option { Option }
+import silk.core.result { Result }
+import silk.core.effect { Effect }
+import silk.io.writer { WriterError }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.system.child_process { ChildProcess, ProcessError }
+import silk.system.filesystem { FileError, FileSystem, Path }
+import silk.system.host_input { HostInput, HostInputError }
+import silk.text.string { String }
+import silk.num.usize
+import silk.collections.slice { Slice }
+import task_codegen { path }
+
+import silk.collections.list { List }
+import silk.io.writer { Writer }
+import silk.io.writer_native { StdoutWriter }
+import silk.encoding.base64 { Base64, Base64Error }
+import silk.json.value { Json, Value }
+import silk.num.u8
+static if Intrinsic.targetOperatingSystem() != "windows" {
+import browser_driver.cdp as Cdp
+
+effect fn encoded(bytes: &[u8]) -> String ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let capacity = match move Base64.encodedLength(bytes.length) {
+    Result<usize, Base64Error>.Success { value } => value
+    Result<usize, Base64Error>.Failure { .. } => run Task.abort("wasm artifact is too large")
+  }
+  let mut result = run String.makeWithCapacity(capacity)
+  let mut at: usize = 0
+  let mut buffer: [u8; 4096] = [0; 4096]
+  while at < bytes.length {
+    let remaining = bytes.length - at
+    let count = if remaining < 3072 { remaining } else { 3072 }
+    let written = match move Base64.encodeInto(&mut buffer, Slice.view<u8>(bytes, at, count)) {
+      Result<usize, Base64Error>.Success { value } => value
+      Result<usize, Base64Error>.Failure { .. } => run Task.abort("cannot encode wasm artifact")
+    }
+    run String.append(&mut result, unsafe String.fromUtf8Unchecked(Slice.view<u8>(&buffer, 0, written)))
+    at = at + count
+  }
+  return move result
+}
+effect fn fileUrl(file: &Path) -> String ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let mut url = run String.copy("file://")
+  let digits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"]
+  let bytes = Path.rawBytes(file)
+  let mut at: usize = 0
+  while at < bytes.length {
+    let byte = bytes[at]
+    if (byte >= 65 && byte <= 90) || (byte >= 97 && byte <= 122) || (byte >= 48 && byte <= 57) || byte == 45 || byte == 46 || byte == 47 || byte == 95 || byte == 126 {
+      let one = [byte]
+      run String.append(&mut url, unsafe String.fromUtf8Unchecked(&one))
+    } else {
+      run String.append(&mut url, "%")
+      run String.append(&mut url, digits[u8.toUsize(byte) / 16])
+      run String.append(&mut url, digits[u8.toUsize(byte) % 16])
+    }
+    at = at + 1
+  }
+  return move url
+}
+effect fn session(browser: &mut Cdp.Browser, wasm: string) -> () ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let session = run Cdp.page(&mut browser)
+  let page = run path("browser/smoke.html")
+  let url = run fileUrl(&page)
+  let quoted = run Cdp.quoted(String.view(&url))
+  let mut params = run String.copy("{\"url\":")
+  run String.append(&mut params, String.view(&quoted))
+  run String.append(&mut params, "}")
+  let paramsValue = run Cdp.parse(String.utf8Bytes(String.view(&params)))
+  let navigation = run Cdp.send(&mut browser, "Page.navigate", &paramsValue, String.view(&session))
+  if let Option<string>.Some { value } = Json.asString(Json.field(&navigation, "errorText")) { run Task.abort(value) }
+  let viewport = run Cdp.parse(b"{\"width\":1024,\"height\":768,\"deviceScaleFactor\":1,\"mobile\":false}")
+  let configured = run Cdp.send(&mut browser, "Emulation.setDeviceMetricsOverride", &viewport, String.view(&session))
+  drop configured
+  let mut loaded = false
+  let mut attempts: usize = 0
+  while attempts < 600 && !loaded {
+    let ready = run Cdp.evaluate(&mut browser, "typeof window.runSmoke === 'function'", String.view(&session))
+    match move ready { Value.Bool { value } => { loaded = value }
+      _ => () }
+    if !loaded { run Cdp.sleep(50) }
+    attempts = attempts + 1
+  }
+  if !loaded { run Task.abort("browser smoke module did not load within thirty seconds") }
+  let wasmPath = run Path.make(wasm)
+  let bytes = run FileSystem.readFile(&wasmPath)
+  let base64 = run encoded(Bytes.asSlice(&bytes))
+  let mut expression = run String.copy("window.runSmoke('")
+  run String.append(&mut expression, String.view(&base64))
+  run String.append(&mut expression, "')")
+  browser.timeoutMs = 60000
+  let result = run Cdp.evaluate(&mut browser, String.view(&expression), String.view(&session))
+  if let Option<&Value>.Some { value } = Json.field(&result, "lines") {
+    match &value.* {
+      Value.Array { values } => {
+        let mut output = StdoutWriter.make()
+        let lines = List<Value>.asSlice(&values)
+        let mut at: usize = 0
+        while at < lines.length {
+          let line = &lines[at]
+          if let Value.String { text } = &line.* {
+            run Writer.writeAll(String.utf8Bytes(String.view(&text))) |> Effect.provideMut<Writer>(&mut output)
+            run Writer.writeAll(b"\n") |> Effect.provideMut<Writer>(&mut output)
+          }
+          at = at + 1
+        }
+      }
+      _ => run Task.abort("browser smoke result has no lines array")
+    }
+  }
+  let code = match Json.asI32(Json.field(&result, "code")) { Option<i32>.Some { value } => value
+    Option<i32>.None => run Task.abort("browser smoke result has no exit status") }
+  if code != 0 { fail TaskError { message: run String.copy("browser smoke failed"), status: code } }
+}
+}
+pub effect fn smoke(wasm: string) -> () ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  static if Intrinsic.targetOperatingSystem() == "windows" {
+    run Task.abort("Windows managed subprocess support is unavailable (silk-lang/silk#3034)")
+  } else {
+    let executable = run Cdp.findChrome("")
+    let mut browser = run Cdp.open(String.view(&executable), true, &["--enable-features=WebAssemblyExperimentalJSPI", "--allow-file-access-from-files"])
+    let result = run Effect.result(session(&mut browser, wasm))
+    let closed = run Effect.result(Cdp.close(&mut browser))
+    let mut diagnostics = StdoutWriter.make()
+    let errors = List<Value>.asSlice(&browser.errors)
+    let mut at: usize = 0
+    while at < errors.length {
+      let encoded = run Cdp.stringify(&errors[at])
+      run Writer.writeAll(String.utf8Bytes(String.view(&encoded))) |> Effect.provideMut<Writer>(&mut diagnostics)
+      run Writer.writeAll(b"\n") |> Effect.provideMut<Writer>(&mut diagnostics)
+      at = at + 1
+    }
+    match move result {
+      Result<(), TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError>.Success { .. } => ()
+      Result<(), TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError>.Failure { error } => { fail move error }
+    }
+    match move closed {
+      Result<(), TaskError | FileError | OutOfMemoryError>.Success { .. } => ()
+      Result<(), TaskError | FileError | OutOfMemoryError>.Failure { error } => { fail move error }
+    }
+  }
+}

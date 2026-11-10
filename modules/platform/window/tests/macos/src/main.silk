@@ -6,8 +6,9 @@ import window.event { Event, Key, Modifiers }
 import window.keys { KeyCode }
 import window.macos { MacPlatform }
 import window.menu { MenuBar, Shortcut, SystemItem }
-import window.platform { Platform }
-import window.types { WindowId, WindowOptions, WindowError, Wait, ImeState, RawSurface }
+// Interface methods resolve through this import; silk#2819 reports it as unused.
+import window.platform { Platform as _Platform }
+import window.types { WindowOptions, WindowError, Wait, ImeState, RawSurface }
 import silk.core.effect { Effect }
 import silk.core.option { Option }
 import silk.geometry.rect { Rect }
@@ -57,23 +58,23 @@ effect fn collect(platform: &mut MacPlatform, seconds: f64) -> Tally
     match move run platform.nextEvent(Wait.Seconds { seconds: 0.02 }) {
       Option<Event>.Some { value } => {
         match &value {
-          Event.RequestFrame { window, targetTime } => {
+          Event.RequestFrame { .. } => {
             tally.frames = tally.frames + 1
           }
-          Event.Resized { window, size, scaleFactor } => {
+          Event.Resized { size, .. } => {
             tally.resizes = tally.resizes + 1
             tally.width = size.width
           }
-          Event.ImePreedit { window, text, selectionStart, selectionEnd } => {
+          Event.ImePreedit { text, selectionStart, .. } => {
             tally.preeditEvents = tally.preeditEvents + 1
             tally.preedit.clear()
             run tally.preedit.append(text.view())
             tally.preeditStart = selectionStart
           }
-          Event.TextInput { window, text } => {
+          Event.TextInput { text, .. } => {
             run tally.text.append(text.view())
           }
-          Event.KeyDown { window, key, code, modifiers, repeat, imeHandled } => {
+          Event.KeyDown { key, code, .. } => {
             tally.keyDowns = tally.keyDowns + 1
             match &key {
               Key.Character { text } => {
@@ -84,7 +85,7 @@ effect fn collect(platform: &mut MacPlatform, seconds: f64) -> Tally
               _ => {}
             }
           }
-          Event.MenuAction { action } => {
+          Event.MenuAction { .. } => {
             tally.menuActions = tally.menuActions + 1
           }
           _ => {}
@@ -141,7 +142,7 @@ effect fn smoke(checks: &mut Checks) -> ()
   checks.check(opened.frames >= 1, "a new window gets a first frame")
   checks.check(platform.scaleFactor(window) >= 1.0, "scale factor")
   match platform.rawSurface(window) {
-    RawSurface.MetalLayer { layer } => {
+    RawSurface.MetalLayer { .. } => {
       checks.check(true, "the view has a CAMetalLayer")
     }
     _ => {

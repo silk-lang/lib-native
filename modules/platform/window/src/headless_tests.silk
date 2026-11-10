@@ -14,7 +14,6 @@ import silk.geometry.size { Size2 }
 import silk.mem.allocator { Allocator, OutOfMemoryError }
 import silk.testing.testing { AssertionError, Testing }
 import silk.text.string { String }
-import silk.core.order { Order }
 
 /// What an app saw while draining the queue: frames and resizes per window.
 struct Seen {
@@ -34,10 +33,10 @@ effect fn drain<P: Platform>(platform: &mut P) -> Seen
     match move run platform.nextEvent(Wait.Poll) {
       Option<Event>.Some { value } => {
         match &value {
-          Event.RequestFrame { window, targetTime } => {
+          Event.RequestFrame { .. } => {
             seen.frames = seen.frames + 1
           }
-          Event.Resized { window, size, scaleFactor } => {
+          Event.Resized { size, scaleFactor, .. } => {
             seen.resizes = seen.resizes + 1
             seen.lastWidth = size.width
             seen.lastScale = scaleFactor
@@ -66,7 +65,7 @@ test effect fn firstFrameFollowsOpen() -> ()
   ! AssertionError<'static> | WindowError | OutOfMemoryError {
   let mut allocator = Allocator.systemAllocatorProvider()
   let mut platform = HeadlessPlatform.make()
-  let window = run opened(&mut platform) |> Effect.provideMut<Allocator>(&mut allocator)
+  drop run opened(&mut platform) |> Effect.provideMut<Allocator>(&mut allocator)
   let seen = run drain(&mut platform) |> Effect.provideMut<Allocator>(&mut allocator)
   run Testing.expect(seen.resizes == 1 && seen.lastWidth == 640.0, "initial size")
   run Testing.expect(seen.frames == 1, "one first frame")

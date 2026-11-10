@@ -1,7 +1,7 @@
 //! The AppKit backend: one `NSWindow` per window, a layer-backed view whose layer is a
 //! `CAMetalLayer`, frames paced by the view's `CADisplayLink`, and `NSTextInputClient` for
 //! input methods. The Objective-C side is native/macos/bridge.m; programs link the archive
-//! scripts/build-native makes and the AppKit, QuartzCore and UniformTypeIdentifiers
+//! declared by silk.toml and the AppKit, QuartzCore and UniformTypeIdentifiers
 //! frameworks (see the README).
 //!
 //! AppKit's own loops (live resize, menu tracking) run on a second stack of the main thread,

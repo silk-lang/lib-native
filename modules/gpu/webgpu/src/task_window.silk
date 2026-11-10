@@ -1,0 +1,230 @@
+static if Intrinsic.targetOperatingSystem() == "linux" {
+import silk.cli.task { Task, TaskError }
+import silk.collections.bytes { Bytes }
+import silk.collections.list { List }
+import silk.core.effect { Effect }
+import silk.core.option { Option }
+import silk.core.result { Result }
+import silk.core.ownership { Drop }
+import silk.io.writer { WriterError }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.mem.pointer { Pointer }
+import silk.platform.native.file as File
+import silk.platform.native.file { NativeFile, NativeFileError }
+import silk.system.child_process { ChildProcess, ProcessError }
+import silk.system.filesystem { FileError, FileSystem, Path }
+import silk.system.host_input { HostInput, HostInputError }
+import silk.system.subprocess { Subprocess, SubprocessError, SpawnOptions, Stdio, ExitStatus }
+import silk.text.string { String }
+import silk.num.f64
+import silk.num.i32
+import silk.num.u8
+import silk.num.usize
+import browser_driver.cdp as Cdp
+import browser_driver.display as Display
+import x11.capture as X11
+import task_build as Build
+import task_data as D
+import task_pixels as Pixels
+import task_process as Process
+
+unsafe extern "C" fn kill(pid: i32, signal: i32) -> i32
+@foreign(noCapture: .("status"))
+unsafe extern "C" fn waitpid(pid: i32, status: *mut i32, options: i32) -> i32
+struct Running { child: Subprocess, stopped: bool }
+impl Drop for Running { fn drop(self: &mut Self) -> () { if !self.stopped { let _kill = unsafe kill(self.child.pid(), 9)
+        let mut status: i32 = 0
+        let _wait = unsafe waitpid(self.child.pid(), Pointer.fromMutRef(&mut status), 0) } } }
+struct Connection { pointer: *mut u8 }
+impl Drop for Connection { fn drop(self: &mut Self) -> () { unsafe X11.silk_task_x11_close(self.pointer) } }
+effect fn processFailure(error: SubprocessError) -> never ! TaskError | OutOfMemoryError ? &mut Allocator { drop error
+    return run Task.abort("X11 proof process failed") }
+effect fn fileFailure(error: NativeFileError) -> never ! TaskError | OutOfMemoryError ? &mut Allocator { drop error
+    return run Task.abort("cannot open window proof log") }
+effect fn alive(process: &mut Running) -> () ! TaskError | OutOfMemoryError ? &mut Allocator {
+  let status = run Intrinsic.catchFailure<SubprocessError>(Subprocess.tryWait(process.child.pid()), processFailure)
+  if let Option<ExitStatus>.Some { .. } = move status { process.stopped = true
+      run Task.abort("window exited before completing presentation; see window.log") }
+}
+effect fn missingWindow(error: TaskError) -> String ! TaskError | OutOfMemoryError ? &mut Allocator {
+  if error.status == 1 { return run String.copy("") }
+    fail move error
+}
+effect fn decimal(text: string) -> usize ! TaskError | OutOfMemoryError ? &mut Allocator {
+  let bytes = String.utf8Bytes(String.trim(text))
+    let mut index: usize = 0
+    let mut result: usize = 0
+  if bytes.length == 0 { run Task.abort("empty xdotool result") }
+  while index < bytes.length { if bytes[index] < 48 || bytes[index] > 57 { run Task.abort("invalid xdotool numeric result") }
+      result = result * 10 + u8.toUsize(bytes[index] - 48)
+      index = index + 1 }
+    return result
+}
+effect fn command(args: &[string], environment: &[String]) -> String
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let root = run Task.root()
+    return run D.text(run Process.capture("xdotool", args, environment, &root))
+}
+fn matches(pixels: &[u8], color: &[u8]) -> bool {
+  let mut index: usize = 0
+  while index < pixels.length { let delta = u8.toI32(pixels[index]) - u8.toI32(if index % 4 == 3 { 255 } else { color[index % 4] })
+      if delta < -2 || delta > 2 { return false }
+      index = index + 1 }
+    return true
+}
+pub effect fn test(output: string) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let driver = run Build.variable("VK_DRIVER_FILES")
+    let alternate = run Build.variable("VK_ICD_FILENAMES")
+  if String.view(&driver) == "" && String.view(&alternate) == "" { run Task.abort("select the pinned lavapipe ICD first with silk task setup-ci") }
+  let binary = run Build.build("examples-window/silk.toml", "gpu-webgpu-examples-window", "modules/gpu/webgpu/examples-window", false, false)
+  let directory = run Process.resolve(output)
+    run FileSystem.createDirectoriesRecursively(&directory)
+  let display = run Display.start()
+    let outcome = run Effect.result(smoke(String.view(&binary), &directory, List<String>.asSlice(&display.environment), Bytes.asSlice(&display.authorization)))
+  run Display.release(&display)
+  match move outcome { Result<(), TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError>.Success { .. } => {} Result<(), TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError>.Failure { error } => { fail move error } }
+}
+effect fn smoke(binary: string, output: &Path, inherited: &[String], authorization: &[u8]) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let mut environment = List<String>.make()
+    let mut index: usize = 0
+  while index < inherited.length { run List<String>.append(&mut environment, run String.copy(String.view(&inherited[index])))
+      index = index + 1 }
+  run List<String>.append(&mut environment, run String.copy("XDG_SESSION_TYPE=x11"))
+  let displayName = String.slice(String.view(&inherited[0]), 8, String.byteLength(String.view(&inherited[0])) - 8)
+  let mut terminated = run Bytes.copy(String.utf8Bytes(displayName))
+    run Bytes.append(&mut terminated, b"\0")
+  let pointer = match Pointer.nonNullMut(unsafe X11.silk_task_x11_open(Pointer.fromSlice(Bytes.asSlice(&terminated)), Pointer.fromSlice(authorization), authorization.length)) { Option<*mut u8>.Some { value } => value Option<*mut u8>.None => run Task.abort("cannot open authenticated private Xvfb through libX11.so.6") }
+  let connection = Connection { pointer: pointer }
+  let root = run Task.root()
+    let env = run Path.make("/usr/bin/env")
+    let mut request = run ChildProcess.requestWithin(&env, &root)
+    run Subprocess.inheritEnvironment(&mut request)
+  run ChildProcess.addArgument(&mut request, "-u")
+    run ChildProcess.addArgument(&mut request, "WAYLAND_DISPLAY")
+    let variables = List<String>.asSlice(&environment)
+    index = 0
+  while index < variables.length { run ChildProcess.addArgument(&mut request, String.view(&variables[index]))
+      index = index + 1 }
+    run ChildProcess.addArgument(&mut request, binary)
+  let log = run Path.join(output, "window.log")
+    let fd = run Intrinsic.catchFailure<NativeFileError>(NativeFile.open(Path.rawBytes(&log), File.OPEN_WRITE_ONLY + File.OPEN_CREATE + File.OPEN_TRUNCATE, 420), fileFailure)
+  let mut options = SpawnOptions.make()
+    run options.setStdio(1, Stdio.inherit(fd))
+    run options.setStdio(2, Stdio.inherit(fd))
+  let spawned = run Effect.result(Subprocess.spawn(&request, &options))
+    let closed = run Effect.result(NativeFile.close(fd))
+    drop closed
+  let child = match move spawned { Result<Subprocess, SubprocessError | OutOfMemoryError>.Success { value } => move value Result<Subprocess, SubprocessError | OutOfMemoryError>.Failure { .. } => run Task.abort("cannot launch GLFW example") }
+  let mut running = Running { child: move child, stopped: false }
+    let pid = run D.number(&running.child.pid())
+    let mut window: usize = 0
+    let mut started = run Process.milliseconds()
+  while (run Process.milliseconds()) - started < 30000 {
+    run alive(&mut running)
+    let found = run Intrinsic.catchFailure<TaskError>(command(&["search", "--onlyvisible", "--pid", String.view(&pid), "--name", "^Silk WebGPU - Escape to close$"], variables), missingWindow)
+    let mut lines = String.split(String.trim(String.view(&found)), "\n")
+    if let Option<string>.Some { value } = lines.next() { if value != "" { window = run decimal(value)
+          break } }
+    run Cdp.sleep(50)
+  }
+  if window == 0 { run Task.abort("GLFW window did not become visible within thirty seconds") }
+  let windowText = run D.number(&window)
+    let linear = [0.08, 0.18, 0.32]
+    let mut unorm: [u8; 3] = [0; 3]
+    let mut srgb: [u8; 3] = [0; 3]
+    index = 0
+  while index < 3 { unorm[index] = f64.toU8(linear[index] * 255.0 + 0.5)
+      let encoded = if linear[index] <= 0.0031308 { 12.92 * linear[index] } else { 1.055 * f64.pow(linear[index], 1.0 / 2.4) - 0.055 }
+      srgb[index] = f64.toU8(encoded * 255.0 + 0.5)
+      index = index + 1 }
+  let widths: [usize; 2] = [800, 960]
+    let heights: [usize; 2] = [600, 480]
+    let mut selected: usize = 2
+    let mut frames = D.list()
+    index = 0
+  while index < widths.length {
+    let width = widths[index]
+      let height = heights[index]
+      let w = run D.number(&width)
+      let h = run D.number(&height)
+    let _resize = run command(&["windowsize", String.view(&windowText), String.view(&w), String.view(&h)], variables)
+    let mut matched = false
+      started = run Process.milliseconds()
+      let mut pixels = run Bytes.zeroed(width * height * 4)
+    while (run Process.milliseconds()) - started < 30000 {
+      run alive(&mut running)
+        let geometry = run command(&["getwindowgeometry", "--shell", String.view(&windowText)], variables)
+      let mut lines = String.split(String.view(&geometry), "\n")
+        let mut observedWidth: usize = 0
+        let mut observedHeight: usize = 0
+      while true { let line = match lines.next() { Option<string>.Some { value } => value Option<string>.None => { break } }
+          if String.startsWith(line, "WIDTH=") { observedWidth = run decimal(String.slice(line, 6, String.byteLength(line) - 6)) }
+          if String.startsWith(line, "HEIGHT=") { observedHeight = run decimal(String.slice(line, 7, String.byteLength(line) - 7)) } }
+      if observedWidth == width && observedHeight == height {
+        if unsafe X11.silk_task_x11_capture(connection.pointer, window, usize.toU32(width), usize.toU32(height), Pointer.fromMutSlice(Bytes.asMutSlice(&mut pixels)), width * height * 4) != 0 { run Task.abort("XGetImage failed or Xvfb is not depth-24 RGB8") }
+        let actual = Bytes.asSlice(&pixels)
+          let family = if matches(actual, &unorm) { 0 } else if matches(actual, &srgb) { 1 } else { 2 }
+        if family < 2 {
+          if selected < 2 && selected != family { run Task.abort("surface color encoding changed during resize") }
+            selected = family
+            matched = true
+            break
+        }
+      }
+      run Cdp.sleep(50)
+    }
+    if !matched { run Task.abort("surface did not present the expected full-image clear within thirty seconds") }
+    let filename = run D.format("window-{}x{}.png", &(width, height))
+      let destination = run Path.join(output, String.view(&filename))
+      let encoded = run Pixels.png(Bytes.asSlice(&pixels), width, height)
+      run FileSystem.writeFile(&destination, Bytes.asSlice(&encoded))
+    let mut expected = D.list()
+      let mut observed = D.list()
+      let color = if selected == 0 { &unorm } else { &srgb }
+      let mut channel: usize = 0
+    while channel < 3 { run D.push(&mut expected, D.int(u8.toI64(color[channel])))
+        run D.push(&mut observed, D.int(u8.toI64(Bytes.asSlice(&pixels)[channel])))
+        channel = channel + 1 }
+    let mut frame = D.object()
+      run D.set(&mut frame, "width", D.int(usize.toI64(width)))
+      run D.set(&mut frame, "height", D.int(usize.toI64(height)))
+      run D.set(&mut frame, "encoding", run D.str(if selected == 0 { "unorm" } else { "srgb" }))
+      run D.set(&mut frame, "expectedRGB", move expected)
+      run D.set(&mut frame, "observedRGB", move observed)
+      run D.set(&mut frame, "pixelsChecked", D.int(usize.toI64(width * height)))
+      run D.set(&mut frame, "tolerance", D.int(2))
+      run D.push(&mut frames, move frame)
+    let message = run D.format("PASS X11 {}x{}: {} compositor pixels match clear", &(width, height, width * height))
+      run D.print(String.view(&message))
+      index = index + 1
+  }
+  let _focus = run command(&["windowfocus", "--sync", String.view(&windowText)], variables)
+    let _escape = run command(&["key", "Escape"], variables)
+  started = run Process.milliseconds()
+  while (run Process.milliseconds()) - started < 30000 {
+    let status = run Intrinsic.catchFailure<SubprocessError>(Subprocess.tryWait(running.child.pid()), processFailure)
+    if let Option<ExitStatus>.Some { value } = move status { running.stopped = true
+        if value.signaled || value.code != 0 { run Task.abort("Escape exit failed; debug handle/failure check did not pass") }
+        break }
+    run Cdp.sleep(50)
+  }
+  if !running.stopped { run Task.abort("Escape did not close the real GLFW window") }
+  let mut proof = D.object()
+    run D.set(&mut proof, "backend", run D.str("GLFW X11 / lavapipe"))
+    run D.set(&mut proof, "frames", move frames)
+    run D.set(&mut proof, "minimize", run D.str("not exercised: Xvfb has no window manager"))
+    run D.set(&mut proof, "wayland", run D.str("not exercised"))
+    run D.set(&mut proof, "escapeExit", D.int(0))
+    run D.set(&mut proof, "silkDebugHandlesAndFailures", D.int(0))
+  let mut json = run D.encode(&proof, true)
+    run Bytes.append(&mut json, b"\n")
+    let destination = run Path.join(output, "proof.json")
+    run FileSystem.writeFile(&destination, Bytes.asSlice(&json))
+    run D.print("PASS real Escape close: exit 0, debug live handles=0 and failures=0")
+}
+}

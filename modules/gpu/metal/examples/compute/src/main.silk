@@ -35,7 +35,8 @@ static if Intrinsic.targetOperatingSystem() == "darwin" {
 
   pub fn main() -> i32 {
     unsafe {
-      let pool = AutoreleasePool.new()
+      // Drained when main returns; the guard is held for the whole sample.
+      let _pool = AutoreleasePool.new()
       let device = Object.adopt(Device.system_default())
       if Object.is_null(&device) {
         return failure(b"No Metal device\0", Pointer.null<u8>(), 1)

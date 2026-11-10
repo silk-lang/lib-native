@@ -1,0 +1,526 @@
+import silk.cli.task { Task, TaskError }
+import silk.collections.bytes { Bytes }
+import silk.core.option { Option }
+import silk.io.writer { WriterError }
+import silk.json.value { Json, Value }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.system.child_process { ChildProcess, ProcessError }
+import silk.system.filesystem { FileError, FileSystem, Path }
+import silk.system.host_input { HostInput, HostInputError }
+import silk.text.string { String }
+import silk.num.i64
+import silk.num.u8
+import silk.num.usize
+import task_data as D
+import task_schema_types as T
+import task_schema_source as Source
+import task_shaders as Output
+
+pub fn items<'a>(value: &'a Value, key: string) -> &'a [Value] {
+  return match Json.field(value, key) { Option<&Value>.Some { value: found } => D.array(found) Option<&Value>.None => &[] }
+}
+fn isNull(value: &Value) -> bool { return match &value.* { Value.Null => true _ => false } }
+pub effect fn upper(value: string) -> String ! TaskError | OutOfMemoryError ? &mut Allocator {
+  let input = String.utf8Bytes(value)
+  let mut output = run Bytes.makeWithCapacity(input.length)
+  let mut index: usize = 0
+  while index < input.length {
+    let byte = input[index]
+    run Bytes.append(&mut output, &[if byte >= 97 && byte <= 122 { byte - 32 } else { byte }])
+    index = index + 1
+  }
+  return run D.text(move output)
+}
+effect fn line<Args>(output: &mut String, static template: string<'static>, args: &Args) -> () ! TaskError | WriterError | OutOfMemoryError ? &mut Allocator {
+  let value = run D.format(template, args)
+  run String.append(&mut output, String.view(&value))
+  run String.append(&mut output, "\n")
+}
+effect fn lookup<'a>(schema: &'a Value, category: string, name: string) -> &'a Value ! TaskError | OutOfMemoryError ? &mut Allocator {
+  let values = items(schema, category)
+  let mut index: usize = 0
+  while index < values.length { if T.property(&values[index], "name") == name { return &values[index] }
+    index = index + 1 }
+  return run Task.abort("schema refers to an unknown named type")
+}
+effect fn suffix(kind: string) -> String ! TaskError | OutOfMemoryError ? &mut Allocator {
+  let dot = match String.find(kind, ".") { Option<usize>.Some { value } => value Option<usize>.None => run Task.abort("expected qualified schema type") }
+  return run T.cut(kind, dot + 1, String.byteLength(kind) - dot - 1)
+}
+effect fn defaultValue(schema: &Value, member: &Value, zero: bool) -> String ! TaskError | WriterError | OutOfMemoryError ? &mut Allocator {
+  let kind = T.property(member, "type")
+  let typ = run T.silkType(member)
+  let value = T.property(member, "default")
+  if T.property(member, "pointer") != "" || T.starts(kind, "object.") || T.starts(kind, "array<") { return run T.nullPointer(String.view(&typ)) }
+  if T.starts(kind, "callback.") { return run T.camel(T.property(member, "name")) }
+  if T.starts(kind, "struct.") {
+    if value == "zero" || zero {
+      let name = run suffix(kind)
+      let nested = run lookup(schema, "structs", String.view(&name))
+      let expanded = run T.expand(items(nested, "members"))
+      let fields = D.array(&expanded)
+      let mut output = run T.concat(&[String.view(&typ), " { "])
+      let mut comma = false
+      if T.starts(T.property(nested, "type"), "extensible") { run String.append(&mut output, "nextInChain: Pointer.null<WGPUChainedStruct>()")
+        comma = true }
+      let mut index: usize = 0
+      while index < fields.length {
+        if comma { run String.append(&mut output, ", ") }
+        let initial = run defaultValue(schema, run D.field(&fields[index], "source"), true)
+        run String.append(&mut output, T.identifier(T.property(&fields[index], "name")))
+        run String.append(&mut output, ": ")
+        run String.append(&mut output, String.view(&initial))
+        comma = true
+        index = index + 1
+      }
+      run String.append(&mut output, " }")
+      return move output
+    }
+    return run T.concat(&[String.view(&typ), ".default()"])
+  }
+  if T.ends(kind, "string") || kind == "string_with_default_empty" { return run String.copy("WGPUStringView.default()") }
+  let floating = String.view(&typ) == "f32" || String.view(&typ) == "f64"
+  if zero { return run String.copy(if floating { "0.0" } else { "0" }) }
+  if T.starts(kind, "enum.") {
+    let mut selected = run String.copy(value)
+    if value == "" {
+      let name = run suffix(kind)
+      let enumeration = run lookup(schema, "enums", String.view(&name))
+      let entries = items(enumeration, "entries")
+      let mut index: usize = 0
+      while index < entries.length {
+        if T.property(&entries[index], "name") == "undefined" { selected = run String.copy("undefined")
+          break }
+        index = index + 1
+      }
+    }
+    if String.view(&selected) == "" { return run String.copy("0") }
+    let name = run T.pascal(String.view(&selected))
+    return run T.concat(&[String.view(&typ), "_", String.view(&name)])
+  }
+  if T.starts(kind, "bitflag.") {
+    let name = if value == "" { run T.pascal("none") } else { run T.pascal(value) }
+    return run T.concat(&[String.view(&typ), "_", String.view(&name)])
+  }
+  if T.starts(value, "constant.") {
+    let name = run suffix(value)
+    let capital = run upper(String.view(&name))
+    return run T.concat(&["WGPU_", String.view(&capital)])
+  }
+  if kind == "bool" {
+    return run String.copy(match Json.field(member, "default") { Option<&Value>.Some { value: initial } => if D.boolean(initial) { "1" } else { "0" } Option<&Value>.None => "0" })
+  }
+  if let Option<&Value>.Some { value: initial } = Json.field(member, "default") {
+    if !isNull(initial) {
+      if floating {
+        let number = Json.asF64(Option<&Value>.some(initial)) |> Option<f64>.unwrapOr(0.0)
+        return run D.number(&number)
+      }
+      if let Option<string>.Some { value: literal } = Json.asString(Option<&Value>.some(initial)) {
+        return run String.copy(literal)
+      }
+      return run D.text(run D.encode(initial, false))
+    }
+  }
+  return run String.copy(if floating { "0.0" } else { "0" })
+}
+effect fn field(name: string, typ: string, initial: string, required: bool) -> Value ! OutOfMemoryError ? &mut Allocator {
+  let mut value = D.object()
+  run D.set(&mut value, "name", run D.str(name))
+  run D.set(&mut value, "type", run D.str(typ))
+  run D.set(&mut value, "default", run D.str(initial))
+  run D.set(&mut value, "required", Value.Bool { value: required })
+  return move value
+}
+effect fn record(silk: &mut String, records: &mut Value, name: string, fields: &Value) -> () ! TaskError | WriterError | OutOfMemoryError ? &mut Allocator {
+  let values = D.array(fields)
+  let mut metadata = D.list()
+  let mut arguments = String.make()
+  let mut index: usize = 0
+  run line(&mut silk, "\npub extern \"C\" struct {} {{", &.(name))
+  while index < values.length {
+    let item = &values[index]
+    let fieldName = T.property(item, "name")
+    let typ = T.property(item, "type")
+    run line(&mut silk, "  pub {}: {},", &(T.identifier(fieldName), typ))
+    let mut member = D.object()
+    run D.set(&mut member, "name", run D.str(fieldName))
+    run D.set(&mut member, "type", run D.str(typ))
+    run D.push(&mut metadata, move member)
+    if D.boolean(run D.field(item, "required")) {
+      if String.byteLength(String.view(&arguments)) > 0 { run String.append(&mut arguments, ", ") }
+      let argument = run D.format("{}: {}", &(fieldName, typ))
+      run String.append(&mut arguments, String.view(&argument))
+    }
+    index = index + 1
+  }
+  run line(&mut silk, "}}\nimpl Copy for {} {{}}\n\nimpl {} {{\n  pub fn default({}) -> Self {{\n    return Self {{", &(name, name, String.view(&arguments)))
+  index = 0
+  while index < values.length {
+    let initial = T.property(&values[index], "default")
+    let value = if initial == "null" { run T.nullPointer(T.property(&values[index], "type")) } else { run String.copy(initial) }
+    run line(&mut silk, "      {}: {},", &(T.identifier(T.property(&values[index], "name")), String.view(&value)))
+    index = index + 1
+  }
+  run String.append(&mut silk, "    }\n  }\n}\n")
+  run D.set(&mut records, name, move metadata)
+}
+effect fn parameter(name: string, typ: string) -> Value ! OutOfMemoryError ? &mut Allocator {
+  let mut value = D.object()
+  run D.set(&mut value, "name", run D.str(name))
+  run D.set(&mut value, "type", run D.str(typ))
+  return move value
+}
+effect fn function(functions: &mut Value, definition: &Value, owner: string) -> () ! TaskError | OutOfMemoryError ? &mut Allocator {
+  let ownerName = run T.pascal(owner)
+  let methodName = run T.pascal(T.property(definition, "name"))
+  let name = run T.concat(&["wgpu", String.view(&ownerName), String.view(&methodName)])
+  let mut arguments = D.list()
+  if owner != "" { let n = run T.camel(owner)
+    let t = run T.typename(owner)
+    run D.push(&mut arguments, run parameter(String.view(&n), String.view(&t))) }
+  let expanded = run T.expand(items(definition, "args"))
+  let fields = D.array(&expanded)
+  let mut index: usize = 0
+  while index < fields.length { run D.push(&mut arguments, run parameter(T.property(&fields[index], "name"), T.property(&fields[index], "type")))
+    index = index + 1 }
+  let mut result = run String.copy("()")
+  if let Option<&Value>.Some { value } = Json.field(definition, "returns") { if !isNull(value) { result = run T.silkType(value) } }
+  let callback = T.property(definition, "callback")
+  if callback != "" {
+    let callbackName = run suffix(callback)
+    let callbackType = run T.typename(String.view(&callbackName))
+    let info = run T.concat(&[String.view(&callbackType), "CallbackInfo"])
+    run D.push(&mut arguments, run parameter("callbackInfo", String.view(&info)))
+    result = run String.copy("WGPUFuture")
+  }
+  let mut value = D.object()
+  run D.set(&mut value, "name", run D.str(String.view(&name)))
+  run D.set(&mut value, "args", move arguments)
+  run D.set(&mut value, "result", run D.str(String.view(&result)))
+  run D.set(&mut value, "callback", Value.Bool { value: callback != "" })
+  run D.push(&mut functions, move value)
+}
+effect fn functionNamed(functions: &mut Value, name: string, owner: string) -> () ! TaskError | OutOfMemoryError ? &mut Allocator {
+  let mut definition = D.object()
+  run D.set(&mut definition, "name", run D.str(name))
+  run function(&mut functions, &definition, owner)
+}
+
+pub effect fn generate(check: bool) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let schema = run Source.fetch()
+  let lock = run D.load("scripts/schema-lock.json")
+  let policy = run D.load("scripts/callback-contracts.json")
+  let revision = T.property(&lock, "revision")
+  let mut silk = run D.format("// Generated by silk task generate. DO NOT EDIT.\n// Copyright 2019-2023 WebGPU-Native developers; SPDX-License-Identifier: BSD-3-Clause\n// Source: webgpu-native/webgpu-headers@{}/webgpu.yml\n// All pointer validity, ownership, callback mode and lifetime requirements are caller obligations.\nimport silk.num.f32\nimport silk.num.u32\nimport silk.num.u64\nimport silk.num.usize\nimport silk.core.ownership {{ Copy }}\nimport silk.mem.pointer {{ Pointer }}\n\npub type WGPUBool = u32\npub type WGPUFlags = u64\npub const WGPU_TRUE: WGPUBool = 1\npub const WGPU_FALSE: WGPUBool = 0\n\n", &.(revision))
+  let mut records = D.object()
+  let mut functions = D.list()
+  let mut constants = D.object()
+  let mut callbacks = D.list()
+  let sourceConstants = items(&schema, "constants")
+  let mut index: usize = 0
+  while index < sourceConstants.length {
+    let item = &sourceConstants[index]
+    let name = run upper(T.property(item, "name"))
+    let kind = T.property(item, "value")
+    let typ = if kind == "uint32_max" { "u32" } else if kind == "uint64_max" { "u64" } else if kind == "usize_max" { "usize" } else { "f32" }
+    let initial = if kind == "uint32_max" { "u32.MAX" } else if kind == "uint64_max" { "u64.MAX" } else if kind == "usize_max" { "usize.MAX" } else if kind == "nan" { "f32.INFINITY - f32.INFINITY" } else { run Task.abort("unknown schema constant") }
+    run line(&mut silk, "pub const WGPU_{}: {} = {}", &(String.view(&name), typ, initial))
+    index = index + 1
+  }
+  let objects = items(&schema, "objects")
+  index = 0
+  while index < objects.length { let name = run T.typename(T.property(&objects[index], "name"))
+    run line(&mut silk, "\npub type {} = ?*mut u8", &.(String.view(&name)))
+    index = index + 1 }
+  let categories = ["enums", "bitflags"]
+  let mut category: usize = 0
+  while category < categories.length {
+    let enums = items(&schema, categories[category])
+    index = 0
+    while index < enums.length {
+      let enumeration = &enums[index]
+      let name = run T.typename(T.property(enumeration, "name"))
+      let mut values = D.object()
+      run line(&mut silk, "\npub type {} = {}", &(String.view(&name), if category == 0 { "u32" } else { "u64" }))
+      let entries = items(enumeration, "entries")
+      let mut entry: usize = 0
+      while entry < entries.length {
+        let item = &entries[entry]
+        if !isNull(item) {
+          let mut value: i64 = 0
+          if category == 0 {
+            let prefix = if T.property(item, "namespace") == "compatibility_mode" { 8192 } else { D.integer(run D.field(&schema, "enum_prefix")) }
+            let ordinal = Json.field(item, "value") |> Json.asI64 |> Option<i64>.unwrapOr(usize.toI64(entry))
+            value = i64.bitOr(prefix * 65536, ordinal)
+          } else if let Option<&Value>.Some { value: combination } = Json.field(item, "value_combination") {
+            let parts = D.array(combination)
+            let mut part: usize = 0
+            while part < parts.length { value = i64.bitOr(value, D.integer(run D.field(&values, D.string(&parts[part]))))
+              part = part + 1 }
+          } else if let Option<&Value>.Some { value: explicit } = Json.field(item, "value") { value = run integerValue(explicit) }
+          else if entry != 0 { value = i64.shiftLeft(1, usize.toI64(entry - 1)) }
+          run D.set(&mut values, T.property(item, "name"), D.int(value))
+          let itemName = run T.pascal(T.property(item, "name"))
+          let constant = run T.concat(&[String.view(&name), "_", String.view(&itemName)])
+          run D.set(&mut constants, String.view(&constant), D.int(value))
+          run line(&mut silk, "pub const {}: {} = {}", &(String.view(&constant), String.view(&name), value))
+        }
+        entry = entry + 1
+      }
+      if category == 0 { run line(&mut silk, "pub const {}_Force32: {} = 2147483647", &(String.view(&name), String.view(&name))) }
+      index = index + 1
+    }
+    category = category + 1
+  }
+  let typedefs = items(&schema, "typedefs")
+  index = 0
+  while index < typedefs.length { let name = run T.typename(T.property(&typedefs[index], "name"))
+    let typ = run T.silkType(&typedefs[index])
+    run line(&mut silk, "pub type {} = {}", &(String.view(&name), String.view(&typ)))
+    index = index + 1 }
+  let mut stringFields = D.list()
+  run D.push(&mut stringFields, run field("data", "?[*]const u8", "null", false))
+  run D.push(&mut stringFields, run field("length", "usize", "WGPU_STRLEN", false))
+  run record(&mut silk, &mut records, "WGPUStringView", &stringFields)
+  let mut chainFields = D.list()
+  run D.push(&mut chainFields, run field("next", "?*mut WGPUChainedStruct", "null", false))
+  run D.push(&mut chainFields, run field("sType", "WGPUSType", "0", false))
+  run record(&mut silk, &mut records, "WGPUChainedStruct", &chainFields)
+  let sourceCallbacks = items(&schema, "callbacks")
+  index = 0
+  while index < sourceCallbacks.length {
+    let callback = &sourceCallbacks[index]
+    let name = run T.typename(T.property(callback, "name"))
+    let callbackName = run T.concat(&[String.view(&name), "Callback"])
+    let mut arguments = run T.expand(items(callback, "args"))
+    run D.push(&mut arguments, run parameter("userdata1", "?*mut u8"))
+    run D.push(&mut arguments, run parameter("userdata2", "?*mut u8"))
+    let args = D.array(&arguments)
+    let mut signature = String.make()
+    let mut metadata = D.list()
+    let mut argument: usize = 0
+    while argument < args.length {
+      if argument != 0 { run String.append(&mut signature, ", ") }
+      run String.append(&mut signature, T.property(&args[argument], "type"))
+      run D.push(&mut metadata, run parameter(T.property(&args[argument], "name"), T.property(&args[argument], "type")))
+      argument = argument + 1
+    }
+    run line(&mut silk, "\n// Wasm callbacks are host-registered tokens, independent of native function addresses.\nstatic if Intrinsic.targetArchitecture() == \"wasm32\" {{\n  pub type {} = u32\n}} else {{\n  pub type {} = extern \"C\" fn({}) -> ()\n}}", &(String.view(&callbackName), String.view(&callbackName), String.view(&signature)))
+    let mut fields = D.list()
+    run D.push(&mut fields, run field("nextInChain", "?*mut WGPUChainedStruct", "null", false))
+    if T.property(callback, "style") == "callback_mode" { run D.push(&mut fields, run field("mode", "WGPUCallbackMode", "WGPUCallbackMode_WaitAnyOnly", false)) }
+    run D.push(&mut fields, run field("callback", String.view(&callbackName), "callback", true))
+    run D.push(&mut fields, run field("userdata1", "?*mut u8", "null", false))
+    run D.push(&mut fields, run field("userdata2", "?*mut u8", "null", false))
+    let infoName = run T.concat(&[String.view(&name), "CallbackInfo"])
+    run record(&mut silk, &mut records, String.view(&infoName), &fields)
+    let mut info = D.object()
+    run D.set(&mut info, "kind", D.int(usize.toI64(index)))
+    run D.set(&mut info, "name", run D.str(String.view(&callbackName)))
+    run D.set(&mut info, "args", move metadata)
+    run D.push(&mut callbacks, move info)
+    index = index + 1
+  }
+  let structs = items(&schema, "structs")
+  index = 0
+  while index < structs.length {
+    let structure = &structs[index]
+    let name = run T.typename(T.property(structure, "name"))
+    let mut fields = D.list()
+    let kind = T.property(structure, "type")
+    if T.starts(kind, "extensible") { run D.push(&mut fields, run field("nextInChain", "?*mut WGPUChainedStruct", "null", false)) }
+    else if kind == "extension" {
+      let entry = run T.pascal(T.property(structure, "name"))
+      let initial = run D.format("WGPUChainedStruct {{ next: Pointer.null<WGPUChainedStruct>(), sType: WGPUSType_{} }}", &.(String.view(&entry)))
+      run D.push(&mut fields, run field("chain", "WGPUChainedStruct", String.view(&initial), false))
+    }
+    let expanded = run T.expand(items(structure, "members"))
+    let members = D.array(&expanded)
+    let mut member: usize = 0
+    while member < members.length {
+      let original = run D.field(&members[member], "source")
+      let initial = run defaultValue(&schema, original, false)
+      run D.push(&mut fields, run field(T.property(&members[member], "name"), T.property(&members[member], "type"), String.view(&initial), T.starts(T.property(original, "type"), "callback.")))
+      member = member + 1
+    }
+    run record(&mut silk, &mut records, String.view(&name), &fields)
+    index = index + 1
+  }
+  let sourceFunctions = items(&schema, "functions")
+  index = 0
+  while index < sourceFunctions.length { run function(&mut functions, &sourceFunctions[index], "")
+    index = index + 1 }
+  index = 0
+  while index < objects.length {
+    let name = T.property(&objects[index], "name")
+    let methods = items(&objects[index], "methods")
+    let mut method: usize = 0
+    while method < methods.length { run function(&mut functions, &methods[method], name)
+      method = method + 1 }
+    run functionNamed(&mut functions, "add_ref", name)
+    run functionNamed(&mut functions, "release", name)
+    index = index + 1
+  }
+  index = 0
+  while index < structs.length {
+    if let Option<&Value>.Some { value } = Json.field(&structs[index], "free_members") {
+      if D.boolean(value) {
+        let name = T.property(&structs[index], "name")
+        let fnName = run T.concat(&[name, "_free_members"])
+        let typ = run T.concat(&["struct.", name])
+        let mut definition = D.object()
+        run D.set(&mut definition, "name", run D.str(String.view(&fnName)))
+        let mut args = D.list()
+        let mut argument = D.object()
+        run D.set(&mut argument, "name", run D.str(name))
+        run D.set(&mut argument, "type", run D.str(String.view(&typ)))
+        run D.push(&mut args, move argument)
+        run D.set(&mut definition, "args", move args)
+        run function(&mut functions, &definition, "")
+      }
+    }
+    index = index + 1
+  }
+  run String.append(&mut silk, "\npub type WGPUProc = ?*mut u8\n")
+  let mut proc = D.object()
+  run D.set(&mut proc, "name", run D.str("wgpuGetProcAddress"))
+  let mut procArgs = D.list()
+  run D.push(&mut procArgs, run parameter("procName", "WGPUStringView"))
+  run D.set(&mut proc, "args", move procArgs)
+  run D.set(&mut proc, "result", run D.str("WGPUProc"))
+  run D.set(&mut proc, "callback", Value.Bool { value: false })
+  run D.push(&mut functions, move proc)
+  run declarations(&mut silk, &functions, &policy)
+  let mut metadata = D.object()
+  run D.set(&mut metadata, "schema_revision", run D.str(revision))
+  run D.set(&mut metadata, "records", move records)
+  run D.set(&mut metadata, "functions", move functions)
+  run D.set(&mut metadata, "constants", move constants)
+  run D.set(&mut metadata, "wasm_abi", run D.str("Silk dev27 wasm32 lowers single-scalar aggregate results recursively to their scalar: WGPUFuture returns i64 (JavaScript bigint), not an sret pointer. Multiscalar by-value aggregates are passed indirectly. Callback fields are u32 host-registered tokens; native function addresses are never reinterpreted."))
+  run D.set(&mut metadata, "nullable_callbacks", run D.str("Native fn fields are nonnull. Callback-info constructors require a callback; raw C NULL callback defaults are intentionally not fabricated."))
+  run D.set(&mut metadata, "callbacks", move callbacks)
+  let root = run Task.root()
+  let path = run Path.join(&root, "sys/src/generated_webgpu.silk")
+  run Output.publish(&path, String.utf8Bytes(String.view(&silk)), check)
+  let mut json = run D.encode(&metadata, true)
+  run Bytes.append(&mut json, b"\n")
+  let schemaPath = run Path.join(&root, "sys/abi/generated_schema.json")
+  run Output.publish(&schemaPath, Bytes.asSlice(&json), check)
+  run abi(&metadata, check)
+}
+
+effect fn integerValue(value: &Value) -> i64 ! TaskError | OutOfMemoryError ? &mut Allocator {
+  if let Option<i64>.Some { value: found } = Json.asI64(Option<&Value>.some(value)) { return found }
+  let text = D.string(value)
+  let bytes = String.utf8Bytes(text)
+  let hexadecimal = String.startsWith(text, "0x") || String.startsWith(text, "0X")
+  let mut index: usize = if hexadecimal { 2 } else { 0 }
+  let mut number: i64 = 0
+  while index < bytes.length {
+    let byte = bytes[index]
+    let digit = if byte >= 48 && byte <= 57 { u8.toI64(byte - 48) } else if hexadecimal && byte >= 65 && byte <= 70 { u8.toI64(byte - 65) + 10 } else if hexadecimal && byte >= 97 && byte <= 102 { u8.toI64(byte - 97) + 10 } else { run Task.abort("invalid schema integer") }
+    let radix: i64 = if hexadecimal { 16 } else { 10 }
+    number = number * radix + digit
+    index = index + 1
+  }
+  return number
+}
+effect fn declarations(silk: &mut String, functions: &Value, policy: &Value) -> () ! TaskError | WriterError | OutOfMemoryError ? &mut Allocator {
+  let list = D.array(functions)
+  let pumps = run D.field(policy, "pumps")
+  let entries = D.entries(pumps)
+  let mut index: usize = 0
+  while index < entries.length {
+    let name = String.view(&entries[index].key)
+    let mut found = false
+    let mut function: usize = 0
+    while function < list.length { if T.property(&list[function], "name") == name { found = true
+        break }
+      function = function + 1 }
+    if !found { run Task.abort("callback policy names a function absent from schema") }
+    index = index + 1
+  }
+  run String.append(&mut silk, "\n// Nonspontaneous registrations require same-thread pumping and stable raw userdata.\n// Pointer-reachable device callbacks are documented in scripts/callback-contracts.json.\nstatic if Intrinsic.targetArchitecture() == \"wasm32\" {\n")
+  let mut branch: usize = 0
+  while branch < 2 {
+    if branch == 1 { run String.append(&mut silk, "} else {\n") }
+    index = 0
+    while index < list.length {
+      let definition = &list[index]
+      let name = T.property(definition, "name")
+      let mut directives = String.make()
+      if branch == 1 && D.boolean(run D.field(definition, "callback")) { run String.append(&mut directives, "  @deferredCallbacks(\"callbackInfo.callback\")\n") }
+      if let Option<&Value>.Some { value } = Json.field(pumps, name) {
+        run line(&mut silk, "  // {}\n  // {}", &(T.property(value, "reason"), T.property(value, "source")))
+        if branch == 1 { run String.append(&mut directives, "  @invokesDeferredCallbacks\n") }
+      }
+      run String.append(&mut silk, String.view(&directives))
+      let args = items(definition, "args")
+      let mut parameters = String.make()
+      let mut argument: usize = 0
+      while argument < args.length { if argument != 0 { run String.append(&mut parameters, ", ") }
+        let value = run D.format("{}: {}", &(T.property(&args[argument], "name"), T.property(&args[argument], "type")))
+        run String.append(&mut parameters, String.view(&value))
+        argument = argument + 1 }
+      let declaration = run D.format("  pub unsafe extern \"C\" fn {}({}) -> {}", &(name, String.view(&parameters), T.property(definition, "result")))
+      run String.append(&mut silk, String.view(&declaration))
+      if branch == 0 { let suffix = run D.format(" as \"webgpu#{}\"", &.(name))
+        run String.append(&mut silk, String.view(&suffix)) }
+      run String.append(&mut silk, "\n")
+      index = index + 1
+    }
+    run String.append(&mut silk, "\n")
+    branch = branch + 1
+  }
+  run String.append(&mut silk, "}\n")
+}
+
+effect fn abi(metadata: &Value, check: bool) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let records = D.entries(run D.field(metadata, "records"))
+  let functions = D.array(run D.field(metadata, "functions"))
+  let constants = D.entries(run D.field(metadata, "constants"))
+  let mut c = run String.copy("/* Generated by silk task generate. DO NOT EDIT. */\n#include <stddef.h>\n#include <stdio.h>\n#include <webgpu.h>\nstatic WGPUProc volatile generated_symbols[] = {\n")
+  let mut index: usize = 0
+  while index < functions.length { run line(&mut c, "  (WGPUProc)&{},", &.(T.property(&functions[index], "name")))
+    index = index + 1 }
+  run String.append(&mut c, "};\ntypedef struct { const char *name; size_t bytes; size_t alignment; } SilkGpuAbiLayout;\nstatic const SilkGpuAbiLayout generated_layouts[] = {\n")
+  index = 0
+  while index < records.length { let name = String.view(&records[index].key)
+    run line(&mut c, "  {{\"{}\", sizeof({}), _Alignof({})}},", &(name, name, name))
+    index = index + 1 }
+  run String.append(&mut c, "};\nint32_t silk_gpu_abi_check(size_t index, size_t bytes, size_t alignment) {\n  if (index >= sizeof(generated_layouts) / sizeof(generated_layouts[0])) return 1;\n  const SilkGpuAbiLayout *expected = &generated_layouts[index];\n  if (bytes == expected->bytes && alignment == expected->alignment) return 0;\n  fprintf(stderr, \"%s ABI mismatch: Silk size=%zu align=%zu; C size=%zu align=%zu\\n\",\n          expected->name, bytes, alignment, expected->bytes, expected->alignment);\n  return 1;\n}\nint32_t silk_gpu_abi_finish(size_t checked) {\n  size_t records = sizeof(generated_layouts) / sizeof(generated_layouts[0]);\n  if (checked != records) return 1;\n  size_t symbols = sizeof(generated_symbols) / sizeof(generated_symbols[0]);\n  for (size_t i = 0; i < symbols; ++i)\n    if (generated_symbols[i] == NULL) return 1;\n  printf(\"WebGPU ABI: %zu C/Silk record sizes and alignments match; %zu native symbols linked\\n\", records, symbols);\n  return 0;\n}\n#ifndef SILK_GPU_ABI_LIBRARY\nint main(void) {\n")
+  let mut silk = run String.copy("// Generated by silk task generate. DO NOT EDIT.\n// Compare actual compiled Silk layouts against actual implementation C-header layouts.\nimport silk.mem.layout { Layout }\nimport webgpu_sys.generated_webgpu { ")
+  index = 0
+  while index < records.length {
+    let name = String.view(&records[index].key)
+    if index != 0 { run String.append(&mut silk, ", ") }
+    run String.append(&mut silk, name)
+    run line(&mut c, "  printf(\"{} sizeof %zu alignof %zu\\n\", sizeof({}), _Alignof({}));", &(name, name, name))
+    let fields = D.array(&records[index].value)
+    let mut field: usize = 0
+    while field < fields.length { let member = T.property(&fields[field], "name")
+      run line(&mut c, "  printf(\"{}.{} %zu\\n\", offsetof({}, {}));", &(name, member, name, member))
+      field = field + 1 }
+    index = index + 1
+  }
+  run String.append(&mut silk, " }\nunsafe extern \"C\" fn silk_gpu_abi_check(index: usize, bytes: usize, alignment: usize) -> i32\nunsafe extern \"C\" fn silk_gpu_abi_finish(checked: usize) -> i32\n\npub fn main() -> i32 {\n")
+  index = 0
+  while index < records.length { run line(&mut silk, "  let layout{} = Layout.of<{}>()\n  if unsafe silk_gpu_abi_check({}, layout{}.bytes, layout{}.alignment) != 0 {{ return 1 }}", &(index, String.view(&records[index].key), index, index, index))
+    index = index + 1 }
+  run line(&mut silk, "  return unsafe silk_gpu_abi_finish({})\n}}", &.(records.length))
+  index = 0
+  while index < constants.length { let name = String.view(&constants[index].key)
+    run line(&mut c, "  _Static_assert({} == {}ULL, \"{}\");", &(name, D.integer(&constants[index].value), name))
+    index = index + 1 }
+  run String.append(&mut c, "  for (size_t i = 0; i < sizeof(generated_symbols) / sizeof(generated_symbols[0]); ++i)\n    if (generated_symbols[i] == NULL) return 1;\n  return 0;\n}\n#endif\n")
+  let root = run Task.root()
+  let cPath = run Path.join(&root, "sys/abi/generated_layout.c")
+  let silkPath = run Path.join(&root, "sys/abi/generated_main.silk")
+  run Output.publish(&cPath, String.utf8Bytes(String.view(&c)), check)
+  run Output.publish(&silkPath, String.utf8Bytes(String.view(&silk)), check)
+}

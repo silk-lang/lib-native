@@ -1,0 +1,73 @@
+import silk.cli.task { Task, TaskError }
+import silk.collections.bytes { Bytes }
+import silk.core.effect { Effect }
+import silk.core.result { Result }
+import silk.crypto.sha2 { Sha256 }
+import silk.io.writer { WriterError }
+import silk.json.value { Value }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.system.child_process { ChildProcess, ProcessError }
+import silk.system.filesystem { AtomicWriteError, FileError, FileSystem, Path }
+import silk.system.host_input { HostInput, HostInputError }
+import silk.text.string { String }
+import silk.num.u8
+import task_data as D
+import task_process as Process
+
+pub effect fn digest(bytes: &[u8]) -> String ! TaskError | OutOfMemoryError ? &mut Allocator {
+  let hash = Sha256.hash(bytes)
+  let digits = b"0123456789abcdef"
+  let mut text = run Bytes.makeWithCapacity(64)
+  let mut index: usize = 0
+  while index < hash.length {
+    let byte = hash[index]
+    run Bytes.append(&mut text, &[digits[u8.toUsize(byte / 16)], digits[u8.toUsize(byte % 16)]])
+    index = index + 1
+  }
+  return run D.text(move text)
+}
+pub effect fn fetch() -> Value
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let lock = run D.load("scripts/schema-lock.json")
+  let revision = run D.requiredString(run D.field(&lock, "revision"))
+  let repository = run D.requiredString(run D.field(&lock, "repository"))
+  let root = run Task.root()
+  let relative = run D.format(".cache/webgpu-headers/{}", &.(revision))
+  let directory = run Path.join(&root, String.view(&relative))
+  run FileSystem.createDirectoriesRecursively(&directory)
+  let hashes = D.entries(run D.field(&lock, "sha256"))
+  let mut index: usize = 0
+  while index < hashes.length {
+    let name = String.view(&hashes[index].key)
+    let path = run Path.join(&directory, name)
+    let exists = run FileSystem.exists(&path)
+    let mut bytes = Bytes.make()
+    if exists { bytes = run FileSystem.readFile(&path) }
+    else {
+      let scratch = run FileSystem.temporaryDirectory(&directory, "download-")
+      let downloaded = run Path.join(&scratch.path, "source")
+      let url = run D.format("https://raw.githubusercontent.com/{}/{}/{}", &(repository, revision, name))
+      run Process.exec("curl", &["--fail", "--location", "--max-time", "60", "--user-agent", "silk-gpu-generator", "--output", Process.text(&downloaded), String.view(&url)], &[], &root)
+      bytes = run FileSystem.readFile(&downloaded)
+      run FileSystem.removeDirectoryRecursively(&scratch.path)
+    }
+    let actual = run digest(Bytes.asSlice(&bytes))
+    let expected = run D.requiredString(&hashes[index].value)
+    if String.view(&actual) != expected {
+      let message = run D.format("SHA-256 mismatch for {}: expected {}, received {}; remove corrupt cache explicitly", &(name, expected, String.view(&actual)))
+      fail TaskError { message: move message, status: 1 }
+    }
+    if !exists {
+      let result = run Effect.result(FileSystem.writeFileAtomic(&path, Bytes.asSlice(&bytes), FileSystem.replaceExisting(), FileSystem.buffered()))
+      match move result {
+        Result<(), AtomicWriteError>.Success { .. } => {}
+        Result<(), AtomicWriteError>.Failure { .. } => run Task.abort("cannot publish verified schema cache")
+      }
+    }
+    index = index + 1
+  }
+  let source = run Path.join(&directory, "webgpu.json")
+  let bytes = run FileSystem.readFile(&source)
+  return run D.parse(Bytes.asSlice(&bytes))
+}

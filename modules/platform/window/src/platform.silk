@@ -39,7 +39,6 @@ import types {
   RawSurface,
 }
 import silk.core.option { Option }
-import silk.geometry.point { Point2 }
 import silk.geometry.size { Size2 }
 import silk.mem.allocator { Allocator, OutOfMemoryError }
 import silk.text.string { String }

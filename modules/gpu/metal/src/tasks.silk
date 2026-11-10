@@ -1,0 +1,69 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+import task_bridge as Bridge
+import task_coverage as Coverage
+import task_device as Device
+import task_encoder as Encoder
+import task_pipeline as Pipeline
+import silk.cli.command { Command, CommandLine, Opt }
+import silk.cli.task { Task, TaskError, TaskSet }
+import silk.core.option { Option }
+import silk.io.writer { WriterError }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.system.child_process { ChildProcess, ProcessError }
+import silk.system.filesystem { FileError, FileSystem, Path }
+import silk.system.host_input { HostInput, HostInputError }
+import silk.text.string { String }
+
+union Tasks {
+  Generate { pub checkout: String },
+  GenerateCore,
+  GenerateLibrary,
+  GenerateDevice { pub sourceFile: String },
+  Coverage { pub upstream: Option<String> },
+}
+impl CommandLine for Tasks {
+  static fn command() -> Command<Tasks> {
+    return Command<Tasks>.make("tasks", "Metal bridge generation and declaration coverage")
+      |> Command.variant("Generate", "Regenerate the five mechanical slices from pinned metal-rs")
+      |> Command.arg("checkout", Opt.about("Path to the pinned metal-rs checkout") |> Opt.required)
+      |> Command.variant("GenerateCore", "Regenerate the core slice from tools/core.json")
+      |> Command.variant("GenerateLibrary", "Regenerate the library slice from tools/library.json")
+      |> Command.variant("GenerateDevice", "Regenerate the device slice from an upstream device.rs")
+      |> Command.arg("sourceFile", Opt.about("Path to metal-rs/src/device.rs") |> Opt.required)
+      |> Command.variant("Coverage", "Audit upstream mappings and Silk target declarations")
+      |> Command.option("upstream", Opt.about("Refresh the inventory from this pinned metal-rs checkout first"))
+  }
+}
+impl TaskSet for Tasks {
+  effect fn perform(self: Tasks) -> ()
+    ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+    ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+    let root = run Task.root()
+    match move self {
+      Tasks.Generate { checkout } => {
+        run Coverage.pinned(checkout.view())
+        let upstream = run Path.resolve(&root, checkout.view())
+        let core = run Bridge.load(&root, "core")
+        run Bridge.emit(&root, "core", &core, "")
+        let library = run Bridge.load(&root, "library")
+        run Bridge.emit(&root, "library", &library, "")
+        run Device.generate(&root, &upstream)
+        run Pipeline.generate(&root, &upstream)
+        run Encoder.generate(&root, &upstream)
+      }
+      Tasks.GenerateCore => {
+        let bindings = run Bridge.load(&root, "core")
+        run Bridge.emit(&root, "core", &bindings, "")
+      }
+      Tasks.GenerateLibrary => {
+        let bindings = run Bridge.load(&root, "library")
+        run Bridge.emit(&root, "library", &bindings, "")
+      }
+      Tasks.GenerateDevice { sourceFile } => run Device.generateFile(&root, sourceFile.view())
+      Tasks.Coverage { upstream } => run Coverage.coverage(&root, move upstream)
+    }
+  }
+}
+pub effect fn main() -> i32 ? &mut HostInput {
+  return run Task.main<Tasks>()
+}

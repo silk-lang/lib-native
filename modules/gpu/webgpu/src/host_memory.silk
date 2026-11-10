@@ -33,7 +33,7 @@ static if Intrinsic.targetArchitecture() == "wasm32" {
   pub fn hostAllocate(size: usize) -> ?*mut u8 {
     return match move run Effect.result(allocate(size)) {
       Result<?*mut u8, OutOfMemoryError>.Success { value } => value
-      Result<?*mut u8, OutOfMemoryError>.Failure { error } => Pointer.null<u8>()
+      Result<?*mut u8, OutOfMemoryError>.Failure { .. } => Pointer.null<u8>()
     }
   }
   // Host contract: pointer and size are an outstanding pair returned by alloc;

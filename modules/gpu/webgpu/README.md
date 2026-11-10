@@ -71,9 +71,9 @@ Windows. Browsers use Chromium's WebGPU.
 
 Windows builds require LLVM 22 and an x64 Visual Studio 2026 developer shell with
 the Windows SDK and current Visual C++ Redistributable. Run
-`./scripts/prepare-windows.ps1` from the repository root, then use `silkc build`
-or `silkc run` directly. Preparation wraps Dawn in `nonstd_dawn.dll` so its C++
-runtime initializes. `-RuntimeDirectory <executable-directory>` stages Dawn, DXC
+`silk task prepare-windows` from the repository root, then use `silk build`
+or `silk run` directly. Preparation wraps Dawn in `nonstd_dawn.dll` so its C++
+runtime initializes. `--runtime-directory <executable-directory>` stages Dawn, DXC
 and GLFW DLLs beside an executable. Keep those DLLs when moving programs.
 
 ## Tests
@@ -81,18 +81,31 @@ and GLFW DLLs beside an executable. Keep those DLLs when moving programs.
 From the repository root:
 
 ```sh
-silkc check --workspace
-silkc run --manifest-path modules/gpu/webgpu/sys/abi/silk.toml
-silkc run --manifest-path modules/gpu/webgpu/tests/native/silk.toml
-silkc build --manifest-path modules/gpu/webgpu/examples/silk.toml --target wasm32-unknown-unknown
-node --test modules/gpu/webgpu/browser/host.test.mjs
+silk check --workspace
+silk task --manifest-path modules/gpu/webgpu/silk.toml check --skip-native
+silk task --manifest-path modules/gpu/webgpu/silk.toml test-abi
+silk task --manifest-path modules/gpu/webgpu/silk.toml test-native
+silk task --manifest-path modules/gpu/webgpu/silk.toml test-pixels
+silk task --manifest-path modules/gpu/webgpu/silk.toml test-browser
 ```
 
 The standalone [native workflow](../../../.github/workflows/native.yml) runs direct Silk
 commands, native pixel comparisons, and actual browser wasm/canvas tests. See the
 [repository guide](../../../README.md#verification) for prerequisites and coverage.
-Historical Python generators and specialized harnesses remain optional maintenance tools;
-they are not normal build hooks or the standalone CI gate.
+Maintenance uses typed Silk tasks: `generate`, `generate-browser`, `embed-shaders`,
+`rect-shader`, `schema-source`, `window`, `test-window`, `bench`, `bench-compare`,
+and `ab`. Run them from this package or supply its manifest path. Explicit path
+arguments are relative to the invoking directory; omitted paths use package-local defaults.
+The manifests pin **0.1.0-dev.64+8214c402307b**.
+
+On Windows only, managed subprocess support is blocked by
+[silk#3034](https://github.com/silk-lang/silk/issues/3034). Timeout-managed ABI,
+native and pixel execution and the browser task are explicitly unsupported there
+until the toolchain supplies managed subprocesses; no parallel legacy runners
+are maintained. Compilation, provisioning and CPU pixel comparison remain Silk tasks.
+Browser runtime assets and
+`browser/host.test.mjs` remain JavaScript because that is the runtime under test.
+POSIX browser tasks use Chromium's DevTools pipe directly, without Playwright.
 
 ## Performance
 

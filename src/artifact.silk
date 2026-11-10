@@ -1,0 +1,90 @@
+//! Locate already-built executables without building them.
+import silk.cli.task { Task, TaskError }
+import silk.collections.list { List }
+import silk.core.effect { Effect }
+import silk.core.option { Option }
+import silk.core.result { Result }
+import silk.io.writer { WriterError }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.system.child_process { ChildProcess, ProcessError }
+import silk.system.filesystem { DirectoryEntry, FileError, FileSystem, Path }
+import silk.system.host_input { HostInput, HostInputError }
+import silk.text.string { String }
+import support
+
+pub effect fn locate(name: string, target: string, packagePath: string, release: bool) -> Path
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let root = run support.root()
+  let package = run support.resolve(packagePath)
+  let mut filename = run String.copy(name)
+  if String.contains(target, "windows") { run String.append(&mut filename, ".exe") }
+  let rootOutput = run outputDirectory(&root, target, release)
+  let mut found = Option<Path>.none()
+  let mut count: usize = 0
+  if run contains(&rootOutput, String.view(&filename)) {
+    found = Option<Path>.some(run Path.join(&rootOutput, String.view(&filename)))
+    count = count + 1
+  }
+  // Match the original Set of resolved roots: never count the same root twice.
+  if support.text(&root) != support.text(&package) {
+    let packageOutput = run outputDirectory(&package, target, release)
+    if run contains(&packageOutput, String.view(&filename)) {
+      found = Option<Path>.some(run Path.join(&packageOutput, String.view(&filename)))
+      count = count + 1
+    }
+  }
+  if count != 1 {
+    let mut message = run String.copy("Expected one ")
+    run String.append(&mut message, String.view(&filename))
+    run String.append(&mut message, " for ")
+    run String.append(&mut message, target)
+    run String.append(&mut message, ", found ")
+    if count == 0 { run String.append(&mut message, "0") }
+    else { run String.append(&mut message, "2") }
+    fail TaskError { message: move message, status: 1 }
+  }
+  return match move found {
+    Option<Path>.Some { value } => move value
+    Option<Path>.None => run Task.abort("Artifact resolution lost its result")
+  }
+}
+
+pub effect fn printArtifact(name: string, target: string, packagePath: string, release: bool) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let path = run locate(name, target, packagePath, release)
+  run support.print(support.text(&path))
+}
+
+effect fn outputDirectory(root: &Path, target: string, release: bool) -> Path
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let llvm = run Path.resolve(root, "build/llvm")
+  let platform = run Path.resolve(&llvm, target)
+  return run Path.join(&platform, if release { "release" } else { "debug" })
+}
+
+effect fn contains(directory: &Path, filename: string) -> bool
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let entries = match move run Effect.result(FileSystem.listDirectory(directory)) {
+    Result<List<DirectoryEntry>, FileError | OutOfMemoryError>.Success { value } => move value
+    Result<List<DirectoryEntry>, FileError | OutOfMemoryError>.Failure { error } => match move error {
+      FileError failure => {
+        if failure.reason.code == FileSystem.notFound().code { return false }
+        fail move failure
+      }
+      OutOfMemoryError failure => { fail move failure }
+    }
+  }
+  let items = List<DirectoryEntry>.asSlice(&entries)
+  let mut index: usize = 0
+  while index < items.length {
+    if let Option<string>.Some { value } = Path.name(&items[index].path) {
+      if value == filename { return true }
+    }
+    index = index + 1
+  }
+  return false
+}

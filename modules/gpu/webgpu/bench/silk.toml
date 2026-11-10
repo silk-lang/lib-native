@@ -1,7 +1,7 @@
 [package]
 name = "gpu-webgpu-bench"
 version = "0.1.0"
-silk-version = "0.1.0-dev.63+657e3c900f65"
+silk-version = "0.1.0-dev.64+8214c402307b"
 kind = "executable"
 
 [dependencies]
@@ -9,18 +9,18 @@ webgpu = { path = "..", package = "gpu-webgpu" }
 webgpu_sys = { path = "../sys", package = "gpu-webgpu-sys" }
 
 # The benchmark's C half (the shared fixture and timers). The C baseline, built by
-# scripts/bench, links the same file. Only the declaring manifest may name an archive, so this one
+# silk task bench, links the same file. Only the declaring manifest may name an archive, so this one
 # pins the same Dawn release as ../sys/silk.toml under its own name; both share one download.
 [native]
 sources = [
   { c = "support.c", include = ["dawn-headers:include"], flags = ["-std=c11", "-O3", "-g"], os = ["macos", "linux"] },
 ]
-# Windows links the same file compiled by scripts/prepare-windows.ps1 into the Dawn override: Silk's
+# Windows links the same file compiled by the root prepare-windows task into the Dawn override: Silk's
 # \\?\ include paths do not find Dawn's headers there.
 link = [{ static-archive = "dawn-headers:lib/nonstd_bench_support.lib", os = "windows" }]
 
 [[generate]]
-run = ["scripts/rect-shader"]
+run = ["silk", "task", "--manifest-path", "../silk.toml", "rect-shader"]
 outputs = ["rect_shader.h"]
 
 [native.archive.dawn-headers.targets.aarch64-apple-darwin]

@@ -1,3 +1,11 @@
+[package]
+name = "lib-native-tasks"
+version = "0.1.0"
+kind = "executable"
+source = "src"
+main = "tasks.silk"
+silk-version = "0.1.0-dev.64+8214c402307b"
+
 [workspace]
 members = [
   "modules/gpu/metal",
@@ -17,4 +25,4 @@ members = [
   "modules/platform/window/tests/smoke",
   "modules/platform/window/tests/windows"
 ]
-silk-version = "0.1.0-dev.63+657e3c900f65"
+silk-version = "0.1.0-dev.64+8214c402307b"

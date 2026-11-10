@@ -1,21 +1,21 @@
 [package]
 name = "gpu-webgpu-abi-probe"
 version = "0.1.0"
-silk-version = "0.1.0-dev.63+657e3c900f65"
+silk-version = "0.1.0-dev.64+8214c402307b"
 source = "."
 main = "generated_main.silk"
 
 [dependencies]
 webgpu_sys = { path = "..", package = "gpu-webgpu-sys" }
 
-# Compares every raw Silk record layout with Dawn's C headers (scripts/test-abi runs it). Only the
+# Compares every raw Silk record layout with Dawn's C headers (silk task test-abi runs it). Only the
 # declaring manifest may name an archive, so this one pins the same Dawn release as ../silk.toml
 # under its own name; both share one download.
 [native]
 sources = [
   { c = "generated_layout.c", include = ["dawn-headers:include", "dawn-headers:include/dawn"], flags = ["-std=c11", "-DSILK_GPU_ABI_LIBRARY"], os = ["macos", "linux"] },
 ]
-# Windows links the same file compiled by scripts/prepare-windows.ps1 into the Dawn override: Silk's
+# Windows links the same file compiled by the root prepare-windows task into the Dawn override: Silk's
 # \\?\ include paths do not find Dawn's headers there.
 link = [{ static-archive = "dawn-headers:lib/nonstd_abi_layout.lib", os = "windows" }]
 

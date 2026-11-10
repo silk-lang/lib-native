@@ -1,0 +1,1017 @@
+[
+  {
+    "owner": "Device",
+    "name": "system_default",
+    "params": [],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "    return (void *)MTLCreateSystemDefaultDevice();",
+    "notes": "Returns an owned +1 device, or null if Metal is unavailable.",
+    "rust": "Device.system_default"
+  },
+  {
+    "owner": "Device",
+    "name": "all",
+    "params": [],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "#if TARGET_OS_IOS || TARGET_OS_VISION\n    id<MTLDevice> device = MTLCreateSystemDefaultDevice();\n    NSArray *devices = device ? [[NSArray alloc] initWithObjects:device, nil] : [[NSArray alloc] init];\n    [device release];\n    return (void *)devices;\n#else\n    return (void *)MTLCopyAllDevices();\n#endif",
+    "notes": "Returns an owned +1 NSArray of devices. Elements are borrowed from the array; retain them to outlive it.",
+    "rust": "Device.all"
+  },
+  {
+    "owner": "Device",
+    "name": "name",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?[*]const u8",
+    "cresult": "const uint8_t *",
+    "body": "    NSString *value = ((id (*)(id, SEL))objc_msgSend)((id)object, sel_registerName(\"name\"));\n    return (const uint8_t *)[value UTF8String];",
+    "notes": "Returns borrowed UTF-8 storage owned by the NSString property. Keep the device alive.",
+    "rust": "DeviceRef.name"
+  },
+  {
+    "owner": "Device",
+    "name": "vendor",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?[*]const u8",
+    "cresult": "const uint8_t *",
+    "body": "    NSString *value = ((id (*)(id, SEL))objc_msgSend)((id)object, sel_registerName(\"vendorName\"));\n    return (const uint8_t *)[value UTF8String];",
+    "notes": "Returns borrowed UTF-8 storage owned by the NSString property. Private vendor API; caller must ensure selector availability.",
+    "rust": "DeviceRef.vendor"
+  },
+  {
+    "owner": "Device",
+    "name": "family_name",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?[*]const u8",
+    "cresult": "const uint8_t *",
+    "body": "    NSString *value = ((id (*)(id, SEL))objc_msgSend)((id)object, sel_registerName(\"familyName\"));\n    return (const uint8_t *)[value UTF8String];",
+    "notes": "Returns borrowed UTF-8 storage owned by the NSString property. Private vendor API; caller must ensure selector availability.",
+    "rust": "DeviceRef.family_name"
+  },
+  {
+    "owner": "Device",
+    "name": "supports_feature_set",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "feature",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "bool",
+    "cresult": "uint8_t",
+    "body": "    return [(id<MTLDevice>)object supportsFeatureSet:(MTLFeatureSet)feature];",
+    "notes": "Caller must ensure the device and selector are available.",
+    "rust": "DeviceRef.supports_feature_set"
+  },
+  {
+    "owner": "Device",
+    "name": "supports_family",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "family",
+        "silk": "i64",
+        "c": "int64_t"
+      }
+    ],
+    "result": "bool",
+    "cresult": "uint8_t",
+    "body": "    return [(id<MTLDevice>)object supportsFamily:(MTLGPUFamily)family];",
+    "notes": "Caller must ensure the device and selector are available.",
+    "rust": "DeviceRef.supports_family"
+  },
+  {
+    "owner": "Device",
+    "name": "supports_vertex_amplification_count",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "count",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "bool",
+    "cresult": "uint8_t",
+    "body": "    return [(id<MTLDevice>)object supportsVertexAmplificationCount:(NSUInteger)count];",
+    "notes": "Caller must ensure the device and selector are available.",
+    "rust": "DeviceRef.supports_vertex_amplification_count"
+  },
+  {
+    "owner": "Device",
+    "name": "supports_texture_sample_count",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "count",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "bool",
+    "cresult": "uint8_t",
+    "body": "    return [(id<MTLDevice>)object supportsTextureSampleCount:(NSUInteger)count];",
+    "notes": "Caller must ensure the device and selector are available.",
+    "rust": "DeviceRef.supports_texture_sample_count"
+  },
+  {
+    "owner": "Device",
+    "name": "supports_counter_sampling",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "sampling_point",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "bool",
+    "cresult": "uint8_t",
+    "body": "    return [(id<MTLDevice>)object supportsCounterSampling:(MTLCounterSamplingPoint)sampling_point];",
+    "notes": "Caller must ensure the device and selector are available.",
+    "rust": "DeviceRef.supports_counter_sampling"
+  },
+  {
+    "owner": "Device",
+    "name": "minimum_linear_texture_alignment_for_pixel_format",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "format",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "    return [(id<MTLDevice>)object minimumLinearTextureAlignmentForPixelFormat:(MTLPixelFormat)format];",
+    "notes": "Caller must ensure the device and selector are available.",
+    "rust": "DeviceRef.minimum_linear_texture_alignment_for_pixel_format"
+  },
+  {
+    "owner": "Device",
+    "name": "minimum_texture_buffer_alignment_for_pixel_format",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "format",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "    return [(id<MTLDevice>)object minimumTextureBufferAlignmentForPixelFormat:(MTLPixelFormat)format];",
+    "notes": "Caller must ensure the device and selector are available.",
+    "rust": "DeviceRef.minimum_texture_buffer_alignment_for_pixel_format"
+  },
+  {
+    "owner": "Device",
+    "name": "new_command_queue_with_max_command_buffer_count",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "count",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "    return (void *)[(id<MTLDevice>)object newCommandQueueWithMaxCommandBufferCount:(NSUInteger)count];",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements.",
+    "rust": "DeviceRef.new_command_queue_with_max_command_buffer_count"
+  },
+  {
+    "owner": "Device",
+    "name": "new_texture",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "descriptor",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "    return (void *)[(id<MTLDevice>)object newTextureWithDescriptor:(MTLTextureDescriptor *)descriptor];",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements.",
+    "rust": "DeviceRef.new_texture"
+  },
+  {
+    "owner": "Device",
+    "name": "new_sampler",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "descriptor",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "    return (void *)[(id<MTLDevice>)object newSamplerStateWithDescriptor:(MTLSamplerDescriptor *)descriptor];",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements.",
+    "rust": "DeviceRef.new_sampler"
+  },
+  {
+    "owner": "Device",
+    "name": "new_depth_stencil_state",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "descriptor",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "    return (void *)[(id<MTLDevice>)object newDepthStencilStateWithDescriptor:(MTLDepthStencilDescriptor *)descriptor];",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements.",
+    "rust": "DeviceRef.new_depth_stencil_state"
+  },
+  {
+    "owner": "Device",
+    "name": "new_argument_encoder",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "arguments",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "    return (void *)[(id<MTLDevice>)object newArgumentEncoderWithArguments:(NSArray<MTLArgumentDescriptor *> *)arguments];",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements.",
+    "rust": "DeviceRef.new_argument_encoder"
+  },
+  {
+    "owner": "Device",
+    "name": "new_heap",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "descriptor",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "    return (void *)[(id<MTLDevice>)object newHeapWithDescriptor:(MTLHeapDescriptor *)descriptor];",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements.",
+    "rust": "DeviceRef.new_heap"
+  },
+  {
+    "owner": "Device",
+    "name": "new_acceleration_structure_with_size",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "size",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "    return (void *)[(id<MTLDevice>)object newAccelerationStructureWithSize:(NSUInteger)size];",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements.",
+    "rust": "DeviceRef.new_acceleration_structure_with_size"
+  },
+  {
+    "owner": "Device",
+    "name": "new_dynamic_library",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "library",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "error",
+        "silk": "?*mut ?*mut u8",
+        "c": "void **"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "    return (void *)[(id<MTLDevice>)object newDynamicLibrary:(id<MTLLibrary>)library error:(NSError **)error];",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore.",
+    "rust": "DeviceRef.new_dynamic_library"
+  },
+  {
+    "owner": "Device",
+    "name": "new_dynamic_library_with_url",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "url",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "error",
+        "silk": "?*mut ?*mut u8",
+        "c": "void **"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "    return (void *)[(id<MTLDevice>)object newDynamicLibraryWithURL:(NSURL *)url error:(NSError **)error];",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore.",
+    "rust": "DeviceRef.new_dynamic_library_with_url"
+  },
+  {
+    "owner": "Device",
+    "name": "new_binary_archive_with_descriptor",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "descriptor",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "error",
+        "silk": "?*mut ?*mut u8",
+        "c": "void **"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "    return (void *)[(id<MTLDevice>)object newBinaryArchiveWithDescriptor:(MTLBinaryArchiveDescriptor *)descriptor error:(NSError **)error];",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore.",
+    "rust": "DeviceRef.new_binary_archive_with_descriptor"
+  },
+  {
+    "owner": "Device",
+    "name": "new_render_pipeline_state",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "descriptor",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "error",
+        "silk": "?*mut ?*mut u8",
+        "c": "void **"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "    return (void *)[(id<MTLDevice>)object newRenderPipelineStateWithDescriptor:(MTLRenderPipelineDescriptor *)descriptor error:(NSError **)error];",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore.",
+    "rust": "DeviceRef.new_render_pipeline_state"
+  },
+  {
+    "owner": "Device",
+    "name": "new_compute_pipeline_state_with_function",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "function",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "error",
+        "silk": "?*mut ?*mut u8",
+        "c": "void **"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "    return (void *)[(id<MTLDevice>)object newComputePipelineStateWithFunction:(id<MTLFunction>)function error:(NSError **)error];",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore.",
+    "rust": "DeviceRef.new_compute_pipeline_state_with_function"
+  },
+  {
+    "owner": "Device",
+    "name": "new_counter_sample_buffer_with_descriptor",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "descriptor",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "error",
+        "silk": "?*mut ?*mut u8",
+        "c": "void **"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "    return (void *)[(id<MTLDevice>)object newCounterSampleBufferWithDescriptor:(MTLCounterSampleBufferDescriptor *)descriptor error:(NSError **)error];",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore.",
+    "rust": "DeviceRef.new_counter_sample_buffer_with_descriptor"
+  },
+  {
+    "owner": "Device",
+    "name": "new_render_pipeline_state_with_reflection",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "descriptor",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "reflection_options",
+        "silk": "u64",
+        "c": "uint64_t"
+      },
+      {
+        "name": "reflection",
+        "silk": "*mut ?*mut u8",
+        "c": "void **"
+      },
+      {
+        "name": "error",
+        "silk": "?*mut ?*mut u8",
+        "c": "void **"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "    MTLRenderPipelineReflection *value = nil;\n    id state = [(id<MTLDevice>)object newRenderPipelineStateWithDescriptor:(MTLRenderPipelineDescriptor *)descriptor options:(MTLPipelineOption)reflection_options reflection:&value error:(NSError **)error];\n    *reflection = (void *)[value retain];\n    return (void *)state;",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore. reflection receives a separately owned +1 reflection object, or null, and must be released.",
+    "rust": "DeviceRef.new_render_pipeline_state_with_reflection"
+  },
+  {
+    "owner": "Device",
+    "name": "new_mesh_render_pipeline_state_with_reflection",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "descriptor",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "reflection_options",
+        "silk": "u64",
+        "c": "uint64_t"
+      },
+      {
+        "name": "reflection",
+        "silk": "*mut ?*mut u8",
+        "c": "void **"
+      },
+      {
+        "name": "error",
+        "silk": "?*mut ?*mut u8",
+        "c": "void **"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "    MTLRenderPipelineReflection *value = nil;\n    id state = [(id<MTLDevice>)object newRenderPipelineStateWithMeshDescriptor:(MTLMeshRenderPipelineDescriptor *)descriptor options:(MTLPipelineOption)reflection_options reflection:&value error:(NSError **)error];\n    *reflection = (void *)[value retain];\n    return (void *)state;",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore. reflection receives a separately owned +1 reflection object, or null, and must be released.",
+    "rust": "DeviceRef.new_mesh_render_pipeline_state_with_reflection"
+  },
+  {
+    "owner": "Device",
+    "name": "new_compute_pipeline_state_with_reflection",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "descriptor",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "reflection_options",
+        "silk": "u64",
+        "c": "uint64_t"
+      },
+      {
+        "name": "reflection",
+        "silk": "*mut ?*mut u8",
+        "c": "void **"
+      },
+      {
+        "name": "error",
+        "silk": "?*mut ?*mut u8",
+        "c": "void **"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "    MTLComputePipelineReflection *value = nil;\n    id state = [(id<MTLDevice>)object newComputePipelineStateWithDescriptor:(MTLComputePipelineDescriptor *)descriptor options:(MTLPipelineOption)reflection_options reflection:&value error:(NSError **)error];\n    *reflection = (void *)[value retain];\n    return (void *)state;",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore. reflection receives a separately owned +1 reflection object, or null, and must be released.",
+    "rust": "DeviceRef.new_compute_pipeline_state_with_reflection"
+  },
+  {
+    "owner": "Device",
+    "name": "new_mesh_render_pipeline_state",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "descriptor",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "error",
+        "silk": "?*mut ?*mut u8",
+        "c": "void **"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "    return (void *)[(id<MTLDevice>)object newRenderPipelineStateWithMeshDescriptor:(MTLMeshRenderPipelineDescriptor *)descriptor options:MTLPipelineOptionNone reflection:NULL error:(NSError **)error];",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore. Uses the SDK descriptor selector with no reflection options.",
+    "rust": "DeviceRef.new_mesh_render_pipeline_state"
+  },
+  {
+    "owner": "Device",
+    "name": "new_compute_pipeline_state",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "descriptor",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "error",
+        "silk": "?*mut ?*mut u8",
+        "c": "void **"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "    return (void *)[(id<MTLDevice>)object newComputePipelineStateWithDescriptor:(MTLComputePipelineDescriptor *)descriptor options:MTLPipelineOptionNone reflection:NULL error:(NSError **)error];",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore. Uses the SDK descriptor selector with no reflection options.",
+    "rust": "DeviceRef.new_compute_pipeline_state"
+  },
+  {
+    "owner": "Device",
+    "name": "new_library_with_source",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "src",
+        "silk": "?[*]const u8",
+        "c": "const uint8_t *"
+      },
+      {
+        "name": "options",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "error",
+        "silk": "?*mut ?*mut u8",
+        "c": "void **"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "    NSString *source = [NSString stringWithUTF8String:(const char *)src];\n    return (void *)[(id<MTLDevice>)object newLibraryWithSource:source options:(MTLCompileOptions *)options error:(NSError **)error];",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore. src is NUL-terminated UTF-8.",
+    "rust": "DeviceRef.new_library_with_source"
+  },
+  {
+    "owner": "Device",
+    "name": "new_library_with_file",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "file",
+        "silk": "?[*]const u8",
+        "c": "const uint8_t *"
+      },
+      {
+        "name": "error",
+        "silk": "?*mut ?*mut u8",
+        "c": "void **"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "    NSString *filename = [NSString stringWithUTF8String:(const char *)file];\n    return (void *)[(id<MTLDevice>)object newLibraryWithFile:filename error:(NSError **)error];",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore. file is a NUL-terminated UTF-8 filesystem path.",
+    "rust": "DeviceRef.new_library_with_file"
+  },
+  {
+    "owner": "Device",
+    "name": "new_library_with_data",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "library_data",
+        "silk": "?[*]const u8",
+        "c": "const uint8_t *"
+      },
+      {
+        "name": "length",
+        "silk": "u64",
+        "c": "uint64_t"
+      },
+      {
+        "name": "error",
+        "silk": "?*mut ?*mut u8",
+        "c": "void **"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "    dispatch_data_t data = dispatch_data_create(library_data, (size_t)length, dispatch_get_main_queue(), DISPATCH_DATA_DESTRUCTOR_DEFAULT);\n    id<MTLLibrary> library = [(id<MTLDevice>)object newLibraryWithData:data error:(NSError **)error];\n    dispatch_release(data);\n    return (void *)library;",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. error receives a borrowed +0 NSError, including compilation warnings when a non-null result is returned; pass null to ignore. library_data points to length readable bytes; dispatch copies the bytes before this returns.",
+    "rust": "DeviceRef.new_library_with_data"
+  },
+  {
+    "owner": "Device",
+    "name": "new_buffer",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "length",
+        "silk": "u64",
+        "c": "uint64_t"
+      },
+      {
+        "name": "options",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "    return (void *)[(id<MTLDevice>)object newBufferWithLength:(NSUInteger)length options:(MTLResourceOptions)options];",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements.",
+    "rust": "DeviceRef.new_buffer"
+  },
+  {
+    "owner": "Device",
+    "name": "new_buffer_with_data",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "bytes",
+        "silk": "?[*]const u8",
+        "c": "const uint8_t *"
+      },
+      {
+        "name": "length",
+        "silk": "u64",
+        "c": "uint64_t"
+      },
+      {
+        "name": "options",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "    return (void *)[(id<MTLDevice>)object newBufferWithBytes:bytes length:(NSUInteger)length options:(MTLResourceOptions)options];",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. bytes points to length readable bytes, copied by Metal.",
+    "rust": "DeviceRef.new_buffer_with_data"
+  },
+  {
+    "owner": "Device",
+    "name": "new_buffer_with_bytes_no_copy",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "bytes",
+        "silk": "?[*]mut u8",
+        "c": "uint8_t *"
+      },
+      {
+        "name": "length",
+        "silk": "u64",
+        "c": "uint64_t"
+      },
+      {
+        "name": "options",
+        "silk": "u64",
+        "c": "uint64_t"
+      },
+      {
+        "name": "deallocator",
+        "silk": "extern \"C\" fn(?*mut u8, ?[*]mut u8, u64) -> ()",
+        "c": "void (*$)(void *, uint8_t *, uint64_t)"
+      },
+      {
+        "name": "context",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "has_deallocator",
+        "silk": "bool",
+        "c": "uint8_t"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "    if (!has_deallocator) {\n        return (void *)[(id<MTLDevice>)object newBufferWithBytesNoCopy:bytes length:(NSUInteger)length options:(MTLResourceOptions)options deallocator:nil];\n    }\n    return (void *)[(id<MTLDevice>)object newBufferWithBytesNoCopy:bytes length:(NSUInteger)length options:(MTLResourceOptions)options deallocator:^(void *pointer, NSUInteger size) {\n        deallocator(context, (uint8_t *)pointer, (uint64_t)size);\n    }];",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements. bytes must satisfy Metal no-copy alignment and lifetime requirements. When has_deallocator is true, the copied block captures the callback/context values; keep both valid until Metal invokes the callback, potentially on another thread. The callback receives context, bytes, and length. When false, deallocator is not called and the caller retains responsibility for storage lifetime.",
+    "rust": "DeviceRef.new_buffer_with_bytes_no_copy"
+  },
+  {
+    "owner": "Device",
+    "name": "new_indirect_command_buffer_with_descriptor",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "descriptor",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "max_command_count",
+        "silk": "u64",
+        "c": "uint64_t"
+      },
+      {
+        "name": "options",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "    return (void *)[(id<MTLDevice>)object newIndirectCommandBufferWithDescriptor:(MTLIndirectCommandBufferDescriptor *)descriptor maxCommandCount:(NSUInteger)max_command_count options:(MTLResourceOptions)options];",
+    "notes": "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements.",
+    "rust": "DeviceRef.new_indirect_command_buffer_with_descriptor"
+  },
+  {
+    "owner": "Device",
+    "name": "heap_buffer_size_and_align",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "length",
+        "silk": "u64",
+        "c": "uint64_t"
+      },
+      {
+        "name": "options",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "MTLSizeAndAlign",
+    "cresult": "MTLSizeAndAlign",
+    "body": "    return [(id<MTLDevice>)object heapBufferSizeAndAlignWithLength:(NSUInteger)length options:(MTLResourceOptions)options];",
+    "notes": "Returns the aggregate by value; caller must ensure API availability and argument validity.",
+    "rust": "DeviceRef.heap_buffer_size_and_align"
+  },
+  {
+    "owner": "Device",
+    "name": "heap_acceleration_structure_size_and_align_with_size",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "size",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "MTLSizeAndAlign",
+    "cresult": "MTLSizeAndAlign",
+    "body": "    return [(id<MTLDevice>)object heapAccelerationStructureSizeAndAlignWithSize:(NSUInteger)size];",
+    "notes": "Returns the aggregate by value; caller must ensure API availability and argument validity.",
+    "rust": "DeviceRef.heap_acceleration_structure_size_and_align_with_size"
+  },
+  {
+    "owner": "Device",
+    "name": "heap_texture_size_and_align",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "descriptor",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "MTLSizeAndAlign",
+    "cresult": "MTLSizeAndAlign",
+    "body": "    return [(id<MTLDevice>)object heapTextureSizeAndAlignWithDescriptor:(MTLTextureDescriptor *)descriptor];",
+    "notes": "Returns the aggregate by value; caller must ensure API availability and argument validity.",
+    "rust": "DeviceRef.heap_texture_size_and_align"
+  },
+  {
+    "owner": "Device",
+    "name": "acceleration_structure_sizes_with_descriptor",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "desc",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "MTLAccelerationStructureSizes",
+    "cresult": "MTLAccelerationStructureSizes",
+    "body": "    return [(id<MTLDevice>)object accelerationStructureSizesWithDescriptor:(MTLAccelerationStructureDescriptor *)desc];",
+    "notes": "Returns the aggregate by value; caller must ensure API availability and argument validity.",
+    "rust": "DeviceRef.acceleration_structure_sizes_with_descriptor"
+  },
+  {
+    "owner": "Device",
+    "name": "sample_timestamps",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "cpu_timestamp",
+        "silk": "*mut u64",
+        "c": "uint64_t *"
+      },
+      {
+        "name": "gpu_timestamp",
+        "silk": "*mut u64",
+        "c": "uint64_t *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "    [(id<MTLDevice>)object sampleTimestamps:(MTLTimestamp *)cpu_timestamp gpuTimestamp:(MTLTimestamp *)gpu_timestamp];",
+    "notes": "Writes the paired CPU and GPU timestamps to the supplied outputs.",
+    "rust": "DeviceRef.sample_timestamps"
+  }
+]

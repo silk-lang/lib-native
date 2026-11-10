@@ -1,0 +1,616 @@
+import silk.cli.task { Task, TaskError }
+import silk.collections.bytes { Bytes }
+import silk.collections.list { List }
+import silk.core.effect { Effect }
+import silk.core.option { Option }
+import silk.core.result { Result }
+import silk.io.writer { WriterError }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.system.child_process { ChildProcess, ProcessError, ProcessRequest }
+import silk.system.filesystem { AtomicWriteError, DirectoryInfo, FileError, FileInfo, FileSystem, Path }
+import silk.system.host_input { HostInput, HostInputError }
+import silk.text.string { InvalidUtf8, String }
+import silk.num.u8
+import silk.num.u32
+import support
+import provision
+
+static if Intrinsic.targetOperatingSystem() == "windows" {
+  import silk.platform.windows.process_image as WindowsProcessImage
+  import silk.platform.windows.host_path as WindowsHostPath
+  import silk.mem.pointer { Pointer }
+  import silk.collections.slice { Slice }
+  import silk.core.ownership { Drop }
+  import silk.platform.windows.environment { EnvironmentEntry }
+  import silk.platform.windows.wtf8 { Wtf8 }
+  unsafe extern "C" fn GetEnvironmentStringsW() -> ?[*]mut u16
+  unsafe extern "C" fn FreeEnvironmentStringsW(block: [*]mut u16) -> i32
+  struct EnvironmentBlock { pointer: [*]mut u16 }
+  impl Drop for EnvironmentBlock {
+    fn drop(self: &mut Self) -> () {
+      let freed = unsafe FreeEnvironmentStringsW(self.pointer)
+      drop freed
+    }
+  }
+  unsafe fn environmentEntryLength(pointer: [*]const u16) -> usize {
+    let mut length: usize = 0
+    while unsafe Pointer.read(unsafe Pointer.at(pointer, length)) != 0 { length = length + 1 }
+    return length
+  }
+  unsafe extern "C" fn GetStdHandle(which: u32) -> ?*mut u8
+  unsafe extern "C" fn SetStdHandle(which: u32, handle: ?*mut u8) -> i32
+  @foreign(noCapture: ("from", "to"))
+  unsafe extern "C" fn MoveFileExW(from: ?[*]const u16, to: ?[*]const u16, flags: u32) -> i32
+  @foreign(noCapture: ("from", "to"))
+  unsafe extern "C" fn CopyFileW(from: ?[*]const u16, to: ?[*]const u16, failIfExists: i32) -> i32
+}
+
+fn suffix(value: string, start: usize) -> string {
+  return String.slice(value, start, String.byteLength(value) - start)
+}
+
+fn horizontal(value: string) -> string {
+  let bytes = String.utf8Bytes(value)
+  let mut first: usize = 0
+  let mut last = bytes.length
+  while first < last && (bytes[first] == 32 || bytes[first] == 9) { first = first + 1 }
+  while last > first && (bytes[last - 1] == 32 || bytes[last - 1] == 9) { last = last - 1 }
+  return String.slice(value, first, last - first)
+}
+
+fn unquote(value: string) -> string {
+  let size = String.byteLength(value)
+  if size >= 2 && ((String.startsWith(value, "\"") && String.endsWith(value, "\"")) ||
+      (String.startsWith(value, "'") && String.endsWith(value, "'"))) {
+    return String.slice(value, 1, size - 2)
+  }
+  return value
+}
+
+fn lineEnd(value: string, start: usize) -> usize {
+  return match move String.find(suffix(value, start), "\n") {
+    Option<usize>.Some { value: offset } => start + offset
+    Option<usize>.None => String.byteLength(value)
+  }
+}
+
+// Match precisely the three bare/basic/literal keys accepted by the old preparer.
+fn overrideHeader(line: string, name: string) -> bool {
+  let mut rest = horizontal(line)
+  if String.endsWith(rest, "\r") { rest = horizontal(String.slice(rest, 0, String.byteLength(rest) - 1)) }
+  if !String.startsWith(rest, "[") { return false }
+  rest = suffix(rest, 1)
+  let parts = ["native", "override", name]
+  let mut at: usize = 0
+  while at < parts.length {
+    rest = horizontal(rest)
+    let key = parts[at]
+    let bytes = String.utf8Bytes(rest)
+    let quoted = bytes.length > 0 && (bytes[0] == 34 || bytes[0] == 39)
+    let start: usize = if quoted { 1 } else { 0 }
+    let length = String.byteLength(key)
+    if String.byteLength(rest) < start + length { return false }
+    if String.slice(rest, start, length) != key { return false }
+    let mut end = start + length
+    if quoted {
+      if end >= bytes.length || bytes[end] != bytes[0] { return false }
+      end = end + 1
+    }
+    rest = horizontal(suffix(rest, end))
+    if at < 2 {
+      if !String.startsWith(rest, ".") { return false }
+      rest = suffix(rest, 1)
+    }
+    at = at + 1
+  }
+  if !String.startsWith(rest, "]") { return false }
+  rest = horizontal(suffix(rest, 1))
+  return rest == "" || String.startsWith(rest, "#")
+}
+
+fn pathLine(line: string) -> bool {
+  return match move String.find(line, "=") {
+    Option<usize>.Some { value } => unquote(horizontal(String.slice(line, 0, value))) == "path"
+    Option<usize>.None => false
+  }
+}
+
+effect fn quoted(value: string) -> String
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let mut output = run String.copy("\"")
+  let bytes = String.utf8Bytes(value)
+  let hex = "0123456789abcdef"
+  let mut start: usize = 0
+  let mut at: usize = 0
+  while at < bytes.length {
+    let byte = bytes[at]
+    if byte == 34 || byte == 92 || byte < 32 {
+      run String.append(&mut output, String.slice(value, start, at - start))
+      if byte == 34 { run String.append(&mut output, "\\\"") }
+      else if byte == 92 { run String.append(&mut output, "\\\\") }
+      else {
+        run String.append(&mut output, "\\u00")
+        run String.append(&mut output, String.slice(hex, u8.toUsize(byte / 16), 1))
+        run String.append(&mut output, String.slice(hex, u8.toUsize(byte % 16), 1))
+      }
+      start = at + 1
+    }
+    at = at + 1
+  }
+  run String.append(&mut output, suffix(value, start))
+  run String.append(&mut output, "\"")
+  return move output
+}
+
+effect fn setOverride(value: string, name: string, path: &Path) -> String
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let absolute = Path.view(path).unwrapOr("")
+  if String.startsWith(absolute, "/UNC/") || String.startsWith(absolute, "//") {
+    run Task.abort("Silk native overrides require a local drive path, not a UNC path.")
+  }
+  let encoded = run quoted(absolute)
+  let size = String.byteLength(value)
+  let mut start: usize = 0
+  let mut found = false
+  while start < size {
+    let end = lineEnd(value, start)
+    if overrideHeader(String.slice(value, start, end - start), name) {
+      start = end
+      found = true
+      break
+    }
+    start = end + 1
+  }
+  if !found {
+    let bytes = String.utf8Bytes(value)
+    let mut end = size
+    while end > 0 && (bytes[end - 1] == 10 || bytes[end - 1] == 13) { end = end - 1 }
+    let mut output = run String.copy(String.slice(value, 0, end))
+    run String.append(&mut output, "\n\n[native.override.")
+    run String.append(&mut output, name)
+    run String.append(&mut output, "]\npath = ")
+    run String.append(&mut output, String.view(&encoded))
+    run String.append(&mut output, "\n")
+    return move output
+  }
+  let mut end = start
+  let mut hasPath = false
+  while end < size {
+    let next = lineEnd(value, end)
+    let line = String.slice(value, end, next - end)
+    if String.startsWith(horizontal(line), "[") { break }
+    if pathLine(line) { hasPath = true }
+    if next == size { end = size
+      break }
+    end = next + 1
+  }
+  let mut output = run String.copy(String.slice(value, 0, start))
+  if !hasPath {
+    run String.append(&mut output, "\npath = ")
+    run String.append(&mut output, String.view(&encoded))
+    run String.append(&mut output, String.slice(value, start, end - start))
+    if !String.endsWith(String.view(&output), "\n") { run String.append(&mut output, "\n") }
+  } else {
+    let mut at = start
+    while at < end {
+      let next = lineEnd(value, at)
+      let line = String.slice(value, at, next - at)
+      if pathLine(line) {
+        run String.append(&mut output, "path = ")
+        run String.append(&mut output, String.view(&encoded))
+        if String.endsWith(line, "\r") { run String.append(&mut output, "\r") }
+      } else { run String.append(&mut output, line) }
+      if next < end { run String.append(&mut output, "\n") }
+      at = next + 1
+    }
+  }
+  run String.append(&mut output, suffix(value, end))
+  return move output
+}
+
+effect fn fileText(path: &Path) -> String
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let bytes = run FileSystem.readFile(path)
+  return match move String.fromBytes(move bytes) {
+    Result<String, InvalidUtf8>.Success { value } => move value
+    Result<String, InvalidUtf8>.Failure { .. } => run Task.abort("Expected a UTF-8 text file.")
+  }
+}
+
+effect fn copyFile(from: &Path, to: &Path) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  static if Intrinsic.targetOperatingSystem() == "windows" {
+    let source = match move run WindowsHostPath.wide(from) {
+      Option<List<u16>>.Some { value } => move value
+      Option<List<u16>>.None => run Task.abort("Invalid copy source path.")
+    }
+    let destination = match move run WindowsHostPath.wide(to) {
+      Option<List<u16>>.Some { value } => move value
+      Option<List<u16>>.None => run Task.abort("Invalid copy destination path.")
+    }
+    if unsafe CopyFileW(Pointer.fromSlice(source.asSlice()), Pointer.fromSlice(destination.asSlice()), 0) == 0 {
+      run Task.abort("Cannot copy native library.")
+    }
+  } else {
+    run Task.abort("Windows file copying requires Windows.")
+  }
+}
+
+effect fn regular(path: &Path) -> bool
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  if !run FileSystem.exists(path) { return false }
+  return match move run FileSystem.stat(path) {
+    FileInfo info => { drop info
+      true }
+    DirectoryInfo info => { drop info
+      false }
+  }
+}
+
+// Resolve the application ourselves: Windows PATH entries use native drive spelling.
+effect fn tool(name: string) -> Path
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  if String.find(name, "/").isSome() || String.find(name, "\\").isSome() {
+    let path = run support.resolveInput(name)
+    if run regular(&path) { return move path }
+  } else {
+    let path = run support.env("PATH")
+    let mut parts = String.split(String.view(&path), ";")
+    while let Option<string>.Some { value } = parts.next() {
+      if value == "" { continue }
+      let directory = run support.resolve(unquote(value))
+      let candidate = run Path.join(&directory, name)
+      if run regular(&candidate) { return move candidate }
+      if !String.endsWith(name, ".exe") {
+        let mut executable = run String.copy(name)
+        run String.append(&mut executable, ".exe")
+        let candidate = run Path.join(&directory, String.view(&executable))
+        if run regular(&candidate) { return move candidate }
+      }
+    }
+  }
+  let mut message = run String.copy("Cannot find application: ")
+  run String.append(&mut message, name)
+  run Task.abort(String.view(&message))
+}
+
+effect fn importLibrary(name: string) -> Path
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let lib = run support.env("LIB")
+  let mut parts = String.split(String.view(&lib), ";")
+  while let Option<string>.Some { value } = parts.next() {
+    if value == "" { continue }
+    let directory = run support.resolve(unquote(value))
+    let candidate = run Path.join(&directory, name)
+    if run regular(&candidate) { return move candidate }
+  }
+  let mut message = run String.copy("Cannot find ")
+  run String.append(&mut message, name)
+  run String.append(&mut message, " in LIB; install the x64 C++ toolset and Windows SDK.")
+  run Task.abort(String.view(&message))
+}
+
+// Child stdout goes to stderr, with the entire developer-shell environment inherited.
+// Restore stdout even when allocation or launching fails; JSON remains the sole stdout record.
+effect fn invoke(program: &Path, arguments: &[string]) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  static if Intrinsic.targetOperatingSystem() == "windows" {
+    let mut words = List<Bytes>.make()
+    let mut at: usize = 0
+    while at < arguments.length {
+      run words.append(run Bytes.copy(String.utf8Bytes(arguments[at])))
+      at = at + 1
+    }
+    let stdout = unsafe GetStdHandle(4294967285)
+    let stderr = unsafe GetStdHandle(4294967284)
+    if unsafe SetStdHandle(4294967285, stderr) == 0 { run Task.abort("Cannot redirect compiler output to stderr.") }
+    let outcome = run Effect.result(WindowsProcessImage.execute(program, words.asSlice(), Option<&Path>.none()))
+    let restored = unsafe SetStdHandle(4294967285, stdout)
+    if restored == 0 { run Task.abort("Cannot restore task stdout.") }
+    let status = match move outcome {
+      Result<Option<u32>, OutOfMemoryError>.Success { value } => move value
+      Result<Option<u32>, OutOfMemoryError>.Failure { error } => { fail move error }
+    }
+    match move status {
+      Option<u32>.Some { value } => {
+        if value != 0 {
+          let mut message = run String.copy(support.text(program))
+          run String.append(&mut message, " failed")
+          fail TaskError { message: move message, status: u32.wrappingToI32(value) }
+        }
+      }
+      Option<u32>.None => run Task.abort("Cannot launch native build tool.")
+    }
+  } else { run Task.abort("Preparation requires 64-bit Windows and an x64 Visual Studio developer shell.") }
+}
+
+fn native(path: &Path) -> string {
+  let value = support.text(path)
+  // Child argument paths are native paths, not MachineFileSystem paths.
+  if String.startsWith(value, "/") { return suffix(value, 1) }
+  return value
+}
+
+effect fn archive(archiver: &Path, useLib: bool, library: &Path, objects: &[string]) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  if run FileSystem.exists(library) { run FileSystem.removeFile(library) }
+  let mut output = run String.copy("/out:")
+  run String.append(&mut output, native(library))
+  let mut arguments = List<string>.make()
+  if useLib { run arguments.append(String.view(&output)) }
+  else { run arguments.append("rcs")
+    run arguments.append(native(library)) }
+  let mut at: usize = 0
+  while at < objects.length { run arguments.append(objects[at])
+    at = at + 1 }
+  run invoke(archiver, arguments.asSlice())
+}
+
+
+// A same-volume rename, never a copy/delete fallback and never overwriting a destination.
+pub effect fn rename(from: &Path, to: &Path) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  static if Intrinsic.targetOperatingSystem() == "windows" {
+    let source = match move run WindowsHostPath.wide(from) {
+      Option<List<u16>>.Some { value } => move value
+      Option<List<u16>>.None => run Task.abort("Invalid rename source path.")
+    }
+    let destination = match move run WindowsHostPath.wide(to) {
+      Option<List<u16>>.Some { value } => move value
+      Option<List<u16>>.None => run Task.abort("Invalid rename destination path.")
+    }
+    if unsafe MoveFileExW(Pointer.fromSlice(source.asSlice()), Pointer.fromSlice(destination.asSlice()), 0) == 0 {
+      run Task.abort("Cannot publish downloaded archive or extracted installation.")
+    }
+  } else {
+    run Task.abort("Windows rename requires Windows.")
+  }
+}
+
+fn word(byte: u8) -> bool {
+  return (byte >= 65 && byte <= 90) || (byte >= 97 && byte <= 122) ||
+    (byte >= 48 && byte <= 57) || byte == 95
+}
+
+effect fn exports(bindings: string) -> String
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let prefix = "extern \"C\" fn "
+  let mut symbols = List<string>.make()
+  let mut rest = bindings
+  while let Option<usize>.Some { value: found } = String.find(rest, prefix) {
+    rest = suffix(rest, found + String.byteLength(prefix))
+    let bytes = String.utf8Bytes(rest)
+    let mut end: usize = 0
+    while end < bytes.length && word(bytes[end]) { end = end + 1 }
+    if end > 4 && end < bytes.length && bytes[end] == 40 && String.startsWith(rest, "wgpu") {
+      run symbols.append(String.slice(rest, 0, end))
+    }
+    rest = suffix(rest, end)
+  }
+  if symbols.length() == 0 { run Task.abort("No Dawn C exports found in generated_webgpu.silk.") }
+  run symbols.sort()
+  let mut output = run String.copy("EXPORTS\n")
+  let values = symbols.asSlice()
+  let mut at: usize = 0
+  while at < values.length {
+    if at == 0 || values[at] != values[at - 1] {
+      run String.append(&mut output, values[at])
+      run String.append(&mut output, "\n")
+    }
+    at = at + 1
+  }
+  return move output
+}
+
+pub effect fn prepare(clang: string, runtimeDirectory: string, json: bool) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  static if Intrinsic.targetOperatingSystem() != "windows" || Intrinsic.targetArchitecture() != "x86_64" {
+    run Task.abort("Preparation requires 64-bit Windows and an x64 Visual Studio developer shell.")
+  }
+  let arch = run support.env("VSCMD_ARG_TGT_ARCH")
+  let include = run support.env("INCLUDE")
+  let lib = run support.env("LIB")
+  if String.view(&arch) != "x64" || String.view(&include) == "" || String.view(&lib) == "" {
+    run Task.abort("Use an x64 Visual Studio developer shell with the C++ toolset and Windows SDK.")
+  }
+  let selected = run support.env("SILK_CLANG")
+  let name = if clang != "" { clang } else if String.view(&selected) != "" { String.view(&selected) } else { "clang.exe" }
+  let compiler = run tool(name)
+  let llvm = match move run Path.parent(&compiler) {
+    Option<Path>.Some { value } => move value
+    Option<Path>.None => run Task.abort("LLVM compiler has no parent directory.")
+  }
+  let lld = run Path.join(&llvm, "lld-link.exe")
+  if !run regular(&lld) { run Task.abort("Missing LLVM linker: lld-link.exe beside clang.") }
+  let mut archiver = run Path.join(&llvm, "llvm-lib.exe")
+  let useLib = run regular(&archiver)
+  if !useLib { archiver = run Path.join(&llvm, "llvm-ar.exe") }
+  if !run regular(&archiver) { run Task.abort("Missing LLVM archiver beside clang.") }
+  let kernel = run importLibrary("kernel32.lib")
+  let ucrt = run importLibrary("ucrt.lib")
+  let vcruntime = run importLibrary("vcruntime.lib")
+  let root = run support.root()
+  let webgpu = run Path.join(&root, "modules/gpu/webgpu")
+  let dawnSource = run support.install("webgpu", "lib/webgpu_dawn.lib")
+  let glfw = run support.install("glfw", "lib-vc2022/glfw3dll.lib")
+  let dxcSource = run support.install("dxc", "bin/x64/dxcompiler.dll")
+  let dxc = run Path.join(&dxcSource, "bin/x64")
+  let dawn = run Path.join(&root, ".cache/windows/dawn")
+  let bridge = run Path.join(&root, ".cache/windows/win32-bridge")
+  let dawnLib = run Path.join(&dawn, "lib")
+  let dawnBin = run Path.join(&dawn, "bin")
+  run FileSystem.createDirectoriesRecursively(&dawnLib)
+  run FileSystem.createDirectoriesRecursively(&dawnBin)
+  run FileSystem.createDirectoriesRecursively(&bridge)
+  let headers = run Path.join(&dawn, "include")
+  if run FileSystem.exists(&headers) { run FileSystem.removeDirectoryRecursively(&headers) }
+  let sourceHeaders = run Path.join(&dawnSource, "include")
+  run support.copyTree(&sourceHeaders, &headers)
+  let bindingsPath = run Path.join(&webgpu, "sys/src/generated_webgpu.silk")
+  let bindings = run fileText(&bindingsPath)
+  let symbols = run exports(String.view(&bindings))
+  let definition = run Path.join(&dawn, "exports.def")
+  run FileSystem.writeFile(&definition, String.ownedUtf8Bytes(&symbols))
+  let entry = run Path.join(&dawn, "entry.c")
+  run FileSystem.writeFile(&entry, b"/* DLL CRT startup owns Dawn's C++ initialization. */\n")
+  let sourceLibrary = run Path.join(&dawnSource, "lib/webgpu_dawn.lib")
+  let dll = run Path.join(&dawnBin, "nonstd_dawn.dll")
+  let importArchive = run Path.join(&dawnLib, "nonstd_dawn.lib")
+  let mut linkerFlag = run String.copy("--ld-path=")
+  run String.append(&mut linkerFlag, native(&lld))
+  let mut exportsFlag = run String.copy("-Wl,/def:")
+  run String.append(&mut exportsFlag, native(&definition))
+  let mut importFlag = run String.copy("-Wl,/implib:")
+  run String.append(&mut importFlag, native(&importArchive))
+  run invoke(&compiler, &["--target=x86_64-pc-windows-msvc", "-shared", String.view(&linkerFlag),
+    "-fms-runtime-lib=dll", native(&entry), native(&sourceLibrary), "-o", native(&dll),
+    String.view(&exportsFlag), String.view(&importFlag), "-luser32", "-lonecore_apiset", "-ldxguid"])
+  let dawnUcrt = run Path.join(&dawnLib, "ucrt.lib")
+  let dawnVcruntime = run Path.join(&dawnLib, "vcruntime.lib")
+  run copyFile(&ucrt, &dawnUcrt)
+  run copyFile(&vcruntime, &dawnVcruntime)
+  let names = ["nonstd_callbacks", "nonstd_abi_layout", "nonstd_bench_support"]
+  let sources = ["sys/native/callbacks.c", "sys/abi/generated_layout.c", "bench/support.c"]
+  let dawnHeaders = run Path.join(&headers, "dawn")
+  let bench = run Path.join(&webgpu, "bench")
+  let mut at: usize = 0
+  while at < names.length {
+    let mut objectName = run String.copy(names[at])
+    run String.append(&mut objectName, ".obj")
+    let object = run Path.join(&dawn, String.view(&objectName))
+    let source = run Path.join(&webgpu, sources[at])
+    let mut arguments = List<string>.make()
+    run arguments.appendSlice(&["--target=x86_64-pc-windows-msvc", "-std=c11", "-fms-runtime-lib=dll", "-fms-omit-default-lib", "-I", native(&headers)])
+    if at == 0 { run arguments.append("-O2") }
+    else if at == 1 { run arguments.appendSlice(&["-DSILK_GPU_ABI_LIBRARY", "-I", native(&dawnHeaders)]) }
+    else { run arguments.appendSlice(&["-O3", "-g", "-I", native(&bench)]) }
+    run arguments.appendSlice(&["-c", native(&source), "-o", native(&object)])
+    run invoke(&compiler, arguments.asSlice())
+    let mut libraryName = run String.copy(names[at])
+    run String.append(&mut libraryName, ".lib")
+    let library = run Path.join(&dawnLib, String.view(&libraryName))
+    run archive(&archiver, useLib, &library, &[native(&object)])
+    run FileSystem.removeFile(&object)
+    at = at + 1
+  }
+  let coreObject = run Path.join(&bridge, "core.obj")
+  let bridgeObject = run Path.join(&bridge, "bridge.obj")
+  let coreSource = run Path.join(&root, "modules/platform/window/native/common/core.c")
+  let bridgeSource = run Path.join(&root, "modules/platform/window/native/windows/bridge.c")
+  let bridgeSources = [native(&coreSource), native(&bridgeSource)]
+  let bridgeObjects = [native(&coreObject), native(&bridgeObject)]
+  at = 0
+  while at < bridgeSources.length {
+    run invoke(&compiler, &["--target=x86_64-pc-windows-msvc", "-fms-runtime-lib=dll", "-std=c11", "-O2",
+      "-Wall", "-Wextra", "-Werror", "-Wno-unused-parameter", "-Wno-missing-field-initializers",
+      "-D_CRT_SECURE_NO_WARNINGS", "-c", bridgeSources[at], "-o", bridgeObjects[at]])
+    at = at + 1
+  }
+  let bridgeLibrary = run Path.join(&bridge, "silkwindow.lib")
+  run archive(&archiver, useLib, &bridgeLibrary, &bridgeObjects)
+  run FileSystem.removeFile(&coreObject)
+  run FileSystem.removeFile(&bridgeObject)
+  let bridgeKernel = run Path.join(&bridge, "kernel32.lib")
+  let bridgeUcrt = run Path.join(&bridge, "ucrt.lib")
+  let bridgeVcruntime = run Path.join(&bridge, "vcruntime.lib")
+  let glfwKernel = run Path.join(&glfw, "lib-vc2022/kernel32.lib")
+  run copyFile(&kernel, &bridgeKernel)
+  run copyFile(&ucrt, &bridgeUcrt)
+  run copyFile(&vcruntime, &bridgeVcruntime)
+  run copyFile(&kernel, &glfwKernel)
+  let configuredHome = run support.env("SILK_HOME")
+  let mut home = run String.copy(String.view(&configuredHome))
+  if String.view(&home) == "" {
+    home = run support.env("USERPROFILE")
+    if String.view(&home) == "" { run Task.abort("USERPROFILE is not set; set SILK_HOME.") }
+    run String.append(&mut home, "/.silk")
+  }
+  let silkHome = run support.resolve(String.view(&home))
+  run FileSystem.createDirectoriesRecursively(&silkHome)
+  let overrides = run Path.join(&silkHome, "native-overrides.toml")
+  let mut configuration = String.make()
+  if run FileSystem.exists(&overrides) { configuration = run fileText(&overrides) }
+  configuration = run setOverride(String.view(&configuration), "dawn", &dawn)
+  configuration = run setOverride(String.view(&configuration), "dawn-headers", &dawn)
+  configuration = run setOverride(String.view(&configuration), "glfw", &glfw)
+  configuration = run setOverride(String.view(&configuration), "win32-bridge", &bridge)
+  match move run Effect.result(FileSystem.writeFileAtomic(&overrides, String.ownedUtf8Bytes(&configuration), FileSystem.replaceExisting(), FileSystem.buffered())) {
+    Result<(), AtomicWriteError>.Success { .. } => {}
+    Result<(), AtomicWriteError>.Failure { error } => { fail move error.cause }
+  }
+  if runtimeDirectory != "" {
+    let runtime = run support.resolveInput(runtimeDirectory)
+    run FileSystem.createDirectoriesRecursively(&runtime)
+    let dxcompiler = run Path.join(&dxc, "dxcompiler.dll")
+    let dxil = run Path.join(&dxc, "dxil.dll")
+    let glfwDll = run Path.join(&glfw, "lib-vc2022/glfw3.dll")
+    let targetDawn = run Path.join(&runtime, "nonstd_dawn.dll")
+    let targetCompiler = run Path.join(&runtime, "dxcompiler.dll")
+    let targetDxil = run Path.join(&runtime, "dxil.dll")
+    let targetGlfw = run Path.join(&runtime, "glfw3.dll")
+    run copyFile(&dll, &targetDawn)
+    run copyFile(&dxcompiler, &targetCompiler)
+    run copyFile(&dxil, &targetDxil)
+    run copyFile(&glfwDll, &targetGlfw)
+  }
+  let glfwBin = run Path.join(&glfw, "lib-vc2022")
+  run provision.exportPath(&dawnBin)
+  run provision.exportPath(&dxc)
+  run provision.exportPath(&glfwBin)
+  if json {
+    let keys = ["dawn", "glfw", "dxc", "bridge", "overrides"]
+    let values = [native(&dawn), native(&glfw), native(&dxc), native(&bridge), native(&overrides)]
+    let mut output = run String.copy("{")
+    at = 0
+    while at < keys.length {
+      if at > 0 { run String.append(&mut output, ",") }
+      let key = run quoted(keys[at])
+      let value = run quoted(values[at])
+      run String.append(&mut output, String.view(&key))
+      run String.append(&mut output, ":")
+      run String.append(&mut output, String.view(&value))
+      at = at + 1
+    }
+    run String.append(&mut output, "}")
+    run support.print(String.view(&output))
+  } else {
+    let mut message = run String.copy("Prepared native archives; updated ")
+    run String.append(&mut message, native(&overrides))
+    run support.print(String.view(&message))
+  }
+}
+
+pub effect fn inheritEnvironment(request: &mut ProcessRequest) -> ()
+  ! HostInputError | OutOfMemoryError ? &mut Allocator {
+  static if Intrinsic.targetOperatingSystem() == "windows" {
+    let pointer = match move Pointer.nonNullManyMut(unsafe GetEnvironmentStringsW()) {
+      Option<[*]mut u16>.Some { value } => value
+      Option<[*]mut u16>.None => { fail HostInputError {} }
+    }
+    let block = EnvironmentBlock { pointer: pointer }
+    let mut offset: usize = 0
+    while unsafe Pointer.read(unsafe Pointer.at(pointer, offset)) != 0 {
+      let entry = unsafe Pointer.assumeMany(unsafe Pointer.at(pointer, offset))
+      let size = unsafe environmentEntryLength(entry)
+      let units = unsafe Pointer.borrowMany(&block, entry, size)
+      if let Option<usize>.Some { value: split } = EnvironmentEntry.separator(units) {
+        let name = run Wtf8.encode(Slice.view(units, 0, split))
+        let value = run Wtf8.encode(Slice.view(units, split + 1, size - split - 1))
+        run ChildProcess.setVariableBytes(&mut request.*, Bytes.asSlice(&name), Bytes.asSlice(&value))
+      }
+      offset = offset + size + 1
+    }
+  }
+}

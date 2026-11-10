@@ -6,7 +6,8 @@ static if Intrinsic.targetArchitecture() == "wasm32" {
   import silk.core.effect { Effect }
   import webgpu.runtime { GpuError }
   import session { Session }
-  import generated_webgpu_exports
+  // Linked for the WebGPU entry points the browser host calls.
+  import generated_webgpu_exports as _webgpuExports
 
   @foreign(noCapture: .("bytes"))
   unsafe extern "C" fn hostOutput(kind: u32, bytes: ?[*]const u8, length: usize) -> ()
@@ -74,7 +75,7 @@ static if Intrinsic.targetArchitecture() == "wasm32" {
     let root = Intrinsic.replace(state.root, Unrooted {})
     match move root {
       Root { storage } => { drop storage }
-      Unrooted empty => ()
+      Unrooted {} => ()
     }
   }
 }

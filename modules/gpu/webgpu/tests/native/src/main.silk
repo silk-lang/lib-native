@@ -15,7 +15,6 @@ import silk.mem.pointer { Pointer }
 import silk.mem.allocator { OutOfMemoryError }
 import silk.core.effect { Effect }
 import silk.core.result { Result }
-import silk.collections.list { List }
 import silk.io.writer { Writer }
 import silk.io.writer_native { StdoutWriter, StderrWriter }
 
@@ -49,7 +48,7 @@ effect fn scenarios(instance: &Instance) -> ()
   impossibleLimits.setMaxTextureDimension2D(0xfffffffe)
   let rejectedDescriptor = DeviceDescriptor.default().withRequiredLimits(&impossibleLimits)
   match move run Effect.result(adapter.requestDevice(&rejectedDescriptor)) {
-    Result<runtime.Device, GpuError | OutOfMemoryError>.Success { value } => {
+    Result<runtime.Device, GpuError | OutOfMemoryError>.Success { .. } => {
       fail GpuError.status(0xffff0006)
     }
     Result<runtime.Device, GpuError | OutOfMemoryError>.Failure { error } => {
@@ -76,7 +75,7 @@ effect fn scenarios(instance: &Instance) -> ()
       b"@compute @workgroup_size(1) fn main() {}",
     ),
   ) {
-    Result<gpu.ShaderModule, GpuError>.Success { value } => {
+    Result<gpu.ShaderModule, GpuError>.Success { .. } => {
       fail GpuError.status(0xffff000b)
     }
     Result<gpu.ShaderModule, GpuError>.Failure { error } => {
@@ -180,7 +179,7 @@ effect fn scenarios(instance: &Instance) -> ()
   let missingEntry = ComputeState.default().withModule(&shader).withEntryPoint(b"missing")
   let invalidPipeline = ComputePipelineDescriptor.default().withCompute(missingEntry)
   match move run Effect.result(runtime.createComputePipelineAsync(&device, &invalidPipeline)) {
-    Result<gpu.ComputePipeline, GpuError | OutOfMemoryError>.Success { value } => {
+    Result<gpu.ComputePipeline, GpuError | OutOfMemoryError>.Success { .. } => {
       fail GpuError.status(0xffff0005)
     }
     Result<gpu.ComputePipeline, GpuError | OutOfMemoryError>.Failure { error } => {
@@ -205,7 +204,7 @@ effect fn scenarios(instance: &Instance) -> ()
   )
   let scope = run Effect.result(device.popErrorScope())
   match move scope {
-    Result<(), GpuError | OutOfMemoryError>.Success { value } => {
+    Result<(), GpuError | OutOfMemoryError>.Success { .. } => {
       fail GpuError.status(0xffff0003)
     }
     Result<(), GpuError | OutOfMemoryError>.Failure { error } => {
@@ -255,7 +254,7 @@ effect fn failed(error: GpuError | OutOfMemoryError) -> i32 {
       writeMessage(message, true)
       writeMessage(b"\n", true)
     }
-    OutOfMemoryError allocation => {
+    OutOfMemoryError {} => {
       writeMessage(b"GPU test allocation failed\n", true)
     }
   }

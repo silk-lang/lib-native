@@ -2,7 +2,7 @@
 name = "platform-window"
 description = "Native windows, input, IME, menus, dialogs and display-paced frames"
 version = "0.1.0"
-silk-version = "0.1.0-dev.63+657e3c900f65"
+silk-version = "0.1.0-dev.64+8214c402307b"
 kind = "library"
 exports = ["lib", "types", "event", "keys", "menu", "platform", "headless", "accessibility", "macos", "native", "bridge", "bridge_sys"]
 
@@ -10,7 +10,7 @@ exports = ["lib", "types", "event", "keys", "menu", "platform", "headless", "acc
 # AppKit bridge (NSView.displayLink(target:selector:) needs macOS 14). Linux compiles the X11 and
 # Wayland bridge, which needs the libX11, libxkbcommon and libwayland development packages; the
 # Wayland protocol glue in native/linux/protocols is committed (see [[generate]] below). The Win32
-# bridge needs the Windows SDK, which Silk does not pass to Clang, so scripts/prepare-windows.ps1
+# bridge needs the Windows SDK, which Silk does not pass to Clang, so the root prepare-windows task
 # builds it and names it as the `win32-bridge` archive's override.
 [native]
 sources = [
@@ -45,11 +45,22 @@ link = [
 
 # The Wayland protocol glue, from wayland-scanner and wayland-protocols.
 [[generate]]
-run = ["scripts/generate-wayland"]
+run = ["silk", "task", "generate-wayland"]
 outputs = ["native/linux/protocols/*"]
 
-# Built on the machine by scripts/prepare-windows.ps1 and always supplied as an override, never
+[[generate]]
+run = ["silk", "task", "generate-keys"]
+outputs = ["src/keys.silk", "native/macos/keys.h", "native/linux/keys.h", "native/windows/keys.h", "browser/keys.js"]
+
+[[generate]]
+run = ["silk", "task", "generate-bridge"]
+outputs = ["src/bridge_sys.silk", "browser/imports.js"]
+
+[profiles.tasks.dependencies]
+browser_driver = { path = "../../gpu/webgpu/task-browser", package = "native-task-browser" }
+
+# Built on the machine by the root prepare-windows task and always supplied as an override, never
 # downloaded: the URL only names what to run when the override is missing.
 [native.archive.win32-bridge]
-url = "file:///run-lib-native-scripts-prepare-windows.ps1"
+url = "file:///run-lib-native-task-prepare-windows"
 sha256 = "0000000000000000000000000000000000000000000000000000000000000000"

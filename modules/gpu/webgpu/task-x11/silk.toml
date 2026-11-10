@@ -1,0 +1,10 @@
+[package]
+name = "webgpu-task-x11"
+version = "0.1.0"
+silk-version = "0.1.0-dev.64+8214c402307b"
+kind = "library"
+
+exports = ["capture"]
+[native]
+sources = [{ c = "capture.c", flags = ["-std=c11"], os = "linux" }]
+link = [{ library = "dl", mode = "dynamic", os = "linux" }]

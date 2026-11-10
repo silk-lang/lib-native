@@ -1,0 +1,14 @@
+import silk.cli.task { Task, TaskError }
+import silk.core.option { Option }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.system.filesystem { FileError, Path }
+import silk.system.host_input { HostInput, HostInputError }
+
+pub fn pathText(path: &Path) -> string {
+  return Path.view(path) |> Option<string>.unwrapOr("")
+}
+pub effect fn rootPath(relative: string) -> Path
+  ! TaskError | FileError | HostInputError | OutOfMemoryError ? &mut HostInput | &mut Allocator {
+  let root = run Task.root()
+  return run Path.resolve(&root, relative)
+}

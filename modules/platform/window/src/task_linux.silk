@@ -1,0 +1,181 @@
+import silk.cli.task { Task, TaskError }
+import silk.core.option { Option }
+import silk.core.result { Result }
+import silk.core.effect { Effect }
+import silk.io.writer { WriterError }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.system.child_process { ChildProcess, ProcessError }
+import silk.system.filesystem { FileError, FileSystem, Path }
+import silk.system.host_input { HostInput, HostInputError }
+import silk.text.string { String }
+import silk.num.usize
+import task_build { which }
+
+static if Intrinsic.targetOperatingSystem() == "linux" {
+import silk.system.subprocess { Subprocess, SubprocessError, SpawnOptions, ExitWatch }
+unsafe extern "C" fn usleep(microseconds: u32) -> i32
+
+effect fn start(program: &Path, arguments: &[string]) -> Subprocess ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError | SubprocessError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let mut request = run ChildProcess.request(program)
+  run Subprocess.inheritEnvironment(&mut request)
+  let mut at: usize = 0
+  while at < arguments.length {
+    run ChildProcess.addArgument(&mut request, arguments[at])
+    at = at + 1
+  }
+  let options = SpawnOptions.make()
+  return run Subprocess.spawn(&request, &options)
+}
+effect fn stop(child: &Subprocess) -> () {
+  let killed = run Effect.result(Subprocess.kill(Subprocess.pid(child), 15))
+  drop killed
+  let waited = run Effect.result(reap(Subprocess.pid(child)))
+  drop waited
+}
+effect fn reap(pid: i32) -> () ! SubprocessError {
+  let watch = run ExitWatch.open(pid)
+  let status = run ExitWatch.collect(&watch)
+  drop status
+}
+effect fn waitFor(path: &Path) -> () ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError | SubprocessError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let mut attempt: usize = 0
+  while attempt < 200 {
+    if run FileSystem.exists(path) { return () }
+    let ignored = unsafe usleep(50000)
+    drop ignored
+    attempt = attempt + 1
+  }
+  run Task.abort("display server did not create its socket within ten seconds")
+}
+effect fn runX11(program: string) -> () ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError | SubprocessError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let executable = match move run which("Xvfb") {
+    Option<Path>.Some { value } => move value
+    Option<Path>.None => {
+      run Task.exec("env", &["SILK_WINDOW_DIALOG=printf \"/tmp/%s-%s.svg\\n\" \"$1\" \"$2\"", "SILK_WINDOW_SCALE=1", program])
+      return ()
+    }
+  }
+  let mut number: usize = 90
+  let mut display = run String.copy("")
+  let mut socketText = run String.copy("")
+  while number < 140 {
+    display = run String.copy(":")
+    run decimal(&mut display, number)
+    socketText = run String.copy("/tmp/.X11-unix/X")
+    run decimal(&mut socketText, number)
+    let socket = run Path.make(String.view(&socketText))
+    let mut lockText = run String.copy("/tmp/.X")
+    run decimal(&mut lockText, number)
+    run String.append(&mut lockText, "-lock")
+    let lock = run Path.make(String.view(&lockText))
+    if !run FileSystem.exists(&socket) && !run FileSystem.exists(&lock) { break }
+    number = number + 1
+  }
+  if number == 140 { run Task.abort("no free X11 display in :90 through :139") }
+  let child = run start(&executable, &[String.view(&display), "-screen", "0", "1280x800x24", "-nolisten", "tcp"])
+  let result = run Effect.result(x11Child(program, String.view(&display), String.view(&socketText)))
+  run stop(&child)
+  match move result {
+    Result<(), TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError | SubprocessError>.Success { .. } => ()
+    Result<(), TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError | SubprocessError>.Failure { error } => { fail move error }
+  }
+}
+effect fn x11Child(program: string, display: string, socket: string) -> () ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError | SubprocessError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let path = run Path.make(socket)
+  run waitFor(&path)
+  let mut variable = run String.copy("DISPLAY=")
+  run String.append(&mut variable, display)
+  run Task.exec("env", &["-u", "WAYLAND_DISPLAY", String.view(&variable), "SILK_WINDOW_BACKEND=x11", "SILK_WINDOW_SCALE=1", "SILK_WINDOW_DIALOG=printf \"/tmp/%s-%s.svg\\n\" \"$1\" \"$2\"", "timeout", "--signal=KILL", "120", program])
+}
+effect fn decimal(out: &mut String, value: usize) -> () ! OutOfMemoryError ? &mut Allocator {
+  if value >= 10 { run decimal(out, value / 10) }
+  let digits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+  run String.append(out, digits[value % 10])
+}
+effect fn runWayland(program: string) -> () ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError | SubprocessError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let weston = match move run which("weston") {
+    Option<Path>.Some { value } => move value
+    Option<Path>.None => {
+      run Task.exec("env", &["SILK_WINDOW_BACKEND=wayland", "SILK_WINDOW_SCALE=1", "SILK_WINDOW_DIALOG=printf \"/tmp/%s-%s.svg\\n\" \"$1\" \"$2\"", program])
+      return ()
+    }
+  }
+  let temporary = run Path.make("/tmp")
+  let runtime = run FileSystem.createTemporaryDirectory(&temporary, b"silk-wayland-")
+  let result = run Effect.result(waylandSession(program, &weston, &runtime))
+  run FileSystem.removeDirectoryRecursively(&runtime)
+  match move result {
+    Result<(), TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError | SubprocessError>.Success { .. } => ()
+    Result<(), TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError | SubprocessError>.Failure { error } => { fail move error }
+  }
+}
+effect fn waylandSession(program: string, weston: &Path, runtime: &Path) -> () ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError | SubprocessError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let runtimeText = match Path.view(runtime) { Option<string>.Some { value } => value
+    Option<string>.None => run Task.abort("runtime directory is not UTF-8") }
+  run Task.exec("chmod", &["700", runtimeText])
+  let westonText = match Path.view(weston) { Option<string>.Some { value } => value
+    Option<string>.None => run Task.abort("weston path is not UTF-8") }
+  let env = match move run which("env") { Option<Path>.Some { value } => move value
+    Option<Path>.None => run Task.abort("env is required") }
+  let mut variable = run String.copy("XDG_RUNTIME_DIR=")
+  run String.append(&mut variable, runtimeText)
+  let child = run start(&env, &[String.view(&variable), westonText, "--backend=headless", "--socket", "silk-smoke", "--idle-time=0", "--width=1280", "--height=800"])
+  let result = run Effect.result(waylandChild(program, runtime, String.view(&variable)))
+  run stop(&child)
+  match move result {
+    Result<(), TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError | SubprocessError>.Success { .. } => ()
+    Result<(), TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError | SubprocessError>.Failure { error } => { fail move error }
+  }
+}
+effect fn waylandChild(program: string, runtime: &Path, variable: string) -> () ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError | SubprocessError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let socket = run Path.join(runtime, "silk-smoke")
+  run waitFor(&socket)
+  run Task.exec("env", &["-u", "DISPLAY", variable, "WAYLAND_DISPLAY=silk-smoke", "SILK_WINDOW_BACKEND=wayland", "SILK_WINDOW_SCALE=1", "SILK_WINDOW_DIALOG=printf \"/tmp/%s-%s.svg\\n\" \"$1\" \"$2\"", "timeout", "--signal=KILL", "120", program])
+}
+effect fn selected(program: string, backend: string, requested: string) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError | SubprocessError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  if backend == "all" || backend == requested {
+    if requested == "x11" { run runX11(program) } else { run runWayland(program) }
+  }
+}
+effect fn both(program: string, backend: string) -> () ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError | SubprocessError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let x = run Effect.result(selected(program, backend, "x11"))
+  let w = run Effect.result(selected(program, backend, "wayland"))
+  match move x {
+    Result<(), TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError | SubprocessError>.Success { .. } => ()
+    Result<(), TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError | SubprocessError>.Failure { error } => { fail move error }
+  }
+  match move w {
+    Result<(), TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError | SubprocessError>.Success { .. } => ()
+    Result<(), TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError | SubprocessError>.Failure { error } => { fail move error }
+  }
+}
+}
+pub effect fn smoke(program: string, backend: string) -> () ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  static if Intrinsic.targetOperatingSystem() == "linux" {
+    let result = run Effect.result(both(program, backend))
+    match move result {
+      Result<(), TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError | SubprocessError>.Success { .. } => ()
+      Result<(), TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError | SubprocessError>.Failure { error } => match move error {
+        SubprocessError error => { drop error
+          run Task.abort("display subprocess failed") }
+        TaskError error => { fail move error }
+        ProcessError error => { fail move error }
+        FileError error => { fail move error }
+        HostInputError error => { fail move error }
+        OutOfMemoryError error => { fail move error }
+        WriterError error => { fail move error }
+      }
+    }
+  } else { run Task.abort("the Linux smoke test requires Linux") }
+}

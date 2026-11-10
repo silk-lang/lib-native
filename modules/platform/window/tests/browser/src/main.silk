@@ -1,4 +1,4 @@
-//! The browser smoke test: browser/test.mjs loads this module in Chromium and calls
+//! The browser smoke test: silk task browser smoke loads this module in Chromium and calls
 //! `smoke_main` through JSPI, so the shared test's waits suspend instead of spinning.
 import smoke.smoke { runSmoke }
 

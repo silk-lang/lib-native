@@ -1,0 +1,72 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+import task_support as S
+import silk.cli.task { TaskError }
+import silk.collections.list { List }
+import silk.core.option { Option }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.text.regex { Match }
+import silk.text.string { String }
+import silk.num.usize
+import silk.num.u8
+
+pub struct Method {
+  pub owner: String,
+  pub name: String,
+  pub arguments: String,
+  pub result: String,
+  pub body: String,
+  pub public: bool,
+}
+pub effect fn functions(source: string, owner: string, publicOnly: bool) -> List<Method> ! TaskError | OutOfMemoryError ? &mut Allocator {
+  let mut result = List<Method>.make()
+  let mut offset: usize = 0
+  while let Option<Match<'_>>.Some { value: found } = move run S.search("(?:(pub)\\s+)?(?:unsafe\\s+)?fn\\s+(\\w+)(?:<[^\\n]*?>)?\\s*\\(", S.sub(source, offset, S.length(source))) {
+    let opening = offset + found.end() - 1
+    let end = run S.closing(source, opening, 40, 41)
+    let bodyStart = end + run S.index(S.sub(source, end, S.length(source)), "{")
+    let bodyEnd = run S.closing(source, bodyStart, 123, 125)
+    let signature = String.trim(S.sub(source, end + 1, bodyStart))
+    let returns = if String.startsWith(signature, "->") { String.trim(S.sub(signature, 2, S.length(signature))) } else { "()" }
+    let public = S.group(&found, 1) != ""
+    if public || !publicOnly {
+      run result.append(Method { owner: run String.copy(owner), name: run String.copy(S.group(&found, 2)), arguments: run String.copy(S.sub(source, opening + 1, end)), result: run String.copy(returns), body: run String.copy(S.sub(source, bodyStart + 1, bodyEnd)), public: public })
+    }
+    offset = offset + found.end()
+  }
+  return move result
+}
+pub effect fn methods(source: string) -> List<Method> ! TaskError | OutOfMemoryError ? &mut Allocator {
+  let mut result = List<Method>.make()
+  let mut offset: usize = 0
+  while let Option<Match<'_>>.Some { value: found } = move run S.search("impl (\\w+)\\s*\\{", S.sub(source, offset, S.length(source))) {
+    let opening = offset + found.end() - 1
+    let end = run S.closing(source, opening, 123, 125)
+    let mut parsed = run functions(S.sub(source, opening + 1, end), S.group(&found, 1), true)
+    while parsed.length() != 0 { run result.append(parsed.remove(0)) }
+    offset = offset + found.end()
+  }
+  return move result
+}
+pub fn owner(value: string) -> string {
+  return if String.endsWith(value, "Ref") { S.sub(value, 0, S.length(value) - 3) } else { value }
+}
+pub effect fn top(value: string, delimiter: u8) -> List<String> ! OutOfMemoryError ? &mut Allocator {
+  let mut result = List<String>.make()
+  let bytes = String.utf8Bytes(value)
+  let mut start: usize = 0
+  let mut at: usize = 0
+  let mut depth: usize = 0
+  while at < bytes.length {
+    if bytes[at] == 40 || bytes[at] == 123 || bytes[at] == 91 { depth = depth + 1 }
+    else if bytes[at] == 41 || bytes[at] == 125 || bytes[at] == 93 { depth = depth - 1 }
+    else if bytes[at] == delimiter && depth == 0 {
+      let part = String.trim(S.sub(value, start, at))
+      if part != "" { run result.append(run String.copy(part)) }
+      start = at + 1
+    }
+    at = at + 1
+  }
+  let part = String.trim(S.sub(value, start, at))
+  if part != "" { run result.append(run String.copy(part)) }
+  return move result
+}

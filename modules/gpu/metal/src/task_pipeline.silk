@@ -1,0 +1,148 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+import task_support as S
+import task_rust as R
+import task_bridge as B
+import silk.cli.task { Task, TaskError }
+import silk.collections.list { List }
+import silk.core.option { Option }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.system.filesystem { FileError, FileSystem, Path }
+import silk.text.regex { Match }
+import silk.text.string { String }
+import silk.num.usize
+
+struct Kind { pub silk: string<'static>, pub c: string<'static>, }
+effect fn kind(rust: string) -> Kind ! TaskError | OutOfMemoryError ? &mut Allocator {
+  if rust == "()" { return Kind { silk: "()", c: "void" } }
+  if rust == "&str" { return Kind { silk: "?[*]const u8", c: "const char *" } }
+  if rust == "MTLClearColor" { return Kind { silk: "MTLClearColor", c: "MTLClearColor" } }
+  if rust == "MTLSize" { return Kind { silk: "MTLSize", c: "MTLSize" } }
+  if String.startsWith(rust, "&[") { return Kind { silk: "?[*]const ?*mut u8", c: "void * const *" } }
+  if rust == "bool" { return Kind { silk: "bool", c: "uint8_t" } }
+  if rust == "u32" || rust == "MTLMultisampleStencilResolveFilter" || rust == "MTLDispatchType" { return Kind { silk: "u32", c: "uint32_t" } }
+  if rust == "u64" || rust == "NSUInteger" || String.startsWith(rust, "MTL") { return Kind { silk: "u64", c: "uint64_t" } }
+  if rust == "f64" { return Kind { silk: "f64", c: "double" } }
+  if rust == "object" || rust == "Self" || rust == "IntersectionFunctionTable" || rust == "VisibleFunctionTable" || String.startsWith(rust, "&") || String.startsWith(rust, "Option<") || String.startsWith(rust, "Vec<") || String.startsWith(rust, "*mut") { return Kind { silk: "?*mut u8", c: "void *" } }
+  return run Task.abort("Unknown pipeline Rust type")
+}
+effect fn required(pattern: string, source: string, group: usize) -> String ! TaskError | OutOfMemoryError ? &mut Allocator {
+  if let Option<Match<'_>>.Some { value } = move run S.search(pattern, source) { return run String.copy(S.group(&value, group)) }
+  return run Task.abort("Unrecognized upstream pipeline selector")
+}
+effect fn render(method: &R.Method) -> B.Binding ! TaskError | OutOfMemoryError ? &mut Allocator {
+  let owner = R.owner(method.owner.view())
+  let name = method.name.view()
+  let returns = method.result.view()
+  let result = run kind(returns)
+  let mut params = List<B.Parameter>.make()
+  let mut notes = List<String>.make()
+  let arguments = run S.split(method.arguments.view(), ",")
+  let args = arguments.asSlice()
+  let mut at: usize = 0
+  let mut slice = String.make()
+  let mut record = false
+  while at < args.length {
+    let argument = String.trim(args[at].view())
+    if argument == "&self" { run params.append(run B.parameter("object", "?*mut u8", "void *")) }
+    else if argument != "" {
+      let colon = run S.index(argument, ":")
+      let name = String.trim(S.sub(argument, 0, colon))
+      let rust = String.trim(S.sub(argument, colon + 1, S.length(argument)))
+      let typ = run kind(rust)
+      run params.append(run B.parameter(name, typ.silk, typ.c))
+      if String.startsWith(rust, "&[") {
+        slice = run String.copy(name)
+        let count = run S.cat(&[name, "_count"])
+        run params.append(run B.parameter(count.view(), "u64", "uint64_t"))
+      }
+      if rust == "MTLClearColor" || rust == "MTLSize" { record = true }
+    }
+    at = at + 1
+  }
+  if owner == "RenderPipelineDescriptor" && name == "serialize_vertex_data" { run params.append(run B.parameter("error", "?*mut ?*mut u8", "void **")) }
+  if name == "new" || String.startsWith(name, "new_") { run notes.append(run String.copy("Returns +1 owned object; caller must release.")) }
+  else if result.silk == "?*mut u8" { run notes.append(run String.copy(if String.startsWith(returns, "Vec<") { "Returns borrowed +0 NSArray handle rather than a Rust Vec." } else { "Returns borrowed +0 object handle." })) }
+  else if result.silk == "?[*]const u8" { run notes.append(run String.copy("Returns borrowed NUL-terminated UTF-8; owner must remain alive and unchanged.")) }
+  if slice.view() != "" { run notes.append(run String.copy("Slice input uses pointer/count; elements are borrowed for this call.")) }
+  if record { run notes.append(run String.copy("Aggregate inputs are passed by value.")) }
+  if returns == "MTLClearColor" || returns == "MTLSize" { run notes.append(run String.copy("Returns the aggregate result by value.")) }
+  if owner == "RenderPipelineReflection" && name == "new" { run notes.append(run String.copy("Private upstream API: caller must establish selector availability and argument validity; null indicates initialization failure.")) }
+  if name == "serialize_vertex_data" {
+    notes = List<String>.make()
+    run notes.append(run String.copy("Private upstream API, flags fixed to zero as upstream; returns +1 serialized data. Optional error receives borrowed +0 NSError."))
+  } else if name == "serialize_fragment_data" { run notes.append(run String.copy("Private upstream API: caller must establish selector availability.")) }
+  let recv = if owner == "ArgumentArray" { run String.copy("((NSArray *)object)") }
+    else if owner == "ComputePipelineState" || owner == "RenderPipelineState" { run S.cat(&["((id<MTL", owner, ">)object)"]) }
+    else { run S.cat(&["((MTL", owner, " *)object)"]) }
+  let mut body = String.make()
+  let mut expr = String.make()
+  if owner == "RenderPipelineReflection" && name == "new" { expr = run String.copy("((id (*)(id, SEL, void *, void *, void *, id, uint64_t, uint64_t))objc_msgSend)([MTLRenderPipelineReflection alloc], sel_registerName(\"initWithVertexData:fragmentData:serializedVertexDescriptor:device:options:flags:\"), vertex_data, fragment_data, vertex_desc, (id)device, options, flags)") }
+  else if name == "serialize_vertex_data" { expr = run String.copy("((id (*)(id, SEL, uint64_t, NSError **))objc_msgSend)((id)object, sel_registerName(\"newSerializedVertexDataWithFlags:error:\"), 0, (NSError **)error)") }
+  else if name == "serialize_fragment_data" { expr = run String.copy("((id (*)(id, SEL))objc_msgSend)((id)object, sel_registerName(\"serializeFragmentData\"))") }
+  else if name == "new" {
+    let selector = run required("msg_send!\\[\\s*(?:class|class!\\([^)]*\\))\\s*,\\s*(\\w+)\\s*\\]", method.body.view(), 1)
+    expr = run S.cat(&[if selector.view() != "new" { "[" } else { "" }, "[MTL", owner, " ", selector.view(), "]", if selector.view() != "new" { " retain]" } else { "" }])
+  } else if name == "label" { expr = run S.cat(&["[[", recv.view(), " label] UTF8String]"]) }
+  else if name == "set_label" {
+    run body.append("NSString *text = label ? [[NSString alloc] initWithUTF8String:label] : nil;\n    ")
+    expr = run S.cat(&["[", recv.view(), " setLabel:text]"])
+  } else if slice.view() != "" {
+    let selector = run required("msg_send!\\[\\s*self,\\s*(\\w+)\\s*:", method.body.view(), 1)
+    let setup = run S.cat(&["NSArray *items = [[NSArray alloc] initWithObjects:(id const *)", slice.view(), " count:(NSUInteger)", slice.view(), "_count];\n    "])
+    run body.append(setup.view())
+    expr = run S.cat(&["[", recv.view(), " ", selector.view(), ":items]"])
+  } else {
+    let raw = run required("(?s:msg_send(?:_bool)?!\\[\\s*self\\s*,(.*?)\\])", method.body.view(), 1)
+    let message = String.trim(raw.view())
+    if !String.contains(message, ":") {
+      let mut selector = message
+      if message == "isMeshThreadgroupSizeIsMultipleOfThreadExecutionWidth" { selector = "meshThreadgroupSizeIsMultipleOfThreadExecutionWidth" }
+      else if message == "isObjectThreadgroupSizeIsMultipleOfThreadExecutionWidth" { selector = "objectThreadgroupSizeIsMultipleOfThreadExecutionWidth" }
+      expr = run S.cat(&["[", recv.view(), " ", selector, "]"])
+    } else {
+      let mut converted = String.make()
+      let mut rest = message
+      while let Option<Match<'_>>.Some { value: found } = move run S.search("(\\w+)\\s*:\\s*(\\w+)", rest) {
+        let arg = S.group(&found, 2)
+        let mut typ = S.sub(message, 0, 0)
+        let values = params.asSlice()
+        let mut p: usize = 0
+        while p < values.length { if values[p].name.view() == arg { typ = values[p].silk.view()
+            break }
+          p = p + 1 }
+        if typ == "" { run Task.abort("Unknown pipeline selector argument") }
+        if converted.view() != "" { run converted.append(" ") }
+        let piece = run S.cat(&[S.group(&found, 1), ":", if typ == "?*mut u8" { "(id)" } else if typ == "bool" { "(" } else { "" }, arg, if typ == "bool" { " != 0)" } else { "" }])
+        run converted.append(piece.view())
+        rest = S.sub(rest, found.end(), S.length(rest))
+      }
+      if converted.view() == "" { run Task.abort("No pipeline selector pieces") }
+      expr = run S.cat(&["[", recv.view(), " ", converted.view(), "]"])
+    }
+  }
+  let returned = run S.cat(&[if result.silk == "()" { "" } else { "return " }, if result.silk == "()" || result.silk == "bool" || returns == "MTLClearColor" || returns == "MTLSize" { "" } else { "(" }, if result.silk == "()" || result.silk == "bool" || returns == "MTLClearColor" || returns == "MTLSize" { "" } else { result.c }, if result.silk == "()" || result.silk == "bool" || returns == "MTLClearColor" || returns == "MTLSize" { "" } else { ")" }, expr.view(), if result.silk == "bool" { " ? 1 : 0" } else { "" }, ";"])
+  run body.append(returned.view())
+  if name == "set_label" { run body.append("\n    [text release];") }
+  if slice.view() != "" { run body.append("\n    [items release];") }
+  if notes.length() == 0 { run notes.append(run String.copy("Direct Metal selector binding; caller establishes object validity and API availability.")) }
+  let note = run S.join(&notes, " ")
+  let rust = run S.cat(&[method.owner.view(), ".", name])
+  return run B.binding(owner, name, move params, result.silk, result.c, body.view(), note.view(), rust.view())
+}
+pub effect fn generate(root: &Path, upstream: &Path) -> () ! TaskError | FileError | OutOfMemoryError ? &mut FileSystem | &mut Allocator {
+  let files = &["src/pipeline/mod.rs", "src/pipeline/render.rs", "src/pipeline/compute.rs", "src/renderpass.rs", "src/computepass.rs", "src/blitpass.rs", "src/acceleration_structure_pass.rs"]
+  let mut bindings = List<B.Binding>.make()
+  let mut file: usize = 0
+  while file < files.length {
+    let source = run S.readText(upstream, files[file])
+    let methods = run R.methods(source.view())
+    let values = methods.asSlice()
+    let mut at: usize = 0
+    while at < values.length {
+      if !String.startsWith(values[at].owner.view(), "MTL") { run bindings.append(run render(&values[at])) }
+      at = at + 1
+    }
+    file = file + 1
+  }
+  run B.emit(root, "pipeline", &bindings, "")
+}

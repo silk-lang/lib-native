@@ -3,7 +3,7 @@
 //! surface; the caller guarantees native pointer provenance and thread affinity.
 import webgpu_sys.generated_webgpu as sys
 import webgpu_sys.generated_webgpu {
-  WGPUChainedStruct, WGPUSurfaceDescriptor, WGPUSurfaceSourceMetalLayer,
+  WGPUSurfaceDescriptor, WGPUSurfaceSourceMetalLayer,
   WGPUSurfaceSourceWaylandSurface, WGPUSurfaceSourceXlibWindow,
   WGPUSurfaceSourceWindowsHWND, WGPUSurfaceCapabilities,
   WGPUSurfaceConfiguration, WGPUSurfaceTexture,

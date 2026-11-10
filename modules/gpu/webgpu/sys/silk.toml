@@ -2,7 +2,7 @@
 name = "gpu-webgpu-sys"
 description = "The raw WebGPU C ABI under gpu-webgpu"
 version = "0.1.0"
-silk-version = "0.1.0-dev.63+657e3c900f65"
+silk-version = "0.1.0-dev.64+8214c402307b"
 kind = "library"
 exports = ["generated_webgpu"]
 
@@ -29,12 +29,12 @@ link = [
   { library = "dl", mode = "dynamic", os = "linux" },
   { library = "rt", mode = "dynamic", os = "linux" },
   { library = "pthread", mode = "dynamic", os = "linux" },
-  # Windows links Dawn through a DLL that scripts/prepare-windows.ps1 builds and names as this
+  # Windows links Dawn through a DLL that the root prepare-windows task builds and names as this
   # archive's override. ABI probes and benchmark support call C stdio through the DLL CRT, whose
-  # import libraries that script copies beside it, since a `library` entry for them does not
+  # import libraries that task copies beside it, since a `library` entry for them does not
   # reach the Windows linker.
   # Silk passes include directories to Clang on Windows as \\?\ paths, where Dawn's headers are not
-  # found, so prepare-windows.ps1 also compiles the callback shim into that directory.
+  # found, so prepare-windows also compiles the callback shim into that directory.
   { static-archive = "dawn:lib/nonstd_dawn.lib", os = "windows" },
   { static-archive = "dawn:lib/nonstd_callbacks.lib", os = "windows" },
   { static-archive = "dawn:lib/ucrt.lib", os = "windows" },

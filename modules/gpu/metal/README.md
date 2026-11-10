@@ -14,17 +14,17 @@ From `modules/gpu/metal`, with:
 
 - Apple Silicon macOS with a Metal device.
 - Xcode/macOS SDK 15.4 or newer for the complete declaration surface.
-- Silk `0.1.0-dev.63+657e3c900f65`, as pinned by the workspace.
+- Silk `0.1.0-dev.64+8214c402307b`, as pinned by the workspace.
 - LLVM 22 clang (`SILK_CLANG`). The build compiles the Objective-C bridge in `native/` with it,
   as `[native].sources` in `silk.toml`.
-- Python 3.9+ only for inventory checks or regeneration.
+- Git only when regenerating from or refreshing the pinned upstream checkout; the tasks themselves run in Silk.
 
 ```sh
 silk build                                               # bridge and Silk static library
 silk check                                               # type-check every exported Silk module
 silk run --manifest-path examples/compute/silk.toml          # GPU compute example
 silk run --manifest-path examples/headless-render/silk.toml  # GPU render example
-python3 tools/coverage.py                                # check upstream declaration inventory
+silk task coverage                                      # check upstream declaration inventory
 ```
 
 Add `--release` to build or run in release mode. The bridge's objects are cached and recompile
@@ -127,19 +127,21 @@ Callback context must remain valid until Metal finishes using it, including asyn
 
 ## Maintaining the port
 
-`api/upstream.json` records the independently extracted method inventory and upstream revision. Per-module JSON maps upstream declarations to Silk declarations and records adaptations. `tools/coverage.py` checks that all inventory methods have mappings and their target declarations exist; it does not prove ABI or GPU behavior.
+`api/upstream.json` records the independently extracted method inventory and upstream revision. Per-module JSON maps upstream declarations to Silk declarations and records adaptations. `silk task coverage` checks that all inventory methods have mappings and their target declarations exist; it does not prove ABI or GPU behavior.
 
 For the generated slices:
 
 ```sh
 git clone https://github.com/gfx-rs/metal-rs.git /path/to/metal-rs
 git -C /path/to/metal-rs checkout e47bc888d3837f85ea8b01c9e66ccf73236293b9
-python3 tools/generate.py /path/to/metal-rs
-python3 tools/coverage.py --upstream /path/to/metal-rs
+silk task generate /path/to/metal-rs
+silk task coverage --upstream /path/to/metal-rs
 silk check && silk run --manifest-path examples/compute/silk.toml && silk run --manifest-path examples/headless-render/silk.toml
 ```
 
-Edit `tools/core.py`, `device.py`, `encoder.py`, `library.py`, or `pipeline.py` for generated code. The resource, raytracing, runtime, and value-type files are maintained directly. Generated files are checked in, so normal builds require neither Python nor the upstream checkout.
+The typed task program is `src/tasks.silk`. Edit `tools/core.json`, `tools/library.json`, and `tools/device.json` for the declarative bridge definitions; `src/task_device.silk`, `src/task_pipeline.silk`, and `src/task_encoder.silk` extract upstream signatures, selectors, and historical capability expressions. Shared emission lives in `src/task_bridge.silk`. `silk task generate-core` and `silk task generate-library` regenerate their table-driven slices without an upstream checkout. The resource, raytracing, runtime, and value-type files are maintained directly. Generated files and API inventories are checked in, so normal builds require neither the task program nor the upstream checkout. Regeneration may normalize source formatting but preserves the raw API, bridge semantics, and JSON entry schemas.
+
+For device-only iteration, `silk task generate-device /path/to/metal-rs/src/device.rs` accepts an upstream source file directly, as the former standalone device generator did.
 
 ## License
 

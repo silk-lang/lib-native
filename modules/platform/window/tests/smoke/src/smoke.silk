@@ -8,9 +8,9 @@ import window.bridge { BridgePlatform, Backend, MouseAction }
 import window.event { Event, Key, Modifiers, MouseButton, ScrollDelta }
 import window.keys { KeyCode, NamedKey }
 import window.menu { MenuBar, OpenDialog, Shortcut, SystemItem }
-import window.platform { Platform }
-import window.types { WindowId, WindowOptions, WindowError, Wait, ImeState, RawSurface }
-import silk.collections.list { List }
+// Interface methods resolve through this import; silk#2819 reports it as unused.
+import window.platform { Platform as _Platform }
+import window.types { WindowOptions, WindowError, Wait, ImeState, RawSurface }
 import silk.core.effect { Effect }
 import silk.core.option { Option }
 import silk.geometry.point { Point2 }
@@ -92,23 +92,23 @@ effect fn collect(platform: &mut BridgePlatform, seconds: f64) -> Tally
     match move run platform.nextEvent(Wait.Seconds { seconds: 0.02 }) {
       Option<Event>.Some { value } => {
         match &value {
-          Event.RequestFrame { window, targetTime } => {
+          Event.RequestFrame { .. } => {
             tally.frames = tally.frames + 1
           }
-          Event.Resized { window, size, scaleFactor } => {
+          Event.Resized { size, .. } => {
             tally.resizes = tally.resizes + 1
             tally.width = size.width
           }
-          Event.ImePreedit { window, text, selectionStart, selectionEnd } => {
+          Event.ImePreedit { text, selectionStart, .. } => {
             tally.preeditEvents = tally.preeditEvents + 1
             tally.preedit.clear()
             run tally.preedit.append(text.view())
             tally.preeditStart = selectionStart
           }
-          Event.TextInput { window, text } => {
+          Event.TextInput { text, .. } => {
             run tally.text.append(text.view())
           }
-          Event.KeyDown { window, key, code, modifiers, repeat, imeHandled } => {
+          Event.KeyDown { key, code, modifiers, .. } => {
             tally.keyDowns = tally.keyDowns + 1
             match &key {
               Key.Character { text } => {
@@ -126,27 +126,27 @@ effect fn collect(platform: &mut BridgePlatform, seconds: f64) -> Tally
               }
             }
           }
-          Event.KeyUp { window, key, code, modifiers } => {
+          Event.KeyUp { .. } => {
             tally.keyUps = tally.keyUps + 1
           }
           Event.MenuAction { action } => {
             tally.menuActions = tally.menuActions + 1
             tally.lastAction = action
           }
-          Event.MouseMoved { window, position, modifiers } => {
+          Event.MouseMoved { position, .. } => {
             tally.moves = tally.moves + 1
             tally.lastX = position.x
           }
-          Event.MouseDown { window, button, position, modifiers, clickCount } => {
+          Event.MouseDown { button, .. } => {
             tally.downs = tally.downs + 1
             if button == MouseButton.Right {
               tally.rightDown = true
             }
           }
-          Event.MouseUp { window, button, position, modifiers } => {
+          Event.MouseUp { .. } => {
             tally.ups = tally.ups + 1
           }
-          Event.Scroll { window, position, delta, phase, modifiers } => {
+          Event.Scroll { delta, .. } => {
             match delta {
               ScrollDelta.Lines { delta: lines } => {
                 tally.scrollY = tally.scrollY + lines.y
@@ -156,7 +156,7 @@ effect fn collect(platform: &mut BridgePlatform, seconds: f64) -> Tally
               }
             }
           }
-          Event.DialogClosed { dialog, paths } => {
+          Event.DialogClosed { paths, .. } => {
             tally.dialogs = tally.dialogs + 1
             tally.dialogPaths = tally.dialogPaths + 1
             if paths.length() != 0 {
@@ -164,7 +164,7 @@ effect fn collect(platform: &mut BridgePlatform, seconds: f64) -> Tally
               run tally.dialogPath.append(paths.asSlice()[0].view())
             }
           }
-          Event.CloseRequested { window } => {
+          Event.CloseRequested { .. } => {
             tally.closeRequests = tally.closeRequests + 1
           }
           Event.QuitRequested => {
@@ -234,10 +234,10 @@ fn backendName(backend: Backend) -> string<'static> {
 
 fn surfaceMatches(backend: Backend, surface: RawSurface) -> bool {
   return match surface {
-    RawSurface.Win32 { hwnd, hinstance } => backend == Backend.Win32
-    RawSurface.Wayland { display, surface: wlSurface } => backend == Backend.Wayland
-    RawSurface.Xlib { display, window } => backend == Backend.X11 && window != 0
-    RawSurface.Canvas { handle } => backend == Backend.Browser
+    RawSurface.Win32 { .. } => backend == Backend.Win32
+    RawSurface.Wayland { .. } => backend == Backend.Wayland
+    RawSurface.Xlib { window, .. } => backend == Backend.X11 && window != 0
+    RawSurface.Canvas { .. } => backend == Backend.Browser
     _ => false
   }
 }
@@ -277,7 +277,7 @@ effect fn smoke(checks: &mut Checks) -> ()
   platform.requestFrame(window)
   while animated < 10 && waited < 200 {
     match move run platform.nextEvent(Wait.Seconds { seconds: 0.05 }) {
-      Option<Event>.Some { value: Event.RequestFrame { window: framed, targetTime } } => {
+      Option<Event>.Some { value: Event.RequestFrame { .. } } => {
         animated = animated + 1
         platform.requestFrame(window)
       }
@@ -406,9 +406,9 @@ effect fn smoke(checks: &mut Checks) -> ()
   }
 
   if backend == Backend.X11 || backend == Backend.Wayland {
-    // scripts/linux points SILK_WINDOW_DIALOG at a command that prints a path.
+    // The Linux smoke task points SILK_WINDOW_DIALOG at a command that prints a path.
     let dialogOptions = OpenDialog.file("Open", "svg,png")
-    let dialog = run platform.openFileDialog(&dialogOptions)
+    drop run platform.openFileDialog(&dialogOptions)
     let closedDialog = run collect(&mut platform, 1.0)
     checks.check(
       closedDialog.dialogs == 1 && closedDialog.dialogPath.view() == "/tmp/open-Open.svg",

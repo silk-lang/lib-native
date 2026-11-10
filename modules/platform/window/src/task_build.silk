@@ -1,0 +1,113 @@
+import silk.cli.task { Task, TaskError }
+import silk.collections.bytes { Bytes }
+import silk.core.option { Option }
+import silk.core.effect { Effect }
+import silk.io.writer { Writer, WriterError }
+import silk.io.writer_native { StderrWriter }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.system.child_process { ChildProcess, Exited, ProcessError, ProcessOutcome, Signaled }
+import silk.system.filesystem { FileError, FileSystem, Path }
+import silk.system.host_input { HostInput, HostInputError }
+import silk.text.string { String }
+import silk.num.usize
+import task_codegen { text }
+static if Intrinsic.targetOperatingSystem() != "windows" {
+  import silk.system.subprocess { Subprocess }
+}
+
+pub effect fn capture(program: string, args: &[string]) -> Bytes
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  static if Intrinsic.targetOperatingSystem() == "windows" {
+    return run Task.capture(program, args)
+  } else {
+    let executable = match move run which(program) {
+      Option<Path>.Some { value } => move value
+      Option<Path>.None => run Task.abort(program)
+    }
+    let mut request = run ChildProcess.request(&executable)
+    let mut index: usize = 0
+    while index < args.length {
+      run ChildProcess.addArgument(&mut request, args[index])
+      index = index + 1
+    }
+    run Subprocess.inheritEnvironment(&mut request)
+    let ProcessOutcome { value } = move run ChildProcess.submit(&request)
+    let mut errors = StderrWriter.make()
+    match move value {
+      Exited outcome => {
+        let Exited { code, output, errors: diagnostic } = move outcome
+        run Writer.writeAll(Bytes.asSlice(&diagnostic)) |> Effect.provideMut<Writer>(&mut errors)
+        if code != 0 { fail TaskError { message: run String.copy(program), status: code } }
+        return move output
+      }
+      Signaled outcome => {
+        run Writer.writeAll(Bytes.asSlice(&outcome.errors)) |> Effect.provideMut<Writer>(&mut errors)
+        fail TaskError { message: run String.copy(program), status: 128 + outcome.signal }
+      }
+    }
+  }
+}
+
+pub effect fn variable(name: string) -> String ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  return match move run HostInput.variableNamed(name) {
+    Option<Bytes>.Some { value } => run text(&value)
+    Option<Bytes>.None => run String.copy("")
+  }
+}
+pub effect fn which(name: string) -> Option<Path> ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  if String.startsWith(name, "/") {
+    let p = run Path.make(name)
+    return if run FileSystem.exists(&p) { Option<Path>.some(move p) } else { Option<Path>.none() }
+  }
+  let search = run variable("PATH")
+  let mut directories = String.split(String.view(&search), ":")
+  while true {
+    match move directories.next() {
+      Option<string>.Some { value } => {
+        if String.startsWith(value, "/") {
+          let directory = run Path.make(value)
+          let p = run Path.join(&directory, name)
+          if run FileSystem.exists(&p) { return Option<Path>.some(move p) }
+        }
+      }
+      Option<string>.None => { return Option<Path>.none() }
+    }
+  }
+}
+pub fn target() -> string<'static> {
+  static if Intrinsic.targetOperatingSystem() == "darwin" {
+    static if Intrinsic.targetArchitecture() == "aarch64" { return "aarch64-apple-darwin" } else { return "x86_64-apple-darwin" }
+  } else {
+    static if Intrinsic.targetOperatingSystem() == "windows" { return "x86_64-pc-windows-msvc" }
+    else {
+      static if Intrinsic.targetArchitecture() == "aarch64" { return "aarch64-unknown-linux-gnu" } else { return "x86_64-unknown-linux-gnu" }
+    }
+  }
+}
+pub effect fn build(manifest: string, name: string, package: string, release: bool, browser: bool) -> String ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let compiler = run variable("SILK_COMPILER")
+  let mut clang = run variable("SILK_CLANG")
+  if String.view(&clang) == "" {
+    let installed = run capture(String.view(&compiler), &["task", "--manifest-path", "../../../silk.toml", "install-llvm"])
+    let installedText = run text(&installed)
+    clang = run String.copy(String.trim(String.view(&installedText)))
+  }
+  if browser {
+    if release { run Task.silk(&["build", "--manifest-path", manifest, "--target", "wasm32-unknown-unknown", "--clang", String.view(&clang), "--release"]) }
+    else { run Task.silk(&["build", "--manifest-path", manifest, "--target", "wasm32-unknown-unknown", "--clang", String.view(&clang)]) }
+  } else {
+    if release { run Task.silk(&["build", "--manifest-path", manifest, "--clang", String.view(&clang), "--release"]) }
+    else { run Task.silk(&["build", "--manifest-path", manifest, "--clang", String.view(&clang)]) }
+  }
+  let found = if release {
+    run capture(String.view(&compiler), &["task", "--manifest-path", "../../../silk.toml", "artifact", name, if browser { "wasm32-unknown-unknown" } else { target() }, package, "--release"])
+  } else {
+    run capture(String.view(&compiler), &["task", "--manifest-path", "../../../silk.toml", "artifact", name, if browser { "wasm32-unknown-unknown" } else { target() }, package])
+  }
+  let foundText = run text(&found)
+  return run String.copy(String.trim(String.view(&foundText)))
+}

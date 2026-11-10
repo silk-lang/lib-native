@@ -1,0 +1,415 @@
+const HOST_OS: string<'static> = Intrinsic.targetOperatingSystem()
+const HOST_ARCH: string<'static> = Intrinsic.targetArchitecture()
+import silk.cli.task { Task, TaskError }
+import silk.collections.bytes { Bytes }
+import silk.collections.list { List }
+import silk.core.effect { Effect }
+import silk.core.option { Option }
+import silk.io.writer { WriterError }
+import silk.json.value { Json, JsonNumber, Value }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.system.child_process { ChildProcess, ProcessError }
+import silk.system.filesystem { FileError, FileSystem, Path }
+import silk.system.host_input { HostInput, HostInputError }
+import silk.system.system_clock { SystemClock }
+import silk.system.system_clock_native { OsSystemClock }
+import silk.text.string { String }
+import silk.num.f64
+import silk.num.i64
+import silk.num.u64
+import silk.num.u8
+import silk.num.usize
+import task_data as D
+import task_build as Build
+import task_process as Process
+import task_schema_source as Source
+import task_schema_types as T
+
+pub const WORKLOADS: [string<'static>; 5] = ["draws", "writes", "binds", "rects10k", "rects100k"]
+const LANGUAGES: [string<'static>; 3] = ["silk", "c", "rust"]
+fn count(case: usize, n: u64) -> u64 { return if case == 3 { 10000 } else if case == 4 { 100000 } else { n } }
+pub effect fn validate(n: u64, frames: u64, repeats: usize) -> () ! TaskError | OutOfMemoryError ? &mut Allocator {
+  if n < 64 || n > 1000000 || frames < 1 || frames > 10000 || repeats < 1 { run Task.abort("n must be 64..1000000, frames 1..10000, repeats >=1") }
+}
+effect fn integer(value: &Value, key: string) -> u64 ! TaskError | OutOfMemoryError ? &mut Allocator {
+  return match Json.field(value, key) |> Json.asU64 { Option<u64>.Some { value: found } => found Option<u64>.None => run Task.abort("benchmark integer field is absent or invalid") }
+}
+effect fn real(value: &Value, key: string) -> f64 ! TaskError | OutOfMemoryError ? &mut Allocator {
+  return match Json.field(value, key) |> Json.asF64 { Option<f64>.Some { value: found } => found Option<f64>.None => run Task.abort("benchmark number field is absent or invalid") }
+}
+effect fn checked(binary: string, case: usize, n: u64, frames: u64, prefix: &[string]) -> Value
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let environment = [run D.format("BENCH_CASE={}", &.(case)), run D.format("BENCH_N={}", &.(n)), run D.format("BENCH_FRAMES={}", &.(frames))]
+  let root = run Task.root()
+  let mut arguments = List<string>.make()
+  let mut index: usize = 1
+  while index < prefix.length { run List<string>.append(&mut arguments, prefix[index])
+    index = index + 1 }
+  if prefix.length != 0 { run List<string>.append(&mut arguments, binary) }
+  let captured = if prefix.length == 0 { run Process.capture(binary, List<string>.asSlice(&arguments), &environment, &root) } else { run Process.capture(prefix[0], List<string>.asSlice(&arguments), &environment, &root) }
+  let output = run D.text(move captured)
+  let mut lines = String.split(String.view(&output), "\n")
+  let mut row = Value.Null
+  let mut rows: usize = 0
+  while true { let line = match move lines.next() { Option<string>.Some { value } => value Option<string>.None => { break } }
+    if String.startsWith(line, "{") { row = run D.parse(String.utf8Bytes(line))
+      rows = rows + 1 } }
+  if rows != 1 { run Task.abort("benchmark must emit exactly one JSON result") }
+  if (run integer(&row, "schema")) != 1 || !D.boolean(run D.field(&row, "checked")) || T.property(&row, "workload") != WORKLOADS[case] || (run integer(&row, "frames")) != frames || (run integer(&row, "n")) != count(case, n) || (run integer(&row, "cpu_ns")) == 0 { run Task.abort("invalid or unchecked benchmark result") }
+  let _checksum = run integer(&row, "checksum")
+  return move row
+}
+effect fn timestamp() -> String ! TaskError | OutOfMemoryError | WriterError ? &mut Allocator {
+  let mut clock = OsSystemClock.make()
+  let now = run SystemClock.now() |> Effect.provideMut<SystemClock>(&mut clock)
+  let seconds = SystemClock.seconds(&now)
+  let days = seconds / 86400
+  let daytime = seconds % 86400
+  let z = days + 719468
+  let era = z / 146097
+  let dayOfEra = z - era * 146097
+  let yearOfEra = (dayOfEra - dayOfEra / 1460 + dayOfEra / 36524 - dayOfEra / 146096) / 365
+  let dayOfYear = dayOfEra - (365 * yearOfEra + yearOfEra / 4 - yearOfEra / 100)
+  let monthPart = (5 * dayOfYear + 2) / 153
+  let day = dayOfYear - (153 * monthPart + 2) / 5 + 1
+  let month = monthPart + (if monthPart < 10 { i64.toI64(3) } else { i64.toI64(-9) })
+  let year = yearOfEra + era * 400 + (if month <= 2 { i64.toI64(1) } else { i64.toI64(0) })
+  return run D.format("{:04}-{:02}-{:02}T{:02}:{:02}:{:02}Z", &(year, month, day, daytime / 3600, daytime / 60 % 60, daytime % 60))
+}
+effect fn hash(relative: string) -> String ! TaskError | FileError | HostInputError | OutOfMemoryError ? &mut HostInput | &mut Allocator | &mut FileSystem {
+  let path = run Process.resolve(relative)
+  let bytes = run FileSystem.readFile(&path)
+  return run Source.digest(Bytes.asSlice(&bytes))
+}
+pub effect fn metadata(labels: &[string], binaries: &[String]) -> Value
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let root = run Task.root()
+  let mut result = D.object()
+  run D.set(&mut result, "schema", D.int(1))
+  let stamp = run timestamp()
+  run D.set(&mut result, "timestamp_utc", run D.str(String.view(&stamp)))
+  let system = if HOST_OS == "darwin" { "Darwin" } else if HOST_OS == "windows" { "Windows" } else { "Linux" }
+  let machine = if HOST_ARCH == "aarch64" { if HOST_OS == "darwin" { "arm64" } else { "aarch64" } } else if HOST_OS == "windows" { "AMD64" } else { "x86_64" }
+  let mut host = D.object()
+  run D.set(&mut host, "system", run D.str(system))
+  run D.set(&mut host, "machine", run D.str(machine))
+  static if Intrinsic.targetOperatingSystem() == "windows" {
+    let platform = run D.text(run Process.capture("reg", &["query", "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "/v", "CurrentBuildNumber"], &[], &root))
+    run D.set(&mut host, "platform", run D.str(String.trim(String.view(&platform))))
+  } else {
+    let platform = run D.text(run Process.capture("uname", &["-a"], &[], &root))
+    run D.set(&mut host, "platform", run D.str(String.trim(String.view(&platform))))
+  }
+  run D.set(&mut result, "host", move host)
+  run D.set(&mut result, "ci", run D.load("scripts/ci-lock.json"))
+  let commit = run Build.variable("GITHUB_SHA")
+  run D.set(&mut result, "source_commit", if String.view(&commit) == "" { Value.Null } else { run D.str(String.view(&commit)) })
+  let id = run Build.variable("GITHUB_RUN_ID")
+  if String.view(&id) == "" { run D.set(&mut result, "run_url", Value.Null) } else {
+    let server = run Build.variable("GITHUB_SERVER_URL")
+    let repo = run Build.variable("GITHUB_REPOSITORY")
+    let url = run D.format("{}/{}/actions/runs/{}", &(String.view(&server), String.view(&repo), String.view(&id)))
+    run D.set(&mut result, "run_url", run D.str(String.view(&url)))
+  }
+  run D.set(&mut result, "toolchains", run D.load("../../../toolchains.lock.json"))
+  let rustHash = run hash("bench/rust/Cargo.lock")
+  run D.set(&mut result, "rust_lock_sha256", run D.str(String.view(&rustHash)))
+  let shaderHash = run hash("examples/shaders/instanced-rects.wgsl")
+  run D.set(&mut result, "shader_sha256", run D.str(String.view(&shaderHash)))
+  let mut descriptions = D.object()
+  let mut index: usize = 0
+  while index < labels.length {
+    let path = run Process.resolve(String.view(&binaries[index]))
+    let checksum = run hash(Process.text(&path))
+    let mut entry = D.object()
+    run D.set(&mut entry, "path", run D.str(Process.text(&path)))
+    run D.set(&mut entry, "sha256", run D.str(String.view(&checksum)))
+    run D.set(&mut descriptions, labels[index], move entry)
+    index = index + 1
+  }
+  run D.set(&mut result, "binaries", move descriptions)
+  return move result
+}
+fn median(values: &mut List<f64>) -> f64 {
+  let items = List<f64>.asMutSlice(&mut values)
+  let mut index: usize = 1
+  while index < items.length { let value = items[index]
+    let mut at = index
+    while at > 0 && items[at - 1] > value { items[at] = items[at - 1]
+      at = at - 1 }
+    items[at] = value
+    index = index + 1 }
+  return if items.length % 2 == 0 { (items[items.length / 2 - 1] + items[items.length / 2]) / 2.0 } else { items[items.length / 2] }
+}
+pub effect fn save(path: string, value: &Value) -> () ! TaskError | FileError | HostInputError | OutOfMemoryError | WriterError ? &mut HostInput | &mut Allocator | &mut FileSystem {
+  let destination = run Process.resolve(path)
+  let mut bytes = run D.encode(value, true)
+  run Bytes.append(&mut bytes, b"\n")
+  run FileSystem.writeFileWithParents(&destination, Bytes.asSlice(&bytes))
+}
+effect fn load(path: string) -> Value ! TaskError | FileError | HostInputError | OutOfMemoryError ? &mut HostInput | &mut Allocator | &mut FileSystem { let path = run Process.resolve(path)
+  let bytes = run FileSystem.readFile(&path)
+  return run D.parse(Bytes.asSlice(&bytes)) }
+pub effect fn measure(binaries: &[String], n: u64, frames: u64, repeats: usize, output: string, baseline: string, recordBaseline: bool) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  run validate(n, frames, repeats)
+  let mut result = run metadata(&LANGUAGES, binaries)
+  run D.set(&mut result, "metric", run D.str("frame_cpu_ns"))
+  run D.set(&mut result, "scope", run D.str("encode/write and submit; excludes setup, GPU wait and checked readback; two warmup frames"))
+  let mut results = D.list()
+  let mut case: usize = 0
+  while case < WORKLOADS.length {
+    let mut samples = [List<f64>.make(), List<f64>.make(), List<f64>.make()]
+    let mut checksum: u64 = 0
+    let mut seen = false
+    let mut repeat: usize = 0
+    while repeat < repeats {
+      let mut position: usize = 0
+      while position < LANGUAGES.length {
+        let language = if repeat % 2 == 0 { position } else { LANGUAGES.length - position - 1 }
+        let row = run checked(String.view(&binaries[language]), case, n, frames, &[])
+        if T.property(&row, "language") != LANGUAGES[language] { run Task.abort("benchmark binary language does not match label") }
+        let value = run integer(&row, "checksum")
+        if seen && checksum != value { run Task.abort("peer benchmark checksum mismatch") }
+        checksum = value
+        seen = true
+        run List<f64>.append(&mut samples[language], u64.toF64(run integer(&row, "cpu_ns")) / u64.toF64(frames))
+        position = position + 1
+      }
+      repeat = repeat + 1
+    }
+    let mut language: usize = 0
+    while language < LANGUAGES.length {
+      let mut row = D.object()
+      run D.set(&mut row, "language", run D.str(LANGUAGES[language]))
+      run D.set(&mut row, "workload", run D.str(WORKLOADS[case]))
+      run D.set(&mut row, "n", D.int(u64.toI64(count(case, n))))
+      run D.set(&mut row, "frames", D.int(u64.toI64(frames)))
+      run D.set(&mut row, "checksum", Value.Number { value: JsonNumber.Unsigned { value: checksum } })
+      run D.set(&mut row, "checked", Value.Bool { value: true })
+      let mut observations = D.list()
+      let values = List<f64>.asSlice(&samples[language])
+      let mut sample: usize = 0
+      while sample < values.length { run D.push(&mut observations, D.float(values[sample]))
+        sample = sample + 1 }
+      drop values
+      let middle = median(&mut samples[language])
+      run D.set(&mut row, "median", D.float(middle))
+      run D.set(&mut row, "samples", move observations)
+      run D.push(&mut results, move row)
+      language = language + 1
+    }
+    case = case + 1
+  }
+  run D.set(&mut result, "results", move results)
+  run save(output, &result)
+  run peerRatios(&result)
+  let baselinePath = run Process.resolve(baseline)
+  if run FileSystem.exists(&baselinePath) { let previous = run load(baseline)
+    run compare(&previous, &result) }
+  else { run D.print("No measured baseline exists; use --record-baseline after reviewing this run.") }
+  if recordBaseline { run save(baseline, &result) }
+  let message = run D.format("Measured samples: {}", &.(output))
+  run D.print(String.view(&message))
+}
+effect fn matrix<'a>(rows: &'a [Value], language: string, workload: string, n: u64) -> &'a Value ! TaskError | OutOfMemoryError ? &mut Allocator {
+  let mut index: usize = 0
+  while index < rows.length { if T.property(&rows[index], "language") == language && T.property(&rows[index], "workload") == workload && (run integer(&rows[index], "n")) == n { return &rows[index] }
+    index = index + 1 }
+  return run Task.abort("baseline workload matrix differs")
+}
+pub effect fn compare(old: &Value, new: &Value) -> () ! TaskError | WriterError | OutOfMemoryError ? &mut Allocator {
+  if T.property(old, "metric") != T.property(new, "metric") { run Task.abort("cannot compare unlike benchmark metrics") }
+  let beforeHost = run D.field(old, "host")
+  let afterHost = run D.field(new, "host")
+  if T.property(beforeHost, "system") != T.property(afterHost, "system") || T.property(beforeHost, "machine") != T.property(afterHost, "machine") { run Task.abort("cannot compare baselines from different host platforms") }
+  let before = D.array(run D.field(old, "results"))
+  let after = D.array(run D.field(new, "results"))
+  if before.length != after.length || after.length == 0 { run Task.abort("baseline workload matrix differs") }
+  let mut logs: f64 = 0.0
+  let mut index: usize = 0
+  while index < after.length {
+    let row = &after[index]
+    let previous = run matrix(before, T.property(row, "language"), T.property(row, "workload"), run integer(row, "n"))
+    if !D.boolean(run D.field(row, "checked")) || !D.boolean(run D.field(previous, "checked")) || (run integer(row, "checksum")) != run integer(previous, "checksum") { run Task.abort("unchecked or changed benchmark output") }
+    let oldMedian = run real(previous, "median")
+    let newMedian = run real(row, "median")
+    if oldMedian <= 0.0 || newMedian <= 0.0 { run Task.abort("benchmark medians must be positive") }
+    let ratio = newMedian / oldMedian
+    logs = logs + f64.log(ratio)
+    let report = run D.format("{:<5} {:<12} {:.4}x ({})", &(T.property(row, "language"), T.property(row, "workload"), ratio, T.property(new, "metric")))
+    run D.print(String.view(&report))
+    index = index + 1
+  }
+  let report = run D.format("geomean {:.4}x", &.(f64.exp(logs / usize.toF64(after.length))))
+  run D.print(String.view(&report))
+}
+pub effect fn compareFiles(old: string, new: string) -> () ! TaskError | FileError | HostInputError | OutOfMemoryError | WriterError ? &mut HostInput | &mut Allocator | &mut FileSystem { let before = run load(old)
+  let after = run load(new)
+  run compare(&before, &after) }
+effect fn peerRatios(data: &Value) -> () ! TaskError | WriterError | OutOfMemoryError ? &mut Allocator {
+  let rows = D.array(run D.field(data, "results"))
+  let peers = ["c", "rust"]
+  let mut peer: usize = 0
+  while peer < peers.length {
+    let mut logs: f64 = 0.0
+    let mut case: usize = 0
+    while case < WORKLOADS.length {
+      let mut silk: f64 = 0.0
+      let mut other: f64 = 0.0
+      let mut index: usize = 0
+      while index < rows.length { if T.property(&rows[index], "workload") == WORKLOADS[case] { if T.property(&rows[index], "language") == "silk" { silk = run real(&rows[index], "median") }
+          if T.property(&rows[index], "language") == peers[peer] { other = run real(&rows[index], "median") } }
+        index = index + 1 }
+      if silk <= 0.0 || other <= 0.0 { run Task.abort("missing peer benchmark row") }
+      let ratio = silk / other
+      logs = logs + f64.log(ratio)
+      let report = run D.format("silk/{} {:<12} {:.4}x", &(peers[peer], WORKLOADS[case], ratio))
+      run D.print(String.view(&report))
+      case = case + 1
+    }
+    let report = run D.format("silk/{} geomean {:.4}x", &(peers[peer], f64.exp(logs / 5.0)))
+    run D.print(String.view(&report))
+    peer = peer + 1
+  }
+}
+
+effect fn decimal(text: string) -> u64 ! TaskError | OutOfMemoryError ? &mut Allocator {
+  let bytes = String.utf8Bytes(text)
+  if bytes.length == 0 { run Task.abort("empty Callgrind instruction count") }
+  let mut number: u64 = 0
+  let mut index: usize = 0
+  while index < bytes.length { if bytes[index] < 48 || bytes[index] > 57 { run Task.abort("invalid Callgrind instruction count") }
+    number = number * 10 + u8.toU64(bytes[index] - 48)
+    index = index + 1 }
+  return number
+}
+effect fn words(text: string) -> List<String> ! OutOfMemoryError ? &mut Allocator {
+  let mut result = List<String>.make()
+  let mut parts = String.split(String.trim(text), " ")
+  while true { let part = match move parts.next() { Option<string>.Some { value } => value Option<string>.None => { break } }
+    if part != "" { run List<String>.append(&mut result, run String.copy(part)) } }
+  return move result
+}
+effect fn callgrind(binary: string, case: usize, n: u64, frames: u64, destination: &Path, calls: &Path) -> Value
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let outputFlag = run D.format("--callgrind-out-file={}", &.(Process.text(destination)))
+  let prefix = ["valgrind", "--tool=callgrind", "--collect-atstart=no", "--instr-atstart=yes", "--error-exitcode=99", String.view(&outputFlag)]
+  let mut row = run checked(binary, case, n, frames, &prefix)
+  if !D.boolean(run D.field(&row, "callgrind_markers")) { run Task.abort("rebuild with BENCH_CALLGRIND=1; unmarked runs cannot produce scoped Ir") }
+  let contents = run D.text(run FileSystem.readFile(destination))
+  let mut lines = String.split(String.view(&contents), "\n")
+  let mut events = List<String>.make()
+  let mut summary = List<String>.make()
+  while true {
+    let line = match move lines.next() { Option<string>.Some { value } => value Option<string>.None => { break } }
+    if String.startsWith(line, "events:") && List<String>.length(&events) == 0 { events = run words(String.slice(line, 7, String.byteLength(line) - 7)) }
+    if String.startsWith(line, "summary:") && List<String>.length(&summary) == 0 { summary = run words(String.slice(line, 8, String.byteLength(line) - 8)) }
+  }
+  let names = List<String>.asSlice(&events)
+  let counts = List<String>.asSlice(&summary)
+  let mut ir: u64 = 0
+  let mut index: usize = 0
+  while index < names.length { if String.view(&names[index]) == "Ir" { if index >= counts.length { run Task.abort("Callgrind summary lacks Ir") }
+      ir = run decimal(String.view(&counts[index]))
+      break }
+    index = index + 1 }
+  if ir == 0 { run Task.abort("empty Callgrind measured region") }
+  run D.set(&mut row, "Ir", Value.Number { value: JsonNumber.Unsigned { value: ir } })
+  let root = run Task.root()
+  let annotated = run Process.capture("callgrind_annotate", &["--inclusive=yes", "--tree=both", "--threshold=100", Process.text(destination)], &[], &root)
+  run FileSystem.writeFile(calls, Bytes.asSlice(&annotated))
+  return move row
+}
+pub effect fn ab(old: string, new: string, n: u64, frames: u64, repeats: usize, output: string) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  run validate(n, frames, repeats)
+  let directory = run Process.resolve(output)
+  run FileSystem.createDirectoriesRecursively(&directory)
+  let oldPath = run Process.resolve(old)
+  let newPath = run Process.resolve(new)
+  let binaries = [run String.copy(Process.text(&oldPath)), run String.copy(Process.text(&newPath))]
+  let labels = ["old", "new"]
+  let mut report = run metadata(&labels, &binaries)
+  let root = run Task.root()
+  let version = run D.text(run Process.capture("valgrind", &["--version"], &[], &root))
+  run D.set(&mut report, "valgrind_version", run D.str(String.trim(String.view(&version))))
+  run D.set(&mut report, "metric", run D.str("Ir"))
+  run D.set(&mut report, "scope", run D.str("calling-thread marked CPU encode/write and submit regions; setup, warmup, GPU waits and worker-thread execution excluded"))
+  let mut options = D.list()
+  run D.push(&mut options, run D.str("--collect-atstart=no"))
+  run D.push(&mut options, run D.str("--instr-atstart=yes"))
+  run D.set(&mut report, "callgrind_options", move options)
+  run D.set(&mut report, "call_count_scope", run D.str("annotated call counts include uncollected startup/warmup; only Ir is region-scoped"))
+  let mut results = D.list()
+  let mut logs: f64 = 0.0
+  let mut case: usize = 0
+  while case < WORKLOADS.length {
+    let mut samples = [List<f64>.make(), List<f64>.make()]
+    let mut checksum: u64 = 0
+    let mut seen = false
+    let mut repeat: usize = 0
+    while repeat < repeats {
+      let mut label: usize = 0
+      while label < labels.length {
+        let prefix = run D.format("{}-{}-{}", &(labels[label], WORKLOADS[case], repeat))
+        let filename = run D.format("{}.callgrind", &.(String.view(&prefix)))
+        let callname = run D.format("{}.calls.txt", &.(String.view(&prefix)))
+        let destination = run Path.join(&directory, String.view(&filename))
+        let calls = run Path.join(&directory, String.view(&callname))
+        let row = run callgrind(String.view(&binaries[label]), case, n, frames, &destination, &calls)
+        let value = run integer(&row, "checksum")
+        if seen && value != checksum { run Task.abort("changed GPU output in Callgrind comparison") }
+        checksum = value
+        seen = true
+        run List<f64>.append(&mut samples[label], u64.toF64(run integer(&row, "Ir")) / u64.toF64(frames))
+        label = label + 1
+      }
+      repeat = repeat + 1
+    }
+    let mut observations = D.object()
+    let mut medians = D.object()
+    let mut middle: [f64; 2] = [0.0; 2]
+    let mut label: usize = 0
+    while label < labels.length {
+      let mut values = D.list()
+      let raw = List<f64>.asSlice(&samples[label])
+      let mut index: usize = 0
+      while index < raw.length { run D.push(&mut values, D.float(raw[index]))
+        index = index + 1 }
+      drop raw
+      run D.set(&mut observations, labels[label], move values)
+      middle[label] = median(&mut samples[label])
+      run D.set(&mut medians, labels[label], D.float(middle[label]))
+      label = label + 1
+    }
+    let ratio = middle[1] / middle[0]
+    logs = logs + f64.log(ratio)
+    let mut row = D.object()
+    run D.set(&mut row, "workload", run D.str(WORKLOADS[case]))
+    run D.set(&mut row, "n", D.int(u64.toI64(count(case, n))))
+    run D.set(&mut row, "frames", D.int(u64.toI64(frames)))
+    run D.set(&mut row, "checked", Value.Bool { value: true })
+    run D.set(&mut row, "checksum", Value.Number { value: JsonNumber.Unsigned { value: checksum } })
+    run D.set(&mut row, "samples", move observations)
+    run D.set(&mut row, "median_Ir_per_frame", move medians)
+    run D.set(&mut row, "new_over_old", D.float(ratio))
+    run D.push(&mut results, move row)
+    let message = run D.format("{:<12} old={:.0} new={:.0} Ir/frame {:.4}x", &(WORKLOADS[case], middle[0], middle[1], ratio))
+    run D.print(String.view(&message))
+    case = case + 1
+  }
+  let geomean = f64.exp(logs / 5.0)
+  run D.set(&mut report, "results", move results)
+  run D.set(&mut report, "geomean_new_over_old", D.float(geomean))
+  let path = run Path.join(&directory, "comparison.json")
+  run save(Process.text(&path), &report)
+  let message = run D.format("geomean {:.4}x; call trees in {}", &(geomean, output))
+  run D.print(String.view(&message))
+  run D.print("Allocation evidence: inspect *.calls.txt allocator callees and their caller chains; backend allocations are not wrapper allocations.")
+}

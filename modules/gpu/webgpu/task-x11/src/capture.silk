@@ -1,0 +1,8 @@
+static if Intrinsic.targetOperatingSystem() == "linux" {
+  @foreign(noCapture: ("name", "cookie"))
+  pub unsafe extern "C" fn silk_task_x11_open(name: ?[*]const u8, cookie: ?[*]const u8, length: usize) -> ?*mut u8
+  @foreign(noCapture: ("handle", "rgba"))
+  pub unsafe extern "C" fn silk_task_x11_capture(handle: *mut u8, window: usize, width: u32, height: u32, rgba: ?[*]mut u8, length: usize) -> i32
+  @foreign(noCapture: .("handle"))
+  pub unsafe extern "C" fn silk_task_x11_close(handle: *mut u8) -> ()
+}

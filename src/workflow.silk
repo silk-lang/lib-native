@@ -1,0 +1,188 @@
+import silk.cli.task { Task, TaskError }
+import silk.collections.bytes { Bytes }
+import silk.core.effect { Effect }
+import silk.core.option { Option }
+import silk.core.result { Result }
+import silk.io.writer { WriterError }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.system.child_process { ChildProcess, ProcessError }
+import silk.system.filesystem { FileError, FileSystem, Path }
+import silk.system.host_input { HostInput, HostInputError }
+import silk.text.string { String }
+import silk.num.usize
+import silk.num.u32
+import artifact
+import pixels
+import support
+import windows
+static if Intrinsic.targetOperatingSystem() == "windows" {
+  import silk.platform.windows.process_image as WindowsProcessImage
+} else {
+  import silk.system.subprocess { ExitWatch, SpawnOptions, Stdio, Subprocess, SubprocessError }
+
+  effect fn waitWithin(program: &Path, directory: &Path) -> i32
+    ! SubprocessError | OutOfMemoryError ? &mut Allocator {
+    let mut request = run ChildProcess.requestWithin(program, directory)
+    run Subprocess.inheritEnvironment(&mut request)
+    let mut options = SpawnOptions.make()
+    run SpawnOptions.setStdio(&mut options, 0, Stdio.inherit(0))
+    run SpawnOptions.setStdio(&mut options, 1, Stdio.inherit(1))
+    run SpawnOptions.setStdio(&mut options, 2, Stdio.inherit(2))
+    let child = run Subprocess.spawn(&request, &options)
+    let watch = run ExitWatch.open(Subprocess.pid(&child))
+    let status = run ExitWatch.collect(&watch)
+    return if status.signaled { 128 + status.signal } else { status.code }
+  }
+}
+
+pub effect fn compiler(args: &[string]) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let program = run support.env("SILK_COMPILER")
+  if String.view(&program) == "" { run Task.abort("SILK_COMPILER is not set") }
+  run support.exec(String.view(&program), args)
+}
+
+pub effect fn runWithin(program: &Path, directory: &Path) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  static if Intrinsic.targetOperatingSystem() == "windows" {
+    let args: [Bytes; 0] = []
+    let code = match move run WindowsProcessImage.execute(program, &args, Option<&Path>.some(directory)) {
+      Option<u32>.Some { value } => value
+      Option<u32>.None => run Task.abort("Could not start native sample")
+    }
+    if code != 0 { fail TaskError { message: run String.copy("Native sample failed"), status: u32.wrappingToI32(code) } }
+  } else {
+    let code = match move run Effect.result(waitWithin(program, directory)) {
+      Result<i32, SubprocessError | OutOfMemoryError>.Success { value } => value
+      Result<i32, SubprocessError | OutOfMemoryError>.Failure { error: failure } => match move failure {
+        OutOfMemoryError error => { fail move error }
+        SubprocessError error => { drop error
+          run Task.abort("Could not run native sample") }
+      }
+    }
+    if code != 0 { fail TaskError { message: run String.copy("Native sample failed"), status: code } }
+  }
+}
+
+pub effect fn nativePixels() -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  run compiler(&["build", "--manifest-path", "modules/gpu/webgpu/examples/silk.toml"])
+  let program = run artifact.locate("gpu-webgpu-examples", support.target(), ".", false)
+  static if Intrinsic.targetOperatingSystem() == "windows" {
+    let parent = match move run Path.parent(&program) {
+      Option<Path>.Some { value } => move value
+      Option<Path>.None => run Task.abort("Invalid program path")
+    }
+    run windows.prepare("", support.text(&parent), false)
+  }
+  let output = run support.resolve(".cache/pixels/native")
+  run FileSystem.createDirectoriesRecursively(&output)
+  run runWithin(&program, &output)
+  run pixels.check(support.text(&output))
+}
+
+pub effect fn crossCheck() -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let apple = ["aarch64-apple-darwin", "x86_64-apple-darwin"]
+  let packages = ["modules/gpu/metal", "modules/gpu/metal/examples/compute", "modules/gpu/metal/examples/headless-render", "modules/platform/window", "modules/platform/window/tests/macos", "modules/platform/window/examples/demo"]
+  let mut target: usize = 0
+  while target < apple.length {
+    let mut package: usize = 0
+    while package < packages.length {
+      let manifest = run support.concat(&[packages[package], "/silk.toml"])
+      run compiler(&["check", "--manifest-path", String.view(&manifest), "--target", apple[target]])
+      package = package + 1
+    }
+    target = target + 1
+  }
+  let targets = ["x86_64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "wasm32-unknown-unknown"]
+  target = 0
+  while target < targets.length {
+    run compiler(&["check", "--manifest-path", "modules/platform/window/silk.toml", "--target", targets[target]])
+    run compiler(&["check", "--manifest-path", "modules/platform/window/tests/smoke/silk.toml", "--target", targets[target]])
+    target = target + 1
+  }
+}
+
+pub effect fn checkWorkspace() -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  run compiler(&["check", "--workspace"])
+  run compiler(&["task", "--manifest-path", "modules/gpu/webgpu/silk.toml", "test-host"])
+  run compiler(&["task", "--manifest-path", "modules/platform/window/silk.toml", "test-headless"])
+}
+
+pub effect fn testNative() -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  run compiler(&["run", "--manifest-path", "modules/gpu/webgpu/sys/abi/silk.toml"])
+  run compiler(&["run", "--manifest-path", "modules/gpu/webgpu/tests/native/silk.toml"])
+}
+
+effect fn callerStack(manifest: string) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  static if Intrinsic.targetOperatingSystem() == "windows" {
+    if !run WindowsProcessImage.setVariable("SILK_WINDOW_FIBER", "0") { run Task.abort("Cannot select caller-stack mode") }
+    run compiler(&["run", "--manifest-path", manifest])
+  } else {
+    let program = run support.env("SILK_COMPILER")
+    run support.exec("env", &["SILK_WINDOW_FIBER=0", String.view(&program), "run", "--manifest-path", manifest])
+  }
+}
+
+pub effect fn testMacos() -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  run compiler(&["check", "--manifest-path", "modules/gpu/metal/silk.toml"])
+  run compiler(&["run", "--manifest-path", "modules/gpu/metal/examples/compute/silk.toml"])
+  run compiler(&["run", "--manifest-path", "modules/gpu/metal/examples/headless-render/silk.toml"])
+  run compiler(&["run", "--manifest-path", "modules/platform/window/tests/macos/silk.toml"])
+  run callerStack("modules/platform/window/tests/macos/silk.toml")
+  run compiler(&["build", "--manifest-path", "modules/platform/window/examples/demo/silk.toml"])
+}
+
+pub effect fn testWindows() -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  run testNative()
+  run compiler(&["run", "--manifest-path", "modules/platform/window/tests/windows/silk.toml"])
+  run callerStack("modules/platform/window/tests/windows/silk.toml")
+  run nativePixels()
+  run compiler(&["build", "--manifest-path", "modules/gpu/webgpu/examples-window/silk.toml"])
+  let program = run artifact.locate("gpu-webgpu-examples-window", support.target(), "modules/gpu/webgpu/examples-window", false)
+  let parent = match move run Path.parent(&program) {
+    Option<Path>.Some { value } => move value
+    Option<Path>.None => run Task.abort("Invalid window executable path")
+  }
+  run windows.prepare("", support.text(&parent), false)
+}
+
+pub effect fn testBrowser() -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  run compiler(&["task", "--manifest-path", "modules/gpu/webgpu/silk.toml", "test-host"])
+  let program = run support.env("SILK_COMPILER")
+  static if Intrinsic.targetOperatingSystem() == "linux" {
+    run support.exec("xvfb-run", &["-a", "--server-args=-screen 0 1280x720x24", String.view(&program), "task", "--manifest-path", "modules/gpu/webgpu/silk.toml", "test-browser"])
+  } else {
+    run compiler(&["task", "--manifest-path", "modules/gpu/webgpu/silk.toml", "test-browser"])
+  }
+  run compiler(&["task", "--manifest-path", "modules/platform/window/silk.toml", "browser", "smoke"])
+}
+
+pub effect fn systemPrerequisites(browser: bool) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  static if Intrinsic.targetOperatingSystem() != "linux" { run Task.abort("System prerequisites require an Ubuntu runner") }
+  run support.exec("sudo", &["apt-get", "update"])
+  if browser {
+    run support.exec("sudo", &["apt-get", "install", "-y", "--no-install-recommends", "xvfb", "xauth"])
+  } else {
+    run support.exec("sudo", &["apt-get", "install", "-y", "--no-install-recommends", "libx11-dev", "libxkbcommon-dev", "libwayland-dev", "libglfw3-dev", "libvulkan1", "xvfb", "xauth", "weston"])
+  }
+}

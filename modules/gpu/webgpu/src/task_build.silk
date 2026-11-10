@@ -1,0 +1,57 @@
+import silk.cli.task { Task, TaskError }
+import silk.collections.bytes { Bytes }
+import silk.core.option { Option }
+import silk.io.writer { WriterError }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.system.child_process { ChildProcess, ProcessError }
+import silk.system.filesystem { FileError, FileSystem, Path }
+import silk.system.host_input { HostInput, HostInputError }
+import silk.text.string { String }
+import task_data as D
+import task_process as Process
+
+pub effect fn variable(name: string) -> String ! TaskError | HostInputError | OutOfMemoryError ? &mut HostInput | &mut Allocator {
+  return match move run HostInput.variableNamed(name) {
+    Option<Bytes>.Some { value } => run D.text(move value)
+    Option<Bytes>.None => run String.copy("")
+  }
+}
+pub fn target() -> string<'static> {
+  static if Intrinsic.targetOperatingSystem() == "darwin" {
+    static if Intrinsic.targetArchitecture() == "aarch64" { return "aarch64-apple-darwin" } else { return "x86_64-apple-darwin" }
+  } else {
+    static if Intrinsic.targetOperatingSystem() == "windows" { return "x86_64-pc-windows-msvc" }
+    else { static if Intrinsic.targetArchitecture() == "aarch64" { return "aarch64-unknown-linux-gnu" } else { return "x86_64-unknown-linux-gnu" } }
+  }
+}
+pub effect fn build(manifest: string, name: string, package: string, release: bool, wasm: bool) -> String
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let compiler = run variable("SILK_COMPILER")
+  let root = run Task.root()
+  let mut clang = run variable("SILK_CLANG")
+  if String.view(&clang) == "" {
+    let output = run D.text(run Process.capture(String.view(&compiler), &["task", "--manifest-path", "../../../silk.toml", "install-llvm"], &[], &root))
+    clang = run String.copy(String.trim(String.view(&output)))
+  }
+  static if Intrinsic.targetOperatingSystem() == "windows" {
+    if !wasm { run Task.silk(&["task", "--manifest-path", "../../../silk.toml", "prepare-windows", "--clang", String.view(&clang)]) }
+  }
+  if wasm {
+    if release { run Task.silk(&["build", "--manifest-path", manifest, "--target", "wasm32-unknown-unknown", "--clang", String.view(&clang), "--release"]) }
+    else { run Task.silk(&["build", "--manifest-path", manifest, "--target", "wasm32-unknown-unknown", "--clang", String.view(&clang)]) }
+  } else {
+    if release { run Task.silk(&["build", "--manifest-path", manifest, "--clang", String.view(&clang), "--release"]) }
+    else { run Task.silk(&["build", "--manifest-path", manifest, "--clang", String.view(&clang)]) }
+  }
+  let found = run D.text(run Process.capture(String.view(&compiler), &["task", "--manifest-path", "../../../silk.toml", "artifact", name, if wasm { "wasm32-unknown-unknown" } else { target() }, package], &[], &root))
+  let binary = String.trim(String.view(&found))
+  static if Intrinsic.targetOperatingSystem() == "windows" {
+    if !wasm {
+      let path = run Process.resolve(binary)
+      let directory = run Path.resolve(&path, "..")
+      run Task.silk(&["task", "--manifest-path", "../../../silk.toml", "prepare-windows", "--clang", String.view(&clang), "--runtime-directory", Process.text(&directory)])
+    }
+  }
+  return run String.copy(binary)
+}

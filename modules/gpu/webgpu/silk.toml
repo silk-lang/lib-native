@@ -2,9 +2,17 @@
 name = "gpu-webgpu"
 description = "WebGPU through Dawn natively and navigator.gpu in browsers, with one API"
 version = "0.1.0"
-silk-version = "0.1.0-dev.63+657e3c900f65"
+silk-version = "0.1.0-dev.64+8214c402307b"
 kind = "library"
 exports = ["runtime", "resources", "descriptors", "surface", "diagnostics", "capabilities", "host_memory"]
 
 [dependencies]
 webgpu_sys = { path = "sys", package = "gpu-webgpu-sys" }
+
+[profiles.tasks.dependencies]
+browser_driver = { path = "task-browser", package = "native-task-browser" }
+x11 = { path = "task-x11", package = "webgpu-task-x11" }
+
+[[generate]]
+run = ["silk", "task", "embed-shaders"]
+outputs = ["examples/src/generated_shaders.silk"]

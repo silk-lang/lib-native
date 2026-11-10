@@ -1,8 +1,0 @@
-#!/usr/bin/env python3
-"""Write rect_shader.h, the instanced-rects shader as a C string (silk generate runs this)."""
-import json
-from pathlib import Path
-
-here = Path(__file__).resolve().parent.parent
-shader = (here.parent / "examples/shaders/instanced-rects.wgsl").read_text()
-(here / "rect_shader.h").write_text("static const char rect_shader[] = " + json.dumps(shader) + ";\n")

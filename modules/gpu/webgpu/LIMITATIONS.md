@@ -1,6 +1,6 @@
 # Silk limitations
 
-All reproductions below use the published **0.1.0-dev.27+323ceb59e7ee** compiler and standard library. No compiler or standard-library patches are used.
+Historical reproductions 1–8 below use the published **0.1.0-dev.27+323ceb59e7ee** compiler unless a later measured release is stated. The current manifests and automation pin **0.1.0-dev.64+8214c402307b**. No compiler or standard-library patches are used.
 
 ## LIMITATION-1 — Nullable native callback fields
 
@@ -8,7 +8,7 @@ All reproductions below use the published **0.1.0-dev.27+323ceb59e7ee** compiler
 - Observed: assigning a null data pointer to a native function-pointer field fails with SEM0025. Native function-pointer types are nonnullable.
 - Workaround: generated callback-info constructors require a real exported function. Device descriptors supply both lost/error callbacks. `WGPUProc` is an opaque nullable address, not an invocable callable.
 - Cost: ten callback-info constructors require a callback argument. No CPU performance claim.
-- Sites: `scripts/generate`; generated `webgpu_sys/src/generated_webgpu.silk`.
+- Sites: `src/task_schema.silk` (`silk task generate`); generated `sys/src/generated_webgpu.silk`.
 
 ## LIMITATION-2 — Phantom lifetimes in C-layout records
 
@@ -64,3 +64,11 @@ All reproductions below use the published **0.1.0-dev.27+323ceb59e7ee** compiler
 ## Browser callback ABI
 
 The browser backend uses explicit callback tokens and exported completion functions rather than assuming access to an exported wasm function table. This is an ABI design, **not** a demonstrated compiler limitation: a minimal native-function-pointer invocation compiled successfully to wasm32 on dev.27.
+
+## LIMITATION-9 — Windows managed subprocesses unavailable in dev.64
+
+- Report: [silk-lang/silk#3034](https://github.com/silk-lang/silk/issues/3034).
+- Reproduction: import `silk.system.subprocess { Subprocess, SpawnOptions, Stdio }` in a native task and compile for `x86_64-pc-windows-msvc` with **0.1.0-dev.64+8214c402307b**. The Windows target does not export these declarations (SEM0014).
+- Impact: the POSIX Silk Chromium/CDP and timeout-managed executable harnesses cannot be compiled for Windows using that API. This is distinct from the historical dev.27 Windows compiler availability gap.
+- Unsupported operations: Windows timeout-managed ABI/native/pixel execution and the browser task. The legacy Python/Node launchers have been removed rather than maintained as compatibility paths. Build/provisioning and CPU pixel validation remain Silk tasks; the required prerequisite is a published toolchain with Windows managed subprocess support.
+- Unblocked tasks, generators, benchmark orchestration, browser runtime assets and host contract test inputs are not replaced with no-ops or wrappers around old automation.

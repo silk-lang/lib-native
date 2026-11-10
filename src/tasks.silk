@@ -1,0 +1,106 @@
+import silk.cli.command { Command, CommandLine, Opt }
+import silk.cli.task { Task, TaskError, TaskSet }
+import silk.io.writer { WriterError }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.system.child_process { ChildProcess, ProcessError }
+import silk.system.filesystem { FileError, FileSystem, Path }
+import silk.system.host_input { HostInput, HostInputError }
+import silk.text.string { String }
+import artifact
+import pixels
+import provision
+import support
+import windows
+import workflow
+
+union Tasks {
+  InstallLlvm,
+  InstallDxc,
+  InstallGlfw,
+  InstallWebgpu,
+  SetupCi { pub browser: bool, pub linuxGpu: bool },
+  SystemPrerequisites { pub browser: bool },
+  PrepareWindows { pub clang: String, pub runtimeDirectory: String, pub json: bool },
+  Artifact { pub name: String, pub target: String, pub packagePath: String, pub release: bool },
+  CheckPixels { pub directory: String },
+  NativePixels,
+  CrossCheck,
+  CheckWorkspace,
+  TestNative,
+  TestMacos,
+  TestWindows,
+  TestBrowser,
+}
+
+impl CommandLine for Tasks {
+  static fn command() -> Command<Tasks> {
+    return Command<Tasks>.make("tasks", "Pinned native toolchains and verification")
+      |> Command.variant("InstallLlvm", "Select LLVM 22 or install the pinned distribution; print clang")
+      |> Command.variant("InstallDxc", "Install pinned Windows DXC; print bin/x64")
+      |> Command.variant("InstallGlfw", "Install pinned Windows GLFW; print its root")
+      |> Command.variant("InstallWebgpu", "Install pinned Dawn; print its root")
+      |> Command.variant("SetupCi", "Provision pinned CI toolchains, Mesa and optional browser test packages")
+      |> Command.variant("SystemPrerequisites", "Install Ubuntu native/display or browser prerequisites")
+      |> Command.variant("PrepareWindows", "Prepare SDK bridges, Dawn DLL, overrides and runtime DLLs")
+      |> Command.option("clang", Opt.about("LLVM clang executable; defaults to SILK_CLANG or PATH") |> Opt.default(""))
+      |> Command.option("runtimeDirectory", Opt.about("Directory beside an executable for runtime DLLs") |> Opt.default(""))
+      |> Command.variant("Artifact", "Find exactly one already-built artifact (debug unless --release)")
+      |> Command.arg("name", Opt.about("Package name") |> Opt.required)
+      |> Command.arg("target", Opt.about("Target triple") |> Opt.required)
+      |> Command.arg("packagePath", Opt.about("Optional package path relative to the repository") |> Opt.default("."))
+      |> Command.variant("CheckPixels", "Compare existing native RGBA/compute outputs with committed fixtures")
+      |> Command.arg("directory", Opt.about("Output directory relative to the invocation directory") |> Opt.required)
+      |> Command.variant("NativePixels", "Build and run all six native pixel/compute samples, then compare")
+      |> Command.variant("CrossCheck", "Check supported cross-target declarations")
+      |> Command.variant("CheckWorkspace", "Check workspace, host contracts and headless window tests")
+      |> Command.variant("TestNative", "Run ABI and native lifetime/validation scenarios")
+      |> Command.variant("TestMacos", "Run Metal and both AppKit execution modes")
+      |> Command.variant("TestWindows", "Run Win32 modes, native tests and runtime DLL staging")
+      |> Command.variant("TestBrowser", "Build wasm examples and exercise real browser canvases")
+  }
+}
+
+impl TaskSet for Tasks {
+  effect fn perform(self: Tasks) -> ()
+    ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+    ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+    match move self {
+      Tasks.InstallLlvm => {
+        let path = run provision.llvm()
+        run support.print(support.text(&path))
+      }
+      Tasks.InstallDxc => {
+        let home = run support.install("dxc", "bin/x64/dxcompiler.dll")
+        let path = run Path.join(&home, "bin/x64")
+        run support.print(support.text(&path))
+      }
+      Tasks.InstallGlfw => {
+        let path = run support.install("glfw", "lib-vc2022/glfw3dll.lib")
+        run support.print(support.text(&path))
+      }
+      Tasks.InstallWebgpu => {
+        let library = if support.os() == "windows" { "lib/webgpu_dawn.lib" }
+          else if support.os() == "linux" { "lib64/libwebgpu_dawn.a" }
+          else { "lib/libwebgpu_dawn.a" }
+        let path = run support.install("webgpu", library)
+        run support.print(support.text(&path))
+      }
+      Tasks.SetupCi { browser, linuxGpu } => run provision.setup(browser, linuxGpu)
+      Tasks.SystemPrerequisites { browser } => run workflow.systemPrerequisites(browser)
+      Tasks.PrepareWindows { clang, runtimeDirectory, json } => run windows.prepare(String.view(&clang), String.view(&runtimeDirectory), json)
+      Tasks.Artifact { name, target, packagePath, release } => run artifact.printArtifact(String.view(&name), String.view(&target), String.view(&packagePath), release)
+      Tasks.CheckPixels { directory } => run pixels.check(String.view(&directory))
+      Tasks.NativePixels => run workflow.nativePixels()
+      Tasks.CrossCheck => run workflow.crossCheck()
+      Tasks.CheckWorkspace => run workflow.checkWorkspace()
+      Tasks.TestNative => run workflow.testNative()
+      Tasks.TestMacos => run workflow.testMacos()
+      Tasks.TestWindows => run workflow.testWindows()
+      Tasks.TestBrowser => run workflow.testBrowser()
+    }
+  }
+}
+
+pub effect fn main() -> i32 ? &mut HostInput {
+  return run Task.main<Tasks>()
+}

@@ -3,7 +3,6 @@
 import types { WindowId }
 import silk.mem.pointer { Pointer }
 import silk.collections.bytes { Bytes }
-import silk.core.result { Result }
 import silk.text.string { String }
 import silk.mem.allocator { Allocator, OutOfMemoryError }
 

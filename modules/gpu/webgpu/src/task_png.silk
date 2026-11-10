@@ -1,0 +1,99 @@
+import silk.cli.task { Task, TaskError }
+import silk.collections.bytes { Bytes }
+import silk.collections.slice { Slice }
+import silk.compress.checksum { CompressionChecksum }
+import silk.compress.inflate { Decoder, DecodeError, Format, Limits, Progress, Status }
+import silk.core.effect { Effect }
+import silk.core.option { Option }
+import silk.core.result { Result }
+import silk.encoding.endian as Endian
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.num.i32
+import silk.num.u8
+import silk.num.u32
+import silk.num.usize
+
+pub struct Image { pub width: usize, pub height: usize, pub rgba: Bytes }
+fn absolute(value: i32) -> i32 { return if value < 0 { -value } else { value } }
+effect fn product(left: usize, right: usize) -> usize ! TaskError | OutOfMemoryError ? &mut Allocator {
+  return match usize.checkedMultiply(left, right) { Option<usize>.Some { value } => value Option<usize>.None => run Task.abort("PNG dimensions overflow") }
+}
+// Native fixtures deliberately require CRC-checked RGBA8/filter-zero. Browser
+// PNGs retain the original RGB8/RGBA8 contract and all five lossless filters.
+pub effect fn decode(bytes: &[u8], fixture: bool) -> Image ! TaskError | OutOfMemoryError ? &mut Allocator {
+  let signature = b"\x89PNG\r\n\x1a\n"
+  if bytes.length < 8 { run Task.abort("invalid PNG signature") }
+  let mut index: usize = 0
+  while index < 8 { if bytes[index] != signature[index] { run Task.abort("invalid PNG signature") }
+    index = index + 1 }
+  let mut offset: usize = 8
+  let mut header = false
+  let mut ended = false
+  let mut width: usize = 0
+  let mut height: usize = 0
+  let mut channels: usize = 0
+  let mut compressed = Bytes.make()
+  while offset < bytes.length {
+    if bytes.length - offset < 12 { run Task.abort("truncated PNG chunk") }
+    let length = u32.toUsize(Endian.readU32BigEndian(bytes, offset))
+    if length > bytes.length - offset - 12 { run Task.abort("truncated PNG payload") }
+    let kind = Endian.readU32BigEndian(bytes, offset + 4)
+    let data = Slice.view<u8>(bytes, offset + 8, length)
+    let end = offset + 8 + length
+    if fixture && CompressionChecksum.crc32(Slice.view<u8>(bytes, offset + 4, length + 4)) != Endian.readU32BigEndian(bytes, end) { run Task.abort("bad PNG CRC") }
+    if kind == 0x49484452 {
+      if header || length != 13 { run Task.abort("invalid PNG IHDR") }
+      header = true
+      width = u32.toUsize(Endian.readU32BigEndian(data, 0))
+      height = u32.toUsize(Endian.readU32BigEndian(data, 4))
+      if data[8] != 8 || (data[9] != 6 && (fixture || data[9] != 2)) || data[10] != 0 || data[11] != 0 || data[12] != 0 { run Task.abort("expected noninterlaced RGB8/RGBA8 PNG") }
+      channels = if data[9] == 6 { 4 } else { 3 }
+    } else if kind == 0x49444154 { run Bytes.append(&mut compressed, data) }
+    else if kind == 0x49454e44 { if fixture && (length != 0 || end + 4 != bytes.length) { run Task.abort("invalid PNG ending") }
+      ended = true }
+    offset = end + 4
+  }
+  if !header || width == 0 || height == 0 || (fixture && !ended) { run Task.abort("incomplete PNG image") }
+  let stride = run product(width, channels)
+  let outputStride = run product(width, 4)
+  let rowLength = match usize.checkedAdd(stride, 1) { Option<usize>.Some { value } => value Option<usize>.None => run Task.abort("PNG dimensions overflow") }
+  let expected = run product(rowLength, height)
+  let capacity = match usize.checkedAdd(expected, 1) { Option<usize>.Some { value } => value Option<usize>.None => run Task.abort("PNG dimensions overflow") }
+  let limits = Limits { maxInputBytes: usize.toU64(Bytes.length(&compressed)), maxOutputBytes: usize.toU64(capacity), maxMembers: 1, maxHeaderBytes: 6, maxMemoryBytes: 65536 }
+  let mut decoder = match move run Effect.result(Decoder.make(Format.Zlib, move limits)) {
+    Result<Decoder, DecodeError | OutOfMemoryError>.Success { value } => move value
+    Result<Decoder, DecodeError | OutOfMemoryError>.Failure { error } => match move error { DecodeError failure => { drop failure
+        run Task.abort("invalid PNG compressed data") } OutOfMemoryError failure => { fail move failure } }
+  }
+  let mut packed = run Bytes.zeroed(capacity)
+  let progress = match move Decoder.step(&mut decoder, Bytes.asSlice(&compressed), Bytes.asMutSlice(&mut packed), true) { Result<Progress, DecodeError>.Success { value } => move value Result<Progress, DecodeError>.Failure { .. } => run Task.abort("invalid PNG compressed data") }
+  if progress.status != Status.Finished || progress.written != expected { run Task.abort("invalid PNG scanline length") }
+  let input = Bytes.asSlice(&packed)
+  let mut output = run Bytes.zeroed(run product(outputStride, height))
+  let pixels = Bytes.asMutSlice(&mut output)
+  let mut y: usize = 0
+  while y < height {
+    let filter = input[y * rowLength]
+    if filter > 4 || (fixture && filter != 0) { run Task.abort("unsupported PNG filter for this fixture contract") }
+    let mut x: usize = 0
+    while x < stride {
+      let at = y * outputStride + (x / channels) * 4 + x % channels
+      let left = if x >= channels { u8.toI32(pixels[at - 4]) } else { 0 }
+      let up = if y > 0 { u8.toI32(pixels[at - outputStride]) } else { 0 }
+      let corner = if y > 0 && x >= channels { u8.toI32(pixels[at - outputStride - 4]) } else { 0 }
+      let mut predictor: i32 = 0
+      if filter == 1 { predictor = left } else if filter == 2 { predictor = up } else if filter == 3 { predictor = (left + up) / 2 }
+      else if filter == 4 { let p = left + up - corner
+        let a = absolute(p - left)
+        let b = absolute(p - up)
+        let c = absolute(p - corner)
+        predictor = if a <= b && a <= c { left } else if b <= c { up } else { corner } }
+      pixels[at] = i32.wrappingToU8(u8.toI32(input[y * rowLength + x + 1]) + predictor)
+      if channels == 3 && x % channels == 2 { pixels[at + 1] = 255 }
+      x = x + 1
+    }
+    y = y + 1
+  }
+  drop pixels
+  return Image { width: width, height: height, rgba: move output }
+}

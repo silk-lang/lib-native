@@ -1,0 +1,1832 @@
+[
+  {
+    "owner": "CommandQueue",
+    "name": "label",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?[*]const u8",
+    "cresult": "const char *",
+    "body": "return [[(id<MTLCommandQueue>)object label] UTF8String];",
+    "notes": "",
+    "rust": "CommandQueue.label"
+  },
+  {
+    "owner": "CommandQueue",
+    "name": "set_label",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "value",
+        "silk": "?[*]const u8",
+        "c": "const char *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(id<MTLCommandQueue>)object setLabel:[NSString stringWithUTF8String:value]];",
+    "notes": "",
+    "rust": "CommandQueue.set_label"
+  },
+  {
+    "owner": "CommandBuffer",
+    "name": "label",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?[*]const u8",
+    "cresult": "const char *",
+    "body": "return [[(id<MTLCommandBuffer>)object label] UTF8String];",
+    "notes": "",
+    "rust": "CommandBuffer.label"
+  },
+  {
+    "owner": "CommandBuffer",
+    "name": "set_label",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "value",
+        "silk": "?[*]const u8",
+        "c": "const char *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(id<MTLCommandBuffer>)object setLabel:[NSString stringWithUTF8String:value]];",
+    "notes": "",
+    "rust": "CommandBuffer.set_label"
+  },
+  {
+    "owner": "Fence",
+    "name": "label",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?[*]const u8",
+    "cresult": "const char *",
+    "body": "return [[(id<MTLFence>)object label] UTF8String];",
+    "notes": "",
+    "rust": "Fence.label"
+  },
+  {
+    "owner": "Fence",
+    "name": "set_label",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "value",
+        "silk": "?[*]const u8",
+        "c": "const char *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(id<MTLFence>)object setLabel:[NSString stringWithUTF8String:value]];",
+    "notes": "",
+    "rust": "Fence.set_label"
+  },
+  {
+    "owner": "CommandQueue",
+    "name": "device",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "return [(id<MTLCommandQueue>)object device];",
+    "notes": "",
+    "rust": "CommandQueue.device"
+  },
+  {
+    "owner": "Event",
+    "name": "device",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "return [(id<MTLEvent>)object device];",
+    "notes": "",
+    "rust": "Event.device"
+  },
+  {
+    "owner": "Fence",
+    "name": "device",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "return [(id<MTLFence>)object device];",
+    "notes": "",
+    "rust": "Fence.device"
+  },
+  {
+    "owner": "MetalLayer",
+    "name": "device",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "return [(CAMetalLayer *)object device];",
+    "notes": "",
+    "rust": "MetalLayer.device"
+  },
+  {
+    "owner": "MetalLayer",
+    "name": "set_device",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "value",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(CAMetalLayer *)object setDevice:(id)value];",
+    "notes": "",
+    "rust": "MetalLayer.set_device"
+  },
+  {
+    "owner": "CommandQueue",
+    "name": "new_command_buffer",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "return [(id<MTLCommandQueue>)object commandBuffer];",
+    "notes": "Borrowed/autoreleased result, despite new_ name.",
+    "rust": "CommandQueue.new_command_buffer"
+  },
+  {
+    "owner": "CommandQueue",
+    "name": "new_command_buffer_with_unretained_references",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "return [(id<MTLCommandQueue>)object commandBufferWithUnretainedReferences];",
+    "notes": "Borrowed/autoreleased result, despite new_ name.",
+    "rust": "CommandQueue.new_command_buffer_with_unretained_references"
+  },
+  {
+    "owner": "CommandBuffer",
+    "name": "enqueue",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(id<MTLCommandBuffer>)object enqueue];",
+    "notes": "",
+    "rust": "CommandBuffer.enqueue"
+  },
+  {
+    "owner": "CommandBuffer",
+    "name": "commit",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(id<MTLCommandBuffer>)object commit];",
+    "notes": "",
+    "rust": "CommandBuffer.commit"
+  },
+  {
+    "owner": "CommandBuffer",
+    "name": "wait_until_completed",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(id<MTLCommandBuffer>)object waitUntilCompleted];",
+    "notes": "",
+    "rust": "CommandBuffer.wait_until_completed"
+  },
+  {
+    "owner": "CommandBuffer",
+    "name": "wait_until_scheduled",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(id<MTLCommandBuffer>)object waitUntilScheduled];",
+    "notes": "",
+    "rust": "CommandBuffer.wait_until_scheduled"
+  },
+  {
+    "owner": "CommandBuffer",
+    "name": "pop_debug_group",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(id<MTLCommandBuffer>)object popDebugGroup];",
+    "notes": "",
+    "rust": "CommandBuffer.pop_debug_group"
+  },
+  {
+    "owner": "CommandBuffer",
+    "name": "status",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u32",
+    "cresult": "uint32_t",
+    "body": "return [(id<MTLCommandBuffer>)object status];",
+    "notes": "",
+    "rust": "CommandBuffer.status"
+  },
+  {
+    "owner": "CommandBuffer",
+    "name": "present_drawable",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "drawable",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(id<MTLCommandBuffer>)object presentDrawable:(id<MTLDrawable>)drawable];",
+    "notes": "",
+    "rust": "CommandBuffer.present_drawable"
+  },
+  {
+    "owner": "CommandBuffer",
+    "name": "push_debug_group",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "name",
+        "silk": "?[*]const u8",
+        "c": "const char *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(id<MTLCommandBuffer>)object pushDebugGroup:[NSString stringWithUTF8String:name]];",
+    "notes": "",
+    "rust": "CommandBuffer.push_debug_group"
+  },
+  {
+    "owner": "CommandBuffer",
+    "name": "new_blit_command_encoder",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "return [(id<MTLCommandBuffer>)object blitCommandEncoder];",
+    "notes": "Borrowed/autoreleased encoder.",
+    "rust": "CommandBuffer.new_blit_command_encoder"
+  },
+  {
+    "owner": "CommandBuffer",
+    "name": "new_compute_command_encoder",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "return [(id<MTLCommandBuffer>)object computeCommandEncoder];",
+    "notes": "Borrowed/autoreleased encoder.",
+    "rust": "CommandBuffer.new_compute_command_encoder"
+  },
+  {
+    "owner": "CommandBuffer",
+    "name": "new_acceleration_structure_command_encoder",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "return [(id<MTLCommandBuffer>)object accelerationStructureCommandEncoder];",
+    "notes": "Borrowed/autoreleased encoder.",
+    "rust": "CommandBuffer.new_acceleration_structure_command_encoder"
+  },
+  {
+    "owner": "CommandBuffer",
+    "name": "blit_command_encoder_with_descriptor",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "descriptor",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "return [(id<MTLCommandBuffer>)object blitCommandEncoderWithDescriptor:(id)descriptor];",
+    "notes": "Borrowed/autoreleased encoder.",
+    "rust": "CommandBuffer.blit_command_encoder_with_descriptor"
+  },
+  {
+    "owner": "CommandBuffer",
+    "name": "compute_command_encoder_with_descriptor",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "descriptor",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "return [(id<MTLCommandBuffer>)object computeCommandEncoderWithDescriptor:(id)descriptor];",
+    "notes": "Borrowed/autoreleased encoder.",
+    "rust": "CommandBuffer.compute_command_encoder_with_descriptor"
+  },
+  {
+    "owner": "CommandBuffer",
+    "name": "new_render_command_encoder",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "descriptor",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "return [(id<MTLCommandBuffer>)object renderCommandEncoderWithDescriptor:(id)descriptor];",
+    "notes": "Borrowed/autoreleased encoder.",
+    "rust": "CommandBuffer.new_render_command_encoder"
+  },
+  {
+    "owner": "CommandBuffer",
+    "name": "new_parallel_render_command_encoder",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "descriptor",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "return [(id<MTLCommandBuffer>)object parallelRenderCommandEncoderWithDescriptor:(id)descriptor];",
+    "notes": "Borrowed/autoreleased encoder.",
+    "rust": "CommandBuffer.new_parallel_render_command_encoder"
+  },
+  {
+    "owner": "CommandBuffer",
+    "name": "acceleration_structure_command_encoder_with_descriptor",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "descriptor",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "return [(id<MTLCommandBuffer>)object accelerationStructureCommandEncoderWithDescriptor:(id)descriptor];",
+    "notes": "Borrowed/autoreleased encoder.",
+    "rust": "CommandBuffer.acceleration_structure_command_encoder_with_descriptor"
+  },
+  {
+    "owner": "CommandBuffer",
+    "name": "compute_command_encoder_with_dispatch_type",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "ty",
+        "silk": "u32",
+        "c": "uint32_t"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "return [(id<MTLCommandBuffer>)object computeCommandEncoderWithDispatchType:(MTLDispatchType)ty];",
+    "notes": "",
+    "rust": "CommandBuffer.compute_command_encoder_with_dispatch_type"
+  },
+  {
+    "owner": "CommandBuffer",
+    "name": "encode_signal_event",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "event",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "value",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(id<MTLCommandBuffer>)object encodeSignalEvent:(id<MTLEvent>)event value:value];",
+    "notes": "",
+    "rust": "CommandBuffer.encode_signal_event"
+  },
+  {
+    "owner": "CommandBuffer",
+    "name": "encode_wait_for_event",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "event",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "value",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(id<MTLCommandBuffer>)object encodeWaitForEvent:(id<MTLEvent>)event value:value];",
+    "notes": "",
+    "rust": "CommandBuffer.encode_wait_for_event"
+  },
+  {
+    "owner": "CommandBuffer",
+    "name": "add_completed_handler",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "callback",
+        "silk": "extern \"C\" fn(?*mut u8, ?*mut u8) -> ()",
+        "c": "void (*$)(void *, void *)"
+      },
+      {
+        "name": "context",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(id<MTLCommandBuffer>)object addCompletedHandler:^(id<MTLCommandBuffer> value) { callback(context, value); }];",
+    "notes": "Callback/context must remain valid until invocation. Called by Metal on an arbitrary thread; do not unwind or suspend.",
+    "rust": "CommandBuffer.add_completed_handler"
+  },
+  {
+    "owner": "CommandBuffer",
+    "name": "add_scheduled_handler",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "callback",
+        "silk": "extern \"C\" fn(?*mut u8, ?*mut u8) -> ()",
+        "c": "void (*$)(void *, void *)"
+      },
+      {
+        "name": "context",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(id<MTLCommandBuffer>)object addScheduledHandler:^(id<MTLCommandBuffer> value) { callback(context, value); }];",
+    "notes": "Callback/context must remain valid until invocation. Called by Metal on an arbitrary thread; do not unwind or suspend.",
+    "rust": "CommandBuffer.add_scheduled_handler"
+  },
+  {
+    "owner": "Drawable",
+    "name": "add_presented_handler",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "callback",
+        "silk": "extern \"C\" fn(?*mut u8, ?*mut u8) -> ()",
+        "c": "void (*$)(void *, void *)"
+      },
+      {
+        "name": "context",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(id<MTLDrawable>)object addPresentedHandler:^(id<MTLDrawable> value) { callback(context, value); }];",
+    "notes": "Callback/context must remain valid until invocation. Called by Metal on an arbitrary thread; do not unwind or suspend.",
+    "rust": "Drawable.add_presented_handler"
+  },
+  {
+    "owner": "Drawable",
+    "name": "present",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(id<MTLDrawable>)object present];",
+    "notes": "",
+    "rust": "Drawable.present"
+  },
+  {
+    "owner": "Drawable",
+    "name": "drawable_id",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "return [(id<MTLDrawable>)object drawableID];",
+    "notes": "",
+    "rust": "Drawable.drawable_id"
+  },
+  {
+    "owner": "Drawable",
+    "name": "presented_time",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "f64",
+    "cresult": "double",
+    "body": "return [(id<MTLDrawable>)object presentedTime];",
+    "notes": "",
+    "rust": "Drawable.presented_time"
+  },
+  {
+    "owner": "MetalDrawable",
+    "name": "texture",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "return [(id<CAMetalDrawable>)object texture];",
+    "notes": "",
+    "rust": "MetalDrawable.texture"
+  },
+  {
+    "owner": "MetalLayer",
+    "name": "new",
+    "params": [],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "return [CAMetalLayer new];",
+    "notes": "Owned +1 result.",
+    "rust": "MetalLayer.new"
+  },
+  {
+    "owner": "MetalLayer",
+    "name": "pixel_format",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "return [(CAMetalLayer *)object pixelFormat];",
+    "notes": "",
+    "rust": "MetalLayer.pixel_format"
+  },
+  {
+    "owner": "MetalLayer",
+    "name": "set_pixel_format",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "value",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(CAMetalLayer *)object setPixelFormat:value];",
+    "notes": "",
+    "rust": "MetalLayer.set_pixel_format"
+  },
+  {
+    "owner": "MetalLayer",
+    "name": "presents_with_transaction",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "bool",
+    "cresult": "uint8_t",
+    "body": "return [(CAMetalLayer *)object presentsWithTransaction];",
+    "notes": "",
+    "rust": "MetalLayer.presents_with_transaction"
+  },
+  {
+    "owner": "MetalLayer",
+    "name": "set_presents_with_transaction",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "value",
+        "silk": "bool",
+        "c": "uint8_t"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(CAMetalLayer *)object setPresentsWithTransaction:value];",
+    "notes": "",
+    "rust": "MetalLayer.set_presents_with_transaction"
+  },
+  {
+    "owner": "MetalLayer",
+    "name": "display_sync_enabled",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "bool",
+    "cresult": "uint8_t",
+    "body": "return [(CAMetalLayer *)object displaySyncEnabled];",
+    "notes": "",
+    "rust": "MetalLayer.display_sync_enabled"
+  },
+  {
+    "owner": "MetalLayer",
+    "name": "set_display_sync_enabled",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "value",
+        "silk": "bool",
+        "c": "uint8_t"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(CAMetalLayer *)object setDisplaySyncEnabled:value];",
+    "notes": "",
+    "rust": "MetalLayer.set_display_sync_enabled"
+  },
+  {
+    "owner": "MetalLayer",
+    "name": "maximum_drawable_count",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "return [(CAMetalLayer *)object maximumDrawableCount];",
+    "notes": "",
+    "rust": "MetalLayer.maximum_drawable_count"
+  },
+  {
+    "owner": "MetalLayer",
+    "name": "set_maximum_drawable_count",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "value",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(CAMetalLayer *)object setMaximumDrawableCount:value];",
+    "notes": "",
+    "rust": "MetalLayer.set_maximum_drawable_count"
+  },
+  {
+    "owner": "MetalLayer",
+    "name": "contents_scale",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "f64",
+    "cresult": "double",
+    "body": "return [(CAMetalLayer *)object contentsScale];",
+    "notes": "",
+    "rust": "MetalLayer.contents_scale"
+  },
+  {
+    "owner": "MetalLayer",
+    "name": "set_contents_scale",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "value",
+        "silk": "f64",
+        "c": "double"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(CAMetalLayer *)object setContentsScale:value];",
+    "notes": "",
+    "rust": "MetalLayer.set_contents_scale"
+  },
+  {
+    "owner": "MetalLayer",
+    "name": "framebuffer_only",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "bool",
+    "cresult": "uint8_t",
+    "body": "return [(CAMetalLayer *)object framebufferOnly];",
+    "notes": "",
+    "rust": "MetalLayer.framebuffer_only"
+  },
+  {
+    "owner": "MetalLayer",
+    "name": "set_framebuffer_only",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "value",
+        "silk": "bool",
+        "c": "uint8_t"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(CAMetalLayer *)object setFramebufferOnly:value];",
+    "notes": "",
+    "rust": "MetalLayer.set_framebuffer_only"
+  },
+  {
+    "owner": "MetalLayer",
+    "name": "wants_extended_dynamic_range_content",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "bool",
+    "cresult": "uint8_t",
+    "body": "return [(CAMetalLayer *)object wantsExtendedDynamicRangeContent];",
+    "notes": "",
+    "rust": "MetalLayer.wants_extended_dynamic_range_content"
+  },
+  {
+    "owner": "MetalLayer",
+    "name": "set_wants_extended_dynamic_range_content",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "value",
+        "silk": "bool",
+        "c": "uint8_t"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(CAMetalLayer *)object setWantsExtendedDynamicRangeContent:value];",
+    "notes": "",
+    "rust": "MetalLayer.set_wants_extended_dynamic_range_content"
+  },
+  {
+    "owner": "MetalLayer",
+    "name": "is_opaque",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "bool",
+    "cresult": "uint8_t",
+    "body": "return [(CAMetalLayer *)object isOpaque];",
+    "notes": "",
+    "rust": "MetalLayer.is_opaque"
+  },
+  {
+    "owner": "MetalLayer",
+    "name": "set_opaque",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "value",
+        "silk": "bool",
+        "c": "uint8_t"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(CAMetalLayer *)object setOpaque:value];",
+    "notes": "",
+    "rust": "MetalLayer.set_opaque"
+  },
+  {
+    "owner": "MetalLayer",
+    "name": "drawable_size",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "CGSize",
+    "cresult": "CGSize",
+    "body": "return [(CAMetalLayer *)object drawableSize];",
+    "notes": "Returns the drawable dimensions by value.",
+    "rust": "MetalLayer.drawable_size"
+  },
+  {
+    "owner": "MetalLayer",
+    "name": "set_drawable_size",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "value",
+        "silk": "CGSize",
+        "c": "CGSize"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(CAMetalLayer *)object setDrawableSize:value];",
+    "notes": "Copies the drawable dimensions by value.",
+    "rust": "MetalLayer.set_drawable_size"
+  },
+  {
+    "owner": "MetalLayer",
+    "name": "set_edge_antialiasing_mask",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "mask",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(CAMetalLayer *)object setEdgeAntialiasingMask:(CAEdgeAntialiasingMask)mask];",
+    "notes": "",
+    "rust": "MetalLayer.set_edge_antialiasing_mask"
+  },
+  {
+    "owner": "MetalLayer",
+    "name": "set_masks_to_bounds",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "masks",
+        "silk": "bool",
+        "c": "uint8_t"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(CAMetalLayer *)object setMasksToBounds:masks];",
+    "notes": "",
+    "rust": "MetalLayer.set_masks_to_bounds"
+  },
+  {
+    "owner": "MetalLayer",
+    "name": "remove_all_animations",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(CAMetalLayer *)object removeAllAnimations];",
+    "notes": "",
+    "rust": "MetalLayer.remove_all_animations"
+  },
+  {
+    "owner": "MetalLayer",
+    "name": "next_drawable",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "return [(CAMetalLayer *)object nextDrawable];",
+    "notes": "Nullable borrowed drawable; nil is a normal timeout/unavailable result.",
+    "rust": "MetalLayer.next_drawable"
+  },
+  {
+    "owner": "SharedEvent",
+    "name": "signaled_value",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "return [(id<MTLSharedEvent>)object signaledValue];",
+    "notes": "",
+    "rust": "SharedEvent.signaled_value"
+  },
+  {
+    "owner": "SharedEvent",
+    "name": "set_signaled_value",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "value",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(id<MTLSharedEvent>)object setSignaledValue:value];",
+    "notes": "",
+    "rust": "SharedEvent.set_signaled_value"
+  },
+  {
+    "owner": "SharedEvent",
+    "name": "notify",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "listener",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "value",
+        "silk": "u64",
+        "c": "uint64_t"
+      },
+      {
+        "name": "callback",
+        "silk": "extern \"C\" fn(?*mut u8, ?*mut u8, u64) -> ()",
+        "c": "void (*$)(void *, void *, uint64_t)"
+      },
+      {
+        "name": "context",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(id<MTLSharedEvent>)object notifyListener:(MTLSharedEventListener *)listener atValue:value block:^(id<MTLSharedEvent> event, uint64_t reached) { callback(context, event, reached); }];",
+    "notes": "Context must outlive notification. Callback runs on listener queue; no unwind/suspension.",
+    "rust": "SharedEvent.notify"
+  },
+  {
+    "owner": "SharedEventListener",
+    "name": "from_queue_handle",
+    "params": [
+      {
+        "name": "queue",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "return [[MTLSharedEventListener alloc] initWithDispatchQueue:(dispatch_queue_t)queue];",
+    "notes": "Owned +1 result; queue is a dispatch_queue_t.",
+    "rust": "SharedEventListener.from_queue_handle"
+  },
+  {
+    "owner": "SharedEventListener",
+    "name": "from_queue",
+    "params": [
+      {
+        "name": "queue",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "return [[MTLSharedEventListener alloc] initWithDispatchQueue:(dispatch_queue_t)queue];",
+    "notes": "Owned +1 result; queue is a dispatch_queue_t.",
+    "rust": "SharedEventListener.from_queue"
+  },
+  {
+    "owner": "CaptureScope",
+    "name": "begin_scope",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(id<MTLCaptureScope>)object beginScope];",
+    "notes": "",
+    "rust": "CaptureScope.begin_scope"
+  },
+  {
+    "owner": "CaptureScope",
+    "name": "end_scope",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(id<MTLCaptureScope>)object endScope];",
+    "notes": "",
+    "rust": "CaptureScope.end_scope"
+  },
+  {
+    "owner": "CaptureScope",
+    "name": "label",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?[*]const u8",
+    "cresult": "const char *",
+    "body": "return [[(id<MTLCaptureScope>)object label] UTF8String];",
+    "notes": "",
+    "rust": "CaptureScope.label"
+  },
+  {
+    "owner": "CaptureManager",
+    "name": "shared",
+    "params": [],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "return [MTLCaptureManager sharedCaptureManager];",
+    "notes": "",
+    "rust": "CaptureManager.shared"
+  },
+  {
+    "owner": "CaptureManager",
+    "name": "new_capture_scope_with_device",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "device",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "return [(MTLCaptureManager *)object newCaptureScopeWithDevice:(id)device];",
+    "notes": "Owned +1 scope.",
+    "rust": "CaptureManager.new_capture_scope_with_device"
+  },
+  {
+    "owner": "CaptureManager",
+    "name": "new_capture_scope_with_command_queue",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "command_queue",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "return [(MTLCaptureManager *)object newCaptureScopeWithCommandQueue:(id)command_queue];",
+    "notes": "Owned +1 scope.",
+    "rust": "CaptureManager.new_capture_scope_with_command_queue"
+  },
+  {
+    "owner": "CaptureManager",
+    "name": "default_capture_scope",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "return [(MTLCaptureManager *)object defaultCaptureScope];",
+    "notes": "",
+    "rust": "CaptureManager.default_capture_scope"
+  },
+  {
+    "owner": "CaptureManager",
+    "name": "set_default_capture_scope",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "value",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(MTLCaptureManager *)object setDefaultCaptureScope:(id)value];",
+    "notes": "",
+    "rust": "CaptureManager.set_default_capture_scope"
+  },
+  {
+    "owner": "CaptureManager",
+    "name": "start_capture",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "descriptor",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "error",
+        "silk": "?*mut ?*mut u8",
+        "c": "void **"
+      }
+    ],
+    "result": "bool",
+    "cresult": "uint8_t",
+    "body": "return [(MTLCaptureManager *)object startCaptureWithDescriptor:(MTLCaptureDescriptor *)descriptor error:(NSError **)error];",
+    "notes": "NSError output is borrowed. Metal capture must be enabled before starting.",
+    "rust": "CaptureManager.start_capture"
+  },
+  {
+    "owner": "CaptureManager",
+    "name": "start_capture_with_device",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "device",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(MTLCaptureManager *)object startCaptureWithDevice:(id)device];",
+    "notes": "",
+    "rust": "CaptureManager.start_capture_with_device"
+  },
+  {
+    "owner": "CaptureManager",
+    "name": "start_capture_with_command_queue",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "command_queue",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(MTLCaptureManager *)object startCaptureWithCommandQueue:(id)command_queue];",
+    "notes": "",
+    "rust": "CaptureManager.start_capture_with_command_queue"
+  },
+  {
+    "owner": "CaptureManager",
+    "name": "start_capture_with_scope",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "scope",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(MTLCaptureManager *)object startCaptureWithScope:(id)scope];",
+    "notes": "",
+    "rust": "CaptureManager.start_capture_with_scope"
+  },
+  {
+    "owner": "CaptureManager",
+    "name": "stop_capture",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(MTLCaptureManager *)object stopCapture];",
+    "notes": "",
+    "rust": "CaptureManager.stop_capture"
+  },
+  {
+    "owner": "CaptureManager",
+    "name": "is_capturing",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "bool",
+    "cresult": "uint8_t",
+    "body": "return [(MTLCaptureManager *)object isCapturing];",
+    "notes": "",
+    "rust": "CaptureManager.is_capturing"
+  },
+  {
+    "owner": "CaptureManager",
+    "name": "supports_destination",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "destination",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "bool",
+    "cresult": "uint8_t",
+    "body": "return [(MTLCaptureManager *)object supportsDestination:(MTLCaptureDestination)destination];",
+    "notes": "",
+    "rust": "CaptureManager.supports_destination"
+  },
+  {
+    "owner": "CaptureDescriptor",
+    "name": "new",
+    "params": [],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "return [MTLCaptureDescriptor new];",
+    "notes": "Owned +1 descriptor.",
+    "rust": "CaptureDescriptor.new"
+  },
+  {
+    "owner": "CaptureDescriptor",
+    "name": "set_capture_device",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "value",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(MTLCaptureDescriptor *)object setCaptureObject:(id)value];",
+    "notes": "",
+    "rust": "CaptureDescriptor.set_capture_device"
+  },
+  {
+    "owner": "CaptureDescriptor",
+    "name": "set_capture_scope",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "value",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(MTLCaptureDescriptor *)object setCaptureObject:(id)value];",
+    "notes": "",
+    "rust": "CaptureDescriptor.set_capture_scope"
+  },
+  {
+    "owner": "CaptureDescriptor",
+    "name": "set_capture_command_queue",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "value",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(MTLCaptureDescriptor *)object setCaptureObject:(id)value];",
+    "notes": "",
+    "rust": "CaptureDescriptor.set_capture_command_queue"
+  },
+  {
+    "owner": "CaptureDescriptor",
+    "name": "output_url",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?[*]const u8",
+    "cresult": "const char *",
+    "body": "return [[[(MTLCaptureDescriptor *)object outputURL] path] UTF8String];",
+    "notes": "",
+    "rust": "CaptureDescriptor.output_url"
+  },
+  {
+    "owner": "CaptureDescriptor",
+    "name": "set_output_url",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "path",
+        "silk": "?[*]const u8",
+        "c": "const char *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(MTLCaptureDescriptor *)object setOutputURL:[NSURL fileURLWithPath:[NSString stringWithUTF8String:path]]];",
+    "notes": "",
+    "rust": "CaptureDescriptor.set_output_url"
+  },
+  {
+    "owner": "CaptureDescriptor",
+    "name": "destination",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "return [(MTLCaptureDescriptor *)object destination];",
+    "notes": "",
+    "rust": "CaptureDescriptor.destination"
+  },
+  {
+    "owner": "CaptureDescriptor",
+    "name": "set_destination",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "value",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "[(MTLCaptureDescriptor *)object setDestination:value];",
+    "notes": "",
+    "rust": "CaptureDescriptor.set_destination"
+  },
+  {
+    "owner": "URL",
+    "name": "new_with_string",
+    "params": [
+      {
+        "name": "text",
+        "silk": "?[*]const u8",
+        "c": "const char *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "return [[NSURL alloc] initWithString:[NSString stringWithUTF8String:text]];",
+    "notes": "Owned +1 URL; malformed input may return nil.",
+    "rust": "URL.new_with_string"
+  },
+  {
+    "owner": "URL",
+    "name": "absolute_string",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?[*]const u8",
+    "cresult": "const char *",
+    "body": "return [[(NSURL *)object absoluteString] UTF8String];",
+    "notes": "",
+    "rust": "URL.absolute_string"
+  },
+  {
+    "owner": "URL",
+    "name": "path",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?[*]const u8",
+    "cresult": "const char *",
+    "body": "return [[(NSURL *)object path] UTF8String];",
+    "notes": "",
+    "rust": "URL.path"
+  },
+  {
+    "owner": "Array",
+    "name": "from_slice",
+    "params": [
+      {
+        "name": "objects",
+        "silk": "?[*]const ?*mut u8",
+        "c": "void *const *"
+      },
+      {
+        "name": "count",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "return [NSArray arrayWithObjects:(id const *)objects count:count];",
+    "notes": "Autoreleased array retains its elements; caller retains ownership of input objects.",
+    "rust": "Array.from_slice"
+  },
+  {
+    "owner": "Array",
+    "name": "from_owned_slice",
+    "params": [
+      {
+        "name": "objects",
+        "silk": "?[*]const ?*mut u8",
+        "c": "void *const *"
+      },
+      {
+        "name": "count",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "return [NSArray arrayWithObjects:(id const *)objects count:count];",
+    "notes": "Autoreleased array retains its elements; caller retains ownership of input objects.",
+    "rust": "Array.from_owned_slice"
+  },
+  {
+    "owner": "Array",
+    "name": "count",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "return [(NSArray *)object count];",
+    "notes": "",
+    "rust": "Array.count"
+  },
+  {
+    "owner": "Array",
+    "name": "object_at",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "index",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "return [(NSArray *)object objectAtIndex:index];",
+    "notes": "Borrowed element; index must be less than count.",
+    "rust": "Array.object_at"
+  },
+  {
+    "owner": "NsObject",
+    "name": "conforms_to_protocol",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "name",
+        "silk": "?[*]const u8",
+        "c": "const char *"
+      }
+    ],
+    "result": "u32",
+    "cresult": "uint32_t",
+    "body": "Protocol *protocol = objc_getProtocol(name); if (!protocol) return 2; return [(id)object conformsToProtocol:protocol] ? 1 : 0;",
+    "notes": "Returns 0=false, 1=true, 2=unknown protocol (upstream error).",
+    "rust": "NsObject.conforms_to_protocol"
+  }
+]

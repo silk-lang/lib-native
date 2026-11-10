@@ -1,0 +1,306 @@
+import silk.cli.task { Task, TaskError }
+import silk.collections.bytes { Bytes }
+import silk.core.option { Option }
+import silk.io.writer { WriterError }
+import silk.json.value { Json, Value }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.system.child_process { ChildProcess, ProcessError }
+import silk.system.filesystem { FileError, FileSystem, Path }
+import silk.system.host_input { HostInput, HostInputError }
+import silk.text.string { String }
+import silk.num.i64
+import silk.num.usize
+import task_data as D
+import task_schema_types as T
+import task_schema as Raw
+import task_schema_source as Source
+import task_shaders as Output
+
+pub effect fn replace(value: string, from: string, to: string) -> String ! OutOfMemoryError ? &mut Allocator {
+  let mut pieces = String.split(value, from)
+  let mut output = String.make()
+  let mut first = true
+  while true {
+    let next = match move pieces.next() { Option<string>.Some { value: found } => found Option<string>.None => { break } }
+    if !first { run String.append(&mut output, to) }
+    run String.append(&mut output, next)
+    first = false
+  }
+  return move output
+}
+effect fn lower(value: string) -> String ! TaskError | OutOfMemoryError ? &mut Allocator {
+  let bytes = String.utf8Bytes(value)
+  let mut output = run Bytes.makeWithCapacity(bytes.length)
+  let mut index: usize = 0
+  while index < bytes.length { let byte = bytes[index]
+    run Bytes.append(&mut output, &[if byte >= 65 && byte <= 90 { byte + 32 } else { byte }])
+    index = index + 1 }
+  return run D.text(move output)
+}
+fn present(object: &Value, key: string) -> bool { return match Json.field(object, key) { Option<&Value>.Some { .. } => true Option<&Value>.None => false } }
+struct Shape { size: i64, alignment: i64 }
+effect fn shape(typ: string, records: &Value, flags: &Value, objects: &Value, layouts: &mut Value) -> Shape ! TaskError | OutOfMemoryError ? &mut Allocator {
+  if T.starts(typ, "?") || T.ends(typ, "Callback") || present(objects, typ) { return Shape { size: 4, alignment: 4 } }
+  if present(records, typ) {
+    run layout(typ, records, flags, objects, &mut layouts)
+    let entry = run D.field(&layouts.*, typ)
+    return Shape { size: D.integer(run D.field(entry, "size")), alignment: D.integer(run D.field(entry, "align")) }
+  }
+  if typ == "u64" || typ == "i64" || typ == "f64" || present(flags, typ) { return Shape { size: 8, alignment: 8 } }
+  if typ == "u8" || typ == "i8" { return Shape { size: 1, alignment: 1 } }
+  if typ == "u16" || typ == "i16" { return Shape { size: 2, alignment: 2 } }
+  return Shape { size: 4, alignment: 4 }
+}
+effect fn layout(name: string, records: &Value, flags: &Value, objects: &Value, layouts: &mut Value) -> () ! TaskError | OutOfMemoryError ? &mut Allocator {
+  if present(&layouts.*, name) { return () }
+  let source = D.array(run D.field(records, name))
+  let mut offset: i64 = 0
+  let mut alignment: i64 = 1
+  let mut fields = D.list()
+  let mut index: usize = 0
+  while index < source.length {
+    let Shape { size, alignment: align } = move run shape(T.property(&source[index], "type"), records, flags, objects, &mut layouts)
+    offset = (offset + align - 1) / align * align
+    let mut field = run Json.copy(&source[index])
+    run D.set(&mut field, "offset", D.int(offset))
+    run D.push(&mut fields, move field)
+    offset = offset + size
+    if align > alignment { alignment = align }
+    index = index + 1
+  }
+  let mut value = D.object()
+  run D.set(&mut value, "size", D.int((offset + alignment - 1) / alignment * alignment))
+  run D.set(&mut value, "align", D.int(alignment))
+  run D.set(&mut value, "fields", move fields)
+  run D.set(&mut layouts, name, move value)
+}
+effect fn scalar(name: string, records: &Value) -> Value ! TaskError | OutOfMemoryError ? &mut Allocator {
+  let fields = D.array(run D.field(records, name))
+  if fields.length != 1 { return Value.Null }
+  let member = &fields[0]
+  let typ = T.property(member, "type")
+  let mut path = D.list()
+  run D.push(&mut path, run D.str(T.property(member, "name")))
+  let mut resolved = run String.copy(typ)
+  if present(records, typ) {
+    let nested = run scalar(typ, records)
+    match &nested { Value.Null => { return Value.Null } _ => {} }
+    let parents = D.array(run D.field(&nested, "path"))
+    let mut index: usize = 0
+    while index < parents.length { run D.push(&mut path, run Json.copy(&parents[index]))
+      index = index + 1 }
+    resolved = run String.copy(T.property(&nested, "type"))
+  }
+  let mut result = D.object()
+  run D.set(&mut result, "path", move path)
+  run D.set(&mut result, "type", run D.str(String.view(&resolved)))
+  return move result
+}
+effect fn enumText(category: string, name: string) -> String ! TaskError | OutOfMemoryError ? &mut Allocator {
+  if category == "WGSL_language_feature_name" { return run String.copy(name) }
+  let lowered = run lower(name)
+  let mut text = run replace(String.view(&lowered), "_", "-")
+  if category == "texture_format" {
+    let value = String.view(&lowered)
+    if !T.starts(value, "bc") && !T.starts(value, "etc") && !T.starts(value, "eac") && !T.starts(value, "astc") {
+      let joined = run replace(value, "_", "")
+      text = run replace(String.view(&joined), "srgb", "-srgb")
+      text = run replace(String.view(&text), "plusstencil", "plus-stencil")
+      text = run replace(String.view(&text), "floatstencil", "float-stencil")
+    }
+  }
+  if category == "vertex_format" {
+    text = run replace(String.view(&lowered), "__", "-")
+    text = run replace(String.view(&text), "_", "-")
+    text = run replace(String.view(&text), "-b-g-r-a", "-bgra")
+  }
+  if category == "feature_name" {
+    text = run replace(String.view(&text), "depth32-float-stencil8", "depth32float-stencil8")
+    text = run replace(String.view(&text), "rg11b10-ufloat", "rg11b10ufloat")
+    text = run replace(String.view(&text), "bgra8-unorm", "bgra8unorm")
+    text = run replace(String.view(&text), "tier-1", "tier1")
+    text = run replace(String.view(&text), "tier-2", "tier2")
+  }
+  if T.starts(String.view(&text), "e1d") || T.starts(String.view(&text), "e2d") || T.starts(String.view(&text), "e3d") { return run T.cut(String.view(&text), 1, String.byteLength(String.view(&text)) - 1) }
+  return move text
+}
+fn less(left: string, right: string) -> bool {
+  let a = String.utf8Bytes(left)
+  let b = String.utf8Bytes(right)
+  let mut index: usize = 0
+  while index < a.length && index < b.length { if a[index] != b[index] { return a[index] < b[index] }
+    index = index + 1 }
+  return a.length < b.length
+}
+pub effect fn generate(check: bool, exportsOutput: string) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let schema = run Source.fetch()
+  let lock = run D.load("scripts/schema-lock.json")
+  let abi = run D.load("sys/abi/generated_schema.json")
+  let revision = T.property(&lock, "revision")
+  if T.property(&abi, "schema_revision") != revision { run Task.abort("run silk task generate first: raw/browser schema revisions differ") }
+  let records = run D.field(&abi, "records")
+  let mut flags = D.object()
+  let mut objects = D.object()
+  let mut layouts = D.object()
+  let mut scalars = D.object()
+  let mut enums = D.object()
+  let mut methods = D.object()
+  let sourceFlags = Raw.items(&schema, "bitflags")
+  let mut index: usize = 0
+  while index < sourceFlags.length { let name = run T.typename(T.property(&sourceFlags[index], "name"))
+    run D.set(&mut flags, String.view(&name), Value.Bool { value: true })
+    index = index + 1 }
+  let sourceObjects = Raw.items(&schema, "objects")
+  index = 0
+  while index < sourceObjects.length {
+    let raw = T.property(&sourceObjects[index], "name")
+    let name = run T.typename(raw)
+    run D.set(&mut objects, String.view(&name), run D.str(raw))
+    let sourceMethods = Raw.items(&sourceObjects[index], "methods")
+    let mut method: usize = 0
+    while method < sourceMethods.length {
+      let owner = run T.pascal(raw)
+      let named = run T.pascal(T.property(&sourceMethods[method], "name"))
+      let methodName = run T.camel(T.property(&sourceMethods[method], "name"))
+      let key = run T.concat(&["wgpu", String.view(&owner), String.view(&named)])
+      let mut entry = D.object()
+      run D.set(&mut entry, "owner", run D.str(String.view(&name)))
+      run D.set(&mut entry, "method", run D.str(String.view(&methodName)))
+      run D.set(&mut methods, String.view(&key), move entry)
+      method = method + 1
+    }
+    index = index + 1
+  }
+  let sourceRecords = D.entries(records)
+  index = 0
+  while index < sourceRecords.length {
+    let name = String.view(&sourceRecords[index].key)
+    run layout(name, records, &flags, &objects, &mut layouts)
+    let scalar = run scalar(name, records)
+    let present = match &scalar { Value.Null => false _ => true }
+    if present { run D.set(&mut scalars, name, move scalar) }
+    index = index + 1
+  }
+  let constants = run D.field(&abi, "constants")
+  let sourceEnums = Raw.items(&schema, "enums")
+  index = 0
+  while index < sourceEnums.length {
+    let enumeration = &sourceEnums[index]
+    let category = T.property(enumeration, "name")
+    let name = run T.typename(category)
+    let entries = Raw.items(enumeration, "entries")
+    let mut values = D.object()
+    let mut entry: usize = 0
+    while entry < entries.length {
+      match &entries[entry] {
+        Value.Null => {}
+        _ => {
+          let itemName = T.property(&entries[entry], "name")
+          let pascal = run T.pascal(itemName)
+          let key = run T.concat(&[String.view(&name), "_", String.view(&pascal)])
+          let number = D.integer(run D.field(constants, String.view(&key)))
+          let numeric = run D.number(&number)
+          let text = run enumText(category, itemName)
+          run D.set(&mut values, String.view(&numeric), run D.str(String.view(&text)))
+        }
+      }
+      entry = entry + 1
+    }
+    run D.set(&mut enums, String.view(&name), move values)
+    index = index + 1
+  }
+  let flagEntries = D.entries(&flags)
+  let mut used = run Bytes.zeroed(flagEntries.length)
+  let mut sortedFlags = D.list()
+  index = 0
+  while index < flagEntries.length {
+    let mut selected = flagEntries.length
+    let mut candidate: usize = 0
+    while candidate < flagEntries.length {
+      if Bytes.asSlice(&used)[candidate] == 0 && (selected == flagEntries.length || less(String.view(&flagEntries[candidate].key), String.view(&flagEntries[selected].key))) { selected = candidate }
+      candidate = candidate + 1
+    }
+    let bytesAt226 = Bytes.asMutSlice(&mut used)
+    bytesAt226[selected] = 1
+    run D.push(&mut sortedFlags, run D.str(String.view(&flagEntries[selected].key)))
+    index = index + 1
+  }
+  let callbackNames = ["WGPURequestAdapterCallback", "WGPURequestDeviceCallback", "WGPUBufferMapCallback", "WGPUPopErrorScopeCallback", "WGPUQueueWorkDoneCallback", "WGPUDeviceLostCallback", "WGPUUncapturedErrorCallback", "WGPUCompilationInfoCallback", "WGPUCreateComputePipelineAsyncCallback", "WGPUCreateRenderPipelineAsyncCallback"]
+  let callbackSuffixes = ["adapter", "device", "bufferMap", "popErrorScope", "queueDone", "deviceLost", "uncapturedError", "compilation", "computePipeline", "renderPipeline"]
+  let callbackTargets = ["wasmAdapter", "wasmDevice", "wasmMap", "wasmScope", "wasmQueue", "wasmLost", "wasmError", "wasmCompilation", "wasmComputePipeline", "wasmRenderPipeline"]
+  let mut exports = run String.copy("// Generated by silk task generate-browser; do not edit.\n// Imports must live in the root application package: dependencies do not export wasm symbols.\n// Host contract: callback userdata addresses remain pinned until completion or cancellation.\n// Invoke callbacks only inside explicit pumps, with no outstanding loans to their slots.\n// Allocator exports run synchronously; promise settlement must only enqueue JS-owned data.\nstatic if Intrinsic.targetArchitecture() == \"wasm32\" {\n  import webgpu_sys.generated_webgpu as sys\n  import webgpu.runtime as runtime\n  import webgpu.host_memory as hostMemory\n\n")
+  let callbacks = Raw.items(&abi, "callbacks")
+  index = 0
+  while index < callbacks.length {
+    let callback = &callbacks[index]
+    let name = T.property(callback, "name")
+    let mut selected: usize = 0
+    while selected < callbackNames.length && callbackNames[selected] != name { selected = selected + 1 }
+    if selected == callbackNames.length { run Task.abort("new callback needs an explicit browser ABI token") }
+    let arguments = Raw.items(callback, "args")
+    let mut parameters = String.make()
+    let mut calls = String.make()
+    let mut argument: usize = 0
+    while argument < arguments.length {
+      if argument != 0 { run String.append(&mut parameters, ", ")
+        run String.append(&mut calls, ", ") }
+      let arg = &arguments[argument]
+      let argName = T.property(arg, "name")
+      let typ = T.property(arg, "type")
+      if typ == "WGPUStringView" {
+        let parameter = run D.format("{}Data: ?[*]const u8, {}Length: usize", &(argName, argName))
+        run String.append(&mut parameters, String.view(&parameter))
+        let call = run D.format("{}Data, {}Length", &(argName, argName))
+        run String.append(&mut calls, String.view(&call))
+      } else {
+        let ty = run replace(typ, "WGPU", "sys.WGPU")
+        let parameter = run D.format("{}: {}", &(T.identifier(argName), String.view(&ty)))
+        run String.append(&mut parameters, String.view(&parameter))
+        run String.append(&mut calls, T.identifier(argName))
+      }
+      argument = argument + 1
+    }
+    let wrapper = run D.format("  export \"C\" fn {}({}) -> () as \"webgpu_callback_{}\" {{\n    unsafe runtime.{}({})\n  }}\n", &(callbackTargets[selected], String.view(&parameters), callbackSuffixes[selected], callbackTargets[selected], String.view(&calls)))
+    run String.append(&mut exports, String.view(&wrapper))
+    index = index + 1
+  }
+  run String.append(&mut exports, "  export \"C\" fn allocate(size: usize) -> ?*mut u8 as \"webgpu_alloc\" {\n    return hostMemory.hostAllocate(size)\n  }\n  export \"C\" fn free(pointer: ?*mut u8, size: usize) -> () as \"webgpu_free\" {\n    unsafe hostMemory.release(pointer, size)\n  }\n}\n")
+  let mut callbackExports = D.list()
+  index = 0
+  while index < callbackNames.length { let mut pair = D.list()
+    run D.push(&mut pair, D.int(usize.toI64(index + 1)))
+    let name = run T.concat(&["webgpu_callback_", callbackSuffixes[index]])
+    run D.push(&mut pair, run D.str(String.view(&name)))
+    run D.push(&mut callbackExports, move pair)
+    index = index + 1 }
+  let mut metadata = D.object()
+  run D.set(&mut metadata, "revision", run D.str(revision))
+  run D.set(&mut metadata, "layouts", move layouts)
+  run D.set(&mut metadata, "scalarRecords", move scalars)
+  run D.set(&mut metadata, "flags", move sortedFlags)
+  run D.set(&mut metadata, "objects", move objects)
+  run D.set(&mut metadata, "enums", move enums)
+  run D.set(&mut metadata, "constants", run Json.copy(constants))
+  run D.set(&mut metadata, "functions", run Json.copy(run D.field(&abi, "functions")))
+  run D.set(&mut metadata, "methods", move methods)
+  run D.set(&mut metadata, "callbackExports", move callbackExports)
+  let encoded = run D.encode(&metadata, false)
+  let mut source = run Bytes.copy(b"// Generated by silk task generate-browser; do not edit.\nexport const schema = ")
+  run Bytes.append(&mut source, Bytes.asSlice(&encoded))
+  run Bytes.append(&mut source, b";\n")
+  let root = run Task.root()
+  let schemaPath = run Path.join(&root, "browser/generated_schema.ts")
+  run Output.publish(&schemaPath, Bytes.asSlice(&source), check)
+  let paths = ["examples/src/generated_webgpu_exports.silk", "browser/generated_webgpu_exports.silk"]
+  index = 0
+  while index < paths.length { let path = run Path.join(&root, paths[index])
+    run Output.publish(&path, String.utf8Bytes(String.view(&exports)), check)
+    index = index + 1 }
+  if exportsOutput != "" {
+    let base = run Task.invocationDirectory()
+    let path = if T.starts(exportsOutput, "/") { run Path.make(exportsOutput) } else { run Path.resolve(&base, exportsOutput) }
+    run Output.publish(&path, String.utf8Bytes(String.view(&exports)), check)
+  }
+}

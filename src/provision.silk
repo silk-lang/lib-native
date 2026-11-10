@@ -1,0 +1,154 @@
+import silk.cli.task { Task, TaskError }
+import silk.collections.bytes { Bytes }
+import silk.core.effect { Effect }
+import silk.core.option { Option }
+import silk.core.result { Result }
+import silk.io.writer { WriterError }
+import silk.json.value { Value }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.system.child_process { ChildProcess, ProcessError }
+import silk.system.filesystem { FileError, FileSystem, Path }
+import silk.system.host_input { HostInput, HostInputError }
+import silk.text.string { Split, String }
+import silk.num.usize
+import support
+import windows
+
+pub effect fn clang22(path: &Path) -> bool
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  if !run FileSystem.exists(path) { return false }
+  let result = run Effect.result(support.capture(support.text(path), &["--version"]))
+  return match move result {
+    Result<Bytes, TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError>.Success { value } => String.contains(run support.utf8(&value), "clang version 22.")
+    Result<Bytes, TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError>.Failure { error: failure } => match move failure {
+      OutOfMemoryError error => { fail move error }
+      TaskError error => { drop error
+        false }
+      ProcessError error => { drop error
+        false }
+      FileError error => { fail move error }
+      HostInputError error => { fail move error }
+      WriterError error => { fail move error }
+    }
+  }
+}
+
+pub effect fn llvm() -> Path
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let configured = run support.env("SILK_CLANG")
+  if String.view(&configured) != "" {
+    let candidate = run support.absolute(String.view(&configured))
+    if !run clang22(&candidate) { run Task.abort("SILK_CLANG must be an absolute path to a working LLVM 22 clang") }
+    return move candidate
+  }
+  let known = ["/opt/homebrew/opt/llvm@22/bin/clang", "/usr/local/opt/llvm@22/bin/clang", "/opt/homebrew/opt/llvm/bin/clang", "/usr/local/opt/llvm/bin/clang", "clang-22", "clang"]
+  let mut index: usize = 0
+  while index < known.length {
+    static if Intrinsic.targetOperatingSystem() == "windows" {
+      if index < 4 { index = index + 1
+        continue }
+    }
+    if let Option<Path>.Some { value } = move run support.which(known[index]) {
+      if run clang22(&value) { return move value }
+    }
+    index = index + 1
+  }
+  let executable = if support.os() == "windows" { "bin/clang.exe" } else { "bin/clang" }
+  let home = run support.install("llvm", executable)
+  let compiler = run Path.join(&home, executable)
+  if !run clang22(&compiler) { run Task.abort("Downloaded LLVM cannot run on this host") }
+  return move compiler
+}
+
+pub effect fn exportEnv(name: string, value: string) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let line = run support.concat(&[name, "=", value])
+  run support.print(String.view(&line))
+  run appendEnvironment("GITHUB_ENV", String.view(&line))
+}
+
+effect fn appendEnvironment(variable: string, value: string) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let setting = run support.env(variable)
+  if String.view(&setting) == "" { return () }
+  let path = run support.resolve(String.view(&setting))
+  let mut bytes = if run FileSystem.exists(&path) { run FileSystem.readFile(&path) } else { Bytes.make() }
+  run Bytes.append(&mut bytes, String.utf8Bytes(value))
+  run Bytes.append(&mut bytes, b"\n")
+  run FileSystem.writeFile(&path, Bytes.asSlice(&bytes))
+}
+
+pub effect fn exportPath(directory: &Path) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  run appendEnvironment("GITHUB_PATH", support.text(directory))
+}
+
+pub effect fn setup(browser: bool, linuxGpu: bool) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let compiler = run llvm()
+  run exportEnv("SILK_CLANG", support.text(&compiler))
+  static if Intrinsic.targetOperatingSystem() == "windows" {
+    run windows.prepare(support.text(&compiler), "", false)
+  }
+  let ciPath = run support.resolve("modules/gpu/webgpu/scripts/ci-lock.json")
+  let ci = run support.readJson(&ciPath)
+  static if Intrinsic.targetOperatingSystem() == "linux" {
+    let version = run support.capture(support.text(&compiler), &["--version"])
+    let expected = run support.concat(&["clang version ", run support.stringField(&ci, "runner_clang_version"), " "])
+    if !String.contains(run support.utf8(&version), String.view(&expected)) { run Task.abort("Runner LLVM changed; review ci-lock.json") }
+  }
+  if linuxGpu { run setupGpu(&ci) }
+  if browser { run setupBrowser() }
+}
+
+effect fn setupGpu(ci: &Value) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  if support.target() != "x86_64-unknown-linux-gnu" { run Task.abort("--linux-gpu requires Ubuntu x86_64") }
+  let mesa = run support.field(ci, "mesa")
+  let archive = run support.download(mesa)
+  run support.exec("sudo", &["apt-get", "update", "-qq"])
+  run support.exec("sudo", &["apt-get", "install", "--yes", "--no-install-recommends", "--allow-downgrades", support.text(&archive)])
+  let installed = run support.capture("dpkg-query", &["-W", "-f=${Version}", "mesa-vulkan-drivers"])
+  if String.trim(run support.utf8(&installed)) != run support.stringField(mesa, "version") { run Task.abort("Installed Mesa version differs") }
+  let listing = run support.capture("dpkg-query", &["-L", "mesa-vulkan-drivers"])
+  let mut lines = String.split(run support.utf8(&listing), "\n")
+  let mut found = run String.copy("")
+  while let Option<string>.Some { value } = Split.next(&mut lines) {
+    if String.contains(value, "/lvp_icd") && String.endsWith(value, ".json") {
+      if String.view(&found) != "" { run Task.abort("Expected one lavapipe ICD") }
+      found = run String.copy(value)
+    }
+  }
+  if String.view(&found) == "" { run Task.abort("Expected one lavapipe ICD") }
+  let path = run support.resolve(String.view(&found))
+  if !run FileSystem.exists(&path) { run Task.abort("Lavapipe ICD does not exist") }
+  run exportEnv("VK_DRIVER_FILES", String.view(&found))
+  run exportEnv("VK_ICD_FILENAMES", String.view(&found))
+}
+
+effect fn setupBrowser() -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let mut chromium = run support.env("CHROMIUM_EXECUTABLE")
+  if String.view(&chromium) == "" {
+    let names = ["chromium", "chromium-browser", "google-chrome"]
+    let mut index: usize = 0
+    while index < names.length {
+      if let Option<Path>.Some { value } = move run support.which(names[index]) {
+        chromium = run String.copy(support.text(&value))
+        break
+      }
+      index = index + 1
+    }
+  }
+  if String.view(&chromium) == "" { run Task.abort("Existing Chromium required; CI never downloads a browser") }
+  run support.exec(String.view(&chromium), &["--version"])
+  run exportEnv("CHROMIUM_EXECUTABLE", String.view(&chromium))
+}

@@ -1,7 +1,7 @@
 [package]
 name = "platform-window-tests-macos"
 version = "0.1.0"
-silk-version = "0.1.0-dev.63+657e3c900f65"
+silk-version = "0.1.0-dev.64+8214c402307b"
 
 [dependencies]
 window = { path = "../..", package = "platform-window" }

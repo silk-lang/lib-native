@@ -1,0 +1,279 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+import task_support as S
+import task_rust as R
+import task_bridge as B
+import silk.cli.task { Task, TaskError }
+import silk.collections.list { List }
+import silk.core.option { Option }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.system.filesystem { FileError, FileSystem, Path }
+import silk.text.regex { Match }
+import silk.text.string { String, InvalidUtf8 }
+import silk.core.result { Result }
+import silk.num.usize
+
+struct Value { pub name: String, pub number: String, }
+struct Arm { pub condition: String, pub value: String, }
+const OWNED: string = "Returns an owned +1 object; release it when finished. Receiver and arguments must satisfy Metal availability and lifetime requirements."
+const CAP_NOTE: string = "feature_set must be a defined MTLFeatureSet value; preserves the upstream historical capability table."
+
+effect fn substitute(source: string, pattern: string, replacement: string) -> String ! TaskError | OutOfMemoryError ? &mut Allocator {
+  let mut result = String.make()
+  let mut rest = source
+  while let Option<Match<'_>>.Some { value: found } = move run S.search(pattern, rest) {
+    run result.append(S.sub(rest, 0, found.start()))
+    let parts = String.utf8Bytes(replacement)
+    let mut at: usize = 0
+    let mut start: usize = 0
+    while at < parts.length {
+      if parts[at] == 36 && at + 1 < parts.length && parts[at + 1] >= 48 && parts[at + 1] <= 57 {
+        run result.append(S.sub(replacement, start, at))
+        let group: usize = if parts[at + 1] == 48 { 0 } else if parts[at + 1] == 49 { 1 } else if parts[at + 1] == 50 { 2 } else { 3 }
+        run result.append(S.group(&found, group))
+        at = at + 2
+        start = at
+      } else { at = at + 1 }
+    }
+    run result.append(S.sub(replacement, start, parts.length))
+    rest = S.sub(rest, found.end(), S.length(rest))
+  }
+  run result.append(rest)
+  return move result
+}
+fn flag(name: string, inverted: bool) -> string<'static> {
+  if name == "Filter" { return if inverted { "62u" } else { "1u" } }
+  if name == "Write" { return if inverted { "61u" } else { "2u" } }
+  if name == "Color" { return if inverted { "59u" } else { "4u" } }
+  if name == "Blend" { return if inverted { "55u" } else { "8u" } }
+  if name == "Msaa" { return if inverted { "47u" } else { "16u" } }
+  if name == "Resolve" { return if inverted { "31u" } else { "32u" } }
+  return ""
+}
+effect fn atom(source: string, values: &List<Value>) -> String ! TaskError | OutOfMemoryError ? &mut Allocator {
+  let calls = run substitute(source, "self\\.(\\w+)\\(\\)", "feature_$1(feature_set)")
+  let all = run S.replace(calls.view(), "PixelFormatCapabilities::all()", "63u")
+  let empty = run S.replace(all.view(), "PixelFormatCapabilities::empty()", "0u")
+  let some = run substitute(empty.view(), "\\bSome\\((.*?)\\)", "($1)")
+  let mut result = String.make()
+  let mut rest = some.view()
+  while let Option<Match<'_>>.Some { value: found } = move run S.search("!?PixelFormatCapabilities::\\w+|Os::\\w+|\\b\\w+\\b", rest) {
+    run result.append(S.sub(rest, 0, found.start()))
+    let word = found.text()
+    let mut replacement = word
+    if String.startsWith(word, "PixelFormatCapabilities::") || String.startsWith(word, "!PixelFormatCapabilities::") {
+      let inverted = String.startsWith(word, "!")
+      let prefix = if inverted { "!PixelFormatCapabilities::" } else { "PixelFormatCapabilities::" }
+      replacement = flag(S.sub(word, S.length(prefix), S.length(word)), inverted)
+      if replacement == "" { run Task.abort("Unknown pixel-format capability flag") }
+    } else if word == "Os::iOS" { replacement = "0" }
+    else if word == "Os::macOS" { replacement = "1" }
+    else if word == "Os::tvOS" { replacement = "2" }
+    else if word == "KB" { replacement = "1024u" }
+    else if word == "MB" { replacement = "1048576u" }
+    else if word == "GB" { replacement = "1073741824u" }
+    else if word == "self" { replacement = "feature_set" }
+    else if word == "None" { replacement = "UINT64_MAX" }
+    else {
+      let entries = values.asSlice()
+      let mut at: usize = 0
+      while at < entries.length { if entries[at].name.view() == word { replacement = entries[at].number.view()
+          break }
+        at = at + 1 }
+    }
+    run result.append(replacement)
+    rest = S.sub(rest, found.end(), S.length(rest))
+  }
+  run result.append(rest)
+  let collapsed = run substitute(result.view(), "\\s+", " ")
+  return run String.copy(String.trim(collapsed.view()))
+}
+effect fn condition(target: string, source: string, values: &List<Value>) -> String ! TaskError | OutOfMemoryError ? &mut Allocator {
+  let mut pattern = source
+  let mut guard = S.sub(source, 0, 0)
+  if let Option<usize>.Some { value: at } = move String.find(pattern, " if ") { guard = S.sub(pattern, at + 4, S.length(pattern))
+    pattern = S.sub(pattern, 0, at) }
+  let alternatives = run R.top(pattern, 124)
+  let parts = alternatives.asSlice()
+  let mut conditions = List<String>.make()
+  let mut at: usize = 0
+  while at < parts.length {
+    let alternative = parts[at].view()
+    if alternative == "_" { run conditions.append(run String.copy("1")) }
+    else if String.startsWith(alternative, "(") {
+      let targets = run R.top(S.sub(target, 1, S.length(target) - 1), 44)
+      let patterns = run R.top(S.sub(alternative, 1, S.length(alternative) - 1), 44)
+      let mut terms = List<String>.make()
+      let mut p: usize = 0
+      while p < targets.length() && p < patterns.length() { run terms.append(run condition(targets.asSlice()[p].view(), patterns.asSlice()[p].view(), values))
+        p = p + 1 }
+      let joined = run S.join(&terms, " && ")
+      run conditions.append(run S.cat(&["(", joined.view(), ")"]))
+    } else {
+      let left = run atom(target, values)
+      let right = run atom(alternative, values)
+      run conditions.append(run S.cat(&["(", left.view(), " == ", right.view(), ")"]))
+    }
+    at = at + 1
+  }
+  let joined = run S.join(&conditions, " || ")
+  if guard != "" { let check = run atom(guard, values)
+    return run S.cat(&["((", joined.view(), ") && (", check.view(), "))"]) }
+  return run S.cat(&["(", joined.view(), ")"])
+}
+effect fn expression(input: string, values: &List<Value>) -> String ! TaskError | OutOfMemoryError ? &mut Allocator {
+  let stripped = run substitute(String.trim(input), "#\\[[^\\n]*\\]\\s*", "")
+  let source = stripped.view()
+  if String.startsWith(source, "{") {
+    let closing = run S.closing(source, 0, 123, 125)
+    if closing == S.length(source) - 1 { return run expression(S.sub(source, 1, S.length(source) - 1), values) }
+  }
+  if String.startsWith(source, "let ") {
+    let equal = run S.index(source, "=")
+    let name = String.trim(S.sub(source, 4, equal))
+    let pieces = run R.top(S.sub(source, equal + 1, S.length(source)), 59)
+    if pieces.length() != 2 { run Task.abort("Unexpected capability let expression") }
+    let value = run expression(pieces.asSlice()[0].view(), values)
+    let rest = run expression(pieces.asSlice()[1].view(), values)
+    let pattern = run S.cat(&["\\b", name, "\\b"])
+    let replacement = run S.cat(&["(", value.view(), ")"])
+    return run substitute(rest.view(), pattern.view(), replacement.view())
+  }
+  if String.startsWith(source, "if ") {
+    let opening = run S.index(source, "{")
+    let end = run S.closing(source, opening, 123, 125)
+    let check = run atom(S.sub(source, 3, opening), values)
+    let yes = run expression(S.sub(source, opening + 1, end), values)
+    let rest = String.trim(S.sub(source, end + 1, S.length(source)))
+    if !String.startsWith(rest, "else ") { run Task.abort("Missing capability else branch") }
+    let no = run expression(S.sub(rest, 5, S.length(rest)), values)
+    return run S.cat(&["((", check.view(), ") ? (", yes.view(), ") : (", no.view(), "))"])
+  }
+  if String.startsWith(source, "match ") {
+    let opening = run S.index(source, "{")
+    let target = String.trim(S.sub(source, 6, opening))
+    let end = run S.closing(source, opening, 123, 125)
+    let mut body = String.trim(S.sub(source, opening + 1, end))
+    let mut arms = List<Arm>.make()
+    while body != "" {
+      let arrow = run S.index(body, "=>")
+      let pattern = String.trim(S.sub(body, 0, arrow))
+      body = String.trimStart(S.sub(body, arrow + 2, S.length(body)))
+      let mut end: usize = 0
+      if String.startsWith(body, "{") { end = (run S.closing(body, 0, 123, 125)) + 1 }
+      else { let pieces = run R.top(body, 44)
+        if pieces.length() == 0 { run Task.abort("Missing capability match arm") }
+        end = S.length(pieces.asSlice()[0].view()) }
+      run arms.append(Arm { condition: run condition(target, pattern, values), value: run expression(S.sub(body, 0, end), values) })
+      body = String.trimStart(S.sub(body, end, S.length(body)))
+      while String.startsWith(body, ",") { body = String.trimStart(S.sub(body, 1, S.length(body))) }
+    }
+    let mut result = run String.copy("(__builtin_unreachable(), 0)")
+    while let Option<Arm>.Some { value: arm } = move arms.pop() { result = run S.cat(&["(", arm.condition.view(), " ? (", arm.value.view(), ") : (", result.view(), "))"]) }
+    return move result
+  }
+  return run atom(source, values)
+}
+effect fn addDevice(bindings: &mut List<B.Binding>, method: &R.Method, result: string, cresult: string, body: string, notes: string) -> () ! OutOfMemoryError ? &mut Allocator {
+  let mut params = List<B.Parameter>.make()
+  run params.append(run B.parameter("object", "?*mut u8", "void *"))
+  let rust = run S.cat(&["DeviceRef.", method.name.view()])
+  run bindings.append(run B.binding("Device", method.name.view(), move params, result, cresult, body, notes, rust.view()))
+}
+pub effect fn generate(root: &Path, upstream: &Path) -> () ! TaskError | FileError | OutOfMemoryError ? &mut FileSystem | &mut Allocator {
+  let source = run S.readText(upstream, "src/device.rs")
+  run render(root, source.view())
+}
+pub effect fn generateFile(root: &Path, sourceFile: string) -> () ! TaskError | FileError | OutOfMemoryError ? &mut FileSystem | &mut Allocator {
+  let path = run Path.resolve(root, sourceFile)
+  let source = match move String.fromBytes(run FileSystem.readFile(&path)) {
+    Result<String, InvalidUtf8>.Success { value } => move value
+    Result<String, InvalidUtf8>.Failure { .. } => run Task.abort("Device source is not UTF-8")
+  }
+  run render(root, source.view())
+}
+effect fn render(root: &Path, text: string) -> () ! TaskError | FileError | OutOfMemoryError ? &mut FileSystem | &mut Allocator {
+  let enumStart = run S.index(text, "pub enum MTLFeatureSet")
+  let enumEnd = run S.index(text, "pub enum MTLGPUFamily")
+  let mut enums = List<Value>.make()
+  let mut rest = S.sub(text, enumStart, enumEnd)
+  while let Option<Match<'_>>.Some { value: found } = move run S.search("(\\w+) = (\\d+),", rest) {
+    run enums.append(Value { name: run String.copy(S.group(&found, 1)), number: run String.copy(S.group(&found, 2)) })
+    rest = S.sub(rest, found.end(), S.length(rest))
+  }
+  let capStart = run S.index(text, "impl MTLFeatureSet {")
+  let capEnd = run S.index(text, "/// See <https://developer.apple.com/documentation/metal/mtlargumentbufferstier>")
+  let capabilities = run R.functions(S.sub(text, capStart, capEnd), "MTLFeatureSet", false)
+  let mut bindings = List<B.Binding>.make()
+  let mut helpers = run String.copy("static uint32_t feature_os(uint64_t feature_set) {\n    if (feature_set < 10000) return 0;\n    if (feature_set < 20000) return 1;\n    if (feature_set >= 30000 && feature_set < 40000) return 2;\n    __builtin_unreachable();\n}\n\n")
+  let methods = capabilities.asSlice()
+  let mut at: usize = 0
+  while at < methods.length {
+    let method = &methods[at]
+    if method.name.view() != "os" {
+      let result = method.result.view()
+      let body = run substitute(method.body.view(), "use MTLFeatureSet::\\*;\\s*", "")
+      let expr = run expression(body.view(), &enums)
+      let helper = run S.cat(&["static ", if result == "Option<u32>" { "uint64_t" } else if result == "bool" { "bool" } else { "uint32_t" }, " feature_", method.name.view(), "(uint64_t feature_set) {\n    (void)feature_set;\n    return ", expr.view(), ";\n}\n\n"])
+      run helpers.append(helper.view())
+      if method.public {
+        let mut params = List<B.Parameter>.make()
+        run params.append(run B.parameter("feature_set", "u64", "uint64_t"))
+        let mut note = run String.copy(CAP_NOTE)
+        let mut body = String.make()
+        if result == "Option<u32>" {
+          run params.append(run B.parameter("out", "*mut u32", "uint32_t *"))
+          body = run S.cat(&["uint64_t value = feature_", method.name.view(), "(feature_set);\n    if (value == UINT64_MAX) return 0;\n    *out = (uint32_t)value;\n    return 1;"])
+          run note.append(" Returns false for None without writing out; otherwise writes the Some value.")
+        } else { body = run S.cat(&["return feature_", method.name.view(), "(feature_set);"]) }
+        let rust = run S.cat(&["MTLFeatureSet.", method.name.view()])
+        run bindings.append(run B.binding("FeatureSetCapabilities", method.name.view(), move params, if result == "bool" || result == "Option<u32>" { "bool" } else { "u32" }, if result == "bool" || result == "Option<u32>" { "uint8_t" } else { "uint32_t" }, body.view(), note.view(), rust.view()))
+      }
+    }
+    at = at + 1
+  }
+  let mut fixed = run B.load(root, "device")
+  let mut implemented = List<String>.make()
+  at = 0
+  while at < fixed.length() { run S.unique(&mut implemented, fixed.asSlice()[at].name.view())
+    at = at + 1 }
+  at = 0
+  while at < 5 { run bindings.append(fixed.remove(0))
+    at = at + 1 }
+  let deviceStart = run S.index(text, "impl DeviceRef {")
+  let deviceMethods = run R.functions(S.sub(text, deviceStart, S.length(text)), "DeviceRef", false)
+  let entries = deviceMethods.asSlice()
+  let mut expected = List<String>.make()
+  run S.unique(&mut expected, "system_default")
+  run S.unique(&mut expected, "all")
+  at = 0
+  while at < entries.length {
+    let method = &entries[at]
+    let name = method.name.view()
+    if method.public { run S.unique(&mut expected, name) }
+    if !S.contains(&implemented, name) {
+      if let Option<Match<'_>>.Some { value: found } = move run S.search("msg_send(?:_bool)?!\\[self,\\s*(\\w+)\\]", method.body.view()) {
+        let result = method.result.view()
+        let mut selector = S.group(&found, 1)
+        if name == "raster_order_groups_supported" { selector = "areRasterOrderGroupsSupported" }
+        let scalar = result == "u64" || result == "NSUInteger" || result == "MTLDeviceLocation" || result == "MTLArgumentBuffersTier" || result == "MTLReadWriteTextureTier" || result == "bool"
+        if name == "counter_sets" { selector = "counterSets" }
+        let body = run S.cat(&["return ", if !scalar && result != "MTLSize" { "(void *)" } else { "" }, "[(id<MTLDevice>)object ", selector, "];"])
+        if scalar { run addDevice(&mut bindings, method, if result == "bool" { "bool" } else { "u64" }, if result == "bool" { "uint8_t" } else { "uint64_t" }, body.view(), "Caller must ensure the device and selector are available.") }
+        else if result == "MTLSize" { run addDevice(&mut bindings, method, "MTLSize", "MTLSize", body.view(), "Returns the threadgroup dimensions by value.") }
+        else if String.startsWith(name, "new_") { run addDevice(&mut bindings, method, "?*mut u8", "void *", body.view(), OWNED) }
+        else if name == "counter_sets" { run addDevice(&mut bindings, method, "?*mut u8", "void *", body.view(), "Returns a borrowed +0 NSArray of counter sets; retain the array or individual elements to extend their lifetimes.") }
+        else { run Task.abort("Unhandled device getter") }
+        run S.unique(&mut implemented, name)
+      }
+    }
+    at = at + 1
+  }
+  at = 0
+  while at < expected.length() { if !S.contains(&implemented, expected.asSlice()[at].view()) { run Task.abort("Device generation inventory mismatch: missing method") }
+    at = at + 1 }
+  at = 0
+  while at < implemented.length() { if !S.contains(&expected, implemented.asSlice()[at].view()) { run Task.abort("Device generation inventory mismatch: extra method") }
+    at = at + 1 }
+  while fixed.length() != 0 { run bindings.append(fixed.remove(0)) }
+  run B.emit(root, "device", &bindings, helpers.view())
+}

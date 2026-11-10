@@ -1,0 +1,314 @@
+//! Compare native RGBA and compute output with the independent committed CPU fixtures.
+import silk.cli.task { Task, TaskError }
+import silk.collections.bytes { Bytes }
+import silk.collections.list { List }
+import silk.collections.slice { Slice }
+import silk.compress.inflate { DecodeError, Decoder, ErrorKind, Format as CompressionFormat, Limits, Progress, Status }
+import silk.core.effect { Effect }
+import silk.core.option { Option }
+import silk.core.result { Result }
+import silk.encoding.endian
+import silk.io.writer { Writer, WriterError }
+import silk.io.writer_native { StdoutWriter }
+import silk.json.scanner { JsonError }
+import silk.json.value { Json, Value }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.num.i32
+import silk.num.u8
+import silk.num.u32
+import silk.num.u64
+import silk.num.usize
+import silk.system.child_process { ChildProcess, ProcessError }
+import silk.system.filesystem { FileError, FileSystem, Path }
+import silk.system.host_input { HostInput, HostInputError }
+import silk.text.format { Format }
+import silk.text.string { String }
+import support
+
+pub effect fn check(directory: string) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let browser = run support.resolve("modules/gpu/webgpu/browser")
+  let actual = run support.resolveInput(directory)
+  let fixturePath = run Path.join(&browser, "fixtures.json")
+  let fixtureBytes = run FileSystem.readFile(&fixturePath)
+  let fixtures = match move run Effect.result(Json.parse(Bytes.asSlice(&fixtureBytes))) {
+    Result<Value, JsonError | OutOfMemoryError>.Success { value } => move value
+    Result<Value, JsonError | OutOfMemoryError>.Failure { error } => match move error {
+      JsonError failure => {
+        drop failure
+        run Task.abort("Invalid pixel fixtures JSON")
+      }
+      OutOfMemoryError failure => { fail move failure }
+    }
+  }
+  let samples = match move Json.field(&fixtures, "samples") {
+    Option<&Value>.Some { value } => value
+    Option<&Value>.None => run Task.abort("Invalid pixel fixtures samples")
+  }
+  match &samples.* {
+    Value.Array { values } => {
+      let items = List<Value>.asSlice(&values)
+      let mut index: usize = 0
+      while index < items.length {
+        run checkSample(&items[index], &browser, &actual)
+        index = index + 1
+      }
+    }
+    _ => run Task.abort("Invalid pixel fixtures samples")
+  }
+}
+
+effect fn checkSample(fixture: &Value, browser: &Path, actual: &Path) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let name = run textField(fixture, "name")
+  let pngName = run textField(fixture, "png")
+  let tolerance = run numberField(fixture, "tolerance")
+  let cap = run numberField(fixture, "maxDifferentPixels")
+  let fixturePath = run Path.resolve(browser, pngName)
+  let pngBytes = run FileSystem.readFile(&fixturePath)
+  let expected = run decodePng(Bytes.asSlice(&pngBytes))
+  let mut filename = run String.copy(name)
+  run String.append(&mut filename, ".rgba")
+  let observedPath = run Path.resolve(actual, String.view(&filename))
+  let observed = run FileSystem.readFile(&observedPath)
+  if Bytes.length(&expected) != 64 * 64 * 4 || Bytes.length(&observed) != Bytes.length(&expected) {
+    let mut message = run String.copy(name)
+    run String.append(&mut message, ": invalid byte length")
+    fail TaskError { message: move message, status: 1 }
+  }
+  let wanted = Bytes.asSlice(&expected)
+  let got = Bytes.asSlice(&observed)
+  let mut different: u64 = 0
+  let mut pixel: usize = 0
+  while pixel < wanted.length {
+    let mut channel: usize = 0
+    while channel < 4 {
+      let delta = absolute(u8.toI32(wanted[pixel + channel]) - u8.toI32(got[pixel + channel]))
+      if i32.toU64(delta) > tolerance {
+        different = different + 1
+        break
+      }
+      channel = channel + 1
+    }
+    pixel = pixel + 4
+  }
+  if different > cap {
+    let mut message = run String.copy(name)
+    run String.append(&mut message, ": ")
+    run appendNumber(&mut message, different)
+    run String.append(&mut message, " pixels exceed tolerance ")
+    run appendNumber(&mut message, tolerance)
+    run String.append(&mut message, ", cap ")
+    run appendNumber(&mut message, cap)
+    fail TaskError { message: move message, status: 1 }
+  }
+  if let Option<&Value>.Some { value } = Json.field(fixture, "compute") {
+    match &value.* {
+      Value.Null => {}
+      Value.Bool { value: enabled } => { if enabled { run checkCompute(value, actual) } }
+      _ => run checkCompute(value, actual)
+    }
+  }
+  let mut out = StdoutWriter.make()
+  let report = .{ name: name, different: different, cap: cap }
+  run Format.format("PASS {name}: {different}/{cap} differing pixels\n", &report)
+    |> Effect.provideMut<Writer>(&mut out)
+}
+
+effect fn checkCompute(compute: &Value, directory: &Path) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let count = run numberField(compute, "count")
+  let multiplier = run numberField(compute, "multiplier")
+  let addend = run numberField(compute, "addend")
+  let path = run Path.join(directory, "compute.u32")
+  let bytes = run FileSystem.readFile(&path)
+  let data = Bytes.asSlice(&bytes)
+  if data.length % 4 != 0 || usize.toU64(data.length / 4) != count {
+    run Task.abort("Invalid compute byte length")
+  }
+  let mut index: usize = 0
+  while index < data.length / 4 {
+    let wanted = match move u64.checkedMultiply(usize.toU64(index), multiplier) {
+      Option<u64>.Some { value } => u64.checkedAdd(value, addend)
+      Option<u64>.None => Option<u64>.none()
+    }
+    let equal = match move wanted {
+      Option<u64>.Some { value } => u32.toU64(endian.readU32LittleEndian(data, index * 4)) == value
+      Option<u64>.None => false
+    }
+    if !equal {
+      let mut message = run String.copy("compute[")
+      run appendNumber(&mut message, usize.toU64(index))
+      run String.append(&mut message, "] differs")
+      fail TaskError { message: move message, status: 1 }
+    }
+    index = index + 1
+  }
+}
+
+effect fn decodePng(bytes: &[u8]) -> Bytes
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let signature: [u8; 8] = [137, 80, 78, 71, 13, 10, 26, 10]
+  if bytes.length < 8 { run Task.abort("Invalid PNG signature") }
+  let mut index: usize = 0
+  while index < 8 {
+    if bytes[index] != signature[index] { run Task.abort("Invalid PNG signature") }
+    index = index + 1
+  }
+  let mut width: usize = 0
+  let mut height: usize = 0
+  let mut compressed = Bytes.make()
+  let mut offset: usize = 8
+  while offset < bytes.length {
+    if bytes.length - offset < 12 { run Task.abort("Truncated PNG chunk") }
+    let length = u32.toUsize(endian.readU32BigEndian(bytes, offset))
+    if length > bytes.length - offset - 12 { run Task.abort("Truncated PNG chunk") }
+    let kind = endian.readU32BigEndian(bytes, offset + 4)
+    let chunk = Slice.view(bytes, offset + 8, length)
+    if kind == 0x49484452 {
+      if length < 13 { run Task.abort("Expected noninterlaced RGBA8 fixture") }
+      width = u32.toUsize(endian.readU32BigEndian(chunk, 0))
+      height = u32.toUsize(endian.readU32BigEndian(chunk, 4))
+      if chunk[8] != 8 || chunk[9] != 6 || chunk[10] != 0 || chunk[11] != 0 || chunk[12] != 0 {
+        run Task.abort("Expected noninterlaced RGBA8 fixture")
+      }
+    } else if kind == 0x49444154 {
+      run Bytes.append(&mut compressed, chunk)
+    }
+    offset = offset + length + 12
+  }
+  if width == 0 || height == 0 { run Task.abort("PNG data length mismatch") }
+  let stride = run multiplied(width, 4)
+  let rowLength = match move usize.checkedAdd(stride, 1) {
+    Option<usize>.Some { value } => value
+    Option<usize>.None => run Task.abort("PNG data length mismatch")
+  }
+  let packedLength = run multiplied(rowLength, height)
+  let packed = run inflate(Bytes.asSlice(&compressed), packedLength)
+  let input = Bytes.asSlice(&packed)
+  let mut output = run Bytes.zeroed(run multiplied(stride, height))
+  let mut pixels = Bytes.asMutSlice(&mut output)
+  let mut y: usize = 0
+  while y < height {
+    let filter = input[y * rowLength]
+    if filter > 4 { run Task.abort("Unsupported PNG filter") }
+    let mut x: usize = 0
+    while x < stride {
+      let at = y * stride + x
+      let mut left: i32 = 0
+      let mut up: i32 = 0
+      let mut corner: i32 = 0
+      if x >= 4 { left = u8.toI32(pixels[at - 4]) }
+      if y != 0 { up = u8.toI32(pixels[at - stride]) }
+      if y != 0 && x >= 4 { corner = u8.toI32(pixels[at - stride - 4]) }
+      let mut predictor: i32 = 0
+      if filter == 1 { predictor = left }
+      else if filter == 2 { predictor = up }
+      else if filter == 3 { predictor = (left + up) / 2 }
+      else if filter == 4 {
+        let p = left + up - corner
+        let a = absolute(p - left)
+        let b = absolute(p - up)
+        let c = absolute(p - corner)
+        if a <= b && a <= c { predictor = left }
+        else if b <= c { predictor = up }
+        else { predictor = corner }
+      }
+      pixels[at] = i32.wrappingToU8(u8.toI32(input[y * rowLength + x + 1]) + predictor)
+      x = x + 1
+    }
+    y = y + 1
+  }
+  drop pixels
+  return move output
+}
+
+effect fn inflate(input: &[u8], expectedLength: usize) -> Bytes
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  // One spare byte distinguishes an oversized scanline stream from a full valid buffer.
+  let capacity = match move usize.checkedAdd(expectedLength, 1) {
+    Option<usize>.Some { value } => value
+    Option<usize>.None => run Task.abort("PNG data length mismatch")
+  }
+  let limits = Limits {
+    maxInputBytes: usize.toU64(input.length), maxOutputBytes: usize.toU64(capacity),
+    maxMembers: 1, maxHeaderBytes: 6, maxMemoryBytes: 65536,
+  }
+  let mut decoder = match move run Effect.result(Decoder.make(CompressionFormat.Zlib, move limits)) {
+    Result<Decoder, OutOfMemoryError | DecodeError>.Success { value } => move value
+    Result<Decoder, OutOfMemoryError | DecodeError>.Failure { error } => match move error {
+      OutOfMemoryError failure => { fail move failure }
+      DecodeError failure => {
+        drop failure
+        run Task.abort("Invalid PNG compressed data")
+      }
+    }
+  }
+  let mut packed = run Bytes.zeroed(capacity)
+  let progress = match move Decoder.step(&mut decoder, input, Bytes.asMutSlice(&mut packed), true) {
+    Result<Progress, DecodeError>.Success { value } => move value
+    Result<Progress, DecodeError>.Failure { error } => {
+      if error.kind == ErrorKind.OutputLimit { run Task.abort("PNG data length mismatch") }
+      run Task.abort("Invalid PNG compressed data")
+    }
+  }
+  if progress.status != Status.Finished || progress.written != expectedLength {
+    run Task.abort("PNG data length mismatch")
+  }
+  Bytes.truncate(&mut packed, expectedLength)
+  return move packed
+}
+
+fn absolute(value: i32) -> i32 {
+  if value < 0 { return -value }
+  return value
+}
+
+effect fn multiplied(left: usize, right: usize) -> usize
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  return match move usize.checkedMultiply(left, right) {
+    Option<usize>.Some { value } => value
+    Option<usize>.None => run Task.abort("PNG data length mismatch")
+  }
+}
+
+effect fn textField<'a>(value: &'a Value, key: string) -> string<'a>
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  return match move Json.asString(Json.field(value, key)) {
+    Option<string<'a>>.Some { value: text } => text
+    Option<string<'a>>.None => run Task.abort("Invalid pixel fixture string field")
+  }
+}
+
+effect fn numberField(value: &Value, key: string) -> u64
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  return match move Json.asU64(Json.field(value, key)) {
+    Option<u64>.Some { value: number } => number
+    Option<u64>.None => run Task.abort("Invalid pixel fixture integer field")
+  }
+}
+
+effect fn appendNumber(text: &mut String, value: u64) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let mut digits: [u8; 20] = [0; 20]
+  let mut start: usize = 20
+  let mut remaining = value
+  while true {
+    start = start - 1
+    digits[start] = u64.toU8(remaining % 10 + 48)
+    remaining = remaining / 10
+    if remaining == 0 { break }
+  }
+  // Each initialized byte is an ASCII decimal digit.
+  let view = unsafe String.fromUtf8Unchecked(Slice.view(&digits, start, 20 - start))
+  run String.append(&mut text, view)
+}

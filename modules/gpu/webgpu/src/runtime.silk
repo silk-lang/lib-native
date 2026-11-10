@@ -18,7 +18,6 @@ import surface { Surface }
 import diagnostics { Diagnostics }
 import capabilities as caps
 import capabilities { AdapterInfo, SupportedFeatures, SupportedWGSLLanguageFeatures }
-import host_memory
 import silk.core.ownership { Drop }
 import silk.core.effect { Effect }
 import silk.core.result { Result }
@@ -439,7 +438,7 @@ impl StatusRequest {
   pub fn poll(self: &mut Self) -> bool { return self.pending.poll() }
   pub effect fn finish(self: Self) -> () ! GpuError {
     let mut owned = move self
-    let ignored = run owned.pending.take()
+    drop run owned.pending.take()
   }
 }
 
@@ -475,7 +474,7 @@ unsafe fn complete(userdata: ?*mut u8, status: u32, errorType: u32, handle: ?*mu
   slot.handle = handle
   match move unsafe copyMessage(message) {
     Result<List<u8>, OutOfMemoryError>.Success { value } => { slot.message = move value }
-    Result<List<u8>, OutOfMemoryError>.Failure { error } => { slot.status = 0xfffffffd }
+    Result<List<u8>, OutOfMemoryError>.Failure { .. } => { slot.status = 0xfffffffd }
   }
   slot.ready = true
 }
@@ -490,7 +489,7 @@ unsafe fn report(userdata: ?*mut u8, status: u32, message: sys.WGPUStringView) -
     state.observer.recordFailure()
     state.error = Option<GpuError>.some(match move unsafe copyMessage(message) {
       Result<List<u8>, OutOfMemoryError>.Success { value } => GpuError { code: status, message: move value }
-      Result<List<u8>, OutOfMemoryError>.Failure { error } => GpuError.status(0xfffffffd)
+      Result<List<u8>, OutOfMemoryError>.Failure { .. } => GpuError.status(0xfffffffd)
     })
   }
 }
@@ -543,7 +542,7 @@ impl MapReadRequest {
   pub fn poll(self: &mut Self) -> bool { return self.pending.poll() }
   pub effect fn finish(self: Self) -> List<u8> ! GpuError | OutOfMemoryError {
     let mut owned = move self
-    let ignored = run owned.pending.take()
+    drop run owned.pending.take()
     let mut allocator = Allocator.systemAllocatorProvider()
     let mut bytes = run List<u8>.makeWithCapacity(owned.size)
       |> Effect.provideMut<Allocator>(&mut allocator)
@@ -643,7 +642,7 @@ impl CompilationInfoRequest {
   pub fn poll(self: &mut Self) -> bool { return self.pending.poll() }
   pub effect fn finish(self: Self) -> List<CompilationMessage> ! GpuError {
     let mut owned = move self
-    let ignored = run owned.pending.take()
+    drop run owned.pending.take()
     return Intrinsic.replace(owned.pending.slot.getMut()[0].extra, List<CompilationMessage>.make())
   }
 }
@@ -699,7 +698,7 @@ unsafe fn completeCompilation(status: u32, info: ?*const sys.WGPUCompilationInfo
       let mut allocator = Allocator.systemAllocatorProvider()
       match move run Effect.result(unsafe copyCompilationMessages(source) |> Effect.provideMut<Allocator>(&mut allocator)) {
         Result<List<CompilationMessage>, OutOfMemoryError>.Success { value } => { slot.extra = move value }
-        Result<List<CompilationMessage>, OutOfMemoryError>.Failure { error } => { slot.status = 0xfffffffd }
+        Result<List<CompilationMessage>, OutOfMemoryError>.Failure { .. } => { slot.status = 0xfffffffd }
       }
     }
   }
@@ -806,7 +805,7 @@ impl BufferMapRequest {
   pub fn poll(self: &mut Self) -> bool { return self.pending.poll() }
   pub effect fn finish(self: Self) -> MappedBuffer ! GpuError {
     let mut owned = move self
-    let ignored = run owned.pending.take()
+    drop run owned.pending.take()
     return match move Intrinsic.replace(owned.buffer, Option<Buffer>.none()) {
       Option<Buffer>.Some { value } => MappedBuffer { buffer: move value }
       Option<Buffer>.None => { fail GpuError.status(0xfffffffc) }

@@ -38,7 +38,7 @@ impl Session {
   pub effect fn poll(self: &mut Self) -> bool ! GpuError | OutOfMemoryError {
     let previous = Intrinsic.replace(self.stage, Failed {})
     match move previous {
-      Failed failed => { fail GpuError.status(0xffffffff) }
+      Failed {} => { fail GpuError.status(0xffffffff) }
       FindingAdapter { request } => {
         let mut pending = move request
         if pending.poll() {

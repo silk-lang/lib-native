@@ -1,0 +1,220 @@
+const HOST_OS: string<'static> = Intrinsic.targetOperatingSystem()
+import silk.cli.task { Task, TaskError }
+import silk.collections.bytes { Bytes }
+import silk.collections.slice { Slice }
+import silk.core.effect { Effect }
+import silk.core.option { Option }
+import silk.io.writer { Writer, WriterError }
+import silk.io.writer_native { StderrWriter }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.mem.pointer { Pointer }
+import silk.system.child_process { ChildProcess, ProcessError, ProcessRequest, ProcessOutcome, Exited, Signaled }
+import silk.system.filesystem { FileError, FileSystem, Path }
+import silk.system.host_input { HostInput, HostInputError }
+import silk.text.string { String }
+import task_data as D
+import silk.system.monotonic_clock { MonotonicClock }
+import silk.system.monotonic_clock_native { OsMonotonicClock }
+import silk.system.system_clock { SystemClock }
+import silk.num.i64
+
+pub effect fn milliseconds() -> u64 {
+  let mut clock = OsMonotonicClock.make()
+  let now = run MonotonicClock.now() |> Effect.provideMut<MonotonicClock>(&mut clock)
+  return i64.toU64(SystemClock.seconds(&now)) * 1000 + i64.toU64(SystemClock.nanoseconds(&now)) / 1000000
+}
+static if Intrinsic.targetOperatingSystem() != "windows" {
+  import silk.system.subprocess { Subprocess, SubprocessError, SpawnOptions, Stdio, ExitStatus }
+  import browser_driver.cdp as Cdp
+} else {
+  import silk.platform.windows.wtf8 { Wtf8 }
+  import silk.core.ownership { Drop }
+  unsafe extern "C" fn GetEnvironmentStringsW() -> ?[*]mut u16
+  unsafe extern "C" fn FreeEnvironmentStringsW(block: [*]mut u16) -> i32
+  struct Environment { pointer: [*]mut u16 }
+  impl Drop for Environment { fn drop(self: &mut Self) -> () { let _freed = unsafe FreeEnvironmentStringsW(self.pointer) } }
+}
+pub fn text(path: &Path) -> string {
+  let value = Path.view(path) |> Option<string>.unwrapOr("")
+  static if Intrinsic.targetOperatingSystem() == "windows" { if String.byteLength(value) >= 3 && String.utf8Bytes(value)[2] == 58 { return String.slice(value, 1, String.byteLength(value) - 1) } }
+  return value
+}
+effect fn resolveFrom(value: string, base: &Path) -> Path ! FileError | OutOfMemoryError ? &mut Allocator {
+  static if Intrinsic.targetOperatingSystem() == "windows" {
+    let raw = String.utf8Bytes(value)
+    let mut normalized = Bytes.make()
+    if raw.length >= 2 && raw[1] == 58 { run Bytes.append(&mut normalized, b"/") }
+    let mut index: usize = 0
+    while index < raw.length { run Bytes.append(&mut normalized, &[if raw[index] == 92 { 47 } else { raw[index] }])
+      index = index + 1 }
+    let bytes = Bytes.asSlice(&normalized)
+    if bytes.length > 0 && bytes[0] == 47 { let root = run Path.root()
+      return run Path.resolveBytes(&root, Slice.view<u8>(bytes, 1, bytes.length - 1)) }
+    return run Path.resolveBytes(base, bytes)
+  } else {
+    if String.startsWith(value, "/") { let root = run Path.root()
+      let bytes = String.utf8Bytes(value)
+      return run Path.resolveBytes(&root, Slice.view<u8>(bytes, 1, bytes.length - 1)) }
+    return run Path.resolve(base, value)
+  }
+}
+pub effect fn resolve(value: string) -> Path ! TaskError | FileError | HostInputError | OutOfMemoryError ? &mut HostInput | &mut Allocator {
+  let root = run Task.root()
+  return run resolveFrom(value, &root)
+}
+pub effect fn invocation(value: string) -> Path ! TaskError | FileError | HostInputError | OutOfMemoryError ? &mut HostInput | &mut Allocator {
+  let directory = run Task.invocationDirectory()
+  return run resolveFrom(value, &directory)
+}
+pub effect fn pathOption(value: string, defaultPath: string) -> String ! TaskError | FileError | HostInputError | OutOfMemoryError ? &mut HostInput | &mut Allocator {
+  if value == "" && defaultPath == "" { return String.make() }
+  let path = if value == "" { run resolve(defaultPath) } else { run invocation(value) }
+  return run String.copy(text(&path))
+}
+pub effect fn which(name: string) -> Path ! TaskError | FileError | HostInputError | OutOfMemoryError ? &mut HostInput | &mut Allocator | &mut FileSystem {
+  if String.contains(name, "/") || String.contains(name, "\\") { return run resolve(name) }
+  let path = match move run HostInput.variableNamed("PATH") { Option<Bytes>.Some { value } => run D.text(move value) Option<Bytes>.None => run String.copy("") }
+  let mut parts = String.split(String.view(&path), if HOST_OS == "windows" { ";" } else { ":" })
+  while true {
+    let directory = match move parts.next() { Option<string>.Some { value } => value Option<string>.None => { break } }
+    let base = run resolve(directory)
+    let candidate = run Path.join(&base, name)
+    if run FileSystem.exists(&candidate) { return move candidate }
+    static if Intrinsic.targetOperatingSystem() == "windows" {
+      let mut executable = run String.copy(name)
+      run String.append(&mut executable, ".exe")
+      let candidate = run Path.join(&base, String.view(&executable))
+      if run FileSystem.exists(&candidate) { return move candidate }
+    }
+  }
+  return run Task.abort("required native executable is absent from PATH")
+}
+fn sameName(left: &[u8], right: &[u8]) -> bool {
+  if left.length != right.length { return false }
+  let mut index: usize = 0
+  while index < left.length {
+    let a = left[index]
+    let b = right[index]
+    if (if a >= 97 && a <= 122 { a - 32 } else { a }) != (if b >= 97 && b <= 122 { b - 32 } else { b }) { return false }
+    index = index + 1
+  }
+  return true
+}
+effect fn request(program: &Path, arguments: &[string], environment: &[String], directory: &Path) -> ProcessRequest
+  ! TaskError | FileError | HostInputError | OutOfMemoryError ? &mut HostInput | &mut Allocator {
+  static if Intrinsic.targetOperatingSystem() != "windows" {
+    let env = run Path.make("/usr/bin/env")
+    let mut request = run ChildProcess.requestWithin(&env, directory)
+    run Subprocess.inheritEnvironment(&mut request)
+    let mut index: usize = 0
+    while index < environment.length { run ChildProcess.addArgument(&mut request, String.view(&environment[index]))
+      index = index + 1 }
+    run ChildProcess.addArgument(&mut request, text(program))
+    index = 0
+    while index < arguments.length { run ChildProcess.addArgument(&mut request, arguments[index])
+      index = index + 1 }
+    return move request
+  } else {
+    let mut request = run ChildProcess.requestWithin(program, directory)
+    let pointer = match Pointer.nonNullManyMut(unsafe GetEnvironmentStringsW()) { Option<[*]mut u16>.Some { value } => value Option<[*]mut u16>.None => run Task.abort("cannot read Windows environment") }
+    let block = Environment { pointer: pointer }
+    let mut offset: usize = 0
+    while unsafe Pointer.read(unsafe Pointer.at(pointer, offset)) != 0 {
+      let start = unsafe Pointer.assumeMany(unsafe Pointer.at(pointer, offset))
+      let mut length: usize = 0
+      while unsafe Pointer.read(unsafe Pointer.at(start, length)) != 0 { length = length + 1 }
+      let units = unsafe Pointer.borrowMany(&block, start, length)
+      let bytes = run Wtf8.encode(units)
+      let entry = Bytes.asSlice(&bytes)
+      let mut equal: usize = 1
+      while equal < entry.length && entry[equal] != 61 { equal = equal + 1 }
+      if equal < entry.length {
+        let mut overridden = false
+        let mut index: usize = 0
+        while index < environment.length {
+          let replacement = String.ownedUtf8Bytes(&environment[index])
+          let mut boundary: usize = 0
+          while boundary < replacement.length && replacement[boundary] != 61 { boundary = boundary + 1 }
+          if sameName(Slice.view<u8>(entry, 0, equal), Slice.view<u8>(replacement, 0, boundary)) { overridden = true
+            break }
+          index = index + 1
+        }
+        if !overridden { run ChildProcess.setVariableBytes(&mut request, Slice.view<u8>(entry, 0, equal), Slice.view<u8>(entry, equal + 1, entry.length - equal - 1)) }
+      }
+      offset = offset + length + 1
+    }
+    let mut index: usize = 0
+    while index < environment.length {
+      let entry = String.ownedUtf8Bytes(&environment[index])
+      let mut equal: usize = 0
+      while equal < entry.length && entry[equal] != 61 { equal = equal + 1 }
+      if equal == entry.length { run Task.abort("invalid process environment assignment") }
+      run ChildProcess.setVariableBytes(&mut request, Slice.view<u8>(entry, 0, equal), Slice.view<u8>(entry, equal + 1, entry.length - equal - 1))
+      index = index + 1
+    }
+    index = 0
+    while index < arguments.length { run ChildProcess.addArgument(&mut request, arguments[index])
+      index = index + 1 }
+    return move request
+  }
+}
+pub effect fn capture(program: string, arguments: &[string], environment: &[String], directory: &Path) -> Bytes
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let path = run which(program)
+  let request = run request(&path, arguments, environment, directory)
+  let ProcessOutcome { value } = move run ChildProcess.submit(&request)
+  match move value {
+    Exited result => {
+      let Exited { code, output, errors } = move result
+      let mut stderr = StderrWriter.make()
+      run Writer.writeAll(Bytes.asSlice(&errors)) |> Effect.provideMut<Writer>(&mut stderr)
+      if code != 0 {
+        run Writer.writeAll(Bytes.asSlice(&output)) |> Effect.provideMut<Writer>(&mut stderr)
+        fail TaskError { message: run String.copy("native task process failed"), status: code }
+      }
+      return move output
+    }
+    Signaled result => { drop result
+      return run Task.abort("native task process was terminated by a signal") }
+  }
+}
+pub effect fn exec(program: string, arguments: &[string], environment: &[String], directory: &Path) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let output = run D.text(run capture(program, arguments, environment, directory))
+  run D.print(String.view(&output))
+}
+static if Intrinsic.targetOperatingSystem() != "windows" {
+@foreign(noCapture: .("status"))
+unsafe extern "C" fn waitpid(pid: i32, status: *mut i32, options: i32) -> i32
+unsafe extern "C" fn kill(pid: i32, signal: i32) -> i32
+import silk.core.ownership { Drop }
+struct Child { process: Subprocess, stopped: bool }
+impl Drop for Child { fn drop(self: &mut Self) -> () { if !self.stopped { let _kill = unsafe kill(self.process.pid(), 9)
+        let mut status: i32 = 0
+        let _wait = unsafe waitpid(self.process.pid(), Pointer.fromMutRef(&mut status), 0) } } }
+effect fn failed(error: SubprocessError) -> never ! TaskError | OutOfMemoryError ? &mut Allocator { drop error
+    return run Task.abort("managed native task process failed") }
+pub effect fn timed(program: string, arguments: &[string], directory: &Path, timeoutMs: u64) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let path = run which(program)
+    let request = run request(&path, arguments, &[], directory)
+    let mut options = SpawnOptions.make()
+  run options.setStdio(0, Stdio.inherit(0))
+    run options.setStdio(1, Stdio.inherit(1))
+    run options.setStdio(2, Stdio.inherit(2))
+  let process = run Intrinsic.catchFailure<SubprocessError>(Subprocess.spawn(&request, &options), failed)
+    let mut child = Child { process: move process, stopped: false }
+    let started = run milliseconds()
+  while true {
+    let outcome = run Intrinsic.catchFailure<SubprocessError>(Subprocess.tryWait(child.process.pid()), failed)
+    if let Option<ExitStatus>.Some { value } = move outcome { child.stopped = true
+        if value.signaled || value.code != 0 { run Task.abort("native task executable failed") }
+        return () }
+    if (run milliseconds()) - started >= timeoutMs { run Task.abort("native task executable exceeded its deadline") }
+      run Cdp.sleep(10)
+  }
+}
+}

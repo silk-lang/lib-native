@@ -1,5 +1,5 @@
 //! Where the smoke test's lines go: stderr natively, and the page's console in the
-//! browser (browser/test.mjs supplies `smoke#print`).
+//! browser (`browser/smoke.html` supplies `smoke#print`).
 static if Intrinsic.targetArchitecture() == "wasm32" {
   import silk.mem.pointer { Pointer }
   import silk.text.string { String }

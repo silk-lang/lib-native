@@ -1,0 +1,2404 @@
+[
+  {
+    "owner": "VertexAttribute",
+    "name": "name",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?[*]const u8",
+    "cresult": "const char *",
+    "body": "MTLVertexAttribute * obj = (MTLVertexAttribute *)object;\n    return [[obj name] UTF8String];",
+    "notes": "Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive.",
+    "rust": "VertexAttributeRef.name"
+  },
+  {
+    "owner": "VertexAttribute",
+    "name": "attribute_index",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "MTLVertexAttribute * obj = (MTLVertexAttribute *)object;\n    return [obj attributeIndex];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "VertexAttributeRef.attribute_index"
+  },
+  {
+    "owner": "VertexAttribute",
+    "name": "attribute_type",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "MTLVertexAttribute * obj = (MTLVertexAttribute *)object;\n    return [obj attributeType];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "VertexAttributeRef.attribute_type"
+  },
+  {
+    "owner": "VertexAttribute",
+    "name": "is_active",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "bool",
+    "cresult": "uint8_t",
+    "body": "MTLVertexAttribute * obj = (MTLVertexAttribute *)object;\n    return ([obj isActive] != NO);",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "VertexAttributeRef.is_active"
+  },
+  {
+    "owner": "VertexAttribute",
+    "name": "is_patch_data",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "bool",
+    "cresult": "uint8_t",
+    "body": "MTLVertexAttribute * obj = (MTLVertexAttribute *)object;\n    return ([obj isPatchData] != NO);",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "VertexAttributeRef.is_patch_data"
+  },
+  {
+    "owner": "VertexAttribute",
+    "name": "is_patch_control_point_data",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "bool",
+    "cresult": "uint8_t",
+    "body": "MTLVertexAttribute * obj = (MTLVertexAttribute *)object;\n    return ([obj isPatchControlPointData] != NO);",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "VertexAttributeRef.is_patch_control_point_data"
+  },
+  {
+    "owner": "Attribute",
+    "name": "name",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?[*]const u8",
+    "cresult": "const char *",
+    "body": "MTLAttribute * obj = (MTLAttribute *)object;\n    return [[obj name] UTF8String];",
+    "notes": "Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive.",
+    "rust": "AttributeRef.name"
+  },
+  {
+    "owner": "Attribute",
+    "name": "attribute_index",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "MTLAttribute * obj = (MTLAttribute *)object;\n    return [obj attributeIndex];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "AttributeRef.attribute_index"
+  },
+  {
+    "owner": "Attribute",
+    "name": "attribute_type",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "MTLAttribute * obj = (MTLAttribute *)object;\n    return [obj attributeType];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "AttributeRef.attribute_type"
+  },
+  {
+    "owner": "Attribute",
+    "name": "is_active",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "bool",
+    "cresult": "uint8_t",
+    "body": "MTLAttribute * obj = (MTLAttribute *)object;\n    return ([obj isActive] != NO);",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "AttributeRef.is_active"
+  },
+  {
+    "owner": "Attribute",
+    "name": "is_patch_data",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "bool",
+    "cresult": "uint8_t",
+    "body": "MTLAttribute * obj = (MTLAttribute *)object;\n    return ([obj isPatchData] != NO);",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "AttributeRef.is_patch_data"
+  },
+  {
+    "owner": "Attribute",
+    "name": "is_patch_control_point_data",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "bool",
+    "cresult": "uint8_t",
+    "body": "MTLAttribute * obj = (MTLAttribute *)object;\n    return ([obj isPatchControlPointData] != NO);",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "AttributeRef.is_patch_control_point_data"
+  },
+  {
+    "owner": "FunctionConstant",
+    "name": "name",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?[*]const u8",
+    "cresult": "const char *",
+    "body": "MTLFunctionConstant * obj = (MTLFunctionConstant *)object;\n    return [[obj name] UTF8String];",
+    "notes": "Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive.",
+    "rust": "FunctionConstantRef.name"
+  },
+  {
+    "owner": "FunctionConstant",
+    "name": "data_type",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "MTLFunctionConstant * obj = (MTLFunctionConstant *)object;\n    return [obj type];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "FunctionConstantRef.data_type"
+  },
+  {
+    "owner": "FunctionConstant",
+    "name": "index",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "MTLFunctionConstant * obj = (MTLFunctionConstant *)object;\n    return [obj index];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "FunctionConstantRef.index"
+  },
+  {
+    "owner": "FunctionConstant",
+    "name": "required",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "bool",
+    "cresult": "uint8_t",
+    "body": "MTLFunctionConstant * obj = (MTLFunctionConstant *)object;\n    return ([obj required] != NO);",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "FunctionConstantRef.required"
+  },
+  {
+    "owner": "FunctionDescriptor",
+    "name": "new",
+    "params": [],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "return (void *)[MTLFunctionDescriptor new];",
+    "notes": "Returns an owned +1 object; release exactly once.",
+    "rust": "FunctionDescriptor.new"
+  },
+  {
+    "owner": "FunctionDescriptor",
+    "name": "name",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?[*]const u8",
+    "cresult": "const char *",
+    "body": "MTLFunctionDescriptor * obj = (MTLFunctionDescriptor *)object;\n    return [[obj name] UTF8String];",
+    "notes": "Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive.",
+    "rust": "FunctionDescriptorRef.name"
+  },
+  {
+    "owner": "FunctionDescriptor",
+    "name": "set_name",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "name",
+        "silk": "?[*]const u8",
+        "c": "const char *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "MTLFunctionDescriptor * obj = (MTLFunctionDescriptor *)object;\n    [obj setName:metal_library_string(name)];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "FunctionDescriptorRef.set_name"
+  },
+  {
+    "owner": "FunctionDescriptor",
+    "name": "specialized_name",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?[*]const u8",
+    "cresult": "const char *",
+    "body": "MTLFunctionDescriptor * obj = (MTLFunctionDescriptor *)object;\n    return [[obj specializedName] UTF8String];",
+    "notes": "Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive.",
+    "rust": "FunctionDescriptorRef.specialized_name"
+  },
+  {
+    "owner": "FunctionDescriptor",
+    "name": "set_specialized_name",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "name",
+        "silk": "?[*]const u8",
+        "c": "const char *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "MTLFunctionDescriptor * obj = (MTLFunctionDescriptor *)object;\n    [obj setSpecializedName:metal_library_string(name)];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "FunctionDescriptorRef.set_specialized_name"
+  },
+  {
+    "owner": "FunctionDescriptor",
+    "name": "constant_values",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "MTLFunctionDescriptor * obj = (MTLFunctionDescriptor *)object;\n    return (void *)[obj constantValues];",
+    "notes": "Borrowed +0 Objective-C object; retain explicitly if needed.",
+    "rust": "FunctionDescriptorRef.constant_values"
+  },
+  {
+    "owner": "FunctionDescriptor",
+    "name": "set_constant_values",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "values",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "MTLFunctionDescriptor * obj = (MTLFunctionDescriptor *)object;\n    [obj setConstantValues:(id)values];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "FunctionDescriptorRef.set_constant_values"
+  },
+  {
+    "owner": "FunctionDescriptor",
+    "name": "options",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "MTLFunctionDescriptor * obj = (MTLFunctionDescriptor *)object;\n    return [obj options];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "FunctionDescriptorRef.options"
+  },
+  {
+    "owner": "FunctionDescriptor",
+    "name": "set_options",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "value",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "MTLFunctionDescriptor * obj = (MTLFunctionDescriptor *)object;\n    [obj setOptions:(MTLFunctionOptions)value];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "FunctionDescriptorRef.set_options"
+  },
+  {
+    "owner": "FunctionHandle",
+    "name": "device",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "id<MTLFunctionHandle> obj = (id<MTLFunctionHandle>)object;\n    return (void *)[obj device];",
+    "notes": "Borrowed +0 Objective-C object; retain explicitly if needed.",
+    "rust": "FunctionHandleRef.device"
+  },
+  {
+    "owner": "FunctionHandle",
+    "name": "name",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?[*]const u8",
+    "cresult": "const char *",
+    "body": "id<MTLFunctionHandle> obj = (id<MTLFunctionHandle>)object;\n    return [[obj name] UTF8String];",
+    "notes": "Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive.",
+    "rust": "FunctionHandleRef.name"
+  },
+  {
+    "owner": "FunctionHandle",
+    "name": "function_type",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "id<MTLFunctionHandle> obj = (id<MTLFunctionHandle>)object;\n    return [obj functionType];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "FunctionHandleRef.function_type"
+  },
+  {
+    "owner": "Function",
+    "name": "device",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "id<MTLFunction> obj = (id<MTLFunction>)object;\n    return (void *)[obj device];",
+    "notes": "Borrowed +0 Objective-C object; retain explicitly if needed.",
+    "rust": "FunctionRef.device"
+  },
+  {
+    "owner": "Function",
+    "name": "name",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?[*]const u8",
+    "cresult": "const char *",
+    "body": "id<MTLFunction> obj = (id<MTLFunction>)object;\n    return [[obj name] UTF8String];",
+    "notes": "Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive.",
+    "rust": "FunctionRef.name"
+  },
+  {
+    "owner": "Function",
+    "name": "function_type",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "id<MTLFunction> obj = (id<MTLFunction>)object;\n    return [obj functionType];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "FunctionRef.function_type"
+  },
+  {
+    "owner": "Function",
+    "name": "label",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?[*]const u8",
+    "cresult": "const char *",
+    "body": "id<MTLFunction> obj = (id<MTLFunction>)object;\n    return [[obj label] UTF8String];",
+    "notes": "Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive.",
+    "rust": "FunctionRef.label"
+  },
+  {
+    "owner": "Function",
+    "name": "set_label",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "label",
+        "silk": "?[*]const u8",
+        "c": "const char *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "id<MTLFunction> obj = (id<MTLFunction>)object;\n    [obj setLabel:metal_library_string(label)];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "FunctionRef.set_label"
+  },
+  {
+    "owner": "Function",
+    "name": "patch_type",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "id<MTLFunction> obj = (id<MTLFunction>)object;\n    return [obj patchType];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "FunctionRef.patch_type"
+  },
+  {
+    "owner": "Function",
+    "name": "patch_control_point_count",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "id<MTLFunction> obj = (id<MTLFunction>)object;\n    return [obj patchControlPointCount];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "FunctionRef.patch_control_point_count"
+  },
+  {
+    "owner": "Function",
+    "name": "vertex_attributes",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "id<MTLFunction> obj = (id<MTLFunction>)object;\n    return (void *)[obj vertexAttributes];",
+    "notes": "Borrowed +0 NSArray of MTLVertexAttribute objects.",
+    "rust": "FunctionRef.vertex_attributes"
+  },
+  {
+    "owner": "Function",
+    "name": "stage_input_attributes",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "id<MTLFunction> obj = (id<MTLFunction>)object;\n    return (void *)[obj stageInputAttributes];",
+    "notes": "Borrowed +0 NSArray of MTLAttribute objects.",
+    "rust": "FunctionRef.stage_input_attributes"
+  },
+  {
+    "owner": "Function",
+    "name": "new_argument_encoder",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "buffer_index",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "id<MTLFunction> obj = (id<MTLFunction>)object;\n    return (void *)[obj newArgumentEncoderWithBufferIndex:buffer_index];",
+    "notes": "Returns an owned +1 argument encoder.",
+    "rust": "FunctionRef.new_argument_encoder"
+  },
+  {
+    "owner": "Function",
+    "name": "function_constants_dictionary",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "id<MTLFunction> obj = (id<MTLFunction>)object;\n    return (void *)[obj functionConstantsDictionary];",
+    "notes": "Borrowed +0 NSDictionary mapping NSString names to MTLFunctionConstant objects.",
+    "rust": "FunctionRef.function_constants_dictionary"
+  },
+  {
+    "owner": "Function",
+    "name": "options",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "id<MTLFunction> obj = (id<MTLFunction>)object;\n    return [obj options];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "FunctionRef.options"
+  },
+  {
+    "owner": "FunctionConstantValues",
+    "name": "new",
+    "params": [],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "return (void *)[MTLFunctionConstantValues new];",
+    "notes": "Returns an owned +1 object; release exactly once.",
+    "rust": "FunctionConstantValues.new"
+  },
+  {
+    "owner": "FunctionConstantValues",
+    "name": "set_constant_value_at_index",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "value",
+        "silk": "?*const u8",
+        "c": "const void *"
+      },
+      {
+        "name": "ty",
+        "silk": "u64",
+        "c": "uint64_t"
+      },
+      {
+        "name": "index",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "MTLFunctionConstantValues * obj = (MTLFunctionConstantValues *)object;\n    [obj setConstantValue:value type:(MTLDataType)ty atIndex:index];",
+    "notes": "Value must point to a live value matching the Metal data type during this call.",
+    "rust": "FunctionConstantValuesRef.set_constant_value_at_index"
+  },
+  {
+    "owner": "FunctionConstantValues",
+    "name": "set_constant_values_with_range",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "values",
+        "silk": "?*const u8",
+        "c": "const void *"
+      },
+      {
+        "name": "ty",
+        "silk": "u64",
+        "c": "uint64_t"
+      },
+      {
+        "name": "range",
+        "silk": "NSRange",
+        "c": "NSRange"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "MTLFunctionConstantValues * obj = (MTLFunctionConstantValues *)object;\n    [obj setConstantValues:values type:(MTLDataType)ty withRange:range];",
+    "notes": "Range is passed by value. Values must address range.length values matching the Metal data type during this call.",
+    "rust": "FunctionConstantValuesRef.set_constant_values_with_range"
+  },
+  {
+    "owner": "FunctionConstantValues",
+    "name": "set_constant_value_with_name",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "value",
+        "silk": "?*const u8",
+        "c": "const void *"
+      },
+      {
+        "name": "ty",
+        "silk": "u64",
+        "c": "uint64_t"
+      },
+      {
+        "name": "name",
+        "silk": "?[*]const u8",
+        "c": "const char *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "MTLFunctionConstantValues * obj = (MTLFunctionConstantValues *)object;\n    [obj setConstantValue:value type:(MTLDataType)ty withName:metal_library_string(name)];",
+    "notes": "Value must point to a live value matching the Metal data type during this call.",
+    "rust": "FunctionConstantValuesRef.set_constant_value_with_name"
+  },
+  {
+    "owner": "CompileOptions",
+    "name": "new",
+    "params": [],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "return (void *)[MTLCompileOptions new];",
+    "notes": "Returns an owned +1 object; release exactly once.",
+    "rust": "CompileOptions.new"
+  },
+  {
+    "owner": "CompileOptions",
+    "name": "preprocessor_macros",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "MTLCompileOptions * obj = (MTLCompileOptions *)object;\n    return (void *)[obj preprocessorMacros];",
+    "notes": "Borrowed +0 NSDictionary of NSString keys and NSString or NSNumber values.",
+    "rust": "CompileOptionsRef.preprocessor_macros"
+  },
+  {
+    "owner": "CompileOptions",
+    "name": "set_preprocessor_macros",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "defines",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "MTLCompileOptions * obj = (MTLCompileOptions *)object;\n    [obj setPreprocessorMacros:(id)defines];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "CompileOptionsRef.set_preprocessor_macros"
+  },
+  {
+    "owner": "CompileOptions",
+    "name": "is_fast_math_enabled",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "bool",
+    "cresult": "uint8_t",
+    "body": "MTLCompileOptions * obj = (MTLCompileOptions *)object;\n    return ([obj fastMathEnabled] != NO);",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "CompileOptionsRef.is_fast_math_enabled"
+  },
+  {
+    "owner": "CompileOptions",
+    "name": "set_fast_math_enabled",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "enabled",
+        "silk": "bool",
+        "c": "uint8_t"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "MTLCompileOptions * obj = (MTLCompileOptions *)object;\n    [obj setFastMathEnabled:(enabled != 0)];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "CompileOptionsRef.set_fast_math_enabled"
+  },
+  {
+    "owner": "CompileOptions",
+    "name": "language_version",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "MTLCompileOptions * obj = (MTLCompileOptions *)object;\n    return [obj languageVersion];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "CompileOptionsRef.language_version"
+  },
+  {
+    "owner": "CompileOptions",
+    "name": "set_language_version",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "version",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "MTLCompileOptions * obj = (MTLCompileOptions *)object;\n    [obj setLanguageVersion:(MTLLanguageVersion)version];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "CompileOptionsRef.set_language_version"
+  },
+  {
+    "owner": "CompileOptions",
+    "name": "library_type",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "MTLCompileOptions * obj = (MTLCompileOptions *)object;\n    return [obj libraryType];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "CompileOptionsRef.library_type"
+  },
+  {
+    "owner": "CompileOptions",
+    "name": "set_library_type",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "lib_type",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "MTLCompileOptions * obj = (MTLCompileOptions *)object;\n    [obj setLibraryType:(MTLLibraryType)lib_type];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "CompileOptionsRef.set_library_type"
+  },
+  {
+    "owner": "CompileOptions",
+    "name": "install_name",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?[*]const u8",
+    "cresult": "const char *",
+    "body": "MTLCompileOptions * obj = (MTLCompileOptions *)object;\n    return [[obj installName] UTF8String];",
+    "notes": "Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive.",
+    "rust": "CompileOptionsRef.install_name"
+  },
+  {
+    "owner": "CompileOptions",
+    "name": "set_install_name",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "name",
+        "silk": "?[*]const u8",
+        "c": "const char *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "MTLCompileOptions * obj = (MTLCompileOptions *)object;\n    [obj setInstallName:metal_library_string(name)];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "CompileOptionsRef.set_install_name"
+  },
+  {
+    "owner": "CompileOptions",
+    "name": "libraries",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "MTLCompileOptions * obj = (MTLCompileOptions *)object;\n    return (void *)[obj libraries];",
+    "notes": "Borrowed +0 NSArray of MTLDynamicLibrary objects; replaces the Rust Vec with its source NSArray.",
+    "rust": "CompileOptionsRef.libraries"
+  },
+  {
+    "owner": "CompileOptions",
+    "name": "libraries_as_nsarray",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "MTLCompileOptions * obj = (MTLCompileOptions *)object;\n    return (void *)[obj libraries];",
+    "notes": "Borrowed +0 NSArray of MTLDynamicLibrary objects; replaces the Rust Vec with its source NSArray.",
+    "rust": "CompileOptionsRef.libraries_as_nsarray"
+  },
+  {
+    "owner": "CompileOptions",
+    "name": "set_libraries",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "libraries",
+        "silk": "?[*]const ?*mut u8",
+        "c": "void *const *"
+      },
+      {
+        "name": "count",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "MTLCompileOptions * obj = (MTLCompileOptions *)object;\n    NSArray *array = [[NSArray alloc] initWithObjects:(id const *)libraries count:count];\n    [obj setLibraries:array];\n    [array release];",
+    "notes": "Pointer addresses count nonnull library objects; null pointer permitted only for count zero.",
+    "rust": "CompileOptionsRef.set_libraries"
+  },
+  {
+    "owner": "CompileOptions",
+    "name": "set_libraries_nsarray",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "libraries",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "MTLCompileOptions * obj = (MTLCompileOptions *)object;\n    [obj setLibraries:(id)libraries];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "CompileOptionsRef.set_libraries_nsarray"
+  },
+  {
+    "owner": "CompileOptions",
+    "name": "preserve_invariance",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "bool",
+    "cresult": "uint8_t",
+    "body": "MTLCompileOptions * obj = (MTLCompileOptions *)object;\n    return ([obj preserveInvariance] != NO);",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "CompileOptionsRef.preserve_invariance"
+  },
+  {
+    "owner": "CompileOptions",
+    "name": "set_preserve_invariance",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "preserve",
+        "silk": "bool",
+        "c": "uint8_t"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "MTLCompileOptions * obj = (MTLCompileOptions *)object;\n    [obj setPreserveInvariance:(preserve != 0)];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "CompileOptionsRef.set_preserve_invariance"
+  },
+  {
+    "owner": "Library",
+    "name": "device",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "id<MTLLibrary> obj = (id<MTLLibrary>)object;\n    return (void *)[obj device];",
+    "notes": "Borrowed +0 Objective-C object; retain explicitly if needed.",
+    "rust": "LibraryRef.device"
+  },
+  {
+    "owner": "Library",
+    "name": "label",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?[*]const u8",
+    "cresult": "const char *",
+    "body": "id<MTLLibrary> obj = (id<MTLLibrary>)object;\n    return [[obj label] UTF8String];",
+    "notes": "Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive.",
+    "rust": "LibraryRef.label"
+  },
+  {
+    "owner": "Library",
+    "name": "set_label",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "label",
+        "silk": "?[*]const u8",
+        "c": "const char *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "id<MTLLibrary> obj = (id<MTLLibrary>)object;\n    [obj setLabel:metal_library_string(label)];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "LibraryRef.set_label"
+  },
+  {
+    "owner": "Library",
+    "name": "get_function",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "name",
+        "silk": "?[*]const u8",
+        "c": "const char *"
+      },
+      {
+        "name": "constants",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "error",
+        "silk": "?*mut ?*mut u8",
+        "c": "void **"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "id<MTLLibrary> obj = (id<MTLLibrary>)object;\n    NSString *functionName = metal_library_string(name);\n    NSError *failure = nil;\n    id<MTLFunction> result;\n    if (constants) {\n        result = [obj newFunctionWithName:functionName constantValues:(MTLFunctionConstantValues *)constants error:&failure];\n    } else {\n        result = [obj newFunctionWithName:functionName];\n    }\n    if (!result && !failure) {\n        failure = [NSError errorWithDomain:MTLLibraryErrorDomain code:MTLLibraryErrorFunctionNotFound\n            userInfo:@{NSLocalizedDescriptionKey: [NSString stringWithFormat:@\"Function '%@' does not exist\", functionName]}];\n    }\n    if (error) *error = (void *)failure;\n    return (void *)result;",
+    "notes": "Returns owned +1 function or null. Null constants selects the unspecialized Metal overload; nonnull selects specialization. NSError is borrowed +0; missing-function convenience errors retain the upstream message.",
+    "rust": "LibraryRef.get_function"
+  },
+  {
+    "owner": "Library",
+    "name": "function_names",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "id<MTLLibrary> obj = (id<MTLLibrary>)object;\n    return (void *)[obj functionNames];",
+    "notes": "Borrowed +0 NSArray of NSString names; replaces the Rust Vec<String>.",
+    "rust": "LibraryRef.function_names"
+  },
+  {
+    "owner": "Library",
+    "name": "library_type",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "id<MTLLibrary> obj = (id<MTLLibrary>)object;\n    return [obj type];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "LibraryRef.library_type"
+  },
+  {
+    "owner": "Library",
+    "name": "install_name",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?[*]const u8",
+    "cresult": "const char *",
+    "body": "id<MTLLibrary> obj = (id<MTLLibrary>)object;\n    return [[obj installName] UTF8String];",
+    "notes": "Borrowed UTF-8 install name; null represents upstream None.",
+    "rust": "LibraryRef.install_name"
+  },
+  {
+    "owner": "Library",
+    "name": "new_function_with_descriptor",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "descriptor",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "error",
+        "silk": "?*mut ?*mut u8",
+        "c": "void **"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "id<MTLLibrary> obj = (id<MTLLibrary>)object;\n    NSError *failure = nil;\n    id<MTLFunction> result = [obj newFunctionWithDescriptor:(MTLFunctionDescriptor *)descriptor error:&failure];\n    if (!result && !failure) {\n        failure = [NSError errorWithDomain:MTLLibraryErrorDomain code:MTLLibraryErrorFunctionNotFound\n            userInfo:@{NSLocalizedDescriptionKey: @\"new_function_with_descriptor() failed\"}];\n    }\n    if (error) *error = (void *)failure;\n    return (void *)result;",
+    "notes": "Result is owned +1 or null. NSError output is borrowed +0; fallback error preserves the upstream convenience failure message.",
+    "rust": "LibraryRef.new_function_with_descriptor"
+  },
+  {
+    "owner": "Library",
+    "name": "new_intersection_function_with_descriptor",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "descriptor",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "error",
+        "silk": "?*mut ?*mut u8",
+        "c": "void **"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "id<MTLLibrary> obj = (id<MTLLibrary>)object;\n    NSError *failure = nil;\n    id<MTLFunction> result = [obj newIntersectionFunctionWithDescriptor:(MTLIntersectionFunctionDescriptor *)descriptor error:&failure];\n    if (!result && !failure) {\n        failure = [NSError errorWithDomain:MTLLibraryErrorDomain code:MTLLibraryErrorFunctionNotFound\n            userInfo:@{NSLocalizedDescriptionKey: @\"new_intersection_function_with_descriptor() failed\"}];\n    }\n    if (error) *error = (void *)failure;\n    return (void *)result;",
+    "notes": "Result is owned +1 or null. NSError output is borrowed +0; fallback error preserves the upstream convenience failure message.",
+    "rust": "LibraryRef.new_intersection_function_with_descriptor"
+  },
+  {
+    "owner": "DynamicLibrary",
+    "name": "device",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "id<MTLDynamicLibrary> obj = (id<MTLDynamicLibrary>)object;\n    return (void *)[obj device];",
+    "notes": "Borrowed +0 Objective-C object; retain explicitly if needed.",
+    "rust": "DynamicLibraryRef.device"
+  },
+  {
+    "owner": "DynamicLibrary",
+    "name": "label",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?[*]const u8",
+    "cresult": "const char *",
+    "body": "id<MTLDynamicLibrary> obj = (id<MTLDynamicLibrary>)object;\n    return [[obj label] UTF8String];",
+    "notes": "Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive.",
+    "rust": "DynamicLibraryRef.label"
+  },
+  {
+    "owner": "DynamicLibrary",
+    "name": "set_label",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "label",
+        "silk": "?[*]const u8",
+        "c": "const char *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "id<MTLDynamicLibrary> obj = (id<MTLDynamicLibrary>)object;\n    [obj setLabel:metal_library_string(label)];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "DynamicLibraryRef.set_label"
+  },
+  {
+    "owner": "DynamicLibrary",
+    "name": "install_name",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?[*]const u8",
+    "cresult": "const char *",
+    "body": "id<MTLDynamicLibrary> obj = (id<MTLDynamicLibrary>)object;\n    return [[obj installName] UTF8String];",
+    "notes": "Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive.",
+    "rust": "DynamicLibraryRef.install_name"
+  },
+  {
+    "owner": "DynamicLibrary",
+    "name": "serialize_to_url",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "url",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "error",
+        "silk": "?*mut ?*mut u8",
+        "c": "void **"
+      }
+    ],
+    "result": "bool",
+    "cresult": "uint8_t",
+    "body": "id<MTLDynamicLibrary> obj = (id<MTLDynamicLibrary>)object;\n    NSError *failure = nil;\n    BOOL result = [obj serializeToURL:(NSURL *)url error:&failure];\n    if (error) *error = (void *)failure;\n    return result != NO;",
+    "notes": "NSError output is borrowed +0 and cleared on success. Returns the Metal BOOL result.",
+    "rust": "DynamicLibraryRef.serialize_to_url"
+  },
+  {
+    "owner": "BinaryArchiveDescriptor",
+    "name": "new",
+    "params": [],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "return (void *)[MTLBinaryArchiveDescriptor new];",
+    "notes": "Returns an owned +1 object; release exactly once.",
+    "rust": "BinaryArchiveDescriptor.new"
+  },
+  {
+    "owner": "BinaryArchiveDescriptor",
+    "name": "url",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "MTLBinaryArchiveDescriptor * obj = (MTLBinaryArchiveDescriptor *)object;\n    return (void *)[obj url];",
+    "notes": "Borrowed +0 Objective-C object; retain explicitly if needed.",
+    "rust": "BinaryArchiveDescriptorRef.url"
+  },
+  {
+    "owner": "BinaryArchiveDescriptor",
+    "name": "set_url",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "url",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "MTLBinaryArchiveDescriptor * obj = (MTLBinaryArchiveDescriptor *)object;\n    [obj setUrl:(id)url];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "BinaryArchiveDescriptorRef.set_url"
+  },
+  {
+    "owner": "BinaryArchive",
+    "name": "device",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "id<MTLBinaryArchive> obj = (id<MTLBinaryArchive>)object;\n    return (void *)[obj device];",
+    "notes": "Borrowed +0 Objective-C object; retain explicitly if needed.",
+    "rust": "BinaryArchiveRef.device"
+  },
+  {
+    "owner": "BinaryArchive",
+    "name": "label",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?[*]const u8",
+    "cresult": "const char *",
+    "body": "id<MTLBinaryArchive> obj = (id<MTLBinaryArchive>)object;\n    return [[obj label] UTF8String];",
+    "notes": "Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive.",
+    "rust": "BinaryArchiveRef.label"
+  },
+  {
+    "owner": "BinaryArchive",
+    "name": "set_label",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "label",
+        "silk": "?[*]const u8",
+        "c": "const char *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "id<MTLBinaryArchive> obj = (id<MTLBinaryArchive>)object;\n    [obj setLabel:metal_library_string(label)];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "BinaryArchiveRef.set_label"
+  },
+  {
+    "owner": "BinaryArchive",
+    "name": "add_compute_pipeline_functions_with_descriptor",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "descriptor",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "error",
+        "silk": "?*mut ?*mut u8",
+        "c": "void **"
+      }
+    ],
+    "result": "bool",
+    "cresult": "uint8_t",
+    "body": "id<MTLBinaryArchive> obj = (id<MTLBinaryArchive>)object;\n    NSError *failure = nil;\n    BOOL result = [obj addComputePipelineFunctionsWithDescriptor:(MTLComputePipelineDescriptor *)descriptor error:&failure];\n    if (error) *error = (void *)failure;\n    return result != NO;",
+    "notes": "NSError output is borrowed +0 and cleared on success. Returns the Metal BOOL result.",
+    "rust": "BinaryArchiveRef.add_compute_pipeline_functions_with_descriptor"
+  },
+  {
+    "owner": "BinaryArchive",
+    "name": "add_render_pipeline_functions_with_descriptor",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "descriptor",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "error",
+        "silk": "?*mut ?*mut u8",
+        "c": "void **"
+      }
+    ],
+    "result": "bool",
+    "cresult": "uint8_t",
+    "body": "id<MTLBinaryArchive> obj = (id<MTLBinaryArchive>)object;\n    NSError *failure = nil;\n    BOOL result = [obj addRenderPipelineFunctionsWithDescriptor:(MTLRenderPipelineDescriptor *)descriptor error:&failure];\n    if (error) *error = (void *)failure;\n    return result != NO;",
+    "notes": "NSError output is borrowed +0 and cleared on success. Returns the Metal BOOL result.",
+    "rust": "BinaryArchiveRef.add_render_pipeline_functions_with_descriptor"
+  },
+  {
+    "owner": "BinaryArchive",
+    "name": "serialize_to_url",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "url",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "error",
+        "silk": "?*mut ?*mut u8",
+        "c": "void **"
+      }
+    ],
+    "result": "bool",
+    "cresult": "uint8_t",
+    "body": "id<MTLBinaryArchive> obj = (id<MTLBinaryArchive>)object;\n    NSError *failure = nil;\n    BOOL result = [obj serializeToURL:(NSURL *)url error:&failure];\n    if (error) *error = (void *)failure;\n    return result != NO;",
+    "notes": "NSError output is borrowed +0 and cleared on success. Returns the Metal BOOL result.",
+    "rust": "BinaryArchiveRef.serialize_to_url"
+  },
+  {
+    "owner": "LinkedFunctions",
+    "name": "new",
+    "params": [],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "return (void *)[MTLLinkedFunctions new];",
+    "notes": "Returns an owned +1 object; release exactly once.",
+    "rust": "LinkedFunctions.new"
+  },
+  {
+    "owner": "LinkedFunctions",
+    "name": "functions",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "MTLLinkedFunctions * obj = (MTLLinkedFunctions *)object;\n    return (void *)[obj functions];",
+    "notes": "Borrowed +0 NSArray of MTLFunction objects; replaces the Rust Vec.",
+    "rust": "LinkedFunctionsRef.functions"
+  },
+  {
+    "owner": "LinkedFunctions",
+    "name": "set_functions",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "functions",
+        "silk": "?[*]const ?*mut u8",
+        "c": "void *const *"
+      },
+      {
+        "name": "count",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "MTLLinkedFunctions * obj = (MTLLinkedFunctions *)object;\n    NSArray *array = [[NSArray alloc] initWithObjects:(id const *)functions count:count];\n    [obj setFunctions:array];\n    [array release];",
+    "notes": "Pointer addresses count nonnull functions; null pointer permitted only for count zero.",
+    "rust": "LinkedFunctionsRef.set_functions"
+  },
+  {
+    "owner": "LinkedFunctions",
+    "name": "binary_functions",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "MTLLinkedFunctions * obj = (MTLLinkedFunctions *)object;\n    return (void *)[obj binaryFunctions];",
+    "notes": "Borrowed +0 NSArray of MTLFunction objects; replaces the Rust Vec.",
+    "rust": "LinkedFunctionsRef.binary_functions"
+  },
+  {
+    "owner": "LinkedFunctions",
+    "name": "set_binary_functions",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "functions",
+        "silk": "?[*]const ?*mut u8",
+        "c": "void *const *"
+      },
+      {
+        "name": "count",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "MTLLinkedFunctions * obj = (MTLLinkedFunctions *)object;\n    NSArray *array = [[NSArray alloc] initWithObjects:(id const *)functions count:count];\n    [obj setBinaryFunctions:array];\n    [array release];",
+    "notes": "Pointer addresses count nonnull functions; null pointer permitted only for count zero.",
+    "rust": "LinkedFunctionsRef.set_binary_functions"
+  },
+  {
+    "owner": "StructMember",
+    "name": "name",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?[*]const u8",
+    "cresult": "const char *",
+    "body": "MTLStructMember * obj = (MTLStructMember *)object;\n    return [[obj name] UTF8String];",
+    "notes": "Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive.",
+    "rust": "StructMemberRef.name"
+  },
+  {
+    "owner": "StructMember",
+    "name": "offset",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "MTLStructMember * obj = (MTLStructMember *)object;\n    return [obj offset];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "StructMemberRef.offset"
+  },
+  {
+    "owner": "StructMember",
+    "name": "data_type",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "MTLStructMember * obj = (MTLStructMember *)object;\n    return [obj dataType];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "StructMemberRef.data_type"
+  },
+  {
+    "owner": "StructMember",
+    "name": "struct_type",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "MTLStructMember * obj = (MTLStructMember *)object;\n    return (void *)[obj structType];",
+    "notes": "Borrowed +0 Objective-C object; retain explicitly if needed.",
+    "rust": "StructMemberRef.struct_type"
+  },
+  {
+    "owner": "StructMember",
+    "name": "array_type",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "MTLStructMember * obj = (MTLStructMember *)object;\n    return (void *)[obj arrayType];",
+    "notes": "Borrowed +0 Objective-C object; retain explicitly if needed.",
+    "rust": "StructMemberRef.array_type"
+  },
+  {
+    "owner": "StructMemberArray",
+    "name": "object_at",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "index",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "NSArray<MTLStructMember *> * obj = (NSArray<MTLStructMember *> *)object;\n    return (void *)[obj objectAtIndexedSubscript:index];",
+    "notes": "Borrowed +0 member. Index must be within the NSArray bounds.",
+    "rust": "StructMemberArrayRef.object_at"
+  },
+  {
+    "owner": "StructMemberArray",
+    "name": "count",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "NSArray<MTLStructMember *> * obj = (NSArray<MTLStructMember *> *)object;\n    return [obj count];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "StructMemberArrayRef.count"
+  },
+  {
+    "owner": "StructType",
+    "name": "members",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "MTLStructType * obj = (MTLStructType *)object;\n    return (void *)[obj members];",
+    "notes": "Borrowed +0 Objective-C object; retain explicitly if needed.",
+    "rust": "StructTypeRef.members"
+  },
+  {
+    "owner": "StructType",
+    "name": "member_from_name",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "name",
+        "silk": "?[*]const u8",
+        "c": "const char *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "MTLStructType * obj = (MTLStructType *)object;\n    return (void *)[obj memberByName:metal_library_string(name)];",
+    "notes": "Borrowed +0 member, or null when absent.",
+    "rust": "StructTypeRef.member_from_name"
+  },
+  {
+    "owner": "ArrayType",
+    "name": "array_length",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "MTLArrayType * obj = (MTLArrayType *)object;\n    return [obj arrayLength];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "ArrayTypeRef.array_length"
+  },
+  {
+    "owner": "ArrayType",
+    "name": "stride",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "MTLArrayType * obj = (MTLArrayType *)object;\n    return [obj stride];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "ArrayTypeRef.stride"
+  },
+  {
+    "owner": "ArrayType",
+    "name": "element_type",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "MTLArrayType * obj = (MTLArrayType *)object;\n    return [obj elementType];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "ArrayTypeRef.element_type"
+  },
+  {
+    "owner": "ArrayType",
+    "name": "element_struct_type",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "MTLArrayType * obj = (MTLArrayType *)object;\n    return (void *)[obj elementStructType];",
+    "notes": "Borrowed +0 Objective-C object; retain explicitly if needed.",
+    "rust": "ArrayTypeRef.element_struct_type"
+  },
+  {
+    "owner": "ArrayType",
+    "name": "element_array_type",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "MTLArrayType * obj = (MTLArrayType *)object;\n    return (void *)[obj elementArrayType];",
+    "notes": "Borrowed +0 Objective-C object; retain explicitly if needed.",
+    "rust": "ArrayTypeRef.element_array_type"
+  },
+  {
+    "owner": "Argument",
+    "name": "name",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?[*]const u8",
+    "cresult": "const char *",
+    "body": "MTLArgument * obj = (MTLArgument *)object;\n    return [[obj name] UTF8String];",
+    "notes": "Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive.",
+    "rust": "ArgumentRef.name"
+  },
+  {
+    "owner": "Argument",
+    "name": "type_",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "MTLArgument * obj = (MTLArgument *)object;\n    return [obj type];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "ArgumentRef.type_"
+  },
+  {
+    "owner": "Argument",
+    "name": "access",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "MTLArgument * obj = (MTLArgument *)object;\n    return [obj access];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "ArgumentRef.access"
+  },
+  {
+    "owner": "Argument",
+    "name": "index",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "MTLArgument * obj = (MTLArgument *)object;\n    return [obj index];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "ArgumentRef.index"
+  },
+  {
+    "owner": "Argument",
+    "name": "is_active",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "bool",
+    "cresult": "uint8_t",
+    "body": "MTLArgument * obj = (MTLArgument *)object;\n    return ([obj isActive] != NO);",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "ArgumentRef.is_active"
+  },
+  {
+    "owner": "Argument",
+    "name": "buffer_alignment",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "MTLArgument * obj = (MTLArgument *)object;\n    return [obj bufferAlignment];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "ArgumentRef.buffer_alignment"
+  },
+  {
+    "owner": "Argument",
+    "name": "buffer_data_size",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "MTLArgument * obj = (MTLArgument *)object;\n    return [obj bufferDataSize];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "ArgumentRef.buffer_data_size"
+  },
+  {
+    "owner": "Argument",
+    "name": "buffer_data_type",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "MTLArgument * obj = (MTLArgument *)object;\n    return [obj bufferDataType];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "ArgumentRef.buffer_data_type"
+  },
+  {
+    "owner": "Argument",
+    "name": "threadgroup_memory_alignment",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "MTLArgument * obj = (MTLArgument *)object;\n    return [obj threadgroupMemoryAlignment];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "ArgumentRef.threadgroup_memory_alignment"
+  },
+  {
+    "owner": "Argument",
+    "name": "threadgroup_memory_data_size",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "MTLArgument * obj = (MTLArgument *)object;\n    return [obj threadgroupMemoryDataSize];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "ArgumentRef.threadgroup_memory_data_size"
+  },
+  {
+    "owner": "Argument",
+    "name": "texture_type",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "MTLArgument * obj = (MTLArgument *)object;\n    return [obj textureType];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "ArgumentRef.texture_type"
+  },
+  {
+    "owner": "Argument",
+    "name": "texture_data_type",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "MTLArgument * obj = (MTLArgument *)object;\n    return [obj textureDataType];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "ArgumentRef.texture_data_type"
+  },
+  {
+    "owner": "Argument",
+    "name": "buffer_struct_type",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "MTLArgument * obj = (MTLArgument *)object;\n    return (void *)[obj bufferStructType];",
+    "notes": "Borrowed +0 Objective-C object; retain explicitly if needed.",
+    "rust": "ArgumentRef.buffer_struct_type"
+  },
+  {
+    "owner": "ArgumentDescriptor",
+    "name": "new",
+    "params": [],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "return (void *)[[MTLArgumentDescriptor argumentDescriptor] retain];",
+    "notes": "Returns owned +1; explicitly retains the upstream autoreleased factory result.",
+    "rust": "ArgumentDescriptor.new"
+  },
+  {
+    "owner": "ArgumentDescriptor",
+    "name": "set_data_type",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "ty",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "MTLArgumentDescriptor * obj = (MTLArgumentDescriptor *)object;\n    [obj setDataType:(MTLDataType)ty];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "ArgumentDescriptorRef.set_data_type"
+  },
+  {
+    "owner": "ArgumentDescriptor",
+    "name": "set_index",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "index",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "MTLArgumentDescriptor * obj = (MTLArgumentDescriptor *)object;\n    [obj setIndex:index];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "ArgumentDescriptorRef.set_index"
+  },
+  {
+    "owner": "ArgumentDescriptor",
+    "name": "set_access",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "access",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "MTLArgumentDescriptor * obj = (MTLArgumentDescriptor *)object;\n    [obj setAccess:(MTLArgumentAccess)access];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "ArgumentDescriptorRef.set_access"
+  },
+  {
+    "owner": "ArgumentDescriptor",
+    "name": "set_array_length",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "length",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "MTLArgumentDescriptor * obj = (MTLArgumentDescriptor *)object;\n    [obj setArrayLength:length];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "ArgumentDescriptorRef.set_array_length"
+  },
+  {
+    "owner": "ArgumentDescriptor",
+    "name": "set_texture_type",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "ty",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "MTLArgumentDescriptor * obj = (MTLArgumentDescriptor *)object;\n    [obj setTextureType:(MTLTextureType)ty];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "ArgumentDescriptorRef.set_texture_type"
+  },
+  {
+    "owner": "CounterSampleBufferDescriptor",
+    "name": "new",
+    "params": [],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "return (void *)[MTLCounterSampleBufferDescriptor new];",
+    "notes": "Returns an owned +1 object; release exactly once.",
+    "rust": "CounterSampleBufferDescriptor.new"
+  },
+  {
+    "owner": "CounterSampleBufferDescriptor",
+    "name": "counter_set",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?*mut u8",
+    "cresult": "void *",
+    "body": "MTLCounterSampleBufferDescriptor * obj = (MTLCounterSampleBufferDescriptor *)object;\n    return (void *)[obj counterSet];",
+    "notes": "Borrowed +0 Objective-C object; retain explicitly if needed.",
+    "rust": "CounterSampleBufferDescriptorRef.counter_set"
+  },
+  {
+    "owner": "CounterSampleBufferDescriptor",
+    "name": "set_counter_set",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "counter_set",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "MTLCounterSampleBufferDescriptor * obj = (MTLCounterSampleBufferDescriptor *)object;\n    [obj setCounterSet:(id)counter_set];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "CounterSampleBufferDescriptorRef.set_counter_set"
+  },
+  {
+    "owner": "CounterSampleBufferDescriptor",
+    "name": "label",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?[*]const u8",
+    "cresult": "const char *",
+    "body": "MTLCounterSampleBufferDescriptor * obj = (MTLCounterSampleBufferDescriptor *)object;\n    return [[obj label] UTF8String];",
+    "notes": "Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive.",
+    "rust": "CounterSampleBufferDescriptorRef.label"
+  },
+  {
+    "owner": "CounterSampleBufferDescriptor",
+    "name": "set_label",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "label",
+        "silk": "?[*]const u8",
+        "c": "const char *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "MTLCounterSampleBufferDescriptor * obj = (MTLCounterSampleBufferDescriptor *)object;\n    [obj setLabel:metal_library_string(label)];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "CounterSampleBufferDescriptorRef.set_label"
+  },
+  {
+    "owner": "CounterSampleBufferDescriptor",
+    "name": "sample_count",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "MTLCounterSampleBufferDescriptor * obj = (MTLCounterSampleBufferDescriptor *)object;\n    return [obj sampleCount];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "CounterSampleBufferDescriptorRef.sample_count"
+  },
+  {
+    "owner": "CounterSampleBufferDescriptor",
+    "name": "set_sample_count",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "sample_count",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "MTLCounterSampleBufferDescriptor * obj = (MTLCounterSampleBufferDescriptor *)object;\n    [obj setSampleCount:sample_count];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "CounterSampleBufferDescriptorRef.set_sample_count"
+  },
+  {
+    "owner": "CounterSampleBufferDescriptor",
+    "name": "storage_mode",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "MTLCounterSampleBufferDescriptor * obj = (MTLCounterSampleBufferDescriptor *)object;\n    return [obj storageMode];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "CounterSampleBufferDescriptorRef.storage_mode"
+  },
+  {
+    "owner": "CounterSampleBufferDescriptor",
+    "name": "set_storage_mode",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "storage_mode",
+        "silk": "u64",
+        "c": "uint64_t"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "MTLCounterSampleBufferDescriptor * obj = (MTLCounterSampleBufferDescriptor *)object;\n    [obj setStorageMode:(MTLStorageMode)storage_mode];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "CounterSampleBufferDescriptorRef.set_storage_mode"
+  },
+  {
+    "owner": "CounterSampleBuffer",
+    "name": "sample_count",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "u64",
+    "cresult": "uint64_t",
+    "body": "id<MTLCounterSampleBuffer> obj = (id<MTLCounterSampleBuffer>)object;\n    return [obj sampleCount];",
+    "notes": "Direct Metal selector bridge; raw object lifetime and availability are caller obligations.",
+    "rust": "CounterSampleBufferRef.sample_count"
+  },
+  {
+    "owner": "CounterSampleBuffer",
+    "name": "resolve_counter_range",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      },
+      {
+        "name": "range",
+        "silk": "NSRange",
+        "c": "NSRange"
+      },
+      {
+        "name": "out",
+        "silk": "[*]mut u64",
+        "c": "uint64_t *"
+      }
+    ],
+    "result": "()",
+    "cresult": "void",
+    "body": "id<MTLCounterSampleBuffer> obj = (id<MTLCounterSampleBuffer>)object;\n    NSData *data = [obj resolveCounterRange:range];\n    [data getBytes:out length:range.length * sizeof(NSUInteger)];",
+    "notes": "Range is passed by value. Writes range.length u64 samples into caller-owned output, matching the upstream Vec<NSUInteger> helper. Range must be valid and range.length * 8 must not overflow; output must hold that many bytes.",
+    "rust": "CounterSampleBufferRef.resolve_counter_range"
+  },
+  {
+    "owner": "CounterSet",
+    "name": "name",
+    "params": [
+      {
+        "name": "object",
+        "silk": "?*mut u8",
+        "c": "void *"
+      }
+    ],
+    "result": "?[*]const u8",
+    "cresult": "const char *",
+    "body": "id<MTLCounterSet> obj = (id<MTLCounterSet>)object;\n    return [[obj name] UTF8String];",
+    "notes": "Borrowed NUL-terminated UTF-8; valid while the owning NSString remains alive.",
+    "rust": "CounterSetRef.name"
+  }
+]

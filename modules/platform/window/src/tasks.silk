@@ -1,0 +1,75 @@
+import silk.cli.command { Command, CommandLine, Opt }
+import silk.cli.task { Task, TaskError, TaskSet }
+import silk.core.effect { Effect }
+import silk.io.writer { Writer, WriterError }
+import silk.io.writer_native { StdoutWriter }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.system.child_process { ChildProcess, ProcessError }
+import silk.system.filesystem { FileError, FileSystem }
+import silk.system.host_input { HostInput, HostInputError }
+import silk.text.string { String }
+import task_build as Build
+import task_codegen as Codegen
+import task_wayland as Wayland
+import task_linux as Linux
+import task_browser as Browser
+
+union Tasks {
+  GenerateKeys { pub check: bool },
+  GenerateBridge { pub check: bool },
+  GenerateWayland,
+  TestHeadless,
+  Macos { pub target: String, pub buildOnly: bool, pub release: bool },
+  Linux { pub target: String, pub backend: String, pub buildOnly: bool, pub release: bool },
+  Browser { pub target: String, pub buildOnly: bool, pub release: bool },
+}
+impl CommandLine for Tasks {
+  static fn command() -> Command<Tasks> {
+    return Command<Tasks>.make("window", "Generate window ABI tables and run platform smoke tests")
+      |> Command.variant("GenerateKeys", "Regenerate physical and named key tables")
+      |> Command.variant("GenerateBridge", "Regenerate Silk and browser bridge declarations")
+      |> Command.variant("GenerateWayland", "Regenerate committed Wayland protocol glue")
+      |> Command.variant("TestHeadless", "Run headless unit tests")
+      |> Command.variant("Macos", "Build/run the AppKit smoke test or demo")
+      |> Command.variant("Linux", "Build/run smoke under X11 and/or Wayland")
+      |> Command.variant("Browser", "Build/run browser smoke in installed Chromium")
+      |> Command.arg("target", Opt.about("smoke, or demo on macOS") |> Opt.required |> Opt.choice("smoke") |> Opt.choice("demo"))
+      |> Command.option("backend", Opt.about("Linux display backend") |> Opt.default("all") |> Opt.choice("x11") |> Opt.choice("wayland") |> Opt.choice("all"))
+      |> Command.option("buildOnly", Opt.about("Build and print artifact path without running"))
+      |> Command.option("release", Opt.about("Build optimized code"))
+      |> Command.option("check", Opt.about("Fail if generated files differ, without changing them"))
+  }
+}
+effect fn print(value: string) -> () ! WriterError {
+  let mut output = StdoutWriter.make()
+  run Writer.writeAll(String.utf8Bytes(value)) |> Effect.provideMut<Writer>(&mut output)
+  run Writer.writeAll(b"\n") |> Effect.provideMut<Writer>(&mut output)
+}
+impl TaskSet for Tasks {
+  effect fn perform(self: Tasks) -> () ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+    match move self {
+      Tasks.GenerateKeys { check } => run Codegen.keys(check)
+      Tasks.GenerateBridge { check } => run Codegen.bridge(check)
+      Tasks.GenerateWayland => run Wayland.generate()
+      Tasks.TestHeadless => run Task.silk(&["test", "--root", "src/tests.silk"])
+      Tasks.Macos { target, buildOnly, release } => {
+        static if Intrinsic.targetOperatingSystem() != "darwin" { run Task.abort("AppKit smoke and demo require macOS") }
+        let demo = String.view(&target) == "demo"
+        let program = run Build.build(if demo { "examples/demo/silk.toml" } else { "tests/macos/silk.toml" }, if demo { "platform-window-examples-demo" } else { "platform-window-tests-macos" }, if demo { "modules/platform/window/examples/demo" } else { "modules/platform/window/tests/macos" }, release, false)
+        if buildOnly { run print(String.view(&program)) } else { run Task.exec(String.view(&program), &[]) }
+      }
+      Tasks.Linux { target, backend, buildOnly, release } => {
+        if String.view(&target) != "smoke" { run Task.abort("Linux supports only the smoke target") }
+        let program = run Build.build("tests/linux/silk.toml", "platform-window-tests-linux", "modules/platform/window/tests/linux", release, false)
+        if buildOnly { run print(String.view(&program)) } else { run Linux.smoke(String.view(&program), String.view(&backend)) }
+      }
+      Tasks.Browser { target, buildOnly, release } => {
+        if String.view(&target) != "smoke" { run Task.abort("Browser supports only the smoke target") }
+        let program = run Build.build("tests/browser/silk.toml", "platform-window-tests-browser", "modules/platform/window/tests/browser", release, true)
+        if buildOnly { run print(String.view(&program)) } else { run Browser.smoke(String.view(&program)) }
+      }
+    }
+  }
+}
+pub effect fn main() -> i32 ? &mut HostInput { return run Task.main<Tasks>() }

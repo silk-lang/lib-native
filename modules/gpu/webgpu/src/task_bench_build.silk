@@ -1,0 +1,143 @@
+const HOST_OS: string<'static> = Intrinsic.targetOperatingSystem()
+import silk.cli.task { Task, TaskError }
+import silk.collections.bytes { Bytes }
+import silk.collections.list { List }
+import silk.core.option { Option }
+import silk.io.writer { WriterError }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.system.child_process { ChildProcess, ProcessError }
+import silk.system.filesystem { FileError, FileSystem, Path }
+import silk.system.host_input { HostInput, HostInputError }
+import silk.text.string { String }
+import task_data as D
+import task_build as Build
+import task_process as Process
+import task_shaders as Shaders
+
+static if Intrinsic.targetOperatingSystem() == "windows" {
+  import silk.core.effect { Effect }
+  import silk.core.result { Result }
+  import silk.platform.windows.wtf8 { Wtf8, InvalidWtf8 }
+  import silk.mem.pointer { Pointer }
+  @foreign(noCapture: ("existing", "created"))
+  unsafe extern "C" fn CopyFileW(existing: ?[*]const u16, created: ?[*]const u16, failIfExists: i32) -> i32
+}
+pub effect fn copy(from: string, to: string) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  static if Intrinsic.targetOperatingSystem() == "windows" {
+    let mut a = match move run Effect.result(Wtf8.decodeBytes(String.utf8Bytes(from))) { Result<List<u16>, InvalidWtf8 | OutOfMemoryError>.Success { value } => move value Result<List<u16>, InvalidWtf8 | OutOfMemoryError>.Failure { .. } => run Task.abort("invalid Windows copy source") }
+    let mut b = match move run Effect.result(Wtf8.decodeBytes(String.utf8Bytes(to))) { Result<List<u16>, InvalidWtf8 | OutOfMemoryError>.Success { value } => move value Result<List<u16>, InvalidWtf8 | OutOfMemoryError>.Failure { .. } => run Task.abort("invalid Windows copy destination") }
+    run List<u16>.append(&mut a, 0)
+    run List<u16>.append(&mut b, 0)
+    if unsafe CopyFileW(Pointer.fromSlice(List<u16>.asSlice(&a)), Pointer.fromSlice(List<u16>.asSlice(&b)), 0) == 0 { run Task.abort("cannot copy benchmark executable") }
+  } else { run Task.exec("cp", &["-p", from, to]) }
+}
+effect fn installed(name: string) -> String
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let compiler = run Build.variable("SILK_COMPILER")
+  let root = run Task.root()
+  let output = run D.text(run Process.capture(String.view(&compiler), &["task", "--manifest-path", "../../../silk.toml", name], &[], &root))
+  return run String.copy(String.trim(String.view(&output)))
+}
+pub effect fn build() -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  run Shaders.rect(false)
+  let root = run Task.root()
+  let local = run Path.join(&root, ".cache/bench")
+  run FileSystem.createDirectoriesRecursively(&local)
+  let binary = run Build.build("bench/silk.toml", "gpu-webgpu-bench", "modules/gpu/webgpu/bench", true, false)
+  let suffix = if HOST_OS == "windows" { ".exe" } else { "" }
+  let silkName = run D.format("silk{}", &.(suffix))
+  let silk = run Path.join(&local, String.view(&silkName))
+  run copy(String.view(&binary), Process.text(&silk))
+  let dawn = run installed("install-webgpu")
+  let mut clang = run Build.variable("SILK_CLANG")
+  if String.view(&clang) == "" { clang = run installed("install-llvm") }
+  let include = run D.format("{}/include", &.(String.view(&dawn)))
+  let cName = run D.format("c{}", &.(suffix))
+  let output = run Path.join(&local, String.view(&cName))
+  let mut flags = List<String>.make()
+  let base = ["-std=c11", "-O3", "-g", "-I", String.view(&include), "-I", "bench"]
+  let mut index: usize = 0
+  while index < base.length { run List<String>.append(&mut flags, run String.copy(base[index]))
+    index = index + 1 }
+  let mut library = String.make()
+  let mut links = List<String>.make()
+  static if Intrinsic.targetOperatingSystem() == "darwin" {
+    let sdk = run D.text(run Process.capture("xcrun", &["--show-sdk-path"], &[], &root))
+    run List<String>.append(&mut flags, run String.copy("-isysroot"))
+    run List<String>.append(&mut flags, run String.copy(String.trim(String.view(&sdk))))
+    run List<String>.append(&mut flags, run String.copy("-mmacosx-version-min=26.0"))
+    library = run D.format("{}/lib/libwebgpu_dawn.a", &.(String.view(&dawn)))
+    run List<String>.append(&mut links, run String.copy("-lc++"))
+    run List<String>.append(&mut links, run String.copy("-lpthread"))
+    let frameworks = ["CoreFoundation", "Foundation", "IOSurface", "QuartzCore", "Cocoa", "IOKit", "Metal"]
+    index = 0
+    while index < frameworks.length { run List<String>.append(&mut links, run String.copy("-framework"))
+      run List<String>.append(&mut links, run String.copy(frameworks[index]))
+      index = index + 1 }
+  } else { static if Intrinsic.targetOperatingSystem() == "linux" {
+    library = run D.format("{}/lib64/libwebgpu_dawn.a", &.(String.view(&dawn)))
+      let libraries = ["-lstdc++", "-ldl", "-lrt", "-lpthread", "-lm"]
+      index = 0
+    while index < libraries.length { run List<String>.append(&mut links, run String.copy(libraries[index]))
+        index = index + 1 }
+  } else {
+    let compiler = run Build.variable("SILK_COMPILER")
+      let prepared = run Process.capture(String.view(&compiler), &["task", "--manifest-path", "../../../silk.toml", "prepare-windows", "--clang", String.view(&clang), "--runtime-directory", Process.text(&local), "--json"], &[], &root)
+      let metadata = run D.parse(Bytes.asSlice(&prepared))
+      let home = run D.requiredString(run D.field(&metadata, "dawn"))
+      library = run D.format("{}/lib/nonstd_dawn.lib", &.(home))
+      run List<String>.append(&mut flags, run String.copy("-fms-runtime-lib=dll"))
+      run List<String>.append(&mut links, run String.copy("-fuse-ld=lld"))
+  }
+  }
+  run List<String>.append(&mut flags, run String.copy("bench/main.c"))
+  run List<String>.append(&mut flags, run String.copy("bench/support.c"))
+  run List<String>.append(&mut flags, move library)
+  let libraries = List<String>.asSlice(&links)
+  index = 0
+  while index < libraries.length { run List<String>.append(&mut flags, run String.copy(String.view(&libraries[index])))
+    index = index + 1 }
+  run List<String>.append(&mut flags, run String.copy("-o"))
+  run List<String>.append(&mut flags, run String.copy(Process.text(&output)))
+  let mut arguments = List<string>.make()
+  let values = List<String>.asSlice(&flags)
+  index = 0
+  while index < values.length { run List<string>.append(&mut arguments, String.view(&values[index]))
+    index = index + 1 }
+  run Process.exec(String.view(&clang), List<string>.asSlice(&arguments), &[], &root)
+  run rust(String.view(&clang), &local, suffix)
+}
+effect fn rust(clang: string, local: &Path, suffix: string) -> ()
+  ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let root = run Task.root()
+  let mut cc = run Build.variable("CC")
+  if String.view(&cc) == "" { cc = run String.copy(clang) }
+  let object = run Path.join(local, if HOST_OS == "windows" { "markers.obj" } else { "markers.o" })
+  let markers = match move run HostInput.variableNamed("BENCH_CALLGRIND") { Option<Bytes>.Some { .. } => true Option<Bytes>.None => false }
+  if markers { run Process.exec(String.view(&cc), &["-O3", "-c", "bench/rust/markers.c", "-o", Process.text(&object), "-DBENCH_CALLGRIND"], &[], &root) }
+  else { run Process.exec(String.view(&cc), &["-O3", "-c", "bench/rust/markers.c", "-o", Process.text(&object)], &[], &root) }
+  let archive = run Path.join(local, if HOST_OS == "windows" { "bench_markers.lib" } else { "libbench_markers.a" })
+  static if Intrinsic.targetOperatingSystem() == "windows" {
+    let compilerPath = run Process.resolve(clang)
+    let tools = run Path.resolve(&compilerPath, "..")
+    let librarian = run Path.join(&tools, "llvm-lib.exe")
+    let destination = run D.format("/OUT:{}", &.(Process.text(&archive)))
+    run Process.exec(Process.text(&librarian), &[String.view(&destination), Process.text(&object)], &[], &root)
+  } else { run Process.exec("ar", &["crs", Process.text(&archive), Process.text(&object)], &[], &root) }
+  let target = run Path.join(local, "rust-target")
+  let environment = [run D.format("CARGO_TARGET_DIR={}", &.(Process.text(&target)))]
+  let search = run D.format("native={}", &.(Process.text(local)))
+  // These flags belong only to the baseline executable, not every Cargo dependency.
+  run Process.exec("cargo", &["rustc", "--locked", "--release", "--manifest-path", "bench/rust/Cargo.toml", "--", "-L", String.view(&search), "-l", "static=bench_markers"], &environment, &root)
+  let builtName = run D.format("release/gpu-bench-wgpu{}", &.(suffix))
+  let built = run Path.join(&target, String.view(&builtName))
+  let outputName = run D.format("rust{}", &.(suffix))
+  let output = run Path.join(local, String.view(&outputName))
+  run copy(Process.text(&built), Process.text(&output))
+}

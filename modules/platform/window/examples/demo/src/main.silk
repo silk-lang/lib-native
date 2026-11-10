@@ -8,11 +8,12 @@
 //! - Type, including with a Japanese input method: composition and committed text are
 //!   logged, and the candidate window opens at the mouse position.
 //! - File > Open… (Command+O) and File > Save… (Command+S) open native dialogs.
-import window.event { Event, Key, Modifiers }
+import window.event { Event }
 import window.keys { KeyCode }
 import window.macos { MacPlatform }
 import window.menu { MenuBar, OpenDialog, SaveDialog, Shortcut, SystemItem }
-import window.platform { Platform }
+// Interface methods resolve through this import; silk#2819 reports it as unused.
+import window.platform { Platform as _Platform }
 import window.types { WindowId, WindowOptions, WindowError, Wait, ImeState, RawSurface }
 import webgpu.runtime { Instance, RequestAdapterOptions, GpuError, Device }
 import webgpu.resources { Queue }
@@ -146,7 +147,7 @@ effect fn demo(instance: &Instance) -> ()
     match move run platform.nextEvent(Wait.Forever) {
       Option<Event>.Some { value } => {
         match &value {
-          Event.Resized { window, size, scaleFactor } => {
+          Event.Resized { size, scaleFactor, .. } => {
             scene.width = size.width
             scene.height = size.height
             let width = f64.toU32(f64.round(size.width * scaleFactor))
@@ -156,7 +157,7 @@ effect fn demo(instance: &Instance) -> ()
               configured = true
             }
           }
-          Event.ScaleFactorChanged { window, scaleFactor } => {
+          Event.ScaleFactorChanged { scaleFactor, .. } => {
             StderrWriter.print("scale factor {}\n", &.(scaleFactor))
           }
           Event.RequestFrame { window, targetTime } => {
@@ -170,7 +171,7 @@ effect fn demo(instance: &Instance) -> ()
               platform.requestFrame(window)
             }
           }
-          Event.MouseMoved { window, position, modifiers } => {
+          Event.MouseMoved { window, position, .. } => {
             scene.x = position.x / f64.max(scene.width, 1.0)
             scene.y = position.y / f64.max(scene.height, 1.0)
             platform.setIme(
@@ -181,19 +182,19 @@ effect fn demo(instance: &Instance) -> ()
             )
             platform.requestFrame(window)
           }
-          Event.KeyDown { window, key, code, modifiers, repeat, imeHandled } => {
+          Event.KeyDown { window, code, repeat, imeHandled, .. } => {
             if code == KeyCode.Space && !imeHandled && !repeat {
               scene.animating = !scene.animating
               platform.requestFrame(window)
             }
           }
-          Event.ImePreedit { window, text, selectionStart, selectionEnd } => {
+          Event.ImePreedit { text, selectionStart, selectionEnd, .. } => {
             StderrWriter.print(
               "preedit \"{}\" caret {}..{}\n",
               &(text.view(), selectionStart, selectionEnd),
             )
           }
-          Event.TextInput { window, text } => {
+          Event.TextInput { text, .. } => {
             StderrWriter.print("text \"{}\"\n", &.(text.view()))
           }
           Event.MenuAction { action } => {
@@ -220,10 +221,10 @@ effect fn demo(instance: &Instance) -> ()
               i = i + 1
             }
           }
-          Event.AppearanceChanged { appearance } => {
+          Event.AppearanceChanged { .. } => {
             StderrWriter.print("appearance changed\n", &())
           }
-          Event.CloseRequested { window } => {
+          Event.CloseRequested { .. } => {
             break
           }
           Event.QuitRequested => {

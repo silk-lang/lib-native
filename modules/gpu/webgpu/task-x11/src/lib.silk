@@ -1,0 +1,3 @@
+static if Intrinsic.targetOperatingSystem() == "linux" {
+  import capture
+}

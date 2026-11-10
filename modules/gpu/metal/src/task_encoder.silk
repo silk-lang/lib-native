@@ -1,0 +1,209 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+import task_support as S
+import task_rust as R
+import task_bridge as B
+import silk.cli.task { Task, TaskError }
+import silk.collections.list { List }
+import silk.core.option { Option }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.system.filesystem { FileError, FileSystem, Path }
+import silk.text.regex { Match }
+import silk.text.string { String }
+import silk.num.usize
+
+struct Pair { pub key: String, pub value: String, }
+struct Selector { pub name: String, pub start: usize, pub end: usize, }
+struct Type { pub silk: string<'static>, pub c: string<'static>, }
+fn record(value: string) -> string<'static> {
+  if value == "MTLViewport" { return "MTLViewport" }
+  if value == "MTLScissorRect" { return "MTLScissorRect" }
+  if value == "VertexAmplificationViewMapping" { return "MTLVertexAmplificationViewMapping" }
+  if value == "MTLSize" { return "MTLSize" }
+  if value == "MTLOrigin" { return "MTLOrigin" }
+  if value == "MTLRegion" { return "MTLRegion" }
+  if value == "NSRange" { return "NSRange" }
+  return ""
+}
+fn scalar(value: string) -> Type {
+  if value == "NSUInteger" { return Type { silk: "u64", c: "NSUInteger" } }
+  if value == "NSInteger" { return Type { silk: "i64", c: "NSInteger" } }
+  if value == "u32" { return Type { silk: "u32", c: "uint32_t" } }
+  if value == "u8" { return Type { silk: "u8", c: "uint8_t" } }
+  if value == "f32" { return Type { silk: "f32", c: "float" } }
+  if value == "f64" { return Type { silk: "f64", c: "double" } }
+  if value == "bool" { return Type { silk: "bool", c: "uint8_t" } }
+  return Type { silk: "", c: "" }
+}
+effect fn mapping(pairs: &mut List<Pair>, key: string, value: string) -> () ! OutOfMemoryError ? &mut Allocator {
+  run pairs.append(Pair { key: run String.copy(key), value: run String.copy(value) })
+}
+fn mapped<'a>(pairs: &'a List<Pair>, key: string<'a>) -> string<'a> {
+  let entries = pairs.asSlice()
+  let mut at: usize = 0
+  while at < entries.length { if entries[at].key.view() == key { return entries[at].value.view() }
+    at = at + 1 }
+  return key
+}
+fn known(pairs: &List<Pair>, value: string) -> bool {
+  let entries = pairs.asSlice()
+  let mut at: usize = 0
+  while at < entries.length { if entries[at].value.view() == value { return true }
+    at = at + 1 }
+  return false
+}
+effect fn render(method: &R.Method) -> B.Binding ! TaskError | OutOfMemoryError ? &mut Allocator {
+  let owner = R.owner(method.owner.view())
+  let name = method.name.view()
+  let returns = method.result.view()
+  let mut params = List<B.Parameter>.make()
+  let mut counts = List<B.Parameter>.make()
+  let mut expressions = List<Pair>.make()
+  let mut notes = List<String>.make()
+  let mut hasSelf = false
+  let arguments = run S.split(method.arguments.view(), ",")
+  let args = arguments.asSlice()
+  let mut at: usize = 0
+  while at < args.length {
+    let arg = String.trim(args[at].view())
+    if arg == "&self" { hasSelf = true
+      run params.append(run B.parameter("object", "?*mut u8", "void *")) }
+    else if arg != "" {
+      let colon = run S.index(arg, ":")
+      let argName = String.trim(S.sub(arg, 0, colon))
+      let qualified = String.trim(S.sub(arg, colon + 1, S.length(arg)))
+      let typ = if String.startsWith(qualified, "crate::") { S.sub(qualified, 7, S.length(qualified)) } else { qualified }
+      let scalarType = scalar(typ)
+      if typ == "Range<f32>" {
+        let start = run S.cat(&[argName, "_start"])
+        let end = run S.cat(&[argName, "_end"])
+        run params.append(run B.parameter(start.view(), "f32", "float"))
+        run params.append(run B.parameter(end.view(), "f32", "float"))
+        let startKey = run S.cat(&[argName, ".start"])
+        let endKey = run S.cat(&[argName, ".end"])
+        run mapping(&mut expressions, startKey.view(), start.view())
+        run mapping(&mut expressions, endKey.view(), end.view())
+        run notes.append(run S.cat(&[argName, " is flattened into start/end scalars."]))
+      } else if typ == "Option<&[VertexAmplificationViewMapping]>" {
+        run params.append(run B.parameter(argName, "?[*]const VertexAmplificationViewMapping", "const MTLVertexAmplificationViewMapping *"))
+        let key = run S.cat(&[argName, ".map_or(std::ptr::null(), |vm| vm.as_ptr())"])
+        run mapping(&mut expressions, key.view(), argName)
+        run notes.append(run String.copy("view_mappings is null or points to count entries."))
+      } else if String.startsWith(typ, "&[") && String.endsWith(typ, "]") {
+        let element = S.sub(typ, 2, S.length(typ) - 1)
+        let ct = record(element)
+        let st = if ct != "" { element } else if element == "NSUInteger" { "u64" } else if String.startsWith(element, "&") || String.startsWith(element, "Option<&") { "?*mut u8" } else { "" }
+        if st == "" { run Task.abort("Unknown encoder slice element") }
+        let silk = run S.cat(&["?[*]const ", st])
+        let c = run S.cat(&["const ", if ct != "" { ct } else if element == "NSUInteger" { "NSUInteger" } else { "id" }, " *"])
+        run params.append(run B.parameter(argName, silk.view(), c.view()))
+        let key = run S.cat(&[argName, ".as_ptr()"])
+        run mapping(&mut expressions, key.view(), argName)
+        let lengthKey = run S.cat(&[argName, ".len()"])
+        if argName == "offsets" {
+          run mapping(&mut expressions, lengthKey.view(), "data_count")
+          run notes.append(run String.copy("offsets and data each contain data_count elements."))
+        } else {
+          let count = run S.cat(&[argName, "_count"])
+          run counts.append(run B.parameter(count.view(), "u64", "NSUInteger"))
+          run mapping(&mut expressions, lengthKey.view(), count.view())
+          run notes.append(run S.cat(&[argName, " points to ", argName, "_count entries; null is allowed only for a zero count."]))
+        }
+      } else if typ == "&str" {
+        run params.append(run B.parameter(argName, "?[*]const u8", "const char *"))
+        let value = run S.cat(&["[NSString stringWithUTF8String:", argName, "]"])
+        run mapping(&mut expressions, argName, value.view())
+        run notes.append(run S.cat(&[argName, " is a non-null NUL-terminated UTF-8 string."]))
+      } else if record(typ) != "" {
+        run params.append(run B.parameter(argName, typ, record(typ)))
+        run mapping(&mut expressions, argName, argName)
+        run notes.append(run S.cat(&[argName, " is passed by value."]))
+      } else if scalarType.silk != "" {
+        run params.append(run B.parameter(argName, scalarType.silk, scalarType.c))
+        run mapping(&mut expressions, argName, argName)
+      } else if String.startsWith(typ, "MTL") {
+        run params.append(run B.parameter(argName, "u64", "NSUInteger"))
+        let value = run S.cat(&["(", typ, ")", argName])
+        run mapping(&mut expressions, argName, value.view())
+      } else if String.startsWith(typ, "&") || String.startsWith(typ, "Option<&") {
+        run params.append(run B.parameter(argName, "?*mut u8", "void *"))
+        let value = run S.cat(&["(id)", argName])
+        run mapping(&mut expressions, argName, value.view())
+      } else if typ == "*const std::ffi::c_void" {
+        run params.append(run B.parameter(argName, "?*const u8", "const void *"))
+        run mapping(&mut expressions, argName, argName)
+      } else { run Task.abort("Unknown encoder Rust argument form") }
+    }
+    at = at + 1
+  }
+  while counts.length() != 0 { run params.append(counts.remove(0)) }
+  let mut result = scalar(returns)
+  if returns == "()" { result = Type { silk: "()", c: "void" } }
+  else if returns == "&str" { result = Type { silk: "?[*]const u8", c: "const char *" }
+    run notes.append(run String.copy("Returned UTF-8 storage is borrowed from the encoder label NSString.")) }
+  else if result.silk != "" {}
+  else if String.startsWith(returns, "MTL") { result = Type { silk: "u64", c: "NSUInteger" } }
+  else if returns == "*mut std::ffi::c_void" { result = Type { silk: "?*mut u8", c: "void *" }
+    run notes.append(run String.copy("Returned mutable storage is borrowed from the argument buffer.")) }
+  else if returns == "Self" || returns == "ArgumentEncoder" || String.startsWith(returns, "&") {
+    result = Type { silk: "?*mut u8", c: "void *" }
+    run notes.append(run String.copy(if String.startsWith(name, "new") { "Returned object is owned (+1); release it exactly once." } else { "Returned object is borrowed (+0)." }))
+  } else { run Task.abort("Unknown encoder return type") }
+  let messageStart = match move run S.search("msg_send(?:_bool)?!\\s*\\[", method.body.view()) {
+    Option<Match<'_>>.Some { value } => value.end() - 1
+    Option<Match<'_>>.None => run Task.abort("No encoder selector")
+  }
+  let messageEnd = run S.closing(method.body.view(), messageStart, 91, 93)
+  let raw = S.sub(method.body.view(), messageStart + 1, messageEnd)
+  let comma = run S.index(raw, ",")
+  let mut message = run String.copy(String.trim(S.sub(raw, comma + 1, S.length(raw))))
+  if let Option<Match<'_>>.Some { value: found } = move run S.search("NSRange\\s*\\{\\s*location:\\s*(\\w+),\\s*length:\\s*(\\w+)\\.len\\(\\) as _,?\\s*\\}", message.view()) {
+    message = run S.cat(&[S.sub(message.view(), 0, found.start()), "NSMakeRange(", S.group(&found, 1), ", ", S.group(&found, 2), "_count)", S.sub(message.view(), found.end(), S.length(message.view()))])
+  }
+  if name == "set_label" || name == "insert_debug_signpost" || name == "push_debug_group" {
+    let stringArg = if name == "set_label" { "label" } else { "name" }
+    message = run S.replace(message.view(), "nslabel", mapped(&expressions, stringArg))
+  } else if String.contains(message.view(), ":") {
+    let mut selectors = List<Selector>.make()
+    let mut offset: usize = 0
+    while let Option<Match<'_>>.Some { value: found } = move run S.search("\\b([A-Za-z_]\\w*)\\s*:(?!:)", S.sub(message.view(), offset, S.length(message.view()))) {
+      run selectors.append(Selector { name: run String.copy(S.group(&found, 1)), start: offset + found.start(), end: offset + found.end() })
+      offset = offset + found.end()
+    }
+    let pieces = selectors.asSlice()
+    let mut converted = String.make()
+    at = 0
+    while at < pieces.length {
+      let mut expr = String.trim(S.sub(message.view(), pieces[at].end, if at + 1 < pieces.length { pieces[at + 1].start } else { S.length(message.view()) }))
+      if let Option<Match<'_>>.Some { value: found } = move run S.search("\\s+as\\s+(?:u64|NSUInteger|_)$", expr) { expr = S.sub(expr, 0, found.start()) }
+      let value = mapped(&expressions, expr)
+      if !String.startsWith(value, "NSMakeRange(") && !known(&expressions, value) { run Task.abort("Unknown encoder selector expression") }
+      if at != 0 { run converted.append(" ") }
+      let piece = run S.cat(&[pieces[at].name.view(), ":", value])
+      run converted.append(piece.view())
+      at = at + 1
+    }
+    message = move converted
+  }
+  let target = run S.cat(&[if !hasSelf { "MTL" } else if owner == "IndirectCommandBufferDescriptor" { "(MTL" } else { "(id<MTL" }, owner, if !hasSelf { "" } else if owner == "IndirectCommandBufferDescriptor" { " *)object" } else { ">)object" }])
+  let call = run S.cat(&[if returns == "&str" { "[" } else if result.silk == "bool" { "(" } else { "" }, "[", target.view(), " ", message.view(), "]", if returns == "&str" { " UTF8String]" } else if result.silk == "bool" { " ? 1 : 0)" } else { "" }])
+  let body = run S.cat(&[if result.silk == "()" { "" } else { "return " }, call.view(), ";"])
+  if notes.length() == 0 { run notes.append(run String.copy("Direct Metal selector binding; receiver and resource arguments are borrowed.")) }
+  let note = run S.join(&notes, " ")
+  let rust = run S.cat(&[method.owner.view(), ".", name])
+  return run B.binding(owner, name, move params, result.silk, result.c, body.view(), note.view(), rust.view())
+}
+pub effect fn generate(root: &Path, upstream: &Path) -> () ! TaskError | FileError | OutOfMemoryError ? &mut FileSystem | &mut Allocator {
+  let files = &["src/encoder.rs", "src/indirect_encoder.rs"]
+  let mut bindings = List<B.Binding>.make()
+  let mut file: usize = 0
+  while file < files.length {
+    let source = run S.readText(upstream, files[file])
+    let methods = run R.methods(source.view())
+    let entries = methods.asSlice()
+    let mut at: usize = 0
+    while at < entries.length { run bindings.append(run render(&entries[at]))
+      at = at + 1 }
+    file = file + 1
+  }
+  run B.emit(root, "encoder", &bindings, "")
+}

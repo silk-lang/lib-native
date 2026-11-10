@@ -1,0 +1,174 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+import task_support as S
+import silk.cli.task { Task, TaskError }
+import silk.collections.list { List }
+import silk.core.option { Option }
+import silk.io.writer { WriterError }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.schema.schema { Schema }
+import silk.system.child_process { ChildProcess, ProcessError }
+import silk.system.filesystem { FileError, FileSystem, Path }
+import silk.system.host_input { HostInput, HostInputError }
+import silk.text.string { String }
+import silk.text.regex { Match }
+import silk.num.usize
+
+pub const REVISION: string = "e47bc888d3837f85ea8b01c9e66ccf73236293b9"
+pub struct Entry { pub rust: String, pub silk: String, pub notes: String, }
+impl Schema for Entry {}
+struct Method { pub rust: String, pub source: String, }
+impl Schema for Method {}
+struct Inventory { pub repository: String, pub revision: String, pub methods: List<Method>, }
+impl Schema for Inventory {}
+struct Scope { pub start: usize, pub end: usize, pub owner: String, }
+
+pub effect fn pinned(upstream: string) -> () ! TaskError | ProcessError | HostInputError | OutOfMemoryError | WriterError ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let revision = run Task.capture("git", &["-C", upstream, "rev-parse", "HEAD"])
+  if String.trim(S.text(&revision)) != REVISION { run Task.abort("Expected metal-rs revision e47bc888d3837f85ea8b01c9e66ccf73236293b9") }
+}
+pub effect fn canonical(value: string) -> String ! OutOfMemoryError ? &mut Allocator { return run S.replace(value, "Ref.", ".") }
+
+effect fn rustFiles(root: &Path, relative: string, files: &mut List<String>) -> () ! FileError | OutOfMemoryError ? &mut FileSystem | &mut Allocator {
+  let path = run Path.join(root, relative)
+  let children = run FileSystem.listDirectory(&path)
+  let items = children.asSlice()
+  let mut at: usize = 0
+  while at < items.length {
+    if let Option<string>.Some { value: name } = move items[at].path.name() {
+      let next = run S.cat(&[relative, "/", name])
+      if items[at].kind.code == 1 { run rustFiles(root, next.view(), &mut files) }
+      else if String.endsWith(name, ".rs") { run files.append(move next) }
+    }
+    at = at + 1
+  }
+}
+effect fn inventory(upstream: &Path) -> List<Method> ! FileError | TaskError | OutOfMemoryError ? &mut FileSystem | &mut Allocator {
+  let mut files = List<String>.make()
+  run rustFiles(upstream, "src", &mut files)
+  let sortedFiles = run S.sorted(&files)
+  let mut methods = List<Method>.make()
+  let paths = sortedFiles.asSlice()
+  let mut file: usize = 0
+  while file < paths.length {
+    let original = run S.readText(upstream, paths[file])
+    let mut cleaned = String.make()
+    let mut rest = original.view()
+    while let Option<Match<'_>>.Some { value: found } = move run S.search("(?s://[^\\n]*|/\\*.*?\\*/|\"(?:\\\\.|[^\"\\\\])*\")", rest) {
+      run cleaned.append(S.sub(rest, 0, found.start()))
+      let mut count = found.end() - found.start()
+      while count > 0 { run cleaned.append(" ")
+        count = count - 1 }
+      rest = S.sub(rest, found.end(), S.length(rest))
+    }
+    run cleaned.append(rest)
+    let source = cleaned.view()
+    let mut scopes = List<Scope>.make()
+    let mut offset: usize = 0
+    while let Option<Match<'_>>.Some { value: found } = move run S.search("\\bimpl(?:<[^{}]*?>)?\\s+(\\w+)(?:<[^{}]*?>)?\\s*(?:where[^{}]*?)?\\{", S.sub(source, offset, S.length(source))) {
+      let start = offset + found.end() - 1
+      run scopes.append(Scope { start: start, end: run S.closing(source, start, 123, 125), owner: run String.copy(S.group(&found, 1)) })
+      offset = offset + found.end()
+    }
+    offset = 0
+    while let Option<Match<'_>>.Some { value: found } = move run S.search("\\bpub\\s+(?:unsafe\\s+)?fn\\s+(\\w+)", S.sub(source, offset, S.length(source))) {
+      let start = offset + found.start()
+      let name = S.group(&found, 1)
+      let mut owner = S.sub(source, 0, 0)
+      let ranges = scopes.asSlice()
+      let mut scope: usize = 0
+      while scope < ranges.length {
+        if ranges[scope].start < start && start < ranges[scope].end { owner = ranges[scope].owner.view()
+          break }
+        scope = scope + 1
+      }
+      if owner == "" && name != "mps_supports_device" { run Task.abort("Unclassified upstream public method") }
+      let qualified = run S.cat(&[if String.endsWith(paths[file], "/mps.rs") { "mps::" } else { "" }, owner, if owner == "" { "" } else { "." }, name])
+      run methods.append(Method { rust: run canonical(qualified.view()), source: run String.copy(paths[file]) })
+      offset = offset + found.end()
+    }
+    file = file + 1
+  }
+  return move methods
+}
+effect fn refresh(root: &Path, upstream: &Path) -> () ! TaskError | FileError | OutOfMemoryError ? &mut Allocator | &mut FileSystem {
+  let methods = run inventory(upstream)
+  let mut output = run S.cat(&["{\n  \"repository\": \"https://github.com/gfx-rs/metal-rs\",\n  \"revision\": \"", REVISION, "\",\n  \"methods\": [\n"])
+  let entries = methods.asSlice()
+  let mut at: usize = 0
+  while at < entries.length {
+    let rust = run S.quoted(entries[at].rust.view())
+    let source = run S.quoted(entries[at].source.view())
+    let item = run S.cat(&["    {\n      \"rust\": ", rust.view(), ",\n      \"source\": ", source.view(), "\n    }", if at + 1 < entries.length { "," } else { "" }, "\n"])
+    run output.append(item.view())
+    at = at + 1
+  }
+  run output.append("  ]\n}\n")
+  run S.save(root, "api/upstream.json", output.view())
+}
+pub effect fn coverage(root: &Path, upstream: Option<String>) -> () ! TaskError | FileError | ProcessError | HostInputError | OutOfMemoryError | WriterError ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  if let Option<String>.Some { value } = move upstream {
+    run pinned(value.view())
+    let directory = run Path.resolve(root, value.view())
+    run refresh(root, &directory)
+  }
+  let source = run S.readText(root, "api/upstream.json")
+  let expected = run S.decode<Inventory>(source.view())
+  let directory = run Path.join(root, "api")
+  let files = run FileSystem.listDirectory(&directory)
+  let mut mapped = List<String>.make()
+  let mut missingTargets = List<String>.make()
+  let mut count: usize = 0
+  let paths = files.asSlice()
+  let mut file: usize = 0
+  while file < paths.length {
+    if let Option<string>.Some { value: name } = move paths[file].path.name() {
+      if String.endsWith(name, ".json") && name != "upstream.json" && name != "type-map.json" {
+        let relative = run S.cat(&["api/", name])
+        let content = run S.readText(root, relative.view())
+        let parsed = run S.decode<List<Entry>>(content.view())
+        let entries = parsed.asSlice()
+        count = count + entries.length
+        let mut at: usize = 0
+        while at < entries.length {
+          run mapped.append(run canonical(entries[at].rust.view()))
+          let parts = run S.split(entries[at].silk.view(), ".")
+          let names = parts.asSlice()
+          let target = run S.cat(&["src/", names[0].view(), ".silk"])
+          let path = run Path.join(root, target.view())
+          let mut exists = false
+          if run FileSystem.exists(&path) {
+            let source = run S.readText(root, target.view())
+            // Declaration identifiers are upstream ASCII words, not regex source.
+            let wanted = run S.cat(&["\\b(?:fn|const|struct)\\s+", names[names.length - 1].view(), "\\b"])
+            if let Option<Match<'_>>.Some { .. } = move run S.search(wanted.view(), source.view()) { exists = true }
+          }
+          if !exists { run missingTargets.append(run String.copy(entries[at].silk.view())) }
+          at = at + 1
+        }
+      }
+    }
+    file = file + 1
+  }
+  let mut unique = List<String>.make()
+  let mut missing = List<String>.make()
+  let methods = expected.methods.asSlice()
+  let mut at: usize = 0
+  while at < methods.length {
+    run S.unique(&mut unique, methods[at].rust.view())
+    if !S.contains(&mapped, methods[at].rust.view()) { run S.unique(&mut missing, methods[at].rust.view()) }
+    at = at + 1
+  }
+  let sortedMissing = run S.sorted(&missing)
+  let sortedTargets = run S.sorted(&missingTargets)
+  at = 0
+  while at < missing.length() { let line = run S.cat(&["MISSING upstream method: ", sortedMissing.asSlice()[at]])
+    run S.printLine(line.view())
+    at = at + 1 }
+  at = 0
+  while at < missingTargets.length() { let line = run S.cat(&["MISSING Silk declaration: ", sortedTargets.asSlice()[at]])
+    run S.printLine(line.view())
+    at = at + 1 }
+  if missing.length() != 0 || missingTargets.length() != 0 { run Task.abort("Incomplete Metal declaration coverage") }
+  run S.printCounts(unique.length(), count)
+  run S.printLine("Inventory coverage only; native execution is verified separately by the GPU examples.")
+}

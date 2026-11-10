@@ -27,15 +27,15 @@ static if Intrinsic.profileText("optimization") == "none" {
     }
     pub fn recordFailure(self: &Self) -> () {
       let pointer = unsafe Intrinsic.pointerRequalify<*const usize, *mut usize>(Pointer.fromRef(&self.counts.get().failures))
-      let ignored = unsafe Atomic.fetchAdd<usize>(pointer, 1, MemoryOrder.Relaxed)
+      drop unsafe Atomic.fetchAdd<usize>(pointer, 1, MemoryOrder.Relaxed)
     }
     pub fn retain(self: &Self) -> () {
       let pointer = unsafe Intrinsic.pointerRequalify<*const usize, *mut usize>(Pointer.fromRef(&self.counts.get().handles))
-      let ignored = unsafe Atomic.fetchAdd<usize>(pointer, 1, MemoryOrder.Relaxed)
+      drop unsafe Atomic.fetchAdd<usize>(pointer, 1, MemoryOrder.Relaxed)
     }
     pub fn release(self: &Self) -> () {
       let pointer = unsafe Intrinsic.pointerRequalify<*const usize, *mut usize>(Pointer.fromRef(&self.counts.get().handles))
-      let ignored = unsafe Atomic.fetchSubtract<usize>(pointer, 1, MemoryOrder.Relaxed)
+      drop unsafe Atomic.fetchSubtract<usize>(pointer, 1, MemoryOrder.Relaxed)
     }
   }
   pub struct HandleLease { observer: Option<Diagnostics> }

@@ -1,6 +1,7 @@
 static if Intrinsic.targetArchitecture() == "wasm32" {
-  import browser
-  import canvas
+  // Linked for their exported wasm entry points; nothing here names them.
+  import browser as _browser
+  import canvas as _canvas
 
   pub fn main() -> i32 {
     return 0

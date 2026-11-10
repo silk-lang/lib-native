@@ -1,0 +1,331 @@
+import silk.cli.task { Task, TaskError }
+import silk.collections.bytes { Bytes }
+import silk.core.option { Option }
+import silk.core.result { Result }
+import silk.io.writer { WriterError }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.system.child_process { ChildProcess, ProcessError }
+import silk.system.filesystem { FileError, FileSystem, Path }
+import silk.system.host_input { HostInput, HostInputError }
+import silk.text.string { InvalidUtf8, String }
+import silk.num.usize
+import task_data { CODES, NAMED, CODE_TO_NAMED, MACOS, EVDEV, WINDOWS, KeyMapping, FUNCTIONS, BRIDGE_HEADER }
+
+effect fn validateNames(names: &[string]) -> () ! TaskError | OutOfMemoryError ? &mut Allocator {
+  let mut i: usize = 0
+  while i < names.length {
+    let mut j = i + 1
+    while j < names.length {
+      if names[i] == names[j] { run Task.abort("duplicate key name in task_data.silk") }
+      j = j + 1
+    }
+    i = i + 1
+  }
+}
+effect fn validateTable(table: &[KeyMapping]) -> () ! TaskError | OutOfMemoryError ? &mut Allocator {
+  let mut at: usize = 0
+  while at < table.length {
+    let mapping = &table[at]
+    if index(&CODES, mapping.code) == 0 && mapping.code != "Unidentified" {
+      run Task.abort("native key mapping names an unknown KeyCode")
+    }
+    at = at + 1
+  }
+}
+
+effect fn append(out: &mut String, text: string) -> () ! OutOfMemoryError ? &mut Allocator {
+  run String.append(&mut out, text)
+}
+effect fn number(out: &mut String, value: usize) -> () ! OutOfMemoryError ? &mut Allocator {
+  if value >= 10 { run number(&mut out, value / 10) }
+  let digits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+  run append(&mut out, digits[value % 10])
+}
+pub effect fn path(name: string) -> Path ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let root = run Task.root()
+  return run Path.join(&root, name)
+}
+pub effect fn text(bytes: &Bytes) -> String ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  match move String.fromUtf8(Bytes.asSlice(bytes)) {
+    Result<string, InvalidUtf8>.Success { value } => { return run String.copy(value) }
+    Result<string, InvalidUtf8>.Failure { .. } => run Task.abort("expected UTF-8 text")
+  }
+}
+effect fn output(name: string, contents: &String, check: bool) -> () ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let destination = run path(name)
+  if check {
+    if !run FileSystem.exists(&destination) { run Task.abort(name) }
+    let previous = run FileSystem.readFile(&destination)
+    let old = Bytes.asSlice(&previous)
+    let expected = String.utf8Bytes(String.view(contents))
+    if old.length != expected.length { run Task.abort(name) }
+    let mut i: usize = 0
+    while i < old.length {
+      if old[i] != expected[i] { run Task.abort(name) }
+      i = i + 1
+    }
+  } else {
+    run FileSystem.writeFileWithParents(&destination, String.utf8Bytes(String.view(contents)))
+  }
+}
+fn index(names: &[string], name: string) -> usize {
+  let mut i: usize = 0
+  while i < names.length {
+    if names[i] == name { return i }
+    i = i + 1
+  }
+  return 0
+}
+fn named(code: string) -> string {
+  let mut i: usize = 0
+  while i < CODE_TO_NAMED.length {
+    if CODE_TO_NAMED[i].code == code { return CODE_TO_NAMED[i].named }
+    i = i + 1
+  }
+  return "Unidentified"
+}
+effect fn defines(out: &mut String) -> () ! OutOfMemoryError ? &mut Allocator {
+  let mut i: usize = 0
+  while i < CODES.length {
+    run append(&mut out, "#define SILK_CODE_")
+    run append(&mut out, CODES[i])
+    run append(&mut out, " ")
+    run number(&mut out, i)
+    run append(&mut out, "\n")
+    i = i + 1
+  }
+  run append(&mut out, "\n")
+  i = 0
+  while i < NAMED.length {
+    run append(&mut out, "#define SILK_NAMED_")
+    run append(&mut out, NAMED[i])
+    run append(&mut out, " ")
+    run number(&mut out, i)
+    run append(&mut out, "\n")
+    i = i + 1
+  }
+}
+effect fn namedTable(out: &mut String) -> () ! OutOfMemoryError ? &mut Allocator {
+  run append(&mut out, "// KeyCode to the NamedKey it always produces, or Unidentified.\nstatic const uint16_t silk_code_named_keys[")
+  run number(&mut out, CODES.length)
+  run append(&mut out, "] = {\n")
+  let mut i: usize = 0
+  while i < CODES.length {
+    run append(&mut out, "  ")
+    run number(&mut out, index(&NAMED, named(CODES[i])))
+    run append(&mut out, ", // ")
+    run append(&mut out, CODES[i])
+    run append(&mut out, "\n")
+    i = i + 1
+  }
+  run append(&mut out, "};\n")
+}
+effect fn header(table: &[KeyMapping], mac: bool, tableName: string, comment: string) -> String ! OutOfMemoryError ? &mut Allocator {
+  let mut out = run String.copy("// Generated by silk task generate-keys; do not edit.\n#pragma once\n#include <stdint.h>\n\n")
+  run defines(&mut out)
+  if !mac {
+    run append(&mut out, "#define SILK_CODE_COUNT ")
+    run number(&mut out, CODES.length)
+    run append(&mut out, "\n\n")
+    run namedTable(&mut out)
+  }
+  run append(&mut out, "\n// ")
+  run append(&mut out, comment)
+  run append(&mut out, "\nstatic const uint16_t ")
+  run append(&mut out, tableName)
+  run append(&mut out, if mac { "[128] = {\n" } else { "[512] = {\n" })
+  let mut i: usize = 0
+  let count: usize = if mac { 128 } else { 512 }
+  while i < count {
+    let mut key: string = "Unidentified"
+    let mut found = false
+    let mut j: usize = 0
+    while j < table.length {
+      if table[j].native == i { key = table[j].code
+        found = true }
+      j = j + 1
+    }
+    if mac || found {
+      run append(&mut out, "  ")
+      if !mac { run append(&mut out, "[")
+        run number(&mut out, i)
+        run append(&mut out, "] = ") }
+      run number(&mut out, index(&CODES, key))
+      run append(&mut out, ", // ")
+      if mac {
+        let hex = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"]
+        run append(&mut out, "0x")
+        run append(&mut out, hex[i / 16])
+        run append(&mut out, hex[i % 16])
+        run append(&mut out, " ")
+      }
+      run append(&mut out, key)
+      run append(&mut out, "\n")
+    }
+    i = i + 1
+  }
+  run append(&mut out, "};\n")
+  if mac { run append(&mut out, "\n")
+    run namedTable(&mut out) }
+  return move out
+}
+effect fn enumeration(out: &mut String, names: &[string], kind: string) -> () ! OutOfMemoryError ? &mut Allocator {
+  run append(&mut out, "pub enum(u16) ")
+  run append(&mut out, kind)
+  run append(&mut out, " {\n")
+  let mut i: usize = 0
+  while i < names.length { run append(&mut out, "  ")
+    run append(&mut out, names[i])
+    run append(&mut out, ",\n")
+    i = i + 1 }
+  run append(&mut out, "}\n\n")
+}
+effect fn values(out: &mut String, names: &[string], kind: string, array: string) -> () ! OutOfMemoryError ? &mut Allocator {
+  run append(&mut out, "const ")
+  run append(&mut out, array)
+  run append(&mut out, ": [")
+  run append(&mut out, kind)
+  run append(&mut out, "; ")
+  run number(&mut out, names.length)
+  run append(&mut out, "] = [\n")
+  let mut i: usize = 0
+  while i < names.length { run append(&mut out, "  ")
+    run append(&mut out, kind)
+    run append(&mut out, ".")
+    run append(&mut out, names[i])
+    run append(&mut out, ",\n")
+    i = i + 1 }
+  run append(&mut out, "]\n\n")
+}
+effect fn jsList(out: &mut String, names: &[string]) -> () ! OutOfMemoryError ? &mut Allocator {
+  let mut i: usize = 0
+  while i < names.length {
+    if i != 0 { run append(&mut out, ", ") }
+    run append(&mut out, "'")
+    run append(&mut out, names[i])
+    run append(&mut out, "'")
+    i = i + 1
+  }
+}
+pub effect fn keys(check: bool) -> () ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  run validateNames(&CODES)
+  run validateNames(&NAMED)
+  run validateTable(&MACOS)
+  run validateTable(&EVDEV)
+  run validateTable(&WINDOWS)
+  let mut mappingIndex: usize = 0
+  while mappingIndex < CODE_TO_NAMED.length {
+    let mapping = &CODE_TO_NAMED[mappingIndex]
+    if (index(&CODES, mapping.code) == 0 && mapping.code != "Unidentified")
+      || (index(&NAMED, mapping.named) == 0 && mapping.named != "Unidentified") {
+      run Task.abort("named key mapping names an unknown key")
+    }
+    mappingIndex = mappingIndex + 1
+  }
+  let mut source = run String.copy("//! Physical key codes and named logical keys. Generated by silk task generate-keys; do not edit.\n//! The discriminants are part of the native backends' C ABI.\nimport silk.num.u32\n\n/// A physical key, named after its position on a US keyboard (UI Events `code`).\n/// The same physical key reports the same code on every layout.\n")
+  run enumeration(&mut source, &CODES, "KeyCode")
+  run append(&mut source, "/// A logical key that produces no character (UI Events `key`). Keys that produce\n/// characters are reported as text in `Key.Character`.\n")
+  run enumeration(&mut source, &NAMED, "NamedKey")
+  run values(&mut source, &CODES, "KeyCode", "KEY_CODES")
+  run values(&mut source, &NAMED, "NamedKey", "NAMED_KEYS")
+  run append(&mut source, "/// The code with discriminant `value`, or `Unidentified` when no member has it.\npub fn keyCodeFromValue(value: u32) -> KeyCode {\n  if value >= ")
+  run number(&mut source, CODES.length)
+  run append(&mut source, " {\n    return KeyCode.Unidentified\n  }\n  return KEY_CODES[u32.toUsize(value)]\n}\n\n/// The named key with discriminant `value`, or `Unidentified` when no member has it.\npub fn namedKeyFromValue(value: u32) -> NamedKey {\n  if value >= ")
+  run number(&mut source, NAMED.length)
+  run append(&mut source, " {\n    return NamedKey.Unidentified\n  }\n  return NAMED_KEYS[u32.toUsize(value)]\n}\n")
+  run output("src/keys.silk", &source, check)
+  let mac = run header(&MACOS, true, "silk_macos_key_codes", "kVK_* to KeyCode.")
+  run output("native/macos/keys.h", &mac, check)
+  let linux = run header(&EVDEV, false, "silk_evdev_key_codes", "evdev KEY_* (X11 key code - 8) to KeyCode.")
+  run output("native/linux/keys.h", &linux, check)
+  let windows = run header(&WINDOWS, false, "silk_windows_key_codes", "Scan code (+ 256 for extended keys) to KeyCode.")
+  run output("native/windows/keys.h", &windows, check)
+  let mut js = run String.copy("// Generated by silk task generate-keys; do not edit.\n// KeyCode and NamedKey discriminants are positions in these lists.\nexport const CODES = [")
+  run jsList(&mut js, &CODES)
+  run append(&mut js, "];\nexport const NAMED = [")
+  run jsList(&mut js, &NAMED)
+  run append(&mut js, "];\nexport const CODE_TO_NAMED = {")
+  let mut i: usize = 0
+  while i < CODE_TO_NAMED.length {
+    if i != 0 { run append(&mut js, ", ") }
+    run append(&mut js, CODE_TO_NAMED[i].code)
+    run append(&mut js, ": '")
+    run append(&mut js, CODE_TO_NAMED[i].named)
+    run append(&mut js, "'")
+    i = i + 1
+  }
+  run append(&mut js, "};\n")
+  run output("browser/keys.js", &js, check)
+}
+pub effect fn bridge(check: bool) -> () ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
+  ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
+  let mut source = run String.copy(BRIDGE_HEADER)
+  run append(&mut source, "\nstatic if Intrinsic.targetOperatingSystem() == \"windows\" || Intrinsic.targetOperatingSystem() == \"linux\" {\n")
+  let mut mode: usize = 0
+  while mode < 3 {
+    let mut i: usize = 0
+    while i < FUNCTIONS.length {
+      let f = FUNCTIONS[i]
+      let indent = if mode == 0 { "  " } else { "    " }
+      run append(&mut source, indent)
+      run append(&mut source, if mode == 2 { "pub unsafe fn silk_window_" } else { "pub unsafe extern \"C\" fn silk_window_" })
+      run append(&mut source, f.name)
+      run append(&mut source, "(")
+      if f.parameters != "" {
+        run append(&mut source, "\n")
+        let mut parameters = String.split(f.parameters, ", ")
+        while let Option<string>.Some { value } = parameters.next() {
+          run append(&mut source, indent)
+          run append(&mut source, "  ")
+          run append(&mut source, value)
+          run append(&mut source, ",\n")
+        }
+        run append(&mut source, indent)
+      }
+      run append(&mut source, ") -> ")
+      run append(&mut source, f.result)
+      if mode == 1 { run append(&mut source, " as \"window#silk_window_")
+        run append(&mut source, f.name)
+        run append(&mut source, "\"") }
+      if mode == 2 {
+        run append(&mut source, " {\n")
+        run append(&mut source, indent)
+        run append(&mut source, "  return ")
+        run append(&mut source, f.stub)
+        run append(&mut source, "\n")
+        run append(&mut source, indent)
+        run append(&mut source, "}")
+        if i + 1 < FUNCTIONS.length { run append(&mut source, "\n") }
+      }
+      run append(&mut source, "\n")
+      i = i + 1
+    }
+    if mode == 0 { run append(&mut source, "} else {\n  static if Intrinsic.targetArchitecture() == \"wasm32\" {\n") }
+    if mode == 1 { run append(&mut source, "  } else {\n") }
+    mode = mode + 1
+  }
+  run append(&mut source, "  }\n}\n")
+  // Format a scratch file, so --check never changes committed outputs.
+  let scratch = run path(".silk/window-codegen/bridge_sys.silk")
+  run FileSystem.writeFileWithParents(&scratch, String.utf8Bytes(String.view(&source)))
+  run Task.silk(&["format", ".silk/window-codegen/bridge_sys.silk"])
+  let formatted = run FileSystem.readFile(&scratch)
+  let formattedText = run text(&formatted)
+  run FileSystem.removeFile(&scratch)
+  run output("src/bridge_sys.silk", &formattedText, check)
+  let mut js = run String.copy("// Generated by silk task generate-bridge; do not edit.\n// Every import the wasm module expects from the \"window\" module.\nexport const IMPORTS = [")
+  let mut i: usize = 0
+  while i < FUNCTIONS.length {
+    if i != 0 { run append(&mut js, ", ") }
+    run append(&mut js, "'silk_window_")
+    run append(&mut js, FUNCTIONS[i].name)
+    run append(&mut js, "'")
+    i = i + 1
+  }
+  run append(&mut js, "];\n")
+  run output("browser/imports.js", &js, check)
+}

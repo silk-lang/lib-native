@@ -1,0 +1,12 @@
+const HOST_OS: string<'static> = Intrinsic.targetOperatingSystem()
+import silk.mem.pointer { Pointer }
+
+@foreign(noCapture: .("buffer"))
+unsafe extern "C" fn send(fd: i32, buffer: ?[*]const u8, length: usize, flags: i32) -> isize
+
+// A CDP endpoint is a socketpair. Unlike write(), send with MSG_NOSIGNAL reports a dead
+// Chromium as EPIPE instead of terminating the task before it can release its children.
+pub fn writeSocket(fd: i32, bytes: &[u8]) -> isize {
+  let flags: i32 = if HOST_OS == "darwin" { 524288 } else { 16384 }
+  return unsafe send(fd, Pointer.fromSlice<u8>(bytes), bytes.length, flags)
+}

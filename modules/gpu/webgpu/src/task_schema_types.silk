@@ -1,0 +1,127 @@
+import silk.cli.task { Task, TaskError }
+import silk.collections.bytes { Bytes }
+import silk.collections.slice { Slice }
+import silk.core.option { Option }
+import silk.json.value { Json, Value }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.text.string { String }
+import silk.num.u8
+import silk.num.usize
+import task_data as D
+
+pub effect fn concat(parts: &[string]) -> String ! OutOfMemoryError ? &mut Allocator {
+  let mut size: usize = 0
+  let mut index: usize = 0
+  while index < parts.length { size = size + String.byteLength(parts[index])
+    index = index + 1 }
+  let mut result = run String.makeWithCapacity(size)
+  index = 0
+  while index < parts.length { run String.append(&mut result, parts[index])
+    index = index + 1 }
+  return move result
+}
+pub effect fn canonical(name: string, upperFirst: bool) -> String ! TaskError | OutOfMemoryError ? &mut Allocator {
+  let bytes = String.utf8Bytes(name)
+  let mut result = run Bytes.makeWithCapacity(bytes.length)
+  let mut upper = upperFirst
+  let mut index: usize = 0
+  while index < bytes.length {
+    let mut byte = bytes[index]
+    if upper {
+      if byte >= 97 && byte <= 122 { byte = byte - 32 }
+      run Bytes.append(&mut result, &[byte])
+      upper = false
+    } else if byte == 95 { upper = true }
+    else { run Bytes.append(&mut result, &[byte]) }
+    index = index + 1
+  }
+  return run D.text(move result)
+}
+pub effect fn pascal(name: string) -> String ! TaskError | OutOfMemoryError ? &mut Allocator { return run canonical(name, true) }
+pub effect fn camel(name: string) -> String ! TaskError | OutOfMemoryError ? &mut Allocator { return run canonical(name, false) }
+pub effect fn typename(name: string) -> String ! TaskError | OutOfMemoryError ? &mut Allocator {
+  let case = run pascal(name)
+  return run concat(&["WGPU", String.view(&case)])
+}
+pub fn identifier(name: string) -> string { return if name == "type" { "type_" } else { name } }
+pub fn property<'a>(value: &'a Value, key: string) -> string<'a> { return Json.field(value, key) |> Json.asString |> Option<string>.unwrapOr("") }
+pub fn starts(value: string, prefix: string) -> bool { return String.startsWith(value, prefix) }
+pub fn ends(value: string, suffix: string) -> bool { return String.endsWith(value, suffix) }
+pub effect fn cut(value: string, start: usize, count: usize) -> String ! TaskError | OutOfMemoryError ? &mut Allocator {
+  return run D.text(run Bytes.copy(Slice.view<u8>(String.utf8Bytes(value), start, count)))
+}
+pub effect fn silkType(member: &Value) -> String ! TaskError | OutOfMemoryError ? &mut Allocator {
+  let original = property(member, "type")
+  let isArray = starts(original, "array<")
+  let kindOwner = if isArray { run cut(original, 6, String.byteLength(original) - 7) } else { run String.copy(original) }
+  let kind = String.view(&kindOwner)
+  let mut result = String.make()
+  if starts(kind, "c_void") { result = run String.copy("u8") }
+  else if kind == "bool" { result = run String.copy("WGPUBool") }
+  else if kind == "uint16" { result = run String.copy("u16") }
+  else if kind == "uint32" { result = run String.copy("u32") }
+  else if kind == "uint64" { result = run String.copy("u64") }
+  else if kind == "int16" { result = run String.copy("i16") }
+  else if kind == "int32" { result = run String.copy("i32") }
+  else if kind == "usize" { result = run String.copy("usize") }
+  else if kind == "float32" || kind == "nullable_float32" { result = run String.copy("f32") }
+  else if kind == "float64" || kind == "float64_supertype" { result = run String.copy("f64") }
+  else if kind == "nullable_string" || kind == "string_with_default_empty" || kind == "out_string" { result = run String.copy("WGPUStringView") }
+  else {
+    let dot = match move String.find(kind, ".") {
+      Option<usize>.Some { value } => value
+      Option<usize>.None => run Task.abort("unrecognized WebGPU schema type")
+    }
+    let name = run cut(kind, dot + 1, String.byteLength(kind) - dot - 1)
+    result = run typename(String.view(&name))
+    if starts(kind, "callback.") { run String.append(&mut result, "CallbackInfo") }
+  }
+  let pointer = property(member, "pointer")
+  if isArray && pointer == "" { run Task.abort("schema array lacks pointer qualification") }
+  if pointer != "" {
+    let prefix = if isArray || kind == "c_void_data_ptr" || kind == "c_void_mapped_range_ptr" { "?[*]" } else { "?*" }
+    let qualifier = if pointer == "immutable" { "const " } else { "mut " }
+    return run concat(&[prefix, qualifier, String.view(&result)])
+  }
+  return move result
+}
+pub effect fn nullPointer(typ: string) -> String ! TaskError | OutOfMemoryError ? &mut Allocator {
+  if !starts(typ, "?") { return run String.copy("Pointer.null<u8>()") }
+  let space = match move String.find(typ, " ") { Option<usize>.Some { value } => value Option<usize>.None => run Task.abort("invalid pointer type") }
+  let pointee = run cut(typ, space + 1, String.byteLength(typ) - space - 1)
+  let value = run concat(&["Pointer.null<", String.view(&pointee), ">()"])
+  let source = run concat(&["?*mut ", String.view(&pointee)])
+  if typ == String.view(&source) { return move value }
+  return run concat(&["unsafe Intrinsic.pointerRequalify<", String.view(&source), ", ", typ, ">(", String.view(&value), ")"])
+}
+
+pub effect fn expand(members: &[Value]) -> Value ! TaskError | OutOfMemoryError ? &mut Allocator {
+  let mut fields = D.list()
+  let mut index: usize = 0
+  while index < members.length {
+    let member = &members[index]
+    let name = property(member, "name")
+    if starts(property(member, "type"), "array<") {
+      let singular = if name == "entries" { run String.copy("entry") }
+        else if ends(name, "s") { run cut(name, 0, String.byteLength(name) - 1) } else { run String.copy(name) }
+      let camel = run camel(String.view(&singular))
+      let count = run concat(&[String.view(&camel), "Count"])
+      let mut field = D.object()
+      run D.set(&mut field, "name", run D.str(String.view(&count)))
+      run D.set(&mut field, "type", run D.str("usize"))
+      let mut source = D.object()
+      run D.set(&mut source, "type", run D.str("usize"))
+      run D.set(&mut field, "source", move source)
+      run D.push(&mut fields, move field)
+    }
+    let camel = run camel(name)
+    let typ = run silkType(member)
+    let mut field = D.object()
+    run D.set(&mut field, "name", run D.str(String.view(&camel)))
+    run D.set(&mut field, "type", run D.str(String.view(&typ)))
+    run D.set(&mut field, "source", run Json.copy(member))
+    run D.push(&mut fields, move field)
+    index = index + 1
+  }
+  return move fields
+}
