@@ -93,6 +93,9 @@ void silk_macos_focus(uint32_t window);
 void silk_macos_minimize(uint32_t window);
 void silk_macos_toggle_full_screen(uint32_t window);
 void silk_macos_start_window_drag(uint32_t window);
+// Centres the window controls in a bar `height` points tall at the top of the content, as far
+// from the left edge as from the top; 0 leaves them where AppKit puts them.
+void silk_macos_set_controls_height(uint32_t window, double height);
 void silk_macos_set_cursor(uint32_t window, uint32_t cursor);
 void silk_macos_set_ime(uint32_t window, uint8_t enabled, double x, double y, double width,
                         double height);

@@ -313,6 +313,8 @@ static void check_appearance(void) {
 @property(nonatomic) uint32_t windowId;
 @property(nonatomic, strong) SilkNSWindow *window;
 @property(nonatomic, strong) SilkView *view;
+// The height of the app's own bar the window controls are centred in, 0 for AppKit's place.
+@property(nonatomic) double controlsHeight;
 @end
 
 static SilkWindow *find_window(uint32_t window) { return windows[@(window)]; }
@@ -770,7 +772,35 @@ static NSPoint top_left(NSWindow *window) {
     return NSMakePoint(frame.origin.x, top - NSMaxY(frame));
 }
 
+// Centres the window controls in the app's bar. AppKit lays the title bar out again whenever
+// the window changes size or leaves full screen, so this runs after each.
+static void place_controls(SilkWindow *record) {
+    double height = record.controlsHeight;
+    NSWindow *window = record.window;
+    if (height <= 0 || (window.styleMask & NSWindowStyleMaskFullScreen)) return;
+    NSButton *close = [window standardWindowButton:NSWindowCloseButton];
+    NSButton *minimize = [window standardWindowButton:NSWindowMiniaturizeButton];
+    NSButton *zoom = [window standardWindowButton:NSWindowZoomButton];
+    NSView *container = close.superview.superview;
+    if (!close || !minimize || !zoom || !container) return;
+    // The controls are clipped to the title bar's container, which grows to the bar.
+    NSRect bar = container.frame;
+    bar.size.height = height;
+    bar.origin.y = window.frame.size.height - height;
+    container.frame = bar;
+    double pitch = minimize.frame.origin.x - close.frame.origin.x;
+    double margin = (height - close.frame.size.height) / 2;
+    NSArray<NSButton *> *controls = @[ close, minimize, zoom ];
+    for (NSUInteger i = 0; i < controls.count; i++) {
+        [controls[i] setFrameOrigin:NSMakePoint(margin + pitch * i, margin)];
+    }
+}
+
 @implementation SilkWindow
+
+- (void)windowDidResize:(NSNotification *)notification {
+    place_controls(self);
+}
 
 - (BOOL)windowShouldClose:(NSWindow *)sender {
     push(blank_event(SILK_EVENT_CLOSE_REQUESTED, self.windowId));
@@ -800,6 +830,7 @@ static NSPoint top_left(NSWindow *window) {
     [self pushFlag:SILK_EVENT_FULL_SCREEN_CHANGED on:YES];
 }
 - (void)windowDidExitFullScreen:(NSNotification *)n {
+    place_controls(self);
     [self pushFlag:SILK_EVENT_FULL_SCREEN_CHANGED on:NO];
 }
 - (void)windowDidChangeOcclusionState:(NSNotification *)n {
@@ -1261,6 +1292,13 @@ void silk_macos_toggle_full_screen(uint32_t id) {
     @autoreleasepool {
         [find_window(id).window toggleFullScreen:nil];
     }
+}
+
+void silk_macos_set_controls_height(uint32_t id, double height) {
+    SilkWindow *record = find_window(id);
+    if (!record) return;
+    record.controlsHeight = height;
+    place_controls(record);
 }
 
 void silk_macos_start_window_drag(uint32_t id) {
