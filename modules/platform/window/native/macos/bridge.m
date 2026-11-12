@@ -295,6 +295,7 @@ static void check_appearance(void) {
 @property(nonatomic, strong) CADisplayLink *displayLink;
 @property(nonatomic, strong) NSTrackingArea *tracking;
 @property(nonatomic) BOOL handlingKey;
+@property(nonatomic, strong) NSEvent *pressed;
 @property(nonatomic, strong) NSMutableDictionary<NSNumber *, SilkAXNode *> *axNodes;
 @property(nonatomic, strong) NSMutableSet<NSNumber *> *axSeen;
 @property(nonatomic, strong) NSMutableArray<NSNumber *> *axOrder;
@@ -568,8 +569,14 @@ static uint32_t other_button(NSEvent *event) {
     }
 }
 
-- (void)mouseDown:(NSEvent *)e { [self pushMouse:SILK_EVENT_MOUSE_DOWN event:e button:0]; }
-- (void)mouseUp:(NSEvent *)e { [self pushMouse:SILK_EVENT_MOUSE_UP event:e button:0]; }
+- (void)mouseDown:(NSEvent *)e {
+    self.pressed = e;
+    [self pushMouse:SILK_EVENT_MOUSE_DOWN event:e button:0];
+}
+- (void)mouseUp:(NSEvent *)e {
+    self.pressed = nil;
+    [self pushMouse:SILK_EVENT_MOUSE_UP event:e button:0];
+}
 - (void)rightMouseDown:(NSEvent *)e { [self pushMouse:SILK_EVENT_MOUSE_DOWN event:e button:1]; }
 - (void)rightMouseUp:(NSEvent *)e { [self pushMouse:SILK_EVENT_MOUSE_UP event:e button:1]; }
 - (void)otherMouseDown:(NSEvent *)e {
@@ -1303,10 +1310,23 @@ void silk_macos_set_controls_height(uint32_t id, double height) {
 
 void silk_macos_start_window_drag(uint32_t id) {
     @autoreleasepool {
-        NSEvent *event = NSApp.currentEvent;
-        if (event && event.type == NSEventTypeLeftMouseDown) {
-            [find_window(id).window performWindowDragWithEvent:event];
+        // The app asks after it has seen the press, often from another thread, so the press
+        // is no longer AppKit's current event: the view keeps it while the button is down.
+        SilkWindow *record = find_window(id);
+        NSEvent *event = record.view.pressed;
+        if (!event || ([NSEvent pressedMouseButtons] & 1) == 0) return;
+        if (event.clickCount == 2) {
+            // A double click on a title bar does what the user chose in System Settings.
+            NSString *action =
+                [NSUserDefaults.standardUserDefaults stringForKey:@"AppleActionOnDoubleClick"];
+            if ([action isEqualToString:@"Minimize"]) {
+                [record.window miniaturize:nil];
+            } else if (![action isEqualToString:@"None"]) {
+                [record.window zoom:nil];
+            }
+            return;
         }
+        [record.window performWindowDragWithEvent:event];
     }
 }
 
