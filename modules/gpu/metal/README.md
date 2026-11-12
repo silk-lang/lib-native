@@ -14,7 +14,7 @@ From `modules/gpu/metal`, with:
 
 - Apple Silicon macOS with a Metal device.
 - Xcode/macOS SDK 15.4 or newer for the complete declaration surface.
-- Silk `0.1.0-dev.64+8214c402307b`, as pinned by the workspace.
+- Silk `0.1.0-dev.69+366225ca4dc5`, as pinned by the workspace.
 - LLVM 22 clang (`SILK_CLANG`). The build compiles the Objective-C bridge in `native/` with it,
   as `[native].sources` in `silk.toml`.
 - Git only when regenerating from or refreshing the pinned upstream checkout; the tasks themselves run in Silk.
