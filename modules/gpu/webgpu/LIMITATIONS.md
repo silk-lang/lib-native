@@ -1,6 +1,6 @@
 # Silk limitations
 
-Historical reproductions 1–8 below use the published **0.1.0-dev.27+323ceb59e7ee** compiler unless a later measured release is stated. The current manifests and automation pin **0.1.0-dev.64+8214c402307b**. No compiler or standard-library patches are used.
+Historical reproductions 1–8 below use the published **0.1.0-dev.27+323ceb59e7ee** compiler unless a later measured release is stated. The current manifests and automation pin **0.1.0-dev.69+366225ca4dc5**. No compiler or standard-library patches are used.
 
 ## LIMITATION-1 — Nullable native callback fields
 
@@ -68,7 +68,7 @@ The browser backend uses explicit callback tokens and exported completion functi
 ## LIMITATION-9 — Windows managed subprocesses unavailable in dev.64
 
 - Report: [silk-lang/silk#3034](https://github.com/silk-lang/silk/issues/3034).
-- Reproduction: import `silk.system.subprocess { Subprocess, SpawnOptions, Stdio }` in a native task and compile for `x86_64-pc-windows-msvc` with **0.1.0-dev.64+8214c402307b**. The Windows target does not export these declarations (SEM0014).
+- Reproduction: import `silk.system.subprocess { Subprocess, SpawnOptions, Stdio }` in a native task and compile for `x86_64-pc-windows-msvc` with **0.1.0-dev.69+366225ca4dc5**. The Windows target does not export these declarations (SEM0014).
 - Impact: the POSIX Silk Chromium/CDP and timeout-managed executable harnesses cannot be compiled for Windows using that API. This is distinct from the historical dev.27 Windows compiler availability gap.
 - Unsupported operations: Windows timeout-managed ABI/native/pixel execution and the browser task. The legacy Python/Node launchers have been removed rather than maintained as compatibility paths. Build/provisioning and CPU pixel validation remain Silk tasks; the required prerequisite is a published toolchain with Windows managed subprocess support.
 - Unblocked tasks, generators, benchmark orchestration, browser runtime assets and host contract test inputs are not replaced with no-ops or wrappers around old automation.

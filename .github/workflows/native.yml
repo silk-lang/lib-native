@@ -48,7 +48,7 @@ jobs:
           echo "SDKROOT=$(xcrun --sdk macosx --show-sdk-path)" >> "$GITHUB_ENV"
       - name: Bootstrap pinned Silk
         env:
-          SILK_RELEASE: v0.1.0-dev.64+8214c402307b
+          SILK_RELEASE: v0.1.0-dev.69+366225ca4dc5
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           curl --fail --location --output "$RUNNER_TEMP/install-silk.sh" https://raw.githubusercontent.com/silk-lang/silk/8214c402307b/install.sh
@@ -93,7 +93,7 @@ jobs:
           key: browser-${{ runner.os }}-${{ hashFiles('toolchains.lock.json', 'modules/gpu/webgpu/scripts/ci-lock.json') }}
       - name: Bootstrap pinned Silk
         env:
-          SILK_RELEASE: v0.1.0-dev.64+8214c402307b
+          SILK_RELEASE: v0.1.0-dev.69+366225ca4dc5
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           curl --fail --location --output "$RUNNER_TEMP/install-silk.sh" https://raw.githubusercontent.com/silk-lang/silk/8214c402307b/install.sh
@@ -148,7 +148,7 @@ jobs:
         run: '"SILK_CLANG=$env:RUNNER_TEMP/silk-bootstrap-llvm/bin/clang.exe" | Out-File -FilePath $env:GITHUB_ENV -Append'
       - name: Bootstrap pinned Silk
         env:
-          SILK_RELEASE: v0.1.0-dev.64+8214c402307b
+          SILK_RELEASE: v0.1.0-dev.69+366225ca4dc5
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           Invoke-WebRequest https://raw.githubusercontent.com/silk-lang/silk/8214c402307b/install.ps1 -OutFile "$env:RUNNER_TEMP/install-silk.ps1"
