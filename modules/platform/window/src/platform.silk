@@ -89,8 +89,9 @@ pub interface Platform {
 
   fn toggleFullScreen(self: &mut Self, window: WindowId) -> ()
 
-  /// Moves the window with the mouse until the button is released; call it from the
-  /// `MouseDown` of a custom title bar.
+  /// Moves the window with the mouse until the button is released; call it for the
+  /// `MouseDown` of a custom title bar, while the button is still down. On macOS the second
+  /// press of a double click zooms or minimizes the window instead, as the user's settings say.
   fn startWindowDrag(self: &mut Self, window: WindowId) -> ()
 
   fn setCursor(self: &mut Self, window: WindowId, cursor: Cursor) -> ()
