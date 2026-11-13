@@ -8,7 +8,11 @@ import webgpu.descriptors {
   ComputeState,
   ComputePipelineDescriptor,
   ComputePassDescriptor,
-  Limits
+  ColorTargetState,
+  FragmentState,
+  Limits,
+  RenderPipelineDescriptor,
+  VertexState
 }
 import webgpu.resources as gpu
 import silk.mem.pointer { Pointer }
@@ -230,6 +234,30 @@ effect fn scenarios(instance: &Instance) -> ()
   drop duplicate
 }
 
+/// Makes a render pipeline on a device that keeps Dawn's cache in `directory`, started then
+/// waited for, as renderers do to compile pipelines side by side.
+effect fn cachedPipeline(instance: &Instance, directory: &[u8]) -> ()
+  ! GpuError | OutOfMemoryError {
+  let adapter = run instance.requestAdapter(&RequestAdapterOptions.default())
+  let device = run adapter.requestDevice(&DeviceDescriptor.cachedIn(directory))
+  let shader = run gpu.createShaderModule(
+    &device,
+    b"cached pipeline",
+    b"@vertex fn vs(@builtin(vertex_index) i: u32) -> @builtin(position) vec4f { return vec4f(f32(i), 0.0, 0.0, 1.0); }\n@fragment fn fs() -> @location(0) vec4f { return vec4f(1.0, 0.5, 0.25, 1.0); }",
+  )
+  let mut target = ColorTargetState.default()
+  target.setFormat(sys.WGPUTextureFormat_RGBA8Unorm)
+  target.setWriteMask(sys.WGPUColorWriteMask_All)
+  let targets = [target]
+  let vertex = VertexState.default().withModule(&shader).withEntryPoint(b"vs")
+  let fragment = FragmentState.default().withModule(&shader).withEntryPoint(b"fs").withTargets(&targets)
+  let descriptor = RenderPipelineDescriptor.default().withVertex(vertex).withFragment(&fragment)
+  let mut request = run runtime.createRenderPipelineStart(&device, &descriptor)
+  run request.wait()
+  drop run request.finish()
+  run device.checkErrors()
+}
+
 effect fn program() -> i32
   ! GpuError | OutOfMemoryError {
   if !rawInstanceSmoke() {
@@ -238,11 +266,14 @@ effect fn program() -> i32
   let instance = run Instance.create()
   let observer = instance.diagnostics()
   run scenarios(&instance)
+  // The first device fills the cache, the second reads it back.
+  run cachedPipeline(&instance, b"build/gpu-webgpu-cache-test")
+  run cachedPipeline(&instance, b"build/gpu-webgpu-cache-test")
   drop instance
   if observer.liveHandles() != 0 || observer.failureCount() != 0 {
     return 2
   }
-  let message = b"PASS native instance, mapping, queue completion, validation scope, cancellation, and handle accounting\n"
+  let message = b"PASS native instance, mapping, queue completion, validation scope, cancellation, pipeline cache, and handle accounting\n"
   writeMessage(message, false)
   return 0
 }
