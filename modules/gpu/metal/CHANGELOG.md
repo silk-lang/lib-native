@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Pin the library and both GPU examples to Silk `0.1.0-dev.69+366225ca4dc5`.
+- Pin the library and both GPU examples to Silk `0.1.0-dev.72+9c780a04d6ef`.
 - Replace the Python bridge generators and coverage checker with typed Silk tasks, retaining the pinned upstream revision, declaration inventory schemas, and checked-in generated sources. Move static bridge definitions into JSON tables; no Python interpreter is required.
 - Move into silk-lang/nonstd as `native/gpu/metal` (package `gpu-metal`; examples `gpu-metal-examples-compute`, `gpu-metal-examples-headless-render`).
 - Pin to Silk `0.1.0-dev.29+94cf9559bf47` and follow the dev.27 stdlib moves (`silk.mem.pointer`, `silk.core.ownership`).
