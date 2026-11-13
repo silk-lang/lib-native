@@ -51,7 +51,7 @@ Builds take Dawn from `sys/silk.toml`'s pinned `dawn` archive, which Silk fetche
 `$SILK_HOME/archives` (default `~/.silk/archives`). Windows preparation is the root
 `silk task prepare-windows`; stage its runtime DLLs with `--runtime-directory`.
 
-- Install Silk through the official launcher. Every manifest pins **0.1.0-dev.72+9c780a04d6ef**; no Python compiler installer remains.
+- Install Silk through the official launcher. Every manifest pins **0.1.0-dev.74+205aea3f5b2e**; no Python compiler installer remains.
 - `install-webgpu` pins Dawn's Release archives and prints the **installation root**. macOS has `lib/libwebgpu_dawn.a`; Linux has `lib64/libwebgpu_dawn.a`; Windows has `lib/webgpu_dawn.lib`.
 - `install-llvm` accepts a working absolute `SILK_CLANG` pointing to LLVM 22, or discovers Homebrew LLVM / `clang-22`; otherwise it downloads checksum-pinned **LLVM 22.1.8**. It prints the **absolute clang executable path**. Published LLVM archives are large (Linux x86_64: 1,938,859,476 bytes); preinstall LLVM 22 for a short cold gate. The full downloaded distribution includes resource headers and `wasm-ld`; a supplied system toolchain must also provide `wasm-ld` for browser builds.
 

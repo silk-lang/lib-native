@@ -2,7 +2,7 @@
 name = "gpu-webgpu"
 description = "WebGPU through Dawn natively and navigator.gpu in browsers, with one API"
 version = "0.1.0"
-silk-version = "0.1.0-dev.72+9c780a04d6ef"
+silk-version = "0.1.0-dev.74+205aea3f5b2e"
 kind = "library"
 exports = ["runtime", "resources", "descriptors", "surface", "diagnostics", "capabilities", "host_memory"]
 

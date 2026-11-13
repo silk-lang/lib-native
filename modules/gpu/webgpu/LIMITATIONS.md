@@ -1,6 +1,6 @@
 # Silk limitations
 
-Historical reproductions 1–8 below use the published **0.1.0-dev.27+323ceb59e7ee** compiler unless a later measured release is stated. The current manifests and automation pin **0.1.0-dev.72+9c780a04d6ef**. No compiler or standard-library patches are used.
+Historical reproductions 1–8 below use the published **0.1.0-dev.27+323ceb59e7ee** compiler unless a later measured release is stated. The current manifests and automation pin **0.1.0-dev.74+205aea3f5b2e**. No compiler or standard-library patches are used.
 
 ## LIMITATION-1 — Nullable native callback fields
 
