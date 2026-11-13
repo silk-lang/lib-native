@@ -1616,11 +1616,19 @@ pub struct DeviceDescriptor<'a> {
   pub requiredFeatures: &'a [sys.WGPUFeatureName],
   pub requiredLimits: Option<&'a Limits<'a>>,
   pub defaultQueue: QueueDescriptor<'a>,
+  /// A directory (UTF-8 path, made if missing) where Dawn keeps translated shaders and
+  /// pipeline caches between runs, so a later run makes the same pipelines faster. Empty for
+  /// none, the default. Native only: browsers keep their own.
+  pub cacheDirectory: &'a [u8],
 }
 impl<'a> Copy for DeviceDescriptor<'a> {}
 impl<'a> DeviceDescriptor<'a> {
   pub fn default() -> Self {
-    return Self { label: b"", requiredFeatures: &EMPTY_FEATURES, requiredLimits: Option<&'a Limits<'a>>.none(), defaultQueue: QueueDescriptor.default() }
+    return Self { label: b"", requiredFeatures: &EMPTY_FEATURES, requiredLimits: Option<&'a Limits<'a>>.none(), defaultQueue: QueueDescriptor.default(), cacheDirectory: b"" }
+  }
+  /// The default descriptor with Dawn's cache kept in `directory` (see `cacheDirectory`).
+  pub fn cachedIn(directory: &'a [u8]) -> Self {
+    return Self { label: b"", requiredFeatures: &EMPTY_FEATURES, requiredLimits: Option<&'a Limits<'a>>.none(), defaultQueue: QueueDescriptor.default(), cacheDirectory: directory }
   }
   pub unsafe fn raw(self: &Self, lost: sys.WGPUDeviceLostCallbackInfo, error: sys.WGPUUncapturedErrorCallbackInfo) -> sys.WGPUDeviceDescriptor {
     let mut result = WGPUDeviceDescriptor.default(lost, error)

@@ -42,6 +42,9 @@ static if Intrinsic.targetArchitecture() != "wasm32" {
     adapter: sys.WGPUAdapter, descriptor: *mut sys.WGPUDeviceDescriptor,
     lostCallback: sys.WGPUDeviceLostCallback, callbackInfo: sys.WGPURequestDeviceCallbackInfo,
   ) -> sys.WGPUFuture as "silkWebgpuRequestDevice"
+  unsafe extern "C" fn cacheChainNative(
+    directory: ?[*]const u8, length: usize,
+  ) -> ?*mut sys.WGPUChainedStruct as "silkWebgpuCacheChain"
 }
 
 pub struct GpuError {
@@ -190,6 +193,11 @@ impl Adapter {
     static if Intrinsic.targetArchitecture() == "wasm32" {
       pending.future = unsafe sys.wgpuAdapterRequestDevice(self.handle, Pointer.fromRef(&descriptor), info)
     } else {
+      if options.cacheDirectory.length != 0 && Pointer.isNull(descriptor.nextInChain) {
+        descriptor.nextInChain = unsafe cacheChainNative(
+          Pointer.fromSlice(options.cacheDirectory), options.cacheDirectory.length,
+        )
+      }
       unsafe registerErrorNative(Pointer.fromMutRef(&mut descriptor), error.callback)
       pending.future = unsafe requestDeviceNative(self.handle, Pointer.fromMutRef(&mut descriptor), lost.callback, info)
     }
@@ -725,6 +733,8 @@ impl ComputePipelineRequest {
 pub struct RenderPipelineRequest { pending: Pending<()> }
 impl RenderPipelineRequest {
   pub fn poll(self: &mut Self) -> bool { return self.pending.poll() }
+  /// Blocks until the pipeline is made, natively; in the browser, fails unless `poll` saw it.
+  pub effect fn wait(self: &mut Self) -> () ! GpuError { run self.pending.wait() }
   pub effect fn finish(self: Self) -> RenderPipeline ! GpuError {
     let mut owned = move self
     let handle = run owned.pending.take()
