@@ -8,5 +8,3 @@ kind = "executable"
 smoke = { path = "../smoke", package = "platform-window-tests-smoke" }
 
 # A browser program: it builds for the browser whatever the host.
-[build]
-targets = ["wasm32-unknown-unknown"]

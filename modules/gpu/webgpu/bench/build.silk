@@ -1,0 +1,22 @@
+import silk.build.plan { Plan }
+import silk.build.step { sourcePath }
+
+static fn plan() -> Plan {
+  let mut plan = Plan.empty()
+  if Intrinsic.targetOperatingSystem() == "darwin" || Intrinsic.targetOperatingSystem() == "linux" {
+    plan = plan
+      |> Plan.compileNative(
+        "c",
+        sourcePath("support.c"),
+        &["-std=c11", "-O3", "-g"],
+        &[Plan.archivePath("dawn-headers", "include")],
+      )
+  }
+  if Intrinsic.targetOperatingSystem() == "windows" {
+    plan = plan
+      |> Plan.linkArchive(Plan.archivePath("dawn-headers", "lib/nonstd_bench_support.lib"))
+  }
+  return plan
+}
+
+pub const PLAN: Plan = plan()

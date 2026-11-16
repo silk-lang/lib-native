@@ -5,6 +5,3 @@ silk-version = "0.1.0-dev.74+205aea3f5b2e"
 kind = "library"
 
 exports = ["capture"]
-[native]
-sources = [{ c = "capture.c", flags = ["-std=c11"], os = "linux" }]
-link = [{ library = "dl", mode = "dynamic", os = "linux" }]

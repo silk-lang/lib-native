@@ -1,0 +1,24 @@
+import silk.build.plan { Plan }
+import silk.build.step { sourcePath }
+
+static fn plan() -> Plan {
+  let mut plan = Plan.empty()
+  if Intrinsic.targetOperatingSystem() == "darwin" || Intrinsic.targetOperatingSystem() == "linux" {
+    plan = plan
+      |> Plan.compileNative(
+        "c",
+        sourcePath("generated_layout.c"),
+        &["-std=c11", "-DSILK_GPU_ABI_LIBRARY"],
+        &[
+          Plan.archivePath("dawn-headers", "include"),
+          Plan.archivePath("dawn-headers", "include/dawn"),
+        ],
+      )
+  }
+  if Intrinsic.targetOperatingSystem() == "windows" {
+    plan = plan |> Plan.linkArchive(Plan.archivePath("dawn-headers", "lib/nonstd_abi_layout.lib"))
+  }
+  return plan
+}
+
+pub const PLAN: Plan = plan()

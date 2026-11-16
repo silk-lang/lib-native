@@ -156,7 +156,7 @@ jobs:
           "$env:SILK_HOME/bin" | Out-File -FilePath $env:GITHUB_PATH -Append
       - run: silk task setup-ci
       - name: Prepare SDK bridge, Dawn DLL and runtime payloads
-        run: silk task prepare-windows --runtime-directory build/llvm/x86_64-pc-windows-msvc/debug
+        run: silk task prepare-windows --runtime-directory build/x86_64-pc-windows-msvc/dev
       - name: Check workspace and headless tests
         run: silk task check-workspace
       - name: ABI, native runtime, pixels and Win32 windows
