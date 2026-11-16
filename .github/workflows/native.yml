@@ -48,10 +48,10 @@ jobs:
           echo "SDKROOT=$(xcrun --sdk macosx --show-sdk-path)" >> "$GITHUB_ENV"
       - name: Bootstrap pinned Silk
         env:
-          SILK_RELEASE: v0.1.0-dev.74+205aea3f5b2e
+          SILK_RELEASE: v0.1.0-pipeline.1
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          curl --fail --location --output "$RUNNER_TEMP/install-silk.sh" https://raw.githubusercontent.com/silk-lang/silk/8214c402307b/install.sh
+          curl --fail --location --output "$RUNNER_TEMP/install-silk.sh" https://raw.githubusercontent.com/silk-lang/silk/v0.1.0-pipeline.1/install.sh
           sh "$RUNNER_TEMP/install-silk.sh"
           echo "$HOME/.silk/bin" >> "$GITHUB_PATH"
       - name: Linux system and display prerequisites
@@ -93,10 +93,10 @@ jobs:
           key: browser-${{ runner.os }}-${{ hashFiles('toolchains.lock.json', 'modules/gpu/webgpu/scripts/ci-lock.json') }}
       - name: Bootstrap pinned Silk
         env:
-          SILK_RELEASE: v0.1.0-dev.74+205aea3f5b2e
+          SILK_RELEASE: v0.1.0-pipeline.1
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          curl --fail --location --output "$RUNNER_TEMP/install-silk.sh" https://raw.githubusercontent.com/silk-lang/silk/8214c402307b/install.sh
+          curl --fail --location --output "$RUNNER_TEMP/install-silk.sh" https://raw.githubusercontent.com/silk-lang/silk/v0.1.0-pipeline.1/install.sh
           sh "$RUNNER_TEMP/install-silk.sh"
           echo "$HOME/.silk/bin" >> "$GITHUB_PATH"
       - run: silk task system-prerequisites --browser
@@ -148,10 +148,10 @@ jobs:
         run: '"SILK_CLANG=$env:RUNNER_TEMP/silk-bootstrap-llvm/bin/clang.exe" | Out-File -FilePath $env:GITHUB_ENV -Append'
       - name: Bootstrap pinned Silk
         env:
-          SILK_RELEASE: v0.1.0-dev.74+205aea3f5b2e
+          SILK_RELEASE: v0.1.0-pipeline.1
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          Invoke-WebRequest https://raw.githubusercontent.com/silk-lang/silk/8214c402307b/install.ps1 -OutFile "$env:RUNNER_TEMP/install-silk.ps1"
+          Invoke-WebRequest https://raw.githubusercontent.com/silk-lang/silk/v0.1.0-pipeline.1/install.ps1 -OutFile "$env:RUNNER_TEMP/install-silk.ps1"
           & "$env:RUNNER_TEMP/install-silk.ps1"
           "$env:SILK_HOME/bin" | Out-File -FilePath $env:GITHUB_PATH -Append
       - run: silk task setup-ci
