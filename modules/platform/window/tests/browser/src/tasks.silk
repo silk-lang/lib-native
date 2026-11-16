@@ -1,5 +1,6 @@
+import silk.collections.list { List }
 import silk.build.graph { Build, BuildError, Compilation, Deferred, Options }
-import silk.cli.command { Command, CommandLine }
+import silk.cli.command { Command, CommandLine, Opt }
 import silk.cli.task { Task, TaskError, TaskSet }
 import silk.io.writer { WriterError }
 import silk.mem.allocator { Allocator, OutOfMemoryError }
@@ -10,13 +11,15 @@ import silk.text.string { String }
 
 union Tasks {
   Build { pub options: Options },
-  Run { pub options: Options },
+  Run { pub options: Options, pub arguments: List<String> },
   Plan { pub options: Options },
 }
 
 impl CommandLine for Tasks {
   static fn command() -> Command<Tasks> {
-    return Command<Tasks>.make("tasks", "Build the package") |> Command.flatten("options")
+    return Command<Tasks>.make("tasks", "Build the package")
+      |> Command.flatten("options")
+      |> Command.arg("arguments", Opt.about("Arguments passed to the program"))
   }
 }
 
@@ -43,11 +46,18 @@ impl TaskSet for Tasks {
         let graph = run (run Build.make()).add(move selected)
         drop run graph.compile()
       }
-      Tasks.Run { options } => {
+      Tasks.Run { options, arguments } => {
         let selected = run compilation(&options)
         let graph = run (run Build.make()).add(move selected)
         let built = run graph.compile()
-        run built.launch(&[])
+        let values = arguments.asSlice()
+        let mut forwarded = List<string>.make()
+        let mut at: usize = 0
+        while at < values.length {
+          run forwarded.append(values[at].view())
+          at = at + 1
+        }
+        run built.launch(forwarded.asSlice())
       }
       Tasks.Plan { options } => {
         let selected = run compilation(&options)
