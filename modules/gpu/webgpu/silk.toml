@@ -3,7 +3,7 @@ include = ["browser"]
 name = "gpu-webgpu"
 description = "WebGPU through Dawn natively and navigator.gpu in browsers, with one API"
 version = "0.1.0"
-silk-version = "0.1.0-pipeline.1"
+silk-version = "0.1.0-dev.85+45b9e51824ca"
 kind = "library"
 exports = ["runtime", "resources", "descriptors", "surface", "diagnostics", "capabilities", "host_memory"]
 
