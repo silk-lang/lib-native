@@ -381,6 +381,9 @@ impl MacPlatform {
     if kind == sys.NOTIFICATION_CLICKED {
       return Option<Event>.some(Event.NotificationClicked { id: raw.code })
     }
+    if kind == sys.CONTEXT_MENU_CLOSED {
+      return Option<Event>.some(Event.ContextMenuClosed { window: WindowId { value: raw.window } })
+    }
     return Option<Event>.None
   }
 
@@ -726,6 +729,28 @@ impl Platform for MacPlatform {
 
   fn removeTray(self: &mut Self) -> () {
     unsafe sys.silk_macos_tray_remove()
+  }
+
+  effect fn showContextMenu(self: &mut Self, window: WindowId, x: f64, y: f64, menu: &MenuBar) -> bool
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    unsafe sys.silk_macos_context_menu_begin()
+    describeMenu(menu)
+    return unsafe sys.silk_macos_context_menu_commit(window.value, x, y) != 0
+  }
+
+  effect fn setBadge(self: &mut Self, text: string) -> bool
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    unsafe sys.silk_macos_set_badge(MacPlatform.bytes(text), String.byteLength(text))
+    return true
+  }
+
+  effect fn setProgress(self: &mut Self, fraction: f64) -> bool
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    unsafe sys.silk_macos_set_progress(fraction)
+    return true
   }
 
   effect fn registerShortcut(self: &mut Self, id: u32, code: KeyCode, modifiers: Modifiers) -> bool

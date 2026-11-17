@@ -2,6 +2,8 @@
 //
 // - Notifications: org.freedesktop.Notifications. The server's ids are mapped to ours,
 //   and its ActionInvoked signal for the "default" action is a click.
+// - The dock badge and progress: com.canonical.Unity.LauncherEntry, which Ubuntu's dock, KDE's
+//   task manager, Plank and Dash to Dock read. The entry names the app's desktop file.
 // - The tray icon: a StatusNotifierItem registered with the StatusNotifierWatcher, which
 //   KDE, most panels and GNOME's AppIndicator extension host. Its menu is exported with
 //   com.canonical.dbusmenu.
@@ -39,6 +41,8 @@ enum { NAME_DO_NOT_QUEUE = 4 };
 #define T_INT32 'i'
 #define T_UINT32 'u'
 #define T_BOOLEAN 'b'
+#define T_INT64 'x'
+#define T_DOUBLE 'd'
 #define T_BYTE 'y'
 #define T_OBJECT_PATH 'o'
 #define T_ARRAY 'a'
@@ -712,6 +716,75 @@ void silk_window_tray_remove(void) {
         send_and_unref(message);
     }
     dbus.connection_flush(bus);
+}
+
+// ---------------------------------------------------------------------------------------
+// The launcher entry: a count and progress on the app's icon in the dock.
+
+static int64_t launcherCount = -1; // negative: none
+static double launcherProgress = -1.0;
+
+// The desktop file the dock knows the app by: SILK_DESKTOP_ID (with or without .desktop),
+// else the program's name.
+static void launcher_uri(char *uri, size_t capacity) {
+    const char *id = getenv("SILK_DESKTOP_ID");
+    if (!id || !*id) id = program_invocation_short_name;
+    size_t length = strlen(id);
+    bool suffixed = length > 8 && strcmp(id + length - 8, ".desktop") == 0;
+    snprintf(uri, capacity, "application://%s%s", id, suffixed ? "" : ".desktop");
+}
+
+static uint8_t launcher_update(void) {
+    if (!load()) return 0;
+    DBusMessage *message = dbus.message_new_signal("/com/canonical/unity/launcherentry/silk",
+                                                   "com.canonical.Unity.LauncherEntry", "Update");
+    if (!message) return 0;
+    char uri[512];
+    launcher_uri(uri, sizeof uri);
+    DBusMessageIter args, properties;
+    dbus.message_iter_init_append(message, &args);
+    append_string(&args, uri);
+    dbus.message_iter_open_container(&args, T_ARRAY, "{sv}", &properties);
+    int64_t count = launcherCount < 0 ? 0 : launcherCount;
+    dbus_bool_t countShown = launcherCount >= 0;
+    double progress = launcherProgress < 0 ? 0 : launcherProgress;
+    dbus_bool_t progressShown = launcherProgress >= 0;
+    append_entry(&properties, "count", T_INT64, &count);
+    append_entry(&properties, "count-visible", T_BOOLEAN, &countShown);
+    append_entry(&properties, "progress", T_DOUBLE, &progress);
+    append_entry(&properties, "progress-visible", T_BOOLEAN, &progressShown);
+    dbus.message_iter_close_container(&args, &properties);
+    send_and_unref(message);
+    dbus.connection_flush(bus);
+    return 1;
+}
+
+uint8_t silk_window_set_badge(const uint8_t *text, size_t length) {
+    // Docks show counts only: other text shows no badge.
+    int64_t count = length ? 0 : -1;
+    for (size_t i = 0; i < length; i++) {
+        if (text[i] < '0' || text[i] > '9' || count > 1000000000) {
+            count = -1;
+            break;
+        }
+        count = count * 10 + (text[i] - '0');
+    }
+    launcherCount = count;
+    return launcher_update();
+}
+
+uint8_t silk_window_set_progress(double fraction) {
+    launcherProgress = fraction < 0 ? -1.0 : fraction > 1 ? 1.0 : fraction;
+    return launcher_update();
+}
+
+// A Linux window has no toolkit to draw a context menu: the app draws its own.
+uint8_t silk_window_context_menu_commit(uint32_t window, double x, double y) {
+    (void)window;
+    (void)x;
+    (void)y;
+    silk_context_commit_pending();
+    return 0;
 }
 
 // ---------------------------------------------------------------------------------------
