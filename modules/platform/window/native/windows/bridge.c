@@ -832,6 +832,11 @@ static HCURSOR cursor_handle(uint32_t cursor) {
         32644, 32645,
         32513, // IBeamVertical
         32512, 32512, 32512,
+        32512, // None, handled below
+        32514, // Wait IDC_WAIT
+        32650, // Progress IDC_APPSTARTING
+        32651, // Help IDC_HELP
+        32512, 32512, // ZoomIn, ZoomOut: Windows has none
     };
     if (cursor == 21) return NULL;
     if (cursor >= sizeof ids / sizeof ids[0]) cursor = 0;
