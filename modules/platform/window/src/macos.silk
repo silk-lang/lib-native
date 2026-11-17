@@ -494,7 +494,7 @@ impl Platform for MacPlatform {
       fail WindowError.CreationFailed
     }
     if options.titleBar == TitleBar.Transparent && options.titleBarHeight > 0.0 {
-      unsafe sys.silk_macos_set_controls_height(id, options.titleBarHeight)
+      unsafe sys.silk_macos_set_controls(id, options.titleBarHeight, options.controlsLeft, options.controlsTop)
     }
     return WindowId { value: id }
   }

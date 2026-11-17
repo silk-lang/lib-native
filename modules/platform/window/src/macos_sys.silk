@@ -167,7 +167,7 @@ static if Intrinsic.targetOperatingSystem() == "darwin" {
   pub unsafe extern "C" fn silk_macos_minimize(window: u32) -> ()
   pub unsafe extern "C" fn silk_macos_toggle_full_screen(window: u32) -> ()
   pub unsafe extern "C" fn silk_macos_start_window_drag(window: u32) -> ()
-  pub unsafe extern "C" fn silk_macos_set_controls_height(window: u32, height: f64) -> ()
+  pub unsafe extern "C" fn silk_macos_set_controls(window: u32, height: f64, left: f64, top: f64) -> ()
   pub unsafe extern "C" fn silk_macos_set_cursor(window: u32, cursor: u32) -> ()
   pub unsafe extern "C" fn silk_macos_set_ime(
     window: u32,
@@ -357,7 +357,7 @@ static if Intrinsic.targetOperatingSystem() == "darwin" {
     return ()
   }
 
-  pub unsafe fn silk_macos_set_controls_height(window: u32, height: f64) -> () {
+  pub unsafe fn silk_macos_set_controls(window: u32, height: f64, left: f64, top: f64) -> () {
     return ()
   }
 
