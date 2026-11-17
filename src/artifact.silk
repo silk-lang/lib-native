@@ -21,6 +21,9 @@ pub effect fn locate(name: string, target: string, packagePath: string, release:
   if String.contains(target, "windows") {
     run String.append(&mut filename, ".exe")
   }
+  if String.contains(target, "wasm32") {
+    run String.append(&mut filename, ".wasm")
+  }
   let rootOutput = run outputDirectory(&root, target, release)
   let mut found = Option<Path>.none()
   let mut count: usize = 0
