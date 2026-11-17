@@ -115,6 +115,13 @@ pub enum Cursor {
   ContextualMenu,
   /// Hidden while it is over the content area.
   None,
+  /// Busy: the app takes no input.
+  Wait,
+  /// Busy, and the app still takes input.
+  Progress,
+  Help,
+  ZoomIn,
+  ZoomOut,
 }
 
 /// What the input method needs from the focused text field.

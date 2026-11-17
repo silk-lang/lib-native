@@ -702,7 +702,7 @@ static const char *cursor_name(uint32_t cursor) {
         "default", "text", "pointer", "crosshair", "grabbing", "grab", "not-allowed",
         "ew-resize", "ns-resize", "w-resize", "e-resize", "n-resize", "s-resize",
         "nwse-resize", "nesw-resize", "col-resize", "row-resize", "vertical-text", "copy",
-        "alias", "context-menu",
+        "alias", "context-menu", "none", "wait", "progress", "help", "zoom-in", "zoom-out",
     };
     return cursor < sizeof names / sizeof names[0] ? names[cursor] : "default";
 }
@@ -719,7 +719,10 @@ static uint32_t cursor_shape(uint32_t cursor) {
         WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_NESW_RESIZE, WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_COL_RESIZE,
         WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_ROW_RESIZE, WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_VERTICAL_TEXT,
         WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_COPY, WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_ALIAS,
-        WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_CONTEXT_MENU,
+        WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_CONTEXT_MENU, WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_DEFAULT,
+        WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_WAIT, WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_PROGRESS,
+        WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_HELP, WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_ZOOM_IN,
+        WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_ZOOM_OUT,
     };
     return cursor < sizeof shapes / sizeof shapes[0] ? shapes[cursor]
                                                      : WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_DEFAULT;

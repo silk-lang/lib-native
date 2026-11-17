@@ -1371,6 +1371,12 @@ static Cursor cursor_for(uint32_t cursor) {
         XC_plus,              // DragCopy
         XC_left_ptr,          // DragLink
         XC_left_ptr,          // ContextualMenu
+        XC_left_ptr,          // None, handled above
+        XC_watch,             // Wait
+        XC_watch,             // Progress
+        XC_question_arrow,    // Help
+        XC_left_ptr,          // ZoomIn
+        XC_left_ptr,          // ZoomOut
     };
     if (cursor >= sizeof shapes / sizeof shapes[0]) return None;
     if (!cursors[cursor]) cursors[cursor] = XCreateFontCursor(display, shapes[cursor]);
