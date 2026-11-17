@@ -2,7 +2,7 @@
 name = "gpu-webgpu-sys"
 description = "The raw WebGPU C ABI under gpu-webgpu"
 version = "0.1.0"
-silk-version = "0.1.0-dev.85+45b9e51824ca"
+silk-version = "0.1.0-dev.86+c9d19330761b"
 kind = "library"
 exports = ["generated_webgpu"]
 

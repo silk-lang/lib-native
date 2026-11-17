@@ -2,7 +2,7 @@
 name = "gpu-metal"
 description = "Metal bindings for programs that talk to Apple GPUs directly; a port of metal-rs"
 version = "0.1.0"
-silk-version = "0.1.0-dev.85+45b9e51824ca"
+silk-version = "0.1.0-dev.86+c9d19330761b"
 source = "src"
 main = "runtime.silk"
 kind = "library"
