@@ -1,4 +1,4 @@
-import silk.build.plan { Plan }
+import silk.build.plan { Framework, Library, Plan }
 import silk.build.step { sourcePath }
 
 static fn plan() -> Plan {
@@ -8,13 +8,13 @@ static fn plan() -> Plan {
       |> Plan.compileNative("objc", sourcePath("native/metal_layer.m"), &["-fobjc-arc", "-O2"], &[])
   }
   if Intrinsic.targetOperatingSystem() == "linux" || Intrinsic.targetOperatingSystem() == "darwin" {
-    plan = plan |> Plan.linkLibrary("glfw", "dynamic", false, false)
+    plan = plan |> Plan.linkLibrary("glfw", Library.dynamicSearch())
   }
   if Intrinsic.targetOperatingSystem() == "darwin" {
-    plan = plan |> Plan.linkFramework("Cocoa", false, false)
+    plan = plan |> Plan.linkFramework("Cocoa", Framework.make())
   }
   if Intrinsic.targetOperatingSystem() == "darwin" {
-    plan = plan |> Plan.linkFramework("QuartzCore", false, false)
+    plan = plan |> Plan.linkFramework("QuartzCore", Framework.make())
   }
   if Intrinsic.targetOperatingSystem() == "windows" {
     plan = plan |> Plan.linkArchive(Plan.archivePath("glfw", "lib-vc2022/glfw3dll.lib"))

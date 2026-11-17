@@ -1,8 +1,9 @@
 # platform-window
 
 Native windows, input and frame pacing for Silk applications.
-It opens windows, delivers keyboard, pointer, IME, menu and dialog events, paces
-frames by the display, and hands out the native objects a `gpu-webgpu` surface is created
+It opens windows, delivers keyboard, pointer, IME, menu, dialog and file drop events, shows a
+tray icon and notifications, registers global shortcuts, paces frames by the display, and hands
+out the native objects a `gpu-webgpu` surface is created
 from. It draws nothing itself.
 
 | Backend | Module | State |
@@ -61,6 +62,12 @@ while true {
 - **Menus and dialogs** never block. A `menu.MenuBar` is built once and installed with
   `setMenuBar`; choosing an item delivers `MenuAction`. File dialogs return a `DialogId` at
   once and deliver `DialogClosed` with the chosen paths.
+- **The desktop.** `setTray` shows one icon with a menu (its items deliver `MenuAction`, or
+  with no menu a click delivers `TrayClicked`). `notify` shows a notification and returns the
+  id that `NotificationClicked` carries. `registerShortcut(id, code, modifiers)` delivers
+  `GlobalShortcut` while another app has focus. Files dragged from other apps deliver
+  `FileDragEntered`, `FileDragMoved`, `FileDragLeft` and `FileDropped`, like the web's
+  `dragenter`, `dragover`, `dragleave` and `drop`.
 
 ## How the macOS backend works
 
@@ -124,6 +131,18 @@ browser cannot block: `nextEvent` returns what is queued, unless the page calls 
 through JSPI (`host.suspendingImports` and `host.promising`), in which case a wait suspends
 the wasm stack until an event arrives. Without JSPI, drive the app from `requestAnimationFrame`
 and `host.onWake` with `Wait.Poll`.
+
+**The desktop, per backend.**
+
+| | Tray | Global shortcuts | File drops | Notifications |
+| --- | --- | --- | --- | --- |
+| macOS | `NSStatusItem` | Carbon hot keys | `NSDraggingDestination` | `UNUserNotificationCenter` in an app bundle; `osascript`, without clicks, for a bare executable |
+| Windows | Notification area icon | `RegisterHotKey` | OLE `IDropTarget` | The icon's balloon, a toast on Windows 10 and later |
+| Linux | StatusNotifierItem with dbusmenu (KDE, most panels, GNOME with the AppIndicator extension) | X11 key grabs; none on Wayland | XDND; Wayland `wl_data_device` (paths come with the drop) | `org.freedesktop.Notifications` |
+| Browser | None | None | Canvas drag events; paths are file names, `host.droppedFiles()` has the files | The page's `Notification` |
+
+On Linux the session bus is reached through libdbus, loaded with `dlopen` when a tray or
+notification is first asked for, so a program that uses neither does not depend on it.
 
 Menus outside macOS and Windows have no visible bar, but their shortcuts work and system
 items (Quit, Close Window, Toggle Full Screen) get the usual ones.
@@ -197,8 +216,9 @@ wayland-protocols and wayland-scanner); `silk generate --check` checks all decla
 ## Not yet
 
 - A cross-thread waker for `nextEvent`.
-- File drag and drop, context menus, accessibility, and custom title bar hit testing beyond
+- Dragging out of a window, context menus, and custom title bar hit testing beyond
   `startWindowDrag`.
+- Wayland global shortcuts, which go through the desktop portal and ask the user to bind them.
 - X11: frames are paced at 60 Hz (or `SILK_WINDOW_REFRESH_HZ`) rather than read from
   XRandR, and clipboard transfers do not use INCR, so very large texts are refused.
 - Wayland: `focus` cannot raise a window (the protocol leaves that to the compositor), and

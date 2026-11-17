@@ -1,4 +1,4 @@
-import silk.build.plan { Plan }
+import silk.build.plan { Framework, Library, Plan }
 import silk.build.step { sourcePath }
 
 static fn plan() -> Plan {
@@ -66,58 +66,64 @@ static fn plan() -> Plan {
       )
   }
   if Intrinsic.targetOperatingSystem() == "darwin" {
-    plan = plan |> Plan.linkFramework("Cocoa", false, false)
+    plan = plan |> Plan.linkFramework("Cocoa", Framework.make())
   }
   if Intrinsic.targetOperatingSystem() == "darwin" {
-    plan = plan |> Plan.linkFramework("QuartzCore", false, false)
+    plan = plan |> Plan.linkFramework("QuartzCore", Framework.make())
   }
   if Intrinsic.targetOperatingSystem() == "darwin" {
-    plan = plan |> Plan.linkFramework("UniformTypeIdentifiers", false, false)
+    plan = plan |> Plan.linkFramework("UniformTypeIdentifiers", Framework.make())
+  }
+  if Intrinsic.targetOperatingSystem() == "darwin" {
+    plan = plan |> Plan.linkFramework("Carbon", Framework.make())
+  }
+  if Intrinsic.targetOperatingSystem() == "darwin" {
+    plan = plan |> Plan.linkFramework("UserNotifications", Framework.make())
   }
   if Intrinsic.targetOperatingSystem() == "linux" {
-    plan = plan |> Plan.linkLibrary("X11", "dynamic", false, false)
+    plan = plan |> Plan.linkLibrary("X11", Library.dynamicSearch())
   }
   if Intrinsic.targetOperatingSystem() == "linux" {
-    plan = plan |> Plan.linkLibrary("xkbcommon", "dynamic", false, false)
+    plan = plan |> Plan.linkLibrary("xkbcommon", Library.dynamicSearch())
   }
   if Intrinsic.targetOperatingSystem() == "linux" {
-    plan = plan |> Plan.linkLibrary("wayland-client", "dynamic", false, false)
+    plan = plan |> Plan.linkLibrary("wayland-client", Library.dynamicSearch())
   }
   if Intrinsic.targetOperatingSystem() == "linux" {
-    plan = plan |> Plan.linkLibrary("wayland-cursor", "dynamic", false, false)
+    plan = plan |> Plan.linkLibrary("wayland-cursor", Library.dynamicSearch())
   }
   if Intrinsic.targetOperatingSystem() == "windows" {
     plan = plan |> Plan.linkArchive(Plan.archivePath("win32-bridge", "silkwindow.lib"))
   }
   if Intrinsic.targetOperatingSystem() == "windows" {
-    plan = plan |> Plan.linkLibrary("user32", "dynamic", false, false)
+    plan = plan |> Plan.linkLibrary("user32", Library.dynamicSearch())
   }
   if Intrinsic.targetOperatingSystem() == "windows" {
-    plan = plan |> Plan.linkLibrary("gdi32", "dynamic", false, false)
+    plan = plan |> Plan.linkLibrary("gdi32", Library.dynamicSearch())
   }
   if Intrinsic.targetOperatingSystem() == "windows" {
-    plan = plan |> Plan.linkLibrary("imm32", "dynamic", false, false)
+    plan = plan |> Plan.linkLibrary("imm32", Library.dynamicSearch())
   }
   if Intrinsic.targetOperatingSystem() == "windows" {
-    plan = plan |> Plan.linkLibrary("dwmapi", "dynamic", false, false)
+    plan = plan |> Plan.linkLibrary("dwmapi", Library.dynamicSearch())
   }
   if Intrinsic.targetOperatingSystem() == "windows" {
-    plan = plan |> Plan.linkLibrary("shell32", "dynamic", false, false)
+    plan = plan |> Plan.linkLibrary("shell32", Library.dynamicSearch())
   }
   if Intrinsic.targetOperatingSystem() == "windows" {
-    plan = plan |> Plan.linkLibrary("comdlg32", "dynamic", false, false)
+    plan = plan |> Plan.linkLibrary("comdlg32", Library.dynamicSearch())
   }
   if Intrinsic.targetOperatingSystem() == "windows" {
-    plan = plan |> Plan.linkLibrary("ole32", "dynamic", false, false)
+    plan = plan |> Plan.linkLibrary("ole32", Library.dynamicSearch())
   }
   if Intrinsic.targetOperatingSystem() == "windows" {
-    plan = plan |> Plan.linkLibrary("uxtheme", "dynamic", false, false)
+    plan = plan |> Plan.linkLibrary("uxtheme", Library.dynamicSearch())
   }
   if Intrinsic.targetOperatingSystem() == "windows" {
-    plan = plan |> Plan.linkLibrary("uuid", "dynamic", false, false)
+    plan = plan |> Plan.linkLibrary("uuid", Library.dynamicSearch())
   }
   if Intrinsic.targetOperatingSystem() == "windows" {
-    plan = plan |> Plan.linkLibrary("advapi32", "dynamic", false, false)
+    plan = plan |> Plan.linkLibrary("advapi32", Library.dynamicSearch())
   }
   if Intrinsic.targetOperatingSystem() == "windows" {
     plan = plan |> Plan.linkArchive(Plan.archivePath("win32-bridge", "kernel32.lib"))

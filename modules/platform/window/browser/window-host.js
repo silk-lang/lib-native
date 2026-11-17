@@ -25,7 +25,9 @@ const EVENT = {
   CLOSE_REQUESTED: 7, FULL_SCREEN_CHANGED: 8, KEY_DOWN: 9, KEY_UP: 10, MODIFIERS_CHANGED: 11,
   TEXT_INPUT: 12, IME_PREEDIT: 13, MOUSE_MOVED: 14, MOUSE_DOWN: 15, MOUSE_UP: 16,
   MOUSE_ENTERED: 17, MOUSE_EXITED: 18, SCROLL: 19, PINCH: 20, MENU_ACTION: 21,
-  DIALOG_CLOSED: 22, APPEARANCE_CHANGED: 23, QUIT_REQUESTED: 24,
+  DIALOG_CLOSED: 22, APPEARANCE_CHANGED: 23, QUIT_REQUESTED: 24, FILE_DRAG_ENTERED: 25,
+  FILE_DRAG_MOVED: 26, FILE_DRAG_LEFT: 27, FILE_DROPPED: 28, GLOBAL_SHORTCUT: 29,
+  TRAY_CLICKED: 30, NOTIFICATION_CLICKED: 31,
 };
 const FLAG = { REPEAT: 1, IME_HANDLED: 2, ON: 4, PRECISE: 8 };
 const MOD = { SHIFT: 1, CONTROL: 2, ALT: 4, META: 8, CAPS_LOCK: 16 };
@@ -84,6 +86,8 @@ export class WindowHost {
     this.clipboard = '';
     this.dialogs = new Map();
     this.nextDialog = 1;
+    this.dropped = [];
+    this.nextNotification = 1;
     this.started = false;
     this.focused = 0;
     this.waiter = null;
@@ -117,6 +121,9 @@ export class WindowHost {
 
   /** The files a dialog returned, as File objects; the Silk side gets their names. */
   dialogFiles(dialog) { return this.dialogs.get(dialog) ?? []; }
+
+  /** The files of the last drop, as File objects; the Silk side gets their names. */
+  droppedFiles() { return this.dropped; }
 
   // ---------------------------------------------------------------------------------
   // Memory.
@@ -270,6 +277,7 @@ export class WindowHost {
     if (title && this.windows.size === 1) document.title = title;
     if (!(flags & WINDOW.VISIBLE)) this.silk_window_set_visible(id, 0);
     this.listenCanvas(window);
+    this.listenDrop(window);
     window.observer = new ResizeObserver(() => this.resized(window, false));
     window.observer.observe(canvas);
     this.resized(window, true);
@@ -592,6 +600,82 @@ export class WindowHost {
   }
 
   // ---------------------------------------------------------------------------------
+  // Files dragged onto a canvas. A page sees File objects, not paths, so the paths are the
+  // file names; droppedFiles() has the files of the last drop.
+
+  listenDrop(window) {
+    const canvas = window.canvas;
+    const options = { signal: window.abort.signal };
+    const files = e => [...(e.dataTransfer?.types ?? [])].includes('Files');
+    const at = (kind, e) => {
+      const rect = canvas.getBoundingClientRect();
+      const record = event(kind, window.id);
+      record.x = e.clientX - rect.left;
+      record.y = e.clientY - rect.top;
+      return record;
+    };
+    // dragenter and dragleave fire for every element crossed; the canvas has no children,
+    // but count anyway so that a nested element does not end the drag early.
+    let depth = 0;
+    canvas.addEventListener('dragenter', e => {
+      if (!files(e)) return;
+      e.preventDefault();
+      if (depth++ > 0) return;
+      this.push(at(EVENT.FILE_DRAG_ENTERED, e));
+    }, options);
+    canvas.addEventListener('dragover', e => {
+      if (!files(e)) return;
+      e.preventDefault();
+      if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+      this.push(at(EVENT.FILE_DRAG_MOVED, e));
+    }, options);
+    canvas.addEventListener('dragleave', e => {
+      if (!files(e) || --depth > 0) return;
+      depth = 0;
+      this.push(event(EVENT.FILE_DRAG_LEFT, window.id));
+    }, options);
+    canvas.addEventListener('drop', e => {
+      if (!files(e)) return;
+      e.preventDefault();
+      depth = 0;
+      this.dropped = [...(e.dataTransfer?.files ?? [])];
+      const record = at(EVENT.FILE_DROPPED, e);
+      record.texts = this.dropped.map(file => file.name);
+      record.count = record.texts.length;
+      this.push(record);
+    }, options);
+  }
+
+  // ---------------------------------------------------------------------------------
+  // The desktop: a page has no tray or global shortcuts. Notifications are the page's
+  // Notification API, which asks for permission the first time.
+
+  silk_window_tray_begin() { this.pendingMenu = null; }
+  silk_window_tray_commit() { return 0; }
+  silk_window_tray_remove() {}
+  silk_window_shortcut_register() { return 0; }
+  silk_window_shortcut_unregister() {}
+
+  silk_window_notify(titlePtr, titleLength, bodyPtr, bodyLength) {
+    const Notice = globalThis.Notification;
+    if (!Notice || Notice.permission === 'denied') return 0;
+    const id = this.nextNotification++;
+    const title = this.text(titlePtr, titleLength);
+    const body = this.text(bodyPtr, bodyLength);
+    const show = () => {
+      const notice = new Notice(title, { body });
+      notice.onclick = () => {
+        const record = event(EVENT.NOTIFICATION_CLICKED);
+        record.code = id;
+        this.push(record);
+      };
+    };
+    if (Notice.permission === 'granted') show();
+    else Notice.requestPermission().then(answer => { if (answer === 'granted') show(); }, () => {});
+    return id;
+  }
+
+  // ---------------------------------------------------------------------------------
   // Menus: no menu bar in a page, but the shortcuts work.
 
   silk_window_menu_begin_bar() { this.pendingMenu = []; }
@@ -731,5 +815,26 @@ export class WindowHost {
     this.f64(yPtr, ime.y);
     this.f64(widthPtr, ime.width);
     this.f64(heightPtr, ime.height);
+  }
+
+  silk_window_test_drop(id, kind, x, y, ptr, length) {
+    const window = this.windows.get(id);
+    if (!window || typeof DataTransfer !== 'function') return 0;
+    // The drag keeps the files it entered with, as a real one does.
+    if (kind === 0) {
+      this.testTransfer = new DataTransfer();
+      for (const path of this.text(ptr, length).split('\n').filter(Boolean)) {
+        this.testTransfer.items.add(new File([], path.slice(path.lastIndexOf('/') + 1)));
+      }
+    }
+    const transfer = this.testTransfer;
+    if (!transfer) return 0;
+    const rect = window.canvas.getBoundingClientRect();
+    const init = { clientX: rect.left + x, clientY: rect.top + y, bubbles: true, cancelable: true,
+      dataTransfer: transfer };
+    const names = [['dragenter', 'dragover'], ['dragover'], ['dragleave'], ['drop']][kind];
+    if (!names) return 0;
+    for (const name of names) window.canvas.dispatchEvent(new DragEvent(name, init));
+    return 1;
   }
 }

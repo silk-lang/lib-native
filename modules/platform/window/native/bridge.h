@@ -36,6 +36,18 @@ enum {
     SILK_EVENT_DIALOG_CLOSED = 22,
     SILK_EVENT_APPEARANCE_CHANGED = 23,
     SILK_EVENT_QUIT_REQUESTED = 24,
+    SILK_EVENT_FILE_DRAG_ENTERED = 25, // x, y; count strings: the paths, when known
+    SILK_EVENT_FILE_DRAG_MOVED = 26,   // x, y
+    SILK_EVENT_FILE_DRAG_LEFT = 27,
+    SILK_EVENT_FILE_DROPPED = 28,      // x, y; count strings: the paths
+    SILK_EVENT_GLOBAL_SHORTCUT = 29,   // code: the shortcut's id
+    SILK_EVENT_TRAY_CLICKED = 30,      // code: the mouse button
+    SILK_EVENT_NOTIFICATION_CLICKED = 31, // code: the notification's id
+};
+
+// tray_commit flags.
+enum {
+    SILK_TRAY_TEMPLATE = 1, // macOS: draw the icon from its alpha in the menu bar's colours
 };
 
 // flags bits.
@@ -175,6 +187,26 @@ void silk_window_clipboard_write(const uint8_t *text, size_t length);
 // 0 light, 1 dark.
 uint32_t silk_window_appearance(void);
 
+// The tray icon. Its menu is described with the menu_* calls between tray_begin and
+// tray_commit, items at the top level and begin/end for submenus; an empty menu makes clicks
+// deliver TRAY_CLICKED instead. `pixels` is width * height RGBA, not premultiplied. Returns
+// 1 when the icon is shown, 0 when the system has no tray.
+void silk_window_tray_begin(void);
+uint8_t silk_window_tray_commit(const uint8_t *pixels, uint32_t width, uint32_t height,
+                         const uint8_t *tooltip, size_t tooltipLength, uint32_t flags);
+void silk_window_tray_remove(void);
+
+// A shortcut that delivers GLOBAL_SHORTCUT with `id` whichever app has focus: the key with
+// KeyCode `code` and exactly the modifier bits `modifiers`. Registering an id again replaces
+// it. Returns 1 when registered, 0 when the system refused or has no global shortcuts.
+uint8_t silk_window_shortcut_register(uint32_t id, uint32_t code, uint32_t modifiers);
+void silk_window_shortcut_unregister(uint32_t id);
+
+// Shows a desktop notification. Returns its id (NOTIFICATION_CLICKED carries it), or 0 when
+// it could not be shown.
+uint32_t silk_window_notify(const uint8_t *title, size_t titleLength, const uint8_t *body,
+                     size_t bodyLength);
+
 // Test hooks for the smoke tests: drive the system as the user would. Each returns 1 when
 // it did something and 0 when the backend cannot simulate it.
 //
@@ -193,3 +225,7 @@ uint8_t silk_window_test_resize(uint32_t window, double width, double height);
 // Where the backend told the input method the caret is, in points of the content area.
 void silk_window_test_ime_rect(uint32_t window, double *x, double *y, double *width,
                                double *height);
+// Drags files over the window as another app would. kind 0 enters, 1 moves, 2 leaves, 3
+// drops; `paths` are separated by newlines. x, y in points of the content area.
+uint8_t silk_window_test_drop(uint32_t window, uint32_t kind, double x, double y,
+                         const uint8_t *paths, size_t length);

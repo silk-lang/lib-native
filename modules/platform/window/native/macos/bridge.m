@@ -13,7 +13,9 @@
 //
 // Built with ARC.
 #import <Cocoa/Cocoa.h>
+#import <Carbon/Carbon.h>
 #import <QuartzCore/QuartzCore.h>
+#import <UserNotifications/UserNotifications.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 #import <objc/message.h>
 #include <math.h>
@@ -182,6 +184,8 @@ static NSData *clipboardText;
 static NSMutableArray<NSMenu *> *menuStack;
 static NSMenu *pendingBar;
 static id menuTarget;
+// Between tray_begin and tray_commit, items go straight into the tray's menu.
+static BOOL trayBuilding;
 static uint32_t lastAppearance = 2;
 
 static SilkWindowEvent blank_event(uint32_t kind, uint32_t window) {
@@ -283,7 +287,7 @@ static void check_appearance(void) {
 // Windows.
 
 @class SilkAXNode;
-@interface SilkView : NSView <NSTextInputClient>
+@interface SilkView : NSView <NSTextInputClient, NSDraggingDestination>
 @property(nonatomic) uint32_t windowId;
 @property(nonatomic) BOOL imeEnabled;
 @property(nonatomic) NSRect imeArea;
@@ -537,6 +541,54 @@ static BOOL window_visible(NSWindow *window) {
 }
 
 - (void)cursorUpdate:(NSEvent *)event { [self.cursor set]; }
+
+// Files dragged in from other apps.
+
+static NSArray<NSData *> *dragged_paths(id<NSDraggingInfo> info) {
+    NSArray<NSURL *> *urls =
+        [info.draggingPasteboard readObjectsForClasses:@[ NSURL.class ]
+                                               options:@{NSPasteboardURLReadingFileURLsOnlyKey : @YES}];
+    NSMutableArray<NSData *> *paths = [NSMutableArray array];
+    for (NSURL *url in urls)
+        if (url.fileURL && url.path) [paths addObject:utf8(url.path)];
+    return paths;
+}
+
+- (void)pushDrag:(uint32_t)kind info:(id<NSDraggingInfo>)info paths:(NSArray<NSData *> *)paths {
+    SilkWindowEvent event = blank_event(kind, self.windowId);
+    if (info) {
+        NSPoint position = [self convertPoint:info.draggingLocation fromView:nil];
+        event.x = position.x;
+        event.y = position.y;
+    }
+    push_texts(event, paths ?: @[]);
+    flush();
+}
+
+- (NSDragOperation)draggingEntered:(id<NSDraggingInfo>)info {
+    NSArray<NSData *> *paths = dragged_paths(info);
+    if (paths.count == 0) return NSDragOperationNone;
+    [self pushDrag:SILK_EVENT_FILE_DRAG_ENTERED info:info paths:paths];
+    return NSDragOperationCopy;
+}
+
+- (NSDragOperation)draggingUpdated:(id<NSDraggingInfo>)info {
+    [self pushDrag:SILK_EVENT_FILE_DRAG_MOVED info:info paths:nil];
+    return NSDragOperationCopy;
+}
+
+- (void)draggingExited:(id<NSDraggingInfo>)info {
+    [self pushDrag:SILK_EVENT_FILE_DRAG_LEFT info:nil paths:nil];
+}
+
+- (BOOL)prepareForDragOperation:(id<NSDraggingInfo>)info { return YES; }
+
+- (BOOL)performDragOperation:(id<NSDraggingInfo>)info {
+    NSArray<NSData *> *paths = dragged_paths(info);
+    if (paths.count == 0) return NO;
+    [self pushDrag:SILK_EVENT_FILE_DROPPED info:info paths:paths];
+    return YES;
+}
 
 // Pointer.
 
@@ -1199,6 +1251,7 @@ uint32_t silk_macos_open_window(const uint8_t *title, size_t titleLength, double
             window.backgroundColor = [NSColor clearColor];
         }
         window.contentView = view;
+        [view registerForDraggedTypes:@[ NSPasteboardTypeFileURL ]];
         view.layer.opaque = !transparent;
         SilkWindow *record = [SilkWindow new];
         record.windowId = id;
@@ -1430,7 +1483,12 @@ static unichar named_key_character(uint32_t named) {
     }
 }
 
+// How deep the menu stack must be for an item: inside a top-level menu of the bar, or
+// anywhere in the tray's menu.
+static NSUInteger item_depth(void) { return trayBuilding ? 1 : 2; }
+
 void silk_macos_menu_begin_bar(void) {
+    trayBuilding = NO;
     pendingBar = [[NSMenu alloc] initWithTitle:@""];
     [menuStack removeAllObjects];
     [menuStack addObject:pendingBar];
@@ -1444,7 +1502,8 @@ void silk_macos_menu_begin(const uint8_t *title, size_t length) {
     item.submenu = menu;
     [menuStack.lastObject addItem:item];
     [menuStack addObject:menu];
-    if (menuStack.count == 2 && [text isEqualToString:@"Window"]) NSApp.windowsMenu = menu;
+    if (!trayBuilding && menuStack.count == 2 && [text isEqualToString:@"Window"])
+        NSApp.windowsMenu = menu;
 }
 
 void silk_macos_menu_end(void) {
@@ -1454,7 +1513,7 @@ void silk_macos_menu_end(void) {
 void silk_macos_menu_action(const uint8_t *title, size_t length, uint32_t action,
                             uint32_t keyKind, uint32_t keyValue, uint32_t modifiers,
                             uint8_t enabled, uint8_t checked) {
-    if (menuStack.count < 2) return;
+    if (menuStack.count < item_depth()) return;
     NSString *key = @"";
     if (keyKind == 1 && keyValue != 0) {
         uint32_t scalar = keyValue;
@@ -1475,18 +1534,18 @@ void silk_macos_menu_action(const uint8_t *title, size_t length, uint32_t action
 }
 
 void silk_macos_menu_separator(void) {
-    if (menuStack.count < 2) return;
+    if (menuStack.count < item_depth()) return;
     [menuStack.lastObject addItem:[NSMenuItem separatorItem]];
 }
 
 void silk_macos_menu_system(uint32_t item) {
-    if (menuStack.count < 2) return;
+    if (menuStack.count < item_depth()) return;
     NSMenuItem *menuItem = system_item(item);
     if (menuItem) [menuStack.lastObject addItem:menuItem];
 }
 
 void silk_macos_menu_commit(void) {
-    if (!pendingBar) return;
+    if (!pendingBar || trayBuilding) return;
     // Every menu but the app menu is matched by key equivalents, so items are enabled
     // as built rather than through responder-chain validation.
     for (NSMenuItem *top in pendingBar.itemArray) top.submenu.autoenablesItems = NO;
@@ -1739,4 +1798,234 @@ size_t silk_macos_ax_text(uint32_t id, uint8_t *out, size_t capacity) {
     NSData *data = [find_window(id).view.axAction[@"text"] dataUsingEncoding:NSUTF8StringEncoding];
     if (out && capacity >= data.length) memcpy(out, data.bytes, data.length);
     return data.length;
+}
+
+// ---------------------------------------------------------------------------------------
+// The tray: an NSStatusItem in the menu bar.
+
+static NSStatusItem *statusItem;
+static id trayTarget;
+
+@interface SilkTrayTarget : NSObject
+- (void)clicked:(id)sender;
+@end
+
+@implementation SilkTrayTarget
+- (void)clicked:(id)sender {
+    SilkWindowEvent event = blank_event(SILK_EVENT_TRAY_CLICKED, 0);
+    NSEventType type = NSApp.currentEvent.type;
+    event.code = type == NSEventTypeRightMouseUp ? 1 : type == NSEventTypeOtherMouseUp ? 2 : 0;
+    push(event);
+    flush();
+}
+@end
+
+void silk_macos_tray_begin(void) {
+    trayBuilding = YES;
+    pendingBar = [[NSMenu alloc] initWithTitle:@""];
+    pendingBar.autoenablesItems = NO;
+    [menuStack removeAllObjects];
+    [menuStack addObject:pendingBar];
+}
+
+uint8_t silk_macos_tray_commit(const uint8_t *pixels, uint32_t width, uint32_t height,
+                               const uint8_t *tooltip, size_t tooltipLength, uint32_t flags) {
+    NSMenu *menu = trayBuilding ? pendingBar : nil;
+    trayBuilding = NO;
+    pendingBar = nil;
+    [menuStack removeAllObjects];
+    if (!started || !width || !height) return 0;
+    @autoreleasepool {
+        NSBitmapImageRep *rep = [[NSBitmapImageRep alloc]
+            initWithBitmapDataPlanes:NULL
+                          pixelsWide:(NSInteger)width
+                          pixelsHigh:(NSInteger)height
+                       bitsPerSample:8
+                     samplesPerPixel:4
+                            hasAlpha:YES
+                            isPlanar:NO
+                      colorSpaceName:NSDeviceRGBColorSpace
+                        bitmapFormat:NSBitmapFormatAlphaNonpremultiplied
+                         bytesPerRow:(NSInteger)width * 4
+                        bitsPerPixel:32];
+        if (!rep) return 0;
+        memcpy(rep.bitmapData, pixels, (size_t)width * height * 4);
+        // Menu bar icons are 18 points tall.
+        NSImage *image = [[NSImage alloc] initWithSize:NSMakeSize(18.0 * width / height, 18.0)];
+        [image addRepresentation:rep];
+        image.template = (flags & SILK_TRAY_TEMPLATE) != 0;
+        if (!statusItem) {
+            statusItem = [NSStatusBar.systemStatusBar statusItemWithLength:NSSquareStatusItemLength];
+            trayTarget = [SilkTrayTarget new];
+        }
+        if (!statusItem) return 0;
+        statusItem.visible = YES;
+        statusItem.button.image = image;
+        statusItem.button.toolTip = string_from(tooltip, tooltipLength);
+        if (menu.itemArray.count) {
+            statusItem.menu = menu;
+            statusItem.button.target = nil;
+            statusItem.button.action = nil;
+        } else {
+            statusItem.menu = nil;
+            statusItem.button.target = trayTarget;
+            statusItem.button.action = @selector(clicked:);
+            [statusItem.button sendActionOn:NSEventMaskLeftMouseUp | NSEventMaskRightMouseUp |
+                                            NSEventMaskOtherMouseUp];
+        }
+    }
+    return 1;
+}
+
+void silk_macos_tray_remove(void) {
+    if (!statusItem) return;
+    [NSStatusBar.systemStatusBar removeStatusItem:statusItem];
+    statusItem = nil;
+}
+
+// ---------------------------------------------------------------------------------------
+// Global shortcuts: Carbon hot keys, which need no accessibility permission.
+
+typedef struct HotKey {
+    uint32_t id;
+    EventHotKeyRef ref;
+} HotKey;
+
+static HotKey hotKeys[64];
+static size_t hotKeyCount;
+static BOOL hotKeyHandler;
+
+static OSStatus hot_key_pressed(EventHandlerCallRef next, EventRef carbonEvent, void *data) {
+    EventHotKeyID hotKey;
+    if (GetEventParameter(carbonEvent, kEventParamDirectObject, typeEventHotKeyID, NULL,
+                          sizeof hotKey, NULL, &hotKey) != noErr)
+        return eventNotHandledErr;
+    SilkWindowEvent event = blank_event(SILK_EVENT_GLOBAL_SHORTCUT, 0);
+    event.code = hotKey.id;
+    push(event);
+    flush();
+    return noErr;
+}
+
+void silk_macos_shortcut_unregister(uint32_t id) {
+    for (size_t i = 0; i < hotKeyCount; i++) {
+        if (hotKeys[i].id != id) continue;
+        UnregisterEventHotKey(hotKeys[i].ref);
+        hotKeys[i] = hotKeys[--hotKeyCount];
+        return;
+    }
+}
+
+uint8_t silk_macos_shortcut_register(uint32_t id, uint32_t code, uint32_t modifiers) {
+    if (!started || hotKeyCount == sizeof hotKeys / sizeof hotKeys[0]) return 0;
+    silk_macos_shortcut_unregister(id);
+    int keyCode = -1;
+    for (int i = 0; i < 128 && code; i++)
+        if (silk_macos_key_codes[i] == code) keyCode = i;
+    if (keyCode < 0) return 0;
+    if (!hotKeyHandler) {
+        EventTypeSpec spec = {kEventClassKeyboard, kEventHotKeyPressed};
+        if (InstallApplicationEventHandler(NewEventHandlerUPP(hot_key_pressed), 1, &spec, NULL, NULL) != noErr)
+            return 0;
+        hotKeyHandler = YES;
+    }
+    UInt32 carbon = 0;
+    if (modifiers & 1) carbon |= shiftKey;
+    if (modifiers & 2) carbon |= controlKey;
+    if (modifiers & 4) carbon |= optionKey;
+    if (modifiers & 8) carbon |= cmdKey;
+    EventHotKeyID hotKey = {0x53494C4B, id}; // 'SILK'
+    EventHotKeyRef ref = NULL;
+    if (RegisterEventHotKey((UInt32)keyCode, carbon, hotKey, GetApplicationEventTarget(), 0, &ref) != noErr)
+        return 0;
+    hotKeys[hotKeyCount].id = id;
+    hotKeys[hotKeyCount].ref = ref;
+    hotKeyCount++;
+    return 1;
+}
+
+// ---------------------------------------------------------------------------------------
+// Notifications. UNUserNotificationCenter only works for an app bundle; a bare executable
+// (a development build) shows them through osascript instead, without clicks.
+
+static uint32_t nextNotification = 1;
+static BOOL notificationsAsked;
+static id notificationDelegate;
+
+@interface SilkNotificationDelegate : NSObject <UNUserNotificationCenterDelegate>
+@end
+
+@implementation SilkNotificationDelegate
+- (void)userNotificationCenter:(UNUserNotificationCenter *)center
+       willPresentNotification:(UNNotification *)notification
+         withCompletionHandler:(void (^)(UNNotificationPresentationOptions))completion {
+    completion(UNNotificationPresentationOptionBanner | UNNotificationPresentationOptionList);
+}
+
+- (void)userNotificationCenter:(UNUserNotificationCenter *)center
+    didReceiveNotificationResponse:(UNNotificationResponse *)response
+             withCompletionHandler:(void (^)(void))completion {
+    uint32_t id = (uint32_t)response.notification.request.identifier.longLongValue;
+    BOOL clicked = [response.actionIdentifier isEqualToString:UNNotificationDefaultActionIdentifier];
+    dispatch_async(dispatch_get_main_queue(), ^{
+      if (clicked) {
+          SilkWindowEvent event = blank_event(SILK_EVENT_NOTIFICATION_CLICKED, 0);
+          event.code = id;
+          push(event);
+          flush();
+      }
+    });
+    completion();
+}
+@end
+
+static NSString *apple_script_string(NSString *text) {
+    NSString *escaped = [text stringByReplacingOccurrencesOfString:@"\\" withString:@"\\\\"];
+    escaped = [escaped stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""];
+    return [NSString stringWithFormat:@"\"%@\"", escaped];
+}
+
+uint32_t silk_macos_notify(const uint8_t *title, size_t titleLength, const uint8_t *body,
+                           size_t bodyLength) {
+    if (!started) return 0;
+    uint32_t id = nextNotification++;
+    @autoreleasepool {
+        NSString *titleText = string_from(title, titleLength);
+        NSString *bodyText = string_from(body, bodyLength);
+        if (!NSBundle.mainBundle.bundleIdentifier) {
+            NSString *script = [NSString stringWithFormat:@"display notification %@ with title %@",
+                                                          apple_script_string(bodyText),
+                                                          apple_script_string(titleText)];
+            NSTask *task = [NSTask new];
+            task.executableURL = [NSURL fileURLWithPath:@"/usr/bin/osascript"];
+            task.arguments = @[ @"-e", script ];
+            NSError *error = nil;
+            if (![task launchAndReturnError:&error]) return 0;
+            return id;
+        }
+        UNUserNotificationCenter *center = UNUserNotificationCenter.currentNotificationCenter;
+        if (!notificationsAsked) {
+            notificationsAsked = YES;
+            notificationDelegate = [SilkNotificationDelegate new];
+            center.delegate = notificationDelegate;
+            [center requestAuthorizationWithOptions:UNAuthorizationOptionAlert | UNAuthorizationOptionSound
+                                  completionHandler:^(BOOL granted, NSError *error){
+                                  }];
+        }
+        UNMutableNotificationContent *content = [UNMutableNotificationContent new];
+        content.title = titleText;
+        content.body = bodyText;
+        NSString *identifier = [NSString stringWithFormat:@"%u", id];
+        UNNotificationRequest *request = [UNNotificationRequest requestWithIdentifier:identifier
+                                                                              content:content
+                                                                              trigger:nil];
+        [center addNotificationRequest:request withCompletionHandler:nil];
+    }
+    return id;
+}
+
+uint8_t silk_macos_test_drop(uint32_t window, uint32_t kind, double x, double y,
+                             const uint8_t *paths, size_t length) {
+    // AppKit drags come from another app's dragging session; there is nothing to post.
+    return 0;
 }

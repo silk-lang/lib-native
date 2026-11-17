@@ -1,4 +1,4 @@
-import silk.build.plan { Plan }
+import silk.build.plan { Framework, Plan }
 import silk.build.step { sourcePath }
 
 static fn plan() -> Plan {
@@ -22,16 +22,16 @@ static fn plan() -> Plan {
       )
   }
   if Intrinsic.targetOperatingSystem() == "darwin" {
-    plan = plan |> Plan.linkFramework("Foundation", false, false)
+    plan = plan |> Plan.linkFramework("Foundation", Framework.make())
   }
   if Intrinsic.targetOperatingSystem() == "darwin" {
-    plan = plan |> Plan.linkFramework("Metal", false, false)
+    plan = plan |> Plan.linkFramework("Metal", Framework.make())
   }
   if Intrinsic.targetOperatingSystem() == "darwin" {
-    plan = plan |> Plan.linkFramework("QuartzCore", false, false)
+    plan = plan |> Plan.linkFramework("QuartzCore", Framework.make())
   }
   if Intrinsic.targetOperatingSystem() == "darwin" {
-    plan = plan |> Plan.linkFramework("MetalPerformanceShaders", false, false)
+    plan = plan |> Plan.linkFramework("MetalPerformanceShaders", Framework.make())
   }
   return plan
 }

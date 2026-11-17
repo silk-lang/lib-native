@@ -189,6 +189,32 @@ static if Intrinsic.targetOperatingSystem() == "windows"
     width: *mut f64,
     height: *mut f64,
   ) -> ()
+  pub unsafe extern "C" fn silk_window_tray_begin() -> ()
+  pub unsafe extern "C" fn silk_window_tray_commit(
+    pixels: ?[*]const u8,
+    width: u32,
+    height: u32,
+    tooltip: ?[*]const u8,
+    tooltipLength: usize,
+    flags: u32,
+  ) -> u8
+  pub unsafe extern "C" fn silk_window_tray_remove() -> ()
+  pub unsafe extern "C" fn silk_window_shortcut_register(id: u32, code: u32, modifiers: u32) -> u8
+  pub unsafe extern "C" fn silk_window_shortcut_unregister(id: u32) -> ()
+  pub unsafe extern "C" fn silk_window_notify(
+    title: ?[*]const u8,
+    titleLength: usize,
+    body: ?[*]const u8,
+    bodyLength: usize,
+  ) -> u32
+  pub unsafe extern "C" fn silk_window_test_drop(
+    window: u32,
+    kind: u32,
+    x: f64,
+    y: f64,
+    paths: ?[*]const u8,
+    length: usize,
+  ) -> u8
 } else {
   static if Intrinsic.targetArchitecture() == "wasm32" {
     pub unsafe extern "C" fn silk_window_start() -> i32 as "window#silk_window_start"
@@ -363,6 +389,38 @@ static if Intrinsic.targetOperatingSystem() == "windows"
       width: *mut f64,
       height: *mut f64,
     ) -> () as "window#silk_window_test_ime_rect"
+    pub unsafe extern "C" fn silk_window_tray_begin() -> () as "window#silk_window_tray_begin"
+    pub unsafe extern "C" fn silk_window_tray_commit(
+      pixels: ?[*]const u8,
+      width: u32,
+      height: u32,
+      tooltip: ?[*]const u8,
+      tooltipLength: usize,
+      flags: u32,
+    ) -> u8 as "window#silk_window_tray_commit"
+    pub unsafe extern "C" fn silk_window_tray_remove() -> () as "window#silk_window_tray_remove"
+    pub unsafe extern "C" fn silk_window_shortcut_register(
+      id: u32,
+      code: u32,
+      modifiers: u32,
+    ) -> u8 as "window#silk_window_shortcut_register"
+    pub unsafe extern "C" fn silk_window_shortcut_unregister(
+      id: u32,
+    ) -> () as "window#silk_window_shortcut_unregister"
+    pub unsafe extern "C" fn silk_window_notify(
+      title: ?[*]const u8,
+      titleLength: usize,
+      body: ?[*]const u8,
+      bodyLength: usize,
+    ) -> u32 as "window#silk_window_notify"
+    pub unsafe extern "C" fn silk_window_test_drop(
+      window: u32,
+      kind: u32,
+      x: f64,
+      y: f64,
+      paths: ?[*]const u8,
+      length: usize,
+    ) -> u8 as "window#silk_window_test_drop"
   } else {
     pub unsafe fn silk_window_start() -> i32 {
       return 3
@@ -597,6 +655,53 @@ static if Intrinsic.targetOperatingSystem() == "windows"
       height: *mut f64,
     ) -> () {
       return ()
+    }
+
+    pub unsafe fn silk_window_tray_begin() -> () {
+      return ()
+    }
+
+    pub unsafe fn silk_window_tray_commit(
+      pixels: ?[*]const u8,
+      width: u32,
+      height: u32,
+      tooltip: ?[*]const u8,
+      tooltipLength: usize,
+      flags: u32,
+    ) -> u8 {
+      return 0
+    }
+
+    pub unsafe fn silk_window_tray_remove() -> () {
+      return ()
+    }
+
+    pub unsafe fn silk_window_shortcut_register(id: u32, code: u32, modifiers: u32) -> u8 {
+      return 0
+    }
+
+    pub unsafe fn silk_window_shortcut_unregister(id: u32) -> () {
+      return ()
+    }
+
+    pub unsafe fn silk_window_notify(
+      title: ?[*]const u8,
+      titleLength: usize,
+      body: ?[*]const u8,
+      bodyLength: usize,
+    ) -> u32 {
+      return 0
+    }
+
+    pub unsafe fn silk_window_test_drop(
+      window: u32,
+      kind: u32,
+      x: f64,
+      y: f64,
+      paths: ?[*]const u8,
+      length: usize,
+    ) -> u8 {
+      return 0
     }
   }
 }

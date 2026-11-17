@@ -5,7 +5,7 @@ description = "Native windows, input, IME, menus, dialogs and display-paced fram
 version = "0.1.0"
 silk-version = "0.1.0-pipeline.1"
 kind = "library"
-exports = ["lib", "types", "event", "keys", "menu", "platform", "headless", "accessibility", "macos", "native", "bridge", "bridge_sys"]
+exports = ["lib", "types", "event", "keys", "menu", "shell", "platform", "headless", "accessibility", "macos", "native", "bridge", "bridge_sys"]
 
 # The native bridges reach every executable that depends on this package. macOS compiles the
 # AppKit bridge (NSView.displayLink(target:selector:) needs macOS 14). Linux compiles the X11 and

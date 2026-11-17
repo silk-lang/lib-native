@@ -1,4 +1,4 @@
-import silk.build.plan { Plan }
+import silk.build.plan { Library, Plan }
 import silk.build.step { sourcePath }
 
 static fn plan() -> Plan {
@@ -7,7 +7,7 @@ static fn plan() -> Plan {
     plan = plan |> Plan.compileNative("c", sourcePath("capture.c"), &["-std=c11"], &[])
   }
   if Intrinsic.targetOperatingSystem() == "linux" {
-    plan = plan |> Plan.linkLibrary("dl", "dynamic", false, false)
+    plan = plan |> Plan.linkLibrary("dl", Library.dynamicSearch())
   }
   return plan
 }

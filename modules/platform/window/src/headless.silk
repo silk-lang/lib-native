@@ -1,7 +1,9 @@
 //! A backend with no display: windows are records, events come from the test that drives
 //! it, and frames follow the same request rules as the native backends. Tests of code that
 //! is generic over `Platform` run on it anywhere, including CI without a display.
-import event { Event }
+import event { Event, Modifiers, MouseButton }
+import keys { KeyCode }
+import shell { Tray, Notification }
 import menu { MenuBar, MenuEntry, OpenDialog, SaveDialog }
 import platform { Platform }
 import types {
@@ -17,6 +19,8 @@ import types {
 }
 import silk.collections.list { List }
 import silk.core.option { Option }
+import silk.core.ownership { Copy }
+import silk.geometry.point { Point2 }
 import silk.geometry.size { Size2 }
 import silk.mem.allocator { Allocator, OutOfMemoryError }
 import silk.text.string { String }
@@ -42,6 +46,22 @@ pub struct HeadlessWindow {
   pub frames: u64,
 }
 
+/// A shortcut registered with `registerShortcut`.
+pub struct HeadlessShortcut {
+  pub id: u32,
+  pub code: KeyCode,
+  pub modifiers: Modifiers,
+}
+
+impl Copy for HeadlessShortcut {}
+
+/// A notification shown with `notify`.
+pub struct HeadlessNotification {
+  pub id: u32,
+  pub title: String,
+  pub body: String,
+}
+
 pub struct HeadlessPlatform {
   windows: List<HeadlessWindow>,
   queue: List<Event>,
@@ -53,6 +73,13 @@ pub struct HeadlessPlatform {
   time: f64,
   /// Menus and items in the last menu bar, counted through submenus.
   pub menuItems: usize,
+  /// The tray's tooltip while a tray is shown.
+  pub tray: Option<String>,
+  /// Items in the tray's menu, counted as `menuItems` is.
+  pub trayItems: usize,
+  pub shortcuts: List<HeadlessShortcut>,
+  /// Every notification shown, oldest first.
+  pub notifications: List<HeadlessNotification>,
 }
 
 impl HeadlessPlatform {
@@ -73,6 +100,10 @@ impl HeadlessPlatform {
       refreshInterval: 1.0 / 60.0,
       time: 0.0,
       menuItems: 0,
+      tray: Option<String>.None,
+      trayItems: 0,
+      shortcuts: List<HeadlessShortcut>.make(),
+      notifications: List<HeadlessNotification>.make(),
     }
   }
 
@@ -121,6 +152,81 @@ impl HeadlessPlatform {
     ! OutOfMemoryError
     ? &mut Allocator {
     run self.queue.append(Event.DialogClosed { dialog: dialog, paths: move paths })
+  }
+
+  /// Drags `paths` over the window and drops them at `position`, as a user would:
+  /// `FileDragEntered`, `FileDragMoved`, then `FileDropped`.
+  pub effect fn dropFiles(
+    self: &mut Self,
+    window: WindowId,
+    position: Point2<f64>,
+    paths: &[string],
+  ) -> ()
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let entered = run HeadlessPlatform.copyPaths(paths)
+    let dropped = run HeadlessPlatform.copyPaths(paths)
+    run self.queue.append(
+      Event.FileDragEntered { window: window, position: position, paths: move entered },
+    )
+    run self.queue.append(Event.FileDragMoved { window: window, position: position })
+    run self.queue.append(
+      Event.FileDropped { window: window, position: position, paths: move dropped },
+    )
+  }
+
+  effect fn copyPaths(paths: &[string]) -> List<String>
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let mut list = run List<String>.makeWithCapacity(paths.length)
+    let mut i: usize = 0
+    while i < paths.length {
+      let path = run String.copy(paths[i])
+      run list.append(move path)
+      i = i + 1
+    }
+    return move list
+  }
+
+  /// Presses the registered shortcut `id`. False when no shortcut has that id.
+  pub effect fn pressShortcut(self: &mut Self, id: u32) -> bool
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    if self.findShortcut(id) == self.shortcuts.length() {
+      return false
+    }
+    run self.queue.append(Event.GlobalShortcut { id: id })
+    return true
+  }
+
+  /// Clicks the tray icon. False when no tray is shown.
+  pub effect fn clickTray(self: &mut Self, button: MouseButton) -> bool
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    if let Option<String>.None = &self.tray {
+      return false
+    }
+    run self.queue.append(Event.TrayClicked { button: button })
+    return true
+  }
+
+  /// Clicks the notification `id`.
+  pub effect fn clickNotification(self: &mut Self, id: u32) -> ()
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    run self.queue.append(Event.NotificationClicked { id: id })
+  }
+
+  fn findShortcut(self: &Self, id: u32) -> usize {
+    let shortcuts = self.shortcuts.asSlice()
+    let mut i: usize = 0
+    while i < shortcuts.length {
+      if shortcuts[i].id == id {
+        return i
+      }
+      i = i + 1
+    }
+    return shortcuts.length
   }
 
   pub fn setAppearance(self: &mut Self, appearance: Appearance) -> () {
@@ -342,19 +448,7 @@ impl Platform for HeadlessPlatform {
   effect fn setMenuBar(self: &mut Self, bar: &MenuBar) -> ()
     ! OutOfMemoryError
     ? &mut Allocator {
-    let entries = bar.entries.asSlice()
-    let mut count: usize = 0
-    let mut i: usize = 0
-    while i < entries.length {
-      match &entries[i] {
-        MenuEntry.End => {}
-        _ => {
-          count = count + 1
-        }
-      }
-      i = i + 1
-    }
-    self.menuItems = count
+    self.menuItems = countItems(bar)
   }
 
   effect fn openFileDialog(self: &mut Self, options: &OpenDialog<'_>) -> DialogId
@@ -393,4 +487,68 @@ impl Platform for HeadlessPlatform {
   fn appearance(self: &Self) -> Appearance {
     return self.appearance
   }
+
+  effect fn setTray(self: &mut Self, tray: &Tray<'_>) -> bool
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let tooltip = run String.copy(tray.tooltip)
+    self.tray = Option<String>.some(move tooltip)
+    self.trayItems = countItems(tray.menu)
+    return true
+  }
+
+  fn removeTray(self: &mut Self) -> () {
+    self.tray = Option<String>.None
+    self.trayItems = 0
+  }
+
+  effect fn registerShortcut(self: &mut Self, id: u32, code: KeyCode, modifiers: Modifiers) -> bool
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let shortcut = HeadlessShortcut { id: id, code: code, modifiers: modifiers }
+    let at = self.findShortcut(id)
+    if at < self.shortcuts.length() {
+      let shortcuts = self.shortcuts.asMutSlice()
+      shortcuts[at] = shortcut
+    } else {
+      run self.shortcuts.append(shortcut)
+    }
+    return true
+  }
+
+  fn unregisterShortcut(self: &mut Self, id: u32) -> () {
+    let at = self.findShortcut(id)
+    if at < self.shortcuts.length() {
+      drop self.shortcuts.remove(at)
+    }
+  }
+
+  effect fn notify(self: &mut Self, notification: &Notification<'_>) -> u32
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let id = usize.toU32(self.notifications.length()) + 1
+    let title = run String.copy(notification.title)
+    let body = run String.copy(notification.body)
+    run self.notifications.append(
+      HeadlessNotification { id: id, title: move title, body: move body },
+    )
+    return id
+  }
+}
+
+/// Menus and items, counted through submenus.
+fn countItems(bar: &MenuBar) -> usize {
+  let entries = bar.entries.asSlice()
+  let mut count: usize = 0
+  let mut i: usize = 0
+  while i < entries.length {
+    match &entries[i] {
+      MenuEntry.End => {}
+      _ => {
+        count = count + 1
+      }
+    }
+    i = i + 1
+  }
+  return count
 }

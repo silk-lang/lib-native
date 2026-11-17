@@ -72,6 +72,9 @@ static int64_t clipboardReadLength = -1;
 static Atom WM_PROTOCOLS, WM_DELETE_WINDOW, NET_WM_NAME, UTF8_STRING, NET_WM_STATE,
     NET_WM_STATE_FULLSCREEN, NET_WM_MOVERESIZE, NET_ACTIVE_WINDOW, MOTIF_WM_HINTS, CLIPBOARD,
     TARGETS, SILK_SELECTION, NET_WM_PID, RESOURCE_MANAGER, TEXT_ATOM;
+// XDND, the drag and drop protocol.
+static Atom XdndAware, XdndEnter, XdndPosition, XdndStatus, XdndLeave, XdndDrop, XdndFinished,
+    XdndSelection, XdndActionCopy, XdndTypeList, URI_LIST, SILK_DND;
 
 static X11Window *find(uint32_t id) {
     for (size_t i = 0; i < windowCount; i++)
@@ -376,6 +379,23 @@ bool silk_x11_start(void) {
     NET_WM_PID = atoms[12];
     RESOURCE_MANAGER = atoms[13];
     TEXT_ATOM = atoms[14];
+    const char *dndNames[] = {"XdndAware", "XdndEnter", "XdndPosition", "XdndStatus",
+                              "XdndLeave", "XdndDrop", "XdndFinished", "XdndSelection",
+                              "XdndActionCopy", "XdndTypeList", "text/uri-list", "SILK_DND"};
+    Atom dnd[12];
+    XInternAtoms(display, (char **)dndNames, 12, False, dnd);
+    XdndAware = dnd[0];
+    XdndEnter = dnd[1];
+    XdndPosition = dnd[2];
+    XdndStatus = dnd[3];
+    XdndLeave = dnd[4];
+    XdndDrop = dnd[5];
+    XdndFinished = dnd[6];
+    XdndSelection = dnd[7];
+    XdndActionCopy = dnd[8];
+    XdndTypeList = dnd[9];
+    URI_LIST = dnd[10];
+    SILK_DND = dnd[11];
     Bool detectable = False;
     XkbSetDetectableAutoRepeat(display, True, &detectable);
     XrmInitialize();
@@ -437,6 +457,9 @@ uint32_t silk_x11_open(const uint8_t *title, size_t titleLength, double width, d
     window->minHeight = minHeight;
     window->resizable = (flags & SILK_WINDOW_RESIZABLE) != 0;
     XSetWMProtocols(display, xid, &WM_DELETE_WINDOW, 1);
+    long xdndVersion = 5;
+    XChangeProperty(display, xid, XdndAware, XA_ATOM, 32, PropModeReplace,
+                    (unsigned char *)&xdndVersion, 1);
     long pid = (long)getpid();
     XChangeProperty(display, xid, NET_WM_PID, XA_CARDINAL, 32, PropModeReplace,
                     (unsigned char *)&pid, 1);
@@ -474,6 +497,10 @@ void silk_x11_close(uint32_t id) {
 // ---------------------------------------------------------------------------------------
 // Clipboard.
 
+// The text/uri-list test_drop offers while it plays the drag source.
+static char *testDrag;
+static size_t testDragLength;
+
 static void answer_selection_request(XSelectionRequestEvent *request) {
     XSelectionEvent reply;
     memset(&reply, 0, sizeof reply);
@@ -484,7 +511,18 @@ static void answer_selection_request(XSelectionRequestEvent *request) {
     reply.time = request->time;
     reply.property = None;
     Atom property = request->property ? request->property : request->target;
-    if (request->selection == CLIPBOARD && clipboardOwned) {
+    if (request->selection == XdndSelection && testDrag) {
+        if (request->target == TARGETS) {
+            Atom targets[] = {TARGETS, URI_LIST};
+            XChangeProperty(display, request->requestor, property, XA_ATOM, 32,
+                            PropModeReplace, (unsigned char *)targets, 2);
+            reply.property = property;
+        } else if (request->target == URI_LIST) {
+            XChangeProperty(display, request->requestor, property, URI_LIST, 8, PropModeReplace,
+                            (unsigned char *)testDrag, (int)testDragLength);
+            reply.property = property;
+        }
+    } else if (request->selection == CLIPBOARD && clipboardOwned) {
         if (request->target == TARGETS) {
             Atom targets[] = {TARGETS, UTF8_STRING, XA_STRING, TEXT_ATOM};
             XChangeProperty(display, request->requestor, property, XA_ATOM, 32,
@@ -748,7 +786,247 @@ static void rescale(void) {
     }
 }
 
+// ---------------------------------------------------------------------------------------
+// Files dragged in with XDND. The paths come by converting XdndSelection, which is asked for
+// at the first position, so FILE_DRAG_ENTERED waits for them.
+
+static struct {
+    Window source;
+    uint32_t window;
+    long version;
+    bool uris;
+    bool requested;
+    bool haveData;
+    bool entered;
+    bool dropPending;
+    double x, y;
+    SilkText paths[SILK_MAX_TEXTS];
+    size_t count;
+} drag;
+
+static void drag_reset(void) {
+    silk_free_texts(drag.paths, drag.count);
+    memset(&drag, 0, sizeof drag);
+}
+
+static void send_xdnd(Window to, Atom type, long l1, long l2, long l3, long l4, Window from) {
+    XEvent message;
+    memset(&message, 0, sizeof message);
+    message.xclient.type = ClientMessage;
+    message.xclient.display = display;
+    message.xclient.window = to;
+    message.xclient.message_type = type;
+    message.xclient.format = 32;
+    message.xclient.data.l[0] = (long)from;
+    message.xclient.data.l[1] = l1;
+    message.xclient.data.l[2] = l2;
+    message.xclient.data.l[3] = l3;
+    message.xclient.data.l[4] = l4;
+    XSendEvent(display, to, False, NoEventMask, &message);
+}
+
+static void drag_finish(X11Window *window) {
+    silk_push_drag(SILK_EVENT_FILE_DROPPED, drag.window, drag.x, drag.y, drag.paths, drag.count);
+    send_xdnd(drag.source, XdndFinished, drag.count ? 1 : 0, drag.count ? (long)XdndActionCopy : 0,
+              0, 0, window->xid);
+    XFlush(display);
+    drag_reset();
+}
+
+static bool has_uri_list(const Atom *types, unsigned long count) {
+    for (unsigned long i = 0; i < count; i++)
+        if (types[i] == URI_LIST) return true;
+    return false;
+}
+
+static void handle_xdnd(X11Window *window, XClientMessageEvent *message) {
+    const long *l = message->data.l;
+    if (message->message_type == XdndEnter) {
+        drag_reset();
+        drag.source = (Window)l[0];
+        drag.window = window->id;
+        drag.version = (l[1] >> 24) & 0xFF;
+        if (l[1] & 1) {
+            Atom type;
+            int format;
+            unsigned long count, remaining;
+            unsigned char *data = NULL;
+            XGetWindowProperty(display, drag.source, XdndTypeList, 0, 1024, False, XA_ATOM, &type,
+                               &format, &count, &remaining, &data);
+            if (data && format == 32) drag.uris = has_uri_list((Atom *)data, count);
+            if (data) XFree(data);
+        } else {
+            Atom types[3] = {(Atom)l[2], (Atom)l[3], (Atom)l[4]};
+            drag.uris = has_uri_list(types, 3);
+        }
+        return;
+    }
+    if ((Window)l[0] != drag.source || drag.window != window->id) return;
+    if (message->message_type == XdndPosition) {
+        int x = 0, y = 0;
+        Window child;
+        XTranslateCoordinates(display, root, window->xid, (int)((l[2] >> 16) & 0xFFFF),
+                              (int)(l[2] & 0xFFFF), &x, &y, &child);
+        drag.x = x / scale;
+        drag.y = y / scale;
+        if (drag.uris && !drag.requested) {
+            XConvertSelection(display, XdndSelection, URI_LIST, SILK_DND, window->xid,
+                              (Time)l[3]);
+            drag.requested = true;
+        }
+        if (drag.entered)
+            silk_push_drag(SILK_EVENT_FILE_DRAG_MOVED, drag.window, drag.x, drag.y, NULL, 0);
+        // Accept, and keep sending positions.
+        send_xdnd(drag.source, XdndStatus, drag.uris ? 3 : 2, 0, 0,
+                  drag.uris ? (long)XdndActionCopy : 0, window->xid);
+        XFlush(display);
+    } else if (message->message_type == XdndLeave) {
+        if (drag.entered) silk_push_drag(SILK_EVENT_FILE_DRAG_LEFT, drag.window, 0, 0, NULL, 0);
+        drag_reset();
+    } else if (message->message_type == XdndDrop) {
+        if (drag.haveData) {
+            drag_finish(window);
+        } else if (drag.requested) {
+            drag.dropPending = true;
+        } else {
+            send_xdnd(drag.source, XdndFinished, 0, 0, 0, 0, window->xid);
+            XFlush(display);
+            drag_reset();
+        }
+    }
+}
+
+static void handle_drag_data(XSelectionEvent *selection) {
+    X11Window *window = find_xid(selection->requestor);
+    if (!window || drag.window != window->id || !drag.requested || drag.haveData) return;
+    drag.haveData = true;
+    if (selection->property != None) {
+        Atom type;
+        int format;
+        unsigned long count, remaining;
+        unsigned char *data = NULL;
+        XGetWindowProperty(display, window->xid, SILK_DND, 0, 0x7FFFFFFF, True, AnyPropertyType,
+                           &type, &format, &count, &remaining, &data);
+        if (data && format == 8)
+            drag.count = silk_uri_list_paths(data, count, drag.paths, SILK_MAX_TEXTS);
+        if (data) XFree(data);
+    }
+    drag.entered = true;
+    silk_push_drag(SILK_EVENT_FILE_DRAG_ENTERED, drag.window, drag.x, drag.y, drag.paths,
+                   drag.count);
+    if (drag.dropPending) drag_finish(window);
+}
+
+uint8_t silk_x11_test_drop(uint32_t id, uint32_t kind, double x, double y, const uint8_t *paths,
+                           size_t length) {
+    X11Window *window = find(id);
+    if (!window) return 0;
+    int rootX = 0, rootY = 0;
+    Window child;
+    XTranslateCoordinates(display, window->xid, root, (int)lround(x * scale),
+                          (int)lround(y * scale), &rootX, &rootY, &child);
+    long position = ((long)rootX << 16) | (rootY & 0xFFFF);
+    if (kind == 0) {
+        free(testDrag);
+        testDrag = silk_paths_uri_list(paths, length, &testDragLength);
+        XSetSelectionOwner(display, XdndSelection, helper, CurrentTime);
+        send_xdnd(window->xid, XdndEnter, 5L << 24, (long)URI_LIST, 0, 0, helper);
+        send_xdnd(window->xid, XdndPosition, 0, position, CurrentTime, (long)XdndActionCopy,
+                  helper);
+    } else if (kind == 1) {
+        send_xdnd(window->xid, XdndPosition, 0, position, CurrentTime, (long)XdndActionCopy,
+                  helper);
+    } else if (kind == 2) {
+        send_xdnd(window->xid, XdndLeave, 0, 0, 0, 0, helper);
+    } else if (kind == 3) {
+        send_xdnd(window->xid, XdndDrop, 0, CurrentTime, 0, 0, helper);
+    } else {
+        return 0;
+    }
+    XFlush(display);
+    return 1;
+}
+
+// ---------------------------------------------------------------------------------------
+// Global shortcuts: passive key grabs on the root window, once per combination of the lock
+// modifiers (Caps Lock, Num Lock) so they work whichever are on.
+
+typedef struct Grab {
+    uint32_t id;
+    unsigned keycode;
+    unsigned state;
+} Grab;
+
+static Grab grabs[64];
+static size_t grabCount;
+static const unsigned lockStates[4] = {0, LockMask, Mod2Mask, LockMask | Mod2Mask};
+static bool grabFailed;
+
+static int grab_error(Display *errorDisplay, XErrorEvent *error) {
+    (void)errorDisplay;
+    (void)error;
+    grabFailed = true;
+    return 0;
+}
+
+static void ungrab(const Grab *grab) {
+    for (int i = 0; i < 4; i++) XUngrabKey(display, (int)grab->keycode, grab->state | lockStates[i], root);
+}
+
+void silk_x11_shortcut_unregister(uint32_t id) {
+    for (size_t i = 0; i < grabCount; i++) {
+        if (grabs[i].id != id) continue;
+        ungrab(&grabs[i]);
+        grabs[i] = grabs[--grabCount];
+        XFlush(display);
+        return;
+    }
+}
+
+uint8_t silk_x11_shortcut_register(uint32_t id, uint32_t code, uint32_t modifiers) {
+    silk_x11_shortcut_unregister(id);
+    uint32_t evdev = silk_evdev_from_code(code);
+    if (!evdev || grabCount == sizeof grabs / sizeof grabs[0]) return 0;
+    Grab grab = {id, evdev + 8, state_from_modifiers(modifiers & ~SILK_MOD_CAPS_LOCK)};
+    // Another client holding the key makes XGrabKey fail with BadAccess, reported
+    // asynchronously; sync around it to see that.
+    XSync(display, False);
+    int (*previous)(Display *, XErrorEvent *) = XSetErrorHandler(grab_error);
+    grabFailed = false;
+    for (int i = 0; i < 4; i++)
+        XGrabKey(display, (int)grab.keycode, grab.state | lockStates[i], root, True, GrabModeAsync,
+                 GrabModeAsync);
+    XSync(display, False);
+    XSetErrorHandler(previous);
+    if (grabFailed) {
+        ungrab(&grab);
+        XFlush(display);
+        return 0;
+    }
+    grabs[grabCount++] = grab;
+    return 1;
+}
+
+static void handle_root_key(XKeyEvent *key) {
+    unsigned state = key->state & (ShiftMask | ControlMask | Mod1Mask | Mod4Mask);
+    for (size_t i = 0; i < grabCount; i++) {
+        if (grabs[i].keycode != key->keycode || grabs[i].state != state) continue;
+        SilkWindowEvent out = silk_event(SILK_EVENT_GLOBAL_SHORTCUT, 0);
+        out.code = grabs[i].id;
+        silk_queue_push(&out);
+        return;
+    }
+}
+
 static void handle_event(XEvent *event) {
+    if (event->type == KeyPress && event->xkey.window == root) {
+        handle_root_key(&event->xkey);
+        return;
+    }
+    if (event->type == SelectionNotify && event->xselection.selection == XdndSelection) {
+        handle_drag_data(&event->xselection);
+        return;
+    }
     if (event->type == SelectionRequest) {
         answer_selection_request(&event->xselectionrequest);
         return;
@@ -856,6 +1134,11 @@ static void handle_event(XEvent *event) {
         }
         break;
     case ClientMessage:
+        if (event->xclient.message_type == XdndEnter || event->xclient.message_type == XdndPosition ||
+            event->xclient.message_type == XdndLeave || event->xclient.message_type == XdndDrop) {
+            handle_xdnd(window, &event->xclient);
+            break;
+        }
         if (event->xclient.message_type == WM_PROTOCOLS &&
             (Atom)event->xclient.data.l[0] == WM_DELETE_WINDOW) {
             SilkWindowEvent out = silk_event(SILK_EVENT_CLOSE_REQUESTED, window->id);
