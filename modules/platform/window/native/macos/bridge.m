@@ -320,6 +320,9 @@ static void check_appearance(void) {
 @property(nonatomic, strong) SilkView *view;
 // The height of the app's own bar the window controls are centred in, 0 for AppKit's place.
 @property(nonatomic) double controlsHeight;
+// The controls' gaps from the left and top edges; 0 for the centred place.
+@property(nonatomic) double controlsLeft;
+@property(nonatomic) double controlsTop;
 @end
 
 static SilkWindow *find_window(uint32_t window) { return windows[@(window)]; }
@@ -831,7 +834,7 @@ static NSPoint top_left(NSWindow *window) {
     return NSMakePoint(frame.origin.x, top - NSMaxY(frame));
 }
 
-// Centres the window controls in the app's bar. AppKit lays the title bar out again whenever
+// Places the window controls in the app's bar, centred unless the app gave gaps. AppKit lays the title bar out again whenever
 // the window changes size or leaves full screen, so this runs after each.
 static void place_controls(SilkWindow *record) {
     double height = record.controlsHeight;
@@ -848,10 +851,13 @@ static void place_controls(SilkWindow *record) {
     bar.origin.y = window.frame.size.height - height;
     container.frame = bar;
     double pitch = minimize.frame.origin.x - close.frame.origin.x;
-    double margin = (height - close.frame.size.height) / 2;
+    double top = record.controlsTop > 0 ? record.controlsTop : (height - close.frame.size.height) / 2;
+    double left = record.controlsLeft > 0 ? record.controlsLeft : top;
+    // The container's origin is at its bottom.
+    double y = height - top - close.frame.size.height;
     NSArray<NSButton *> *controls = @[ close, minimize, zoom ];
     for (NSUInteger i = 0; i < controls.count; i++) {
-        [controls[i] setFrameOrigin:NSMakePoint(margin + pitch * i, margin)];
+        [controls[i] setFrameOrigin:NSMakePoint(left + pitch * i, y)];
     }
 }
 
@@ -1354,10 +1360,12 @@ void silk_macos_toggle_full_screen(uint32_t id) {
     }
 }
 
-void silk_macos_set_controls_height(uint32_t id, double height) {
+void silk_macos_set_controls(uint32_t id, double height, double left, double top) {
     SilkWindow *record = find_window(id);
     if (!record) return;
     record.controlsHeight = height;
+    record.controlsLeft = left;
+    record.controlsTop = top;
     place_controls(record);
 }
 

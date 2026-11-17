@@ -56,6 +56,11 @@ pub struct WindowOptions<'a> {
   /// the window controls are centred in it, as far from the left edge as from the top. 0
   /// leaves them where the system puts them, in a bar 28 points tall.
   pub titleBarHeight: f64,
+  /// With such a bar, where the controls' top-left corner sits, in points from the window's
+  /// left and top edges. 0 keeps the centred place: the top gap is the bar's centre, and the
+  /// left gap equals the top gap.
+  pub controlsLeft: f64,
+  pub controlsTop: f64,
   /// Show the window as soon as it is created. A hidden window appears on `setVisible`.
   pub visible: bool,
   /// Whether the drawing surface may be transparent where the app draws nothing.
@@ -72,6 +77,8 @@ impl<'a> WindowOptions<'a> {
       resizable: true,
       titleBar: TitleBar.Standard,
       titleBarHeight: 0.0,
+      controlsLeft: 0.0,
+      controlsTop: 0.0,
       visible: true,
       transparent: false,
     }
