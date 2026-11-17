@@ -1038,10 +1038,18 @@ static const struct wl_data_source_listener sourceListener = {
     source_action,
 };
 
+// What an offer has, filled in by its `offer` events before it is entered or selected.
+typedef struct OfferTypes {
+    bool text;
+    bool uris;
+} OfferTypes;
+
 static void offer_offer(void *data, struct wl_data_offer *offer, const char *mime) {
+    OfferTypes *types = wl_data_offer_get_user_data(offer);
     if (strcmp(mime, "text/plain;charset=utf-8") == 0 || strcmp(mime, "UTF8_STRING") == 0 ||
         strcmp(mime, "text/plain") == 0)
-        *(bool *)wl_data_offer_get_user_data(offer) = true;
+        types->text = true;
+    if (strcmp(mime, "text/uri-list") == 0) types->uris = true;
 }
 static void offer_source_actions(void *data, struct wl_data_offer *offer, uint32_t actions) {}
 static void offer_action(void *data, struct wl_data_offer *offer, uint32_t action) {}
@@ -1050,29 +1058,105 @@ static const struct wl_data_offer_listener offerListener = {
     offer_offer, offer_source_actions, offer_action,
 };
 
-static bool offerFlags[64];
-static int offerFlagNext;
+static OfferTypes offerTypes[64];
+static int offerTypesNext;
 
 static void device_data_offer(void *data, struct wl_data_device *device, struct wl_data_offer *offer) {
-    bool *flag = &offerFlags[offerFlagNext++ % 64];
-    *flag = false;
-    wl_data_offer_add_listener(offer, &offerListener, flag);
+    OfferTypes *types = &offerTypes[offerTypesNext++ % 64];
+    types->text = types->uris = false;
+    wl_data_offer_add_listener(offer, &offerListener, types);
 }
+
+// A drag of files from another client over one of our windows. Wayland hands out the paths
+// only by reading the offer, which needs the source to answer, so they arrive with the drop.
+static struct wl_data_offer *dragOffer;
+static uint32_t dragWindow;
+static double dragX, dragY;
 
 static void device_enter(void *data, struct wl_data_device *device, uint32_t serial,
                          struct wl_surface *surface, wl_fixed_t x, wl_fixed_t y,
                          struct wl_data_offer *offer) {
-    if (offer) wl_data_offer_destroy(offer);
+    WlWindow *window = find_surface(surface);
+    OfferTypes *types = offer ? wl_data_offer_get_user_data(offer) : NULL;
+    if (!window || surface != window->surface || !types || !types->uris) {
+        if (offer) {
+            wl_data_offer_accept(offer, serial, NULL);
+            wl_data_offer_destroy(offer);
+        }
+        return;
+    }
+    dragOffer = offer;
+    dragWindow = window->id;
+    dragX = wl_fixed_to_double(x);
+    dragY = wl_fixed_to_double(y);
+    wl_data_offer_accept(offer, serial, "text/uri-list");
+    if (wl_data_offer_get_version(offer) >= 3)
+        wl_data_offer_set_actions(offer, WL_DATA_DEVICE_MANAGER_DND_ACTION_COPY,
+                                  WL_DATA_DEVICE_MANAGER_DND_ACTION_COPY);
+    silk_push_drag(SILK_EVENT_FILE_DRAG_ENTERED, dragWindow, dragX, dragY, NULL, 0);
 }
-static void device_leave(void *data, struct wl_data_device *device) {}
+
+static void drag_end(void) {
+    if (dragOffer) wl_data_offer_destroy(dragOffer);
+    dragOffer = NULL;
+    dragWindow = 0;
+}
+
+static void device_leave(void *data, struct wl_data_device *device) {
+    if (!dragOffer) return;
+    silk_push_drag(SILK_EVENT_FILE_DRAG_LEFT, dragWindow, 0, 0, NULL, 0);
+    drag_end();
+}
+
 static void device_motion(void *data, struct wl_data_device *device, uint32_t time, wl_fixed_t x,
-                          wl_fixed_t y) {}
-static void device_drop(void *data, struct wl_data_device *device) {}
+                          wl_fixed_t y) {
+    if (!dragOffer) return;
+    dragX = wl_fixed_to_double(x);
+    dragY = wl_fixed_to_double(y);
+    silk_push_drag(SILK_EVENT_FILE_DRAG_MOVED, dragWindow, dragX, dragY, NULL, 0);
+}
+
+static void device_drop(void *data, struct wl_data_device *device) {
+    if (!dragOffer) return;
+    int pipes[2];
+    size_t length = 0, size = 0;
+    uint8_t *list = NULL;
+    if (pipe2(pipes, O_CLOEXEC) == 0) {
+        wl_data_offer_receive(dragOffer, "text/uri-list", pipes[1]);
+        close(pipes[1]);
+        wl_display_flush(display);
+        double deadline = silk_now() + 1.0;
+        for (;;) {
+            double now = silk_now();
+            if (now >= deadline) break;
+            struct pollfd fd = {pipes[0], POLLIN, 0};
+            if (poll(&fd, 1, (int)ceil((deadline - now) * 1000.0)) <= 0) break;
+            if (length + 4096 > size) {
+                size = (length + 4096) * 2;
+                uint8_t *grown = realloc(list, size);
+                if (!grown) abort();
+                list = grown;
+            }
+            ssize_t n = read(pipes[0], list + length, 4096);
+            if (n < 0 && errno == EINTR) continue;
+            if (n <= 0) break;
+            length += (size_t)n;
+        }
+        close(pipes[0]);
+    }
+    SilkText paths[SILK_MAX_TEXTS];
+    size_t count = silk_uri_list_paths(list, length, paths, SILK_MAX_TEXTS);
+    silk_push_drag(SILK_EVENT_FILE_DROPPED, dragWindow, dragX, dragY, paths, count);
+    silk_free_texts(paths, count);
+    free(list);
+    if (wl_data_offer_get_version(dragOffer) >= 3) wl_data_offer_finish(dragOffer);
+    drag_end();
+}
 
 static void device_selection(void *data, struct wl_data_device *device, struct wl_data_offer *offer) {
     if (selectionOffer) wl_data_offer_destroy(selectionOffer);
     selectionOffer = offer;
-    selectionOfferHasText = offer && *(bool *)wl_data_offer_get_user_data(offer);
+    selectionOfferHasText = offer && ((OfferTypes *)wl_data_offer_get_user_data(offer))->text;
 }
 
 static const struct wl_data_device_listener deviceListener = {

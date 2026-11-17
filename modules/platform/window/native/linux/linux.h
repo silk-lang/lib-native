@@ -80,6 +80,12 @@ void silk_dialog_dispatch(void);
                                double *height);
 
 SILK_LINUX_BACKEND(silk_x11_)
+
+// X11 only: XDND as the source for test_drop, and keys grabbed on the root window.
+uint8_t silk_x11_test_drop(uint32_t window, uint32_t kind, double x, double y,
+                           const uint8_t *paths, size_t length);
+uint8_t silk_x11_shortcut_register(uint32_t id, uint32_t code, uint32_t modifiers);
+void silk_x11_shortcut_unregister(uint32_t id);
 SILK_LINUX_BACKEND(silk_wl_)
 
 // The key-press path both window systems share once they have decoded a press: matches
@@ -89,6 +95,19 @@ bool silk_linux_shortcut(uint32_t window, uint32_t character, uint32_t named,
                          uint32_t modifiers);
 // Called by a window system for SystemItem shortcuts that act on a window.
 void silk_linux_system_item(uint32_t window, uint32_t item);
+
+// Paths of the file:// URIs in a text/uri-list, percent-decoded, in new memory freed with
+// silk_free_texts. Returns how many (at most `capacity`); other URIs and comments are skipped.
+size_t silk_uri_list_paths(const uint8_t *list, size_t length, SilkText *out, size_t capacity);
+// The text/uri-list of newline-separated paths, as for test_drop. Free with free().
+char *silk_paths_uri_list(const uint8_t *paths, size_t length, size_t *listLength);
+void silk_free_texts(SilkText *texts, size_t count);
+
+// The session bus (dbus.c): tray icon and notifications, the same on X11 and Wayland.
+// The connection's descriptor while connected, or -1.
+int silk_dbus_fd(void);
+// Reads and handles what the bus sent.
+void silk_dbus_dispatch(void);
 
 // The appearance from the environment (GTK_THEME ending in ":dark"), 0 light, 1 dark.
 uint32_t silk_linux_appearance(void);

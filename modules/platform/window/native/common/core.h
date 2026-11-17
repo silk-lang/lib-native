@@ -78,6 +78,12 @@ void silk_menu_reset_pending(void);
 void silk_menu_add(SilkMenuEntry entry, const uint8_t *title, size_t titleLength);
 void silk_menu_commit_pending(void);
 
+// The committed tray menu: tray_begin resets the pending list, and the backend's tray_commit
+// moves it here.
+extern SilkMenuEntry *silk_tray_entries;
+extern size_t silk_tray_count;
+void silk_tray_commit_pending(void);
+
 // What a matched shortcut does.
 typedef struct SilkShortcutMatch {
     uint32_t type;   // 0 none, SILK_MENU_ACTION or SILK_MENU_SYSTEM
@@ -99,6 +105,13 @@ bool silk_utf8_is_control(const uint8_t *text, size_t length);
 
 // Dialog results are delivered by id.
 uint32_t silk_next_dialog_id(void);
+
+// Splits newline-separated test_drop paths into `out` (at most `capacity`), pointing into
+// `paths`. Returns how many.
+size_t silk_split_paths(const uint8_t *paths, size_t length, SilkText *out, size_t capacity);
+// Queues a drag event; `texts` are the paths.
+void silk_push_drag(uint32_t kind, uint32_t window, double x, double y, const SilkText *paths,
+                    size_t count);
 
 // "png,jpg" split into a NUL-terminated array of NUL-terminated strings; free with
 // silk_free_extensions.

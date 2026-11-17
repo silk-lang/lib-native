@@ -99,6 +99,7 @@ uint8_t silk_window_next_event(double timeout, SilkWindowEvent *event) {
     for (;;) {
         DISPATCH(dispatch)();
         silk_dialog_dispatch();
+        silk_dbus_dispatch();
         double now = silk_now();
         double nextFrame = DISPATCH(frames)(now);
         if (silk_queue_pop(event)) return 1;
@@ -116,7 +117,13 @@ uint8_t silk_window_next_event(double timeout, SilkWindowEvent *event) {
         fds[0].fd = DISPATCH(fd)();
         fds[0].events = POLLIN;
         fds[0].revents = 0;
-        int count = 1 + silk_dialog_fds(fds + 1, 15);
+        int count = 1 + silk_dialog_fds(fds + 1, 14);
+        if (silk_dbus_fd() >= 0) {
+            fds[count].fd = silk_dbus_fd();
+            fds[count].events = POLLIN;
+            fds[count].revents = 0;
+            count++;
+        }
         if (wakeFd >= 0) {
             fds[count].fd = wakeFd;
             fds[count].events = POLLIN;
@@ -289,4 +296,96 @@ void silk_window_test_ime_rect(uint32_t window, double *x, double *y, double *wi
                                double *height) {
     *x = *y = *width = *height = 0;
     if (backend) DISPATCH(test_ime_rect)(window, x, y, width, height);
+}
+
+// ---------------------------------------------------------------------------------------
+// File drags, global shortcuts, the tray and notifications.
+
+static int hex_value(uint8_t c) {
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+    return -1;
+}
+
+size_t silk_uri_list_paths(const uint8_t *list, size_t length, SilkText *out, size_t capacity) {
+    size_t count = 0, start = 0;
+    for (size_t i = 0; i <= length && count < capacity; i++) {
+        if (i < length && list[i] != '\n' && list[i] != '\r') continue;
+        const uint8_t *line = list + start;
+        size_t lineLength = i - start;
+        start = i + 1;
+        if (lineLength < 7 || line[0] == '#' || memcmp(line, "file://", 7) != 0) continue;
+        line += 7;
+        lineLength -= 7;
+        // file://host/path: skip the host, which is empty or localhost.
+        size_t slash = 0;
+        while (slash < lineLength && line[slash] != '/') slash++;
+        if (slash == lineLength) continue;
+        uint8_t *path = malloc(lineLength - slash + 1);
+        if (!path) abort();
+        size_t pathLength = 0;
+        for (size_t j = slash; j < lineLength; j++) {
+            int high, low;
+            if (line[j] == '%' && j + 2 < lineLength && (high = hex_value(line[j + 1])) >= 0 &&
+                (low = hex_value(line[j + 2])) >= 0) {
+                path[pathLength++] = (uint8_t)(high * 16 + low);
+                j += 2;
+            } else {
+                path[pathLength++] = line[j];
+            }
+        }
+        out[count].bytes = path;
+        out[count].length = pathLength;
+        count++;
+    }
+    return count;
+}
+
+char *silk_paths_uri_list(const uint8_t *paths, size_t length, size_t *listLength) {
+    // Every byte may grow to %XX, plus "file://" and CRLF per path.
+    char *list = malloc(length * 3 + (length + 1) * 9 + 1);
+    if (!list) abort();
+    size_t at = 0;
+    SilkText split[SILK_MAX_TEXTS];
+    size_t count = silk_split_paths(paths, length, split, SILK_MAX_TEXTS);
+    for (size_t i = 0; i < count; i++) {
+        memcpy(list + at, "file://", 7);
+        at += 7;
+        for (size_t j = 0; j < split[i].length; j++) {
+            uint8_t c = split[i].bytes[j];
+            bool plain = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') ||
+                         strchr("/-._~", c);
+            if (plain && c) {
+                list[at++] = (char)c;
+            } else {
+                at += (size_t)sprintf(list + at, "%%%02X", c);
+            }
+        }
+        list[at++] = '\r';
+        list[at++] = '\n';
+    }
+    list[at] = 0;
+    *listLength = at;
+    return list;
+}
+
+void silk_free_texts(SilkText *texts, size_t count) {
+    for (size_t i = 0; i < count; i++) free(texts[i].bytes);
+}
+
+uint8_t silk_window_test_drop(uint32_t window, uint32_t kind, double x, double y,
+                              const uint8_t *paths, size_t length) {
+    if (backend != SILK_BACKEND_X11) return 0;
+    return silk_x11_test_drop(window, kind, x, y, paths, length);
+}
+
+uint8_t silk_window_shortcut_register(uint32_t id, uint32_t code, uint32_t modifiers) {
+    // Wayland leaves global shortcuts to the desktop portal, which asks the user to bind them.
+    if (backend != SILK_BACKEND_X11) return 0;
+    return silk_x11_shortcut_register(id, code, modifiers);
+}
+
+void silk_window_shortcut_unregister(uint32_t id) {
+    if (backend == SILK_BACKEND_X11) silk_x11_shortcut_unregister(id);
 }
