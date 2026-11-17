@@ -22,6 +22,8 @@
 #include <dwmapi.h>
 #include <imm.h>
 #include <shellscalingapi.h>
+#include <ole2.h>
+#include <shellapi.h>
 #include <shlobj.h>
 #include <shobjidl.h>
 #include <math.h>
@@ -41,6 +43,9 @@ enum {
     WM_SILK_RUN = WM_APP + 1,       // run a deferred task on the pump fiber
     WM_SILK_KEYSTATE = WM_APP + 2,  // test hook: restore the keyboard state
     WM_SILK_WAKE = WM_APP + 3,      // silk_window_wake: return to Silk
+    WM_SILK_TRAY = WM_APP + 4,      // the notification area's callback for our icons
+    TRAY_ICON = 1,                  // the tray icon's id
+    NOTICE_ICON = 2,                // an icon added only to show a notification
     TIMER_MODAL = 1,
     MENU_ACTION_BASE = 0x1000,
     MENU_SYSTEM_BASE = 0x100,
@@ -72,6 +77,7 @@ typedef struct Win32Window {
     double lastClickTime;
     int lastClickX, lastClickY;
     uint32_t lastClickButton, clickCount;
+    IDropTarget *dropTarget;
 } Win32Window;
 
 typedef struct Task {
@@ -309,6 +315,9 @@ int32_t silk_window_start(void) {
     enable_dpi_awareness();
     HRESULT com = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
     (void)com; // RPC_E_CHANGED_MODE: the app already chose; dialogs still work in MTA.
+    // Dropping files needs OLE, which needs the single-threaded apartment.
+    HRESULT ole = OleInitialize(NULL);
+    (void)ole;
     WNDCLASSEXW wc;
     memset(&wc, 0, sizeof wc);
     wc.cbSize = sizeof wc;
@@ -411,14 +420,15 @@ static void append_shortcut(WCHAR *text, size_t capacity, const SilkMenuEntry *e
     wcsncat(text, key, capacity - wcslen(text) - 1);
 }
 
-static HMENU build_menu(void) {
-    if (!silk_menu_count) return NULL;
-    HMENU bar = CreateMenu();
+// A menu bar, or with `popup` a context menu whose items sit at its top level.
+static HMENU build_menu_from(const SilkMenuEntry *entries, size_t count, bool popup) {
+    if (!count) return NULL;
+    HMENU bar = popup ? CreatePopupMenu() : CreateMenu();
     HMENU stack[32];
     int depth = 0;
     stack[0] = bar;
-    for (size_t i = 0; i < silk_menu_count; i++) {
-        const SilkMenuEntry *entry = &silk_menu_entries[i];
+    for (size_t i = 0; i < count; i++) {
+        const SilkMenuEntry *entry = &entries[i];
         HMENU current = stack[depth];
         WCHAR text[512] = {0};
         if (entry->title && entry->titleLength) {
@@ -469,6 +479,8 @@ static HMENU build_menu(void) {
     }
     return bar;
 }
+
+static HMENU build_menu(void) { return build_menu_from(silk_menu_entries, silk_menu_count, false); }
 
 static void client_rect_for(Win32Window *window, int width, int height, RECT *rect) {
     rect->left = 0;
@@ -896,8 +908,16 @@ static void system_item(Win32Window *window, uint32_t item) {
 }
 
 static void run_task(Task *task);
+static void hotkey_pressed(int hotkey);
+static HWND trayWindow;
+static LRESULT tray_message(UINT message, WPARAM wParam, LPARAM lParam);
 
 static LRESULT CALLBACK window_proc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
+    if (hwnd && hwnd == trayWindow) {
+        LRESULT result = tray_message(message, wParam, lParam);
+        yield_if_ready();
+        return result;
+    }
     if (hwnd == helper) {
         if (message == WM_SILK_RUN) {
             run_task((Task *)lParam);
@@ -905,6 +925,11 @@ static LRESULT CALLBACK window_proc(HWND hwnd, UINT message, WPARAM wParam, LPAR
             return 0;
         }
         if (message == WM_SILK_WAKE) {
+            yield_if_ready();
+            return 0;
+        }
+        if (message == WM_HOTKEY) {
+            hotkey_pressed((int)wParam);
             yield_if_ready();
             return 0;
         }
@@ -1162,6 +1187,146 @@ static LRESULT CALLBACK window_proc(HWND hwnd, UINT message, WPARAM wParam, LPAR
 }
 
 // ---------------------------------------------------------------------------------------
+// Files dragged in from other apps: an OLE drop target per window.
+
+typedef struct SilkDropTarget {
+    IDropTarget target;
+    LONG references;
+    uint32_t window;
+    bool files; // the drag carries CF_HDROP
+} SilkDropTarget;
+
+static FORMATETC hdrop_format(void) {
+    FORMATETC format = {CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
+    return format;
+}
+
+// The dragged paths, in new memory freed with free_texts.
+static size_t drop_paths(IDataObject *data, SilkText *texts, size_t capacity) {
+    FORMATETC format = hdrop_format();
+    STGMEDIUM medium;
+    if (FAILED(IDataObject_GetData(data, &format, &medium))) return 0;
+    size_t count = 0;
+    HDROP drop = (HDROP)GlobalLock(medium.hGlobal);
+    if (drop) {
+        UINT files = DragQueryFileW(drop, 0xFFFFFFFF, NULL, 0);
+        for (UINT i = 0; i < files && count < capacity; i++) {
+            UINT length = DragQueryFileW(drop, i, NULL, 0);
+            WCHAR *path = malloc((length + 1) * sizeof *path);
+            if (!path) break;
+            DragQueryFileW(drop, i, path, length + 1);
+            texts[count].bytes = narrow(path, (int)length, &texts[count].length);
+            free(path);
+            if (texts[count].bytes) count++;
+        }
+        GlobalUnlock(medium.hGlobal);
+    }
+    ReleaseStgMedium(&medium);
+    return count;
+}
+
+static void free_texts(SilkText *texts, size_t count) {
+    for (size_t i = 0; i < count; i++) free(texts[i].bytes);
+}
+
+static void drop_point(uint32_t id, POINTL screen, double *x, double *y) {
+    Win32Window *window = find(id);
+    POINT point = {screen.x, screen.y};
+    *x = *y = 0;
+    if (!window) return;
+    ScreenToClient(window->hwnd, &point);
+    *x = point.x / window->scale;
+    *y = point.y / window->scale;
+}
+
+static HRESULT STDMETHODCALLTYPE drop_query(IDropTarget *self, REFIID riid, void **out) {
+    if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IDropTarget)) {
+        *out = self;
+        IDropTarget_AddRef(self);
+        return S_OK;
+    }
+    *out = NULL;
+    return E_NOINTERFACE;
+}
+
+static ULONG STDMETHODCALLTYPE drop_add_ref(IDropTarget *self) {
+    return (ULONG)InterlockedIncrement(&((SilkDropTarget *)self)->references);
+}
+
+static ULONG STDMETHODCALLTYPE drop_release(IDropTarget *self) {
+    LONG left = InterlockedDecrement(&((SilkDropTarget *)self)->references);
+    if (left == 0) free(self);
+    return (ULONG)left;
+}
+
+static HRESULT STDMETHODCALLTYPE drop_enter(IDropTarget *self, IDataObject *data, DWORD keys,
+                                            POINTL point, DWORD *effect) {
+    SilkDropTarget *target = (SilkDropTarget *)self;
+    FORMATETC format = hdrop_format();
+    target->files = SUCCEEDED(IDataObject_QueryGetData(data, &format));
+    *effect = target->files ? DROPEFFECT_COPY : DROPEFFECT_NONE;
+    if (!target->files) return S_OK;
+    SilkText paths[SILK_MAX_TEXTS];
+    size_t count = drop_paths(data, paths, SILK_MAX_TEXTS);
+    double x, y;
+    drop_point(target->window, point, &x, &y);
+    silk_push_drag(SILK_EVENT_FILE_DRAG_ENTERED, target->window, x, y, paths, count);
+    free_texts(paths, count);
+    yield_if_ready();
+    return S_OK;
+}
+
+static HRESULT STDMETHODCALLTYPE drop_over(IDropTarget *self, DWORD keys, POINTL point,
+                                           DWORD *effect) {
+    SilkDropTarget *target = (SilkDropTarget *)self;
+    *effect = target->files ? DROPEFFECT_COPY : DROPEFFECT_NONE;
+    if (!target->files) return S_OK;
+    double x, y;
+    drop_point(target->window, point, &x, &y);
+    silk_push_drag(SILK_EVENT_FILE_DRAG_MOVED, target->window, x, y, NULL, 0);
+    yield_if_ready();
+    return S_OK;
+}
+
+static HRESULT STDMETHODCALLTYPE drop_leave(IDropTarget *self) {
+    SilkDropTarget *target = (SilkDropTarget *)self;
+    if (!target->files) return S_OK;
+    target->files = false;
+    silk_push_drag(SILK_EVENT_FILE_DRAG_LEFT, target->window, 0, 0, NULL, 0);
+    yield_if_ready();
+    return S_OK;
+}
+
+static HRESULT STDMETHODCALLTYPE drop_drop(IDropTarget *self, IDataObject *data, DWORD keys,
+                                           POINTL point, DWORD *effect) {
+    SilkDropTarget *target = (SilkDropTarget *)self;
+    *effect = target->files ? DROPEFFECT_COPY : DROPEFFECT_NONE;
+    if (!target->files) return S_OK;
+    target->files = false;
+    SilkText paths[SILK_MAX_TEXTS];
+    size_t count = drop_paths(data, paths, SILK_MAX_TEXTS);
+    double x, y;
+    drop_point(target->window, point, &x, &y);
+    silk_push_drag(SILK_EVENT_FILE_DROPPED, target->window, x, y, paths, count);
+    free_texts(paths, count);
+    yield_if_ready();
+    return S_OK;
+}
+
+static IDropTargetVtbl dropTargetMethods = {
+    drop_query, drop_add_ref, drop_release, drop_enter, drop_over, drop_leave, drop_drop,
+};
+
+static IDropTarget *new_drop_target(uint32_t window) {
+    SilkDropTarget *target = calloc(1, sizeof *target);
+    if (!target) return NULL;
+    target->target.lpVtbl = &dropTargetMethods;
+    target->references = 1;
+    target->window = window;
+    return &target->target;
+}
+
+// ---------------------------------------------------------------------------------------
 // Windows.
 
 uint32_t silk_window_open(const uint8_t *title, size_t titleLength, double width, double height,
@@ -1209,6 +1374,11 @@ uint32_t silk_window_open(const uint8_t *title, size_t titleLength, double width
     window->pixelHeight = client.bottom;
     // Input methods start off, as on the other backends, until setIme turns them on.
     window->savedContext = ImmAssociateContext(hwnd, NULL);
+    window->dropTarget = new_drop_target(window->id);
+    if (window->dropTarget && FAILED(RegisterDragDrop(hwnd, window->dropTarget))) {
+        IDropTarget_Release(window->dropTarget);
+        window->dropTarget = NULL;
+    }
     if (flags & SILK_WINDOW_VISIBLE) silk_window_set_visible(window->id, 1);
     return window->id;
 }
@@ -1218,6 +1388,11 @@ void silk_window_close(uint32_t id) {
     if (!window) return;
     window->open = false;
     if (window->savedContext) ImmAssociateContext(window->hwnd, window->savedContext);
+    if (window->dropTarget) {
+        RevokeDragDrop(window->hwnd);
+        IDropTarget_Release(window->dropTarget);
+        window->dropTarget = NULL;
+    }
     DestroyWindow(window->hwnd);
     if (window->menu) DestroyMenu(window->menu);
     silk_queue_forget_window(id);
@@ -1670,4 +1845,254 @@ void silk_window_test_ime_rect(uint32_t id, double *x, double *y, double *width,
     *y = window->imeY;
     *width = window->imeWidth;
     *height = window->imeHeight;
+}
+
+// ---------------------------------------------------------------------------------------
+// The tray: an icon in the notification area, owned by a hidden top-level window (a
+// context menu only closes on an outside click when its owner can be the foreground window).
+// Notifications are the icon's balloons, which Windows 10 and later show as toasts.
+
+static bool trayShown;
+static HICON trayIcon;
+static HMENU trayMenu;
+static WCHAR trayTip[128];
+static bool noticeIcon; // NOTICE_ICON was added for a notification
+static uint32_t noticeId;
+static uint32_t nextNotice = 1;
+static UINT taskbarCreated;
+
+static void ensure_tray_window(void) {
+    if (trayWindow || !started) return;
+    trayWindow = CreateWindowExW(WS_EX_TOOLWINDOW, L"SilkWindow", L"", WS_POPUP, 0, 0, 0, 0, NULL,
+                                 NULL, instance, NULL);
+    taskbarCreated = RegisterWindowMessageW(L"TaskbarCreated");
+}
+
+static HICON icon_from_rgba(const uint8_t *pixels, uint32_t width, uint32_t height) {
+    if (!width || !height) return NULL;
+    BITMAPV5HEADER header;
+    memset(&header, 0, sizeof header);
+    header.bV5Size = sizeof header;
+    header.bV5Width = (LONG)width;
+    header.bV5Height = -(LONG)height;
+    header.bV5Planes = 1;
+    header.bV5BitCount = 32;
+    header.bV5Compression = BI_BITFIELDS;
+    header.bV5RedMask = 0x00FF0000;
+    header.bV5GreenMask = 0x0000FF00;
+    header.bV5BlueMask = 0x000000FF;
+    header.bV5AlphaMask = 0xFF000000;
+    void *bits = NULL;
+    HDC screen = GetDC(NULL);
+    HBITMAP color = CreateDIBSection(screen, (BITMAPINFO *)&header, DIB_RGB_COLORS, &bits, NULL, 0);
+    ReleaseDC(NULL, screen);
+    if (!color) return NULL;
+    uint8_t *out = bits;
+    for (size_t i = 0; i < (size_t)width * height; i++) {
+        out[i * 4 + 0] = pixels[i * 4 + 2];
+        out[i * 4 + 1] = pixels[i * 4 + 1];
+        out[i * 4 + 2] = pixels[i * 4 + 0];
+        out[i * 4 + 3] = pixels[i * 4 + 3];
+    }
+    HBITMAP mask = CreateBitmap((int)width, (int)height, 1, 1, NULL);
+    ICONINFO info = {TRUE, 0, 0, mask, color};
+    HICON icon = CreateIconIndirect(&info);
+    DeleteObject(mask);
+    DeleteObject(color);
+    return icon;
+}
+
+static void tray_data(NOTIFYICONDATAW *data, UINT id) {
+    memset(data, 0, sizeof *data);
+    data->cbSize = sizeof *data;
+    data->hWnd = trayWindow;
+    data->uID = id;
+    data->uCallbackMessage = WM_SILK_TRAY;
+    data->uVersion = NOTIFYICON_VERSION_4;
+}
+
+static bool tray_add(void) {
+    NOTIFYICONDATAW data;
+    tray_data(&data, TRAY_ICON);
+    data.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP | NIF_SHOWTIP;
+    data.hIcon = trayIcon;
+    wcsncpy(data.szTip, trayTip, 127);
+    if (!Shell_NotifyIconW(NIM_ADD, &data) && !Shell_NotifyIconW(NIM_MODIFY, &data)) return false;
+    Shell_NotifyIconW(NIM_SETVERSION, &data);
+    return true;
+}
+
+uint8_t silk_window_tray_commit(const uint8_t *pixels, uint32_t width, uint32_t height,
+                                const uint8_t *tooltip, size_t tooltipLength, uint32_t flags) {
+    (void)flags;
+    silk_tray_commit_pending();
+    ensure_tray_window();
+    if (!trayWindow) return 0;
+    HICON icon = icon_from_rgba(pixels, width, height);
+    if (!icon) return 0;
+    if (trayIcon) DestroyIcon(trayIcon);
+    trayIcon = icon;
+    if (trayMenu) DestroyMenu(trayMenu);
+    trayMenu = build_menu_from(silk_tray_entries, silk_tray_count, true);
+    WCHAR *tip = wide(tooltip, tooltipLength);
+    trayTip[0] = 0;
+    if (tip) wcsncpy(trayTip, tip, 127);
+    trayTip[127] = 0;
+    free(tip);
+    trayShown = tray_add();
+    return trayShown ? 1 : 0;
+}
+
+void silk_window_tray_remove(void) {
+    if (!trayShown) return;
+    NOTIFYICONDATAW data;
+    tray_data(&data, TRAY_ICON);
+    Shell_NotifyIconW(NIM_DELETE, &data);
+    trayShown = false;
+}
+
+static void remove_notice_icon(void) {
+    if (!noticeIcon) return;
+    NOTIFYICONDATAW data;
+    tray_data(&data, NOTICE_ICON);
+    Shell_NotifyIconW(NIM_DELETE, &data);
+    noticeIcon = false;
+}
+
+uint32_t silk_window_notify(const uint8_t *title, size_t titleLength, const uint8_t *body,
+                            size_t bodyLength) {
+    ensure_tray_window();
+    if (!trayWindow) return 0;
+    NOTIFYICONDATAW data;
+    UINT id = trayShown ? TRAY_ICON : NOTICE_ICON;
+    tray_data(&data, id);
+    if (!trayShown && !noticeIcon) {
+        data.uFlags = NIF_MESSAGE | NIF_ICON;
+        data.hIcon = LoadIconW(NULL, MAKEINTRESOURCEW(32512));
+        if (!Shell_NotifyIconW(NIM_ADD, &data)) return 0;
+        Shell_NotifyIconW(NIM_SETVERSION, &data);
+        noticeIcon = true;
+    }
+    data.uFlags = NIF_INFO;
+    data.dwInfoFlags = NIIF_INFO | NIIF_RESPECT_QUIET_TIME;
+    WCHAR *wideTitle = wide(title, titleLength), *wideBody = wide(body, bodyLength);
+    if (wideTitle) wcsncpy(data.szInfoTitle, wideTitle, 63);
+    if (wideBody) wcsncpy(data.szInfo, wideBody, 255);
+    free(wideTitle);
+    free(wideBody);
+    if (!data.szInfo[0]) wcsncpy(data.szInfo, L" ", 255);
+    if (!Shell_NotifyIconW(NIM_MODIFY, &data)) return 0;
+    noticeId = nextNotice++;
+    return noticeId;
+}
+
+static void tray_menu_or_click(uint32_t button, int x, int y) {
+    if (!trayMenu) {
+        SilkWindowEvent event = silk_event(SILK_EVENT_TRAY_CLICKED, 0);
+        event.code = button;
+        silk_queue_push(&event);
+        return;
+    }
+    SetForegroundWindow(trayWindow);
+    UINT command = (UINT)TrackPopupMenu(trayMenu, TPM_RETURNCMD | TPM_RIGHTBUTTON | TPM_NONOTIFY,
+                                        x, y, 0, trayWindow, NULL);
+    PostMessageW(trayWindow, WM_NULL, 0, 0);
+    if (command >= MENU_ACTION_BASE) {
+        SilkWindowEvent event = silk_event(SILK_EVENT_MENU_ACTION, 0);
+        event.code = command - MENU_ACTION_BASE;
+        silk_queue_push(&event);
+    } else if (command >= MENU_SYSTEM_BASE) {
+        system_item(windowCount ? windows[0] : NULL, command - MENU_SYSTEM_BASE);
+    }
+}
+
+static LRESULT tray_message(UINT message, WPARAM wParam, LPARAM lParam) {
+    if (message == taskbarCreated && taskbarCreated) {
+        // Explorer restarted and forgot the icons.
+        if (trayShown) tray_add();
+        noticeIcon = false;
+        return 0;
+    }
+    if (message != WM_SILK_TRAY) return DefWindowProcW(trayWindow, message, wParam, lParam);
+    UINT event = LOWORD(lParam), icon = HIWORD(lParam);
+    int x = (short)LOWORD(wParam), y = (short)HIWORD(wParam);
+    switch (event) {
+    case NIN_BALLOONUSERCLICK: {
+        SilkWindowEvent clicked = silk_event(SILK_EVENT_NOTIFICATION_CLICKED, 0);
+        clicked.code = noticeId;
+        silk_queue_push(&clicked);
+        if (icon == NOTICE_ICON) remove_notice_icon();
+        break;
+    }
+    case NIN_BALLOONTIMEOUT:
+    case NIN_BALLOONHIDE:
+        if (icon == NOTICE_ICON) remove_notice_icon();
+        break;
+    case NIN_SELECT:
+    case NIN_KEYSELECT:
+        if (icon == TRAY_ICON) tray_menu_or_click(SILK_BUTTON_LEFT, x, y);
+        break;
+    case WM_CONTEXTMENU:
+        if (icon == TRAY_ICON) tray_menu_or_click(SILK_BUTTON_RIGHT, x, y);
+        break;
+    case WM_MBUTTONUP:
+        if (icon == TRAY_ICON && !trayMenu) tray_menu_or_click(SILK_BUTTON_MIDDLE, x, y);
+        break;
+    default:
+        break;
+    }
+    return 0;
+}
+
+// ---------------------------------------------------------------------------------------
+// Global shortcuts: RegisterHotKey on the helper window. Hotkey ids are slots + 1.
+
+typedef struct Hotkey {
+    bool used;
+    uint32_t id;
+} Hotkey;
+
+static Hotkey hotkeys[64];
+
+void silk_window_shortcut_unregister(uint32_t id) {
+    for (int i = 0; i < 64; i++) {
+        if (!hotkeys[i].used || hotkeys[i].id != id) continue;
+        UnregisterHotKey(helper, i + 1);
+        hotkeys[i].used = false;
+    }
+}
+
+uint8_t silk_window_shortcut_register(uint32_t id, uint32_t code, uint32_t modifiers) {
+    if (!started) return 0;
+    silk_window_shortcut_unregister(id);
+    bool extended = false;
+    UINT scan = scan_of_code(code, &extended);
+    UINT vk = scan ? MapVirtualKeyW(scan | (extended ? 0xE000 : 0), MAPVK_VSC_TO_VK_EX) : 0;
+    if (!vk) return 0;
+    UINT mods = MOD_NOREPEAT;
+    if (modifiers & SILK_MOD_SHIFT) mods |= MOD_SHIFT;
+    if (modifiers & SILK_MOD_CONTROL) mods |= MOD_CONTROL;
+    if (modifiers & SILK_MOD_ALT) mods |= MOD_ALT;
+    if (modifiers & SILK_MOD_META) mods |= MOD_WIN;
+    for (int i = 0; i < 64; i++) {
+        if (hotkeys[i].used) continue;
+        if (!RegisterHotKey(helper, i + 1, mods, vk)) return 0;
+        hotkeys[i].used = true;
+        hotkeys[i].id = id;
+        return 1;
+    }
+    return 0;
+}
+
+static void hotkey_pressed(int hotkey) {
+    if (hotkey < 1 || hotkey > 64 || !hotkeys[hotkey - 1].used) return;
+    SilkWindowEvent event = silk_event(SILK_EVENT_GLOBAL_SHORTCUT, 0);
+    event.code = hotkeys[hotkey - 1].id;
+    silk_queue_push(&event);
+}
+
+uint8_t silk_window_test_drop(uint32_t window, uint32_t kind, double x, double y,
+                              const uint8_t *paths, size_t length) {
+    // OLE drags come from another process's DoDragDrop; there is nothing to post.
+    return 0;
 }

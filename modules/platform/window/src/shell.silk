@@ -1,0 +1,33 @@
+//! The desktop around the windows: a tray icon with a menu, notifications, and shortcuts
+//! that work while another app has focus. Options are borrowed while the platform reads them.
+import menu { MenuBar }
+
+/// The tray's icon: RGBA pixels, not premultiplied, row by row from the top left. 32 by 32
+/// pixels looks right everywhere; the system scales it to its tray.
+pub struct TrayIcon<'a> {
+  pub width: u32,
+  pub height: u32,
+  pub pixels: &'a [u8],
+  /// macOS draws a template icon from its alpha alone, in the menu bar's colours, as system
+  /// icons are. Other systems show the pixels as they are.
+  pub template: bool,
+}
+
+/// An icon in the system tray (the macOS menu bar's status area, the Windows notification
+/// area, a StatusNotifierItem on Linux).
+///
+/// The menu's items sit at its top level; `begin` and `end` make submenus. Choosing one sends
+/// `Event.MenuAction`. With an empty menu a click sends `Event.TrayClicked` instead.
+pub struct Tray<'a> {
+  pub icon: TrayIcon<'a>,
+  /// Shown when the pointer rests on the icon.
+  pub tooltip: string<'a>,
+  pub menu: &'a MenuBar,
+}
+
+/// A desktop notification, like the web's `new Notification(title, { body })`. Clicking it
+/// sends `Event.NotificationClicked` with the id `Platform.notify` returned.
+pub struct Notification<'a> {
+  pub title: string<'a>,
+  pub body: string<'a>,
+}

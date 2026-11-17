@@ -7,11 +7,12 @@
 //! AppKit's own loops (live resize, menu tracking) run on a second stack of the main thread,
 //! so `nextEvent` keeps returning events and frames while they run. See the README.
 import event { Event, Key, Modifiers, MouseButton, Phase, ScrollDelta }
-import keys { keyCodeFromValue, namedKeyFromValue, NamedKey }
+import keys { keyCodeFromValue, namedKeyFromValue, KeyCode, NamedKey }
 import macos_sys as sys
 import macos_sys { RawEvent }
 import menu { MenuBar, MenuEntry, OpenDialog, SaveDialog, Shortcut, ShortcutKey, SystemItem }
 import platform { Platform }
+import shell { Tray, Notification }
 import types {
   WindowId,
   DialogId,
@@ -353,7 +354,48 @@ impl MacPlatform {
     if kind == sys.QUIT_REQUESTED {
       return Option<Event>.some(Event.QuitRequested)
     }
+    if kind == sys.FILE_DRAG_ENTERED {
+      let paths = run self.texts(raw.count)
+      return Option<Event>.some(
+        Event.FileDragEntered { window: window, position: position, paths: move paths },
+      )
+    }
+    if kind == sys.FILE_DRAG_MOVED {
+      return Option<Event>.some(Event.FileDragMoved { window: window, position: position })
+    }
+    if kind == sys.FILE_DRAG_LEFT {
+      return Option<Event>.some(Event.FileDragLeft { window: window })
+    }
+    if kind == sys.FILE_DROPPED {
+      let paths = run self.texts(raw.count)
+      return Option<Event>.some(
+        Event.FileDropped { window: window, position: position, paths: move paths },
+      )
+    }
+    if kind == sys.GLOBAL_SHORTCUT {
+      return Option<Event>.some(Event.GlobalShortcut { id: raw.code })
+    }
+    if kind == sys.TRAY_CLICKED {
+      return Option<Event>.some(Event.TrayClicked { button: MacPlatform.button(raw.code) })
+    }
+    if kind == sys.NOTIFICATION_CLICKED {
+      return Option<Event>.some(Event.NotificationClicked { id: raw.code })
+    }
     return Option<Event>.None
+  }
+
+  effect fn texts(self: &Self, count: u32) -> List<String>
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let length = u32ToUsize(count)
+    let mut list = run List<String>.makeWithCapacity(length)
+    let mut i: usize = 0
+    while i < length {
+      let text = run self.text(i)
+      run list.append(move text)
+      i = i + 1
+    }
+    return move list
   }
 
   fn button(code: u32) -> MouseButton {
@@ -571,59 +613,7 @@ impl Platform for MacPlatform {
     ! OutOfMemoryError
     ? &mut Allocator {
     unsafe sys.silk_macos_menu_begin_bar()
-    let entries = bar.entries.asSlice()
-    let mut i: usize = 0
-    while i < entries.length {
-      match &entries[i] {
-        MenuEntry.Begin { title } => {
-          unsafe sys.silk_macos_menu_begin(
-            MacPlatform.bytes(title.view()),
-            String.byteLength(title.view()),
-          )
-        }
-        MenuEntry.End => {
-          unsafe sys.silk_macos_menu_end()
-        }
-        MenuEntry.Action { title, action, shortcut, enabled, checked } => {
-          let mut keyKind: u32 = 0
-          let mut keyValue: u32 = 0
-          let mut modifiers: u32 = 0
-          match shortcut {
-            Option<Shortcut>.Some { value } => {
-              modifiers = value.modifiers.bits()
-              match value.key {
-                ShortcutKey.Character { character } => {
-                  keyKind = 1
-                  keyValue = chars.toU32(character)
-                }
-                ShortcutKey.Named { key } => {
-                  keyKind = 2
-                  keyValue = u16.toU32(NamedKey.value(key))
-                }
-              }
-            }
-            _ => {}
-          }
-          unsafe sys.silk_macos_menu_action(
-            MacPlatform.bytes(title.view()),
-            String.byteLength(title.view()),
-            action,
-            keyKind,
-            keyValue,
-            modifiers,
-            bool8(enabled),
-            bool8(checked),
-          )
-        }
-        MenuEntry.Separator => {
-          unsafe sys.silk_macos_menu_separator()
-        }
-        MenuEntry.System { item } => {
-          unsafe sys.silk_macos_menu_system(u8.toU32(SystemItem.value(item)))
-        }
-      }
-      i = i + 1
-    }
+    describeMenu(bar)
     unsafe sys.silk_macos_menu_commit()
   }
 
@@ -707,5 +697,117 @@ impl Platform for MacPlatform {
 
   fn appearance(self: &Self) -> Appearance {
     return MacPlatform.appearanceOf(unsafe sys.silk_macos_appearance())
+  }
+
+  effect fn setTray(self: &mut Self, tray: &Tray<'_>) -> bool
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let icon = &tray.icon
+    if u32ToUsize(icon.width) * u32ToUsize(icon.height) * 4 > icon.pixels.length {
+      return false
+    }
+    unsafe sys.silk_macos_tray_begin()
+    describeMenu(tray.menu)
+    let flags = if icon.template {
+      sys.TRAY_TEMPLATE
+    } else {
+      0
+    }
+    let shown = unsafe sys.silk_macos_tray_commit(
+      Pointer.fromSlice(icon.pixels),
+      icon.width,
+      icon.height,
+      MacPlatform.bytes(tray.tooltip),
+      String.byteLength(tray.tooltip),
+      flags,
+    )
+    return shown != 0
+  }
+
+  fn removeTray(self: &mut Self) -> () {
+    unsafe sys.silk_macos_tray_remove()
+  }
+
+  effect fn registerShortcut(self: &mut Self, id: u32, code: KeyCode, modifiers: Modifiers) -> bool
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let registered = unsafe sys.silk_macos_shortcut_register(
+      id,
+      u16.toU32(KeyCode.value(code)),
+      modifiers.bits(),
+    )
+    return registered != 0
+  }
+
+  fn unregisterShortcut(self: &mut Self, id: u32) -> () {
+    unsafe sys.silk_macos_shortcut_unregister(id)
+  }
+
+  effect fn notify(self: &mut Self, notification: &Notification<'_>) -> u32
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    return unsafe sys.silk_macos_notify(
+      MacPlatform.bytes(notification.title),
+      String.byteLength(notification.title),
+      MacPlatform.bytes(notification.body),
+      String.byteLength(notification.body),
+    )
+  }
+}
+
+/// Describes `bar`'s entries with the menu_* calls, after menu_begin_bar or tray_begin.
+fn describeMenu(bar: &MenuBar) -> () {
+  let entries = bar.entries.asSlice()
+  let mut i: usize = 0
+  while i < entries.length {
+    match &entries[i] {
+      MenuEntry.Begin { title } => {
+        unsafe sys.silk_macos_menu_begin(
+          MacPlatform.bytes(title.view()),
+          String.byteLength(title.view()),
+        )
+      }
+      MenuEntry.End => {
+        unsafe sys.silk_macos_menu_end()
+      }
+      MenuEntry.Action { title, action, shortcut, enabled, checked } => {
+        let mut keyKind: u32 = 0
+        let mut keyValue: u32 = 0
+        let mut modifiers: u32 = 0
+        match shortcut {
+          Option<Shortcut>.Some { value } => {
+            modifiers = value.modifiers.bits()
+            match value.key {
+              ShortcutKey.Character { character } => {
+                keyKind = 1
+                keyValue = chars.toU32(character)
+              }
+              ShortcutKey.Named { key } => {
+                keyKind = 2
+                keyValue = u16.toU32(NamedKey.value(key))
+              }
+            }
+          }
+          _ => {}
+        }
+        unsafe sys.silk_macos_menu_action(
+          MacPlatform.bytes(title.view()),
+          String.byteLength(title.view()),
+          action,
+          keyKind,
+          keyValue,
+          modifiers,
+          bool8(enabled),
+          bool8(checked),
+        )
+      }
+      MenuEntry.Separator => {
+        unsafe sys.silk_macos_menu_separator()
+      }
+      MenuEntry.System { item } => {
+        unsafe sys.silk_macos_menu_system(u8.toU32(SystemItem.value(item)))
+      }
+    }
+    i = i + 1
   }
 }

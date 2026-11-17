@@ -4,10 +4,11 @@
 //!
 //! `run` returns 0 when every hard check passed. Checks the window system may refuse in a
 //! virtual session (focus, a dialog program) are reported as skipped.
-import window.bridge { BridgePlatform, Backend, MouseAction }
+import window.bridge { BridgePlatform, Backend, DragStep, MouseAction }
 import window.event { Event, Key, Modifiers, MouseButton, ScrollDelta }
 import window.keys { KeyCode, NamedKey }
 import window.menu { MenuBar, OpenDialog, Shortcut, SystemItem }
+import window.shell { Notification, Tray, TrayIcon }
 // Interface methods resolve through this import; silk#2819 reports it as unused.
 import window.platform { Platform as _Platform }
 import window.types { WindowOptions, WindowError, Wait, ImeState, RawSurface }
@@ -20,6 +21,7 @@ import silk.geometry.vector { Vector2 }
 import report { write }
 import silk.mem.allocator { Allocator, OutOfMemoryError }
 import silk.text.string { String }
+import silk.num.usize
 
 /// What arrived while the test waited.
 struct Tally {
@@ -48,6 +50,13 @@ struct Tally {
   dialogPath: String,
   closeRequests: u32,
   quits: u32,
+  dragEnters: u32,
+  dragMoves: u32,
+  dragLeaves: u32,
+  drops: u32,
+  dropX: f64,
+  droppedPaths: u32,
+  droppedPath: String,
 }
 
 impl Tally {
@@ -78,6 +87,13 @@ impl Tally {
       dialogPath: String.make(),
       closeRequests: 0,
       quits: 0,
+      dragEnters: 0,
+      dragMoves: 0,
+      dragLeaves: 0,
+      drops: 0,
+      dropX: 0.0,
+      droppedPaths: 0,
+      droppedPath: String.make(),
     }
   }
 }
@@ -169,6 +185,24 @@ effect fn collect(platform: &mut BridgePlatform, seconds: f64) -> Tally
           }
           Event.QuitRequested => {
             tally.quits = tally.quits + 1
+          }
+          Event.FileDragEntered { .. } => {
+            tally.dragEnters = tally.dragEnters + 1
+          }
+          Event.FileDragMoved { .. } => {
+            tally.dragMoves = tally.dragMoves + 1
+          }
+          Event.FileDragLeft { .. } => {
+            tally.dragLeaves = tally.dragLeaves + 1
+          }
+          Event.FileDropped { position, paths, .. } => {
+            tally.drops = tally.drops + 1
+            tally.dropX = position.x
+            tally.droppedPaths = usize.toU32(paths.length())
+            if paths.length() != 0 {
+              tally.droppedPath.clear()
+              run tally.droppedPath.append(paths.asSlice()[0].view())
+            }
           }
           _ => {}
         }
@@ -337,6 +371,51 @@ effect fn smoke(checks: &mut Checks) -> ()
   checks.check(entered.enter, "Enter is a named key")
   checks.check(entered.text.view() == "", "Enter types no text")
 
+  let paths = "/tmp/silk drop/a.txt\n/tmp/b%.png"
+  if platform.simulateDrag(window, DragStep.Enter, Point2<f64>.new(50.0, 60.0), paths) {
+    let entered = run collect(&mut platform, 0.3)
+    checks.check(entered.dragEnters == 1, "a file drag enters the window")
+    drop platform.simulateDrag(window, DragStep.Move, Point2<f64>.new(80.0, 60.0), "")
+    drop platform.simulateDrag(window, DragStep.Drop, Point2<f64>.new(80.0, 60.0), "")
+    let dropped = run collect(&mut platform, 0.3)
+    checks.check(dropped.dragMoves >= 1, "the drag moves over the window")
+    checks.check(dropped.drops == 1 && dropped.dropX == 80.0, "files dropped where the drag ended")
+
+    // A page sees file names, not paths.
+    let first = if backend == Backend.Browser {
+      "a.txt"
+    } else {
+      "/tmp/silk drop/a.txt"
+    }
+    checks.check(
+      dropped.droppedPaths == 2 && dropped.droppedPath.view() == first,
+      "the drop names every path, decoded",
+    )
+    drop platform.simulateDrag(window, DragStep.Enter, Point2<f64>.new(50.0, 60.0), paths)
+    let again = run collect(&mut platform, 0.3)
+    drop platform.simulateDrag(window, DragStep.Leave, Point2<f64>.new(50.0, 60.0), "")
+    let left = run collect(&mut platform, 0.3)
+    checks.check(
+      again.dragEnters == 1 && left.dragLeaves == 1 && left.drops == 0,
+      "a drag can leave without dropping",
+    )
+  } else {
+    checks.skip("file drags", "the backend cannot simulate them")
+  }
+  let mut trayMenu = MenuBar.make()
+  run trayMenu.action("Show", 11, Option<Shortcut>.None)
+  run trayMenu.system(SystemItem.Quit)
+  let pixels: [u8; 16] = [255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 255, 255, 255, 0]
+  let tray = Tray {
+    icon: TrayIcon { width: 2, height: 2, pixels: &pixels, template: false },
+    tooltip: "Smoke",
+    menu: &trayMenu,
+  }
+  let trayShown = run platform.setTray(&tray)
+  checks.soft(trayShown, "a tray icon is shown", "no tray in this session")
+  platform.removeTray()
+  let notified = run platform.notify(&Notification { title: "Smoke", body: "A notification" })
+  checks.soft(notified != 0, "a notification is shown", "no notification service")
   let mut bar = MenuBar.make()
   run bar.begin("App")
   run bar.system(SystemItem.Quit)

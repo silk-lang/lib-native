@@ -14,6 +14,7 @@ import event { Event, Key, Modifiers, MouseButton, Phase, ScrollDelta }
 import keys { keyCodeFromValue, namedKeyFromValue, KeyCode, NamedKey }
 import menu { MenuBar, MenuEntry, OpenDialog, SaveDialog, Shortcut, ShortcutKey, SystemItem }
 import platform { Platform }
+import shell { Tray, Notification }
 import types {
   WindowId,
   DialogId,
@@ -92,6 +93,22 @@ const APPEARANCE_CHANGED: u32 = 23
 
 const QUIT_REQUESTED: u32 = 24
 
+const FILE_DRAG_ENTERED: u32 = 25
+
+const FILE_DRAG_MOVED: u32 = 26
+
+const FILE_DRAG_LEFT: u32 = 27
+
+const FILE_DROPPED: u32 = 28
+
+const GLOBAL_SHORTCUT: u32 = 29
+
+const TRAY_CLICKED: u32 = 30
+
+const NOTIFICATION_CLICKED: u32 = 31
+
+const TRAY_TEMPLATE: u32 = 1
+
 const FLAG_REPEAT: u32 = 1
 
 const FLAG_IME_HANDLED: u32 = 2
@@ -146,6 +163,14 @@ pub enum MouseAction {
   Release,
   /// A wheel turn by `delta` lines.
   Wheel,
+}
+
+/// A step of a simulated file drag, for `BridgePlatform.simulateDrag`.
+pub enum DragStep {
+  Enter,
+  Move,
+  Leave,
+  Drop,
 }
 
 /// The Windows, Linux or browser platform. There is one per process (one per page in the
@@ -230,6 +255,26 @@ impl BridgePlatform {
       position.y,
       delta.x,
       delta.y,
+    )
+      != 0
+  }
+
+  /// Drags files over the window as another app would: `Enter` (which also moves to
+  /// `position`), `Move`, `Leave` or `Drop`. `paths` are separated by newlines.
+  pub fn simulateDrag(
+    self: &mut Self,
+    window: WindowId,
+    step: DragStep,
+    position: Point2<f64>,
+    paths: string,
+  ) -> bool {
+    return unsafe sys.silk_window_test_drop(
+      window.value,
+      u8.toU32(DragStep.value(step)),
+      position.x,
+      position.y,
+      BridgePlatform.bytes(paths),
+      String.byteLength(paths),
     )
       != 0
   }
@@ -487,7 +532,106 @@ impl BridgePlatform {
     if kind == QUIT_REQUESTED {
       return Option<Event>.some(Event.QuitRequested)
     }
+    if kind == FILE_DRAG_ENTERED {
+      let paths = run self.texts(raw.count)
+      return Option<Event>.some(
+        Event.FileDragEntered { window: window, position: position, paths: move paths },
+      )
+    }
+    if kind == FILE_DRAG_MOVED {
+      return Option<Event>.some(Event.FileDragMoved { window: window, position: position })
+    }
+    if kind == FILE_DRAG_LEFT {
+      return Option<Event>.some(Event.FileDragLeft { window: window })
+    }
+    if kind == FILE_DROPPED {
+      let paths = run self.texts(raw.count)
+      return Option<Event>.some(
+        Event.FileDropped { window: window, position: position, paths: move paths },
+      )
+    }
+    if kind == GLOBAL_SHORTCUT {
+      return Option<Event>.some(Event.GlobalShortcut { id: raw.code })
+    }
+    if kind == TRAY_CLICKED {
+      return Option<Event>.some(Event.TrayClicked { button: BridgePlatform.button(raw.code) })
+    }
+    if kind == NOTIFICATION_CLICKED {
+      return Option<Event>.some(Event.NotificationClicked { id: raw.code })
+    }
     return Option<Event>.None
+  }
+
+  /// The first `count` strings of the event last returned.
+  effect fn texts(self: &Self, count: u32) -> List<String>
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let length = u32.toUsize(count)
+    let mut list = run List<String>.makeWithCapacity(length)
+    let mut i: usize = 0
+    while i < length {
+      let text = run self.text(i)
+      run list.append(move text)
+      i = i + 1
+    }
+    return move list
+  }
+
+  /// Describes `bar`'s entries with the menu_* calls, after menu_begin_bar or tray_begin.
+  fn describeMenu(bar: &MenuBar) -> () {
+    let entries = bar.entries.asSlice()
+    let mut i: usize = 0
+    while i < entries.length {
+      match &entries[i] {
+        MenuEntry.Begin { title } => {
+          unsafe sys.silk_window_menu_begin(
+            BridgePlatform.bytes(title.view()),
+            String.byteLength(title.view()),
+          )
+        }
+        MenuEntry.End => {
+          unsafe sys.silk_window_menu_end()
+        }
+        MenuEntry.Action { title, action, shortcut, enabled, checked } => {
+          let mut keyKind: u32 = 0
+          let mut keyValue: u32 = 0
+          let mut modifiers: u32 = 0
+          match shortcut {
+            Option<Shortcut>.Some { value } => {
+              modifiers = value.modifiers.bits()
+              match value.key {
+                ShortcutKey.Character { character } => {
+                  keyKind = 1
+                  keyValue = chars.toU32(character)
+                }
+                ShortcutKey.Named { key } => {
+                  keyKind = 2
+                  keyValue = u16.toU32(NamedKey.value(key))
+                }
+              }
+            }
+            _ => {}
+          }
+          unsafe sys.silk_window_menu_action(
+            BridgePlatform.bytes(title.view()),
+            String.byteLength(title.view()),
+            action,
+            keyKind,
+            keyValue,
+            modifiers,
+            bool8(enabled),
+            bool8(checked),
+          )
+        }
+        MenuEntry.Separator => {
+          unsafe sys.silk_window_menu_separator()
+        }
+        MenuEntry.System { item } => {
+          unsafe sys.silk_window_menu_system(u8.toU32(SystemItem.value(item)))
+        }
+      }
+      i = i + 1
+    }
   }
 
   fn button(code: u32) -> MouseButton {
@@ -715,59 +859,7 @@ impl Platform for BridgePlatform {
     ! OutOfMemoryError
     ? &mut Allocator {
     unsafe sys.silk_window_menu_begin_bar()
-    let entries = bar.entries.asSlice()
-    let mut i: usize = 0
-    while i < entries.length {
-      match &entries[i] {
-        MenuEntry.Begin { title } => {
-          unsafe sys.silk_window_menu_begin(
-            BridgePlatform.bytes(title.view()),
-            String.byteLength(title.view()),
-          )
-        }
-        MenuEntry.End => {
-          unsafe sys.silk_window_menu_end()
-        }
-        MenuEntry.Action { title, action, shortcut, enabled, checked } => {
-          let mut keyKind: u32 = 0
-          let mut keyValue: u32 = 0
-          let mut modifiers: u32 = 0
-          match shortcut {
-            Option<Shortcut>.Some { value } => {
-              modifiers = value.modifiers.bits()
-              match value.key {
-                ShortcutKey.Character { character } => {
-                  keyKind = 1
-                  keyValue = chars.toU32(character)
-                }
-                ShortcutKey.Named { key } => {
-                  keyKind = 2
-                  keyValue = u16.toU32(NamedKey.value(key))
-                }
-              }
-            }
-            _ => {}
-          }
-          unsafe sys.silk_window_menu_action(
-            BridgePlatform.bytes(title.view()),
-            String.byteLength(title.view()),
-            action,
-            keyKind,
-            keyValue,
-            modifiers,
-            bool8(enabled),
-            bool8(checked),
-          )
-        }
-        MenuEntry.Separator => {
-          unsafe sys.silk_window_menu_separator()
-        }
-        MenuEntry.System { item } => {
-          unsafe sys.silk_window_menu_system(u8.toU32(SystemItem.value(item)))
-        }
-      }
-      i = i + 1
-    }
+    BridgePlatform.describeMenu(bar)
     unsafe sys.silk_window_menu_commit()
   }
 
@@ -855,5 +947,60 @@ impl Platform for BridgePlatform {
 
   fn appearance(self: &Self) -> Appearance {
     return BridgePlatform.appearanceOf(unsafe sys.silk_window_appearance())
+  }
+
+  effect fn setTray(self: &mut Self, tray: &Tray<'_>) -> bool
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let icon = &tray.icon
+    if u32.toUsize(icon.width) * u32.toUsize(icon.height) * 4 > icon.pixels.length {
+      return false
+    }
+    unsafe sys.silk_window_tray_begin()
+    BridgePlatform.describeMenu(tray.menu)
+    let flags = if icon.template {
+      TRAY_TEMPLATE
+    } else {
+      0
+    }
+    let shown = unsafe sys.silk_window_tray_commit(
+      Pointer.fromSlice(icon.pixels),
+      icon.width,
+      icon.height,
+      BridgePlatform.bytes(tray.tooltip),
+      String.byteLength(tray.tooltip),
+      flags,
+    )
+    return shown != 0
+  }
+
+  fn removeTray(self: &mut Self) -> () {
+    unsafe sys.silk_window_tray_remove()
+  }
+
+  effect fn registerShortcut(self: &mut Self, id: u32, code: KeyCode, modifiers: Modifiers) -> bool
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let registered = unsafe sys.silk_window_shortcut_register(
+      id,
+      u16.toU32(KeyCode.value(code)),
+      modifiers.bits(),
+    )
+    return registered != 0
+  }
+
+  fn unregisterShortcut(self: &mut Self, id: u32) -> () {
+    unsafe sys.silk_window_shortcut_unregister(id)
+  }
+
+  effect fn notify(self: &mut Self, notification: &Notification<'_>) -> u32
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    return unsafe sys.silk_window_notify(
+      BridgePlatform.bytes(notification.title),
+      String.byteLength(notification.title),
+      BridgePlatform.bytes(notification.body),
+      String.byteLength(notification.body),
+    )
   }
 }

@@ -178,6 +178,44 @@ void silk_menu_commit_pending(void) {
 
 void silk_window_menu_begin_bar(void) { silk_menu_reset_pending(); }
 
+SilkMenuEntry *silk_tray_entries;
+size_t silk_tray_count;
+
+void silk_tray_commit_pending(void) {
+    free_entries(silk_tray_entries, silk_tray_count);
+    silk_tray_entries = pending;
+    silk_tray_count = pendingCount;
+    pending = NULL;
+    pendingCount = pendingCapacity = 0;
+}
+
+void silk_window_tray_begin(void) { silk_menu_reset_pending(); }
+
+size_t silk_split_paths(const uint8_t *paths, size_t length, SilkText *out, size_t capacity) {
+    size_t count = 0, start = 0;
+    for (size_t i = 0; i <= length && count < capacity; i++) {
+        if (i == length || paths[i] == '\n') {
+            if (i > start) {
+                out[count].bytes = (uint8_t *)paths + start;
+                out[count].length = i - start;
+                count++;
+            }
+            start = i + 1;
+        }
+    }
+    return count;
+}
+
+void silk_push_drag(uint32_t kind, uint32_t window, double x, double y, const SilkText *paths,
+                    size_t count) {
+    SilkWindowEvent event = silk_event(kind, window);
+    event.x = x;
+    event.y = y;
+    if (count > SILK_MAX_TEXTS) count = SILK_MAX_TEXTS;
+    event.count = (uint32_t)count;
+    silk_queue_push_texts(&event, paths, count);
+}
+
 void silk_window_menu_begin(const uint8_t *title, size_t length) {
     SilkMenuEntry entry = {0};
     entry.type = SILK_MENU_BEGIN;

@@ -25,7 +25,9 @@
 //! Backends must keep delivering events while the system runs its own loops, such as a live
 //! resize or an open menu, so `nextEvent` returns there too. The app draws inside that
 //! call sequence exactly as it does otherwise.
-import event { Event }
+import event { Event, Modifiers }
+import keys { KeyCode }
+import shell { Tray, Notification }
 import menu { MenuBar, OpenDialog, SaveDialog }
 import types {
   WindowId,
@@ -120,4 +122,27 @@ pub interface Platform {
   effect fn writeClipboard(self: &mut Self, text: string) -> () ! OutOfMemoryError ? &mut Allocator
 
   fn appearance(self: &Self) -> Appearance
+
+  // The desktop.
+
+  /// Shows the tray icon, or replaces the one shown. False when the system has no tray.
+  effect fn setTray(self: &mut Self, tray: &Tray<'_>) -> bool ! OutOfMemoryError ? &mut Allocator
+
+  fn removeTray(self: &mut Self) -> ()
+
+  /// Sends `Event.GlobalShortcut` with `id` when the key with `code` is pressed with exactly
+  /// `modifiers`, whichever app has focus. Registering `id` again replaces its shortcut. False
+  /// when the system refused (another app holds the shortcut) or has no global shortcuts
+  /// (Wayland, the browser).
+  effect fn registerShortcut(self: &mut Self, id: u32, code: KeyCode, modifiers: Modifiers) -> bool
+    ! OutOfMemoryError
+    ? &mut Allocator
+
+  fn unregisterShortcut(self: &mut Self, id: u32) -> ()
+
+  /// Shows a notification and returns its id for `Event.NotificationClicked`, or 0 when it
+  /// could not be shown.
+  effect fn notify(self: &mut Self, notification: &Notification<'_>) -> u32
+    ! OutOfMemoryError
+    ? &mut Allocator
 }

@@ -212,13 +212,32 @@ pub union Event {
   /// A trackpad pinch. `delta` is the change of the magnification, 0.1 for 10% larger.
   Pinch { pub window: WindowId, pub position: Point2<f64>, pub delta: f64, pub phase: Phase },
 
+  // Files dragged from other apps.
+
+  /// Files dragged from another app entered the window, as the web's `dragenter`. `paths`
+  /// are absolute; some systems only tell them on the drop, and send none here.
+  FileDragEntered { pub window: WindowId, pub position: Point2<f64>, pub paths: List<String> },
+  /// The drag moved over the window, as `dragover`.
+  FileDragMoved { pub window: WindowId, pub position: Point2<f64> },
+  /// The drag left the window or was cancelled, as `dragleave`.
+  FileDragLeft { pub window: WindowId },
+  /// The files were dropped on the window, as `drop`.
+  FileDropped { pub window: WindowId, pub position: Point2<f64>, pub paths: List<String> },
+
   // App.
 
-  /// A menu item from `Platform.setMenuBar` was chosen, by click or by its shortcut.
+  /// A menu item from `Platform.setMenuBar` or the tray's menu was chosen, by click or by its
+  /// shortcut.
   MenuAction { pub action: u32 },
   /// A file dialog closed. `paths` is empty when it was cancelled.
   DialogClosed { pub dialog: DialogId, pub paths: List<String> },
   AppearanceChanged { pub appearance: Appearance },
+  /// A shortcut from `Platform.registerShortcut` was pressed, whichever app had focus.
+  GlobalShortcut { pub id: u32 },
+  /// The tray icon was clicked. A tray with a menu opens it instead, and sends no click.
+  TrayClicked { pub button: MouseButton },
+  /// The user clicked a notification from `Platform.notify`.
+  NotificationClicked { pub id: u32 },
   /// The user asked to quit, from the app menu or the system. The app decides whether to
   /// stop its event loop.
   QuitRequested,

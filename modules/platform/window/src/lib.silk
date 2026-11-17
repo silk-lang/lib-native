@@ -4,5 +4,6 @@
 //! - `event`, `keys`: what `Platform.nextEvent` delivers.
 //! - `types`: window options, waiting, cursors, IME state, raw surface handles, errors.
 //! - `menu`: menu bars and file dialogs.
+//! - `shell`: the tray icon and notifications.
 //! - `native`: `NativePlatform`, the backend for the compilation target.
 //! - `macos`: the AppKit backend. `headless`: a backend without a display, for tests.

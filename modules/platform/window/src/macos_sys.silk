@@ -94,6 +94,22 @@ pub const APPEARANCE_CHANGED: u32 = 23
 
 pub const QUIT_REQUESTED: u32 = 24
 
+pub const FILE_DRAG_ENTERED: u32 = 25
+
+pub const FILE_DRAG_MOVED: u32 = 26
+
+pub const FILE_DRAG_LEFT: u32 = 27
+
+pub const FILE_DROPPED: u32 = 28
+
+pub const GLOBAL_SHORTCUT: u32 = 29
+
+pub const TRAY_CLICKED: u32 = 30
+
+pub const NOTIFICATION_CLICKED: u32 = 31
+
+pub const TRAY_TEMPLATE: u32 = 1
+
 pub const FLAG_REPEAT: u32 = 1
 
 pub const FLAG_IME_HANDLED: u32 = 2
@@ -234,6 +250,32 @@ static if Intrinsic.targetOperatingSystem() == "darwin" {
     height: *mut f64,
   ) -> ()
   pub unsafe extern "C" fn silk_macos_test_uses_fiber() -> u8
+  pub unsafe extern "C" fn silk_macos_tray_begin() -> ()
+  pub unsafe extern "C" fn silk_macos_tray_commit(
+    pixels: ?[*]const u8,
+    width: u32,
+    height: u32,
+    tooltip: ?[*]const u8,
+    tooltipLength: usize,
+    flags: u32,
+  ) -> u8
+  pub unsafe extern "C" fn silk_macos_tray_remove() -> ()
+  pub unsafe extern "C" fn silk_macos_shortcut_register(id: u32, code: u32, modifiers: u32) -> u8
+  pub unsafe extern "C" fn silk_macos_shortcut_unregister(id: u32) -> ()
+  pub unsafe extern "C" fn silk_macos_notify(
+    title: ?[*]const u8,
+    titleLength: usize,
+    body: ?[*]const u8,
+    bodyLength: usize,
+  ) -> u32
+  pub unsafe extern "C" fn silk_macos_test_drop(
+    window: u32,
+    kind: u32,
+    x: f64,
+    y: f64,
+    paths: ?[*]const u8,
+    length: usize,
+  ) -> u8
 } else {
   pub unsafe fn silk_macos_start() -> i32 {
     return 2
@@ -450,6 +492,53 @@ static if Intrinsic.targetOperatingSystem() == "darwin" {
   }
 
   pub unsafe fn silk_macos_test_uses_fiber() -> u8 {
+    return 0
+  }
+
+  pub unsafe fn silk_macos_tray_begin() -> () {
+    return ()
+  }
+
+  pub unsafe fn silk_macos_tray_commit(
+    pixels: ?[*]const u8,
+    width: u32,
+    height: u32,
+    tooltip: ?[*]const u8,
+    tooltipLength: usize,
+    flags: u32,
+  ) -> u8 {
+    return 0
+  }
+
+  pub unsafe fn silk_macos_tray_remove() -> () {
+    return ()
+  }
+
+  pub unsafe fn silk_macos_shortcut_register(id: u32, code: u32, modifiers: u32) -> u8 {
+    return 0
+  }
+
+  pub unsafe fn silk_macos_shortcut_unregister(id: u32) -> () {
+    return ()
+  }
+
+  pub unsafe fn silk_macos_notify(
+    title: ?[*]const u8,
+    titleLength: usize,
+    body: ?[*]const u8,
+    bodyLength: usize,
+  ) -> u32 {
+    return 0
+  }
+
+  pub unsafe fn silk_macos_test_drop(
+    window: u32,
+    kind: u32,
+    x: f64,
+    y: f64,
+    paths: ?[*]const u8,
+    length: usize,
+  ) -> u8 {
     return 0
   }
 }
