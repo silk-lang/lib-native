@@ -1426,6 +1426,11 @@ static NSCursor *cursor_for(uint32_t cursor) {
     case 18: return [NSCursor dragCopyCursor];
     case 19: return [NSCursor dragLinkCursor];
     case 20: return [NSCursor contextualMenuCursor];
+    case 22: return private_cursor(@"busyButClickableCursor", [NSCursor arrowCursor]);
+    case 23: return private_cursor(@"busyButClickableCursor", [NSCursor arrowCursor]);
+    case 24: return private_cursor(@"_helpCursor", [NSCursor arrowCursor]);
+    case 25: return private_cursor(@"zoomInCursor", [NSCursor arrowCursor]);
+    case 26: return private_cursor(@"zoomOutCursor", [NSCursor arrowCursor]);
     default: return hidden_cursor();
     }
 }
