@@ -21,6 +21,7 @@ union Tasks {
   GenerateDevice { pub sourceFile: String },
   Coverage { pub upstream: Option<String> },
 }
+
 impl CommandLine for Tasks {
   static fn command() -> Command<Tasks> {
     return Command<Tasks>.make("tasks", "Metal bridge generation and declaration coverage")
@@ -31,9 +32,13 @@ impl CommandLine for Tasks {
       |> Command.variant("GenerateDevice", "Regenerate the device slice from an upstream device.rs")
       |> Command.arg("sourceFile", Opt.about("Path to metal-rs/src/device.rs") |> Opt.required)
       |> Command.variant("Coverage", "Audit upstream mappings and Silk target declarations")
-      |> Command.option("upstream", Opt.about("Refresh the inventory from this pinned metal-rs checkout first"))
+      |> Command.option(
+        "upstream",
+        Opt.about("Refresh the inventory from this pinned metal-rs checkout first"),
+      )
   }
 }
+
 impl TaskSet for Tasks {
   effect fn perform(self: Tasks) -> ()
     ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
@@ -64,6 +69,8 @@ impl TaskSet for Tasks {
     }
   }
 }
-pub effect fn main() -> i32 ? &mut HostInput {
+
+pub effect fn main() -> i32
+  ? &mut HostInput {
   return run Task.main<Tasks>()
 }

@@ -1,0 +1,140 @@
+import silk.build.plan { Framework, Library, Plan }
+import silk.build.step { sourcePath }
+
+static fn plan() -> Plan {
+  let mut plan = Plan.empty()
+  if Intrinsic.targetOperatingSystem() == "linux" {
+    plan = plan
+      |> Plan.compileSources(
+        "c",
+        sourcePath("native/linux/protocols"),
+        "*.c",
+        &["-std=c11", "-O2"],
+        &[],
+      )
+  }
+  if Intrinsic.targetOperatingSystem() == "linux" {
+    plan = plan
+      |> Plan.compileNative(
+        "c",
+        sourcePath("native/common/core.c"),
+        &[
+          "-std=c11",
+          "-O2",
+          "-Wall",
+          "-Wextra",
+          "-Werror",
+          "-Wno-unused-parameter",
+          "-Wno-missing-field-initializers",
+        ],
+        &[sourcePath("native/linux/protocols")],
+      )
+    plan = plan
+      |> Plan.compileSources(
+        "c",
+        sourcePath("native/linux"),
+        "*.c",
+        &[
+          "-std=c11",
+          "-O2",
+          "-Wall",
+          "-Wextra",
+          "-Werror",
+          "-Wno-unused-parameter",
+          "-Wno-missing-field-initializers",
+        ],
+        &[sourcePath("native/linux/protocols")],
+      )
+  }
+  if Intrinsic.targetOperatingSystem() == "darwin" {
+    plan = plan
+      |> Plan.compileNative(
+        "objc",
+        sourcePath("native/macos/bridge.m"),
+        &[
+          "-fobjc-arc",
+          "-fblocks",
+          "-O2",
+          "-Wall",
+          "-Wextra",
+          "-Werror",
+          "-Wno-unused-parameter",
+          "-Wno-deprecated-declarations",
+          "-mmacosx-version-min=14.0",
+        ],
+        &[],
+      )
+  }
+  if Intrinsic.targetOperatingSystem() == "darwin" {
+    plan = plan |> Plan.linkFramework("Cocoa", Framework.make())
+  }
+  if Intrinsic.targetOperatingSystem() == "darwin" {
+    plan = plan |> Plan.linkFramework("QuartzCore", Framework.make())
+  }
+  if Intrinsic.targetOperatingSystem() == "darwin" {
+    plan = plan |> Plan.linkFramework("UniformTypeIdentifiers", Framework.make())
+  }
+  if Intrinsic.targetOperatingSystem() == "darwin" {
+    plan = plan |> Plan.linkFramework("Carbon", Framework.make())
+  }
+  if Intrinsic.targetOperatingSystem() == "darwin" {
+    plan = plan |> Plan.linkFramework("UserNotifications", Framework.make())
+  }
+  if Intrinsic.targetOperatingSystem() == "linux" {
+    plan = plan |> Plan.linkLibrary("X11", Library.dynamicSearch())
+  }
+  if Intrinsic.targetOperatingSystem() == "linux" {
+    plan = plan |> Plan.linkLibrary("xkbcommon", Library.dynamicSearch())
+  }
+  if Intrinsic.targetOperatingSystem() == "linux" {
+    plan = plan |> Plan.linkLibrary("wayland-client", Library.dynamicSearch())
+  }
+  if Intrinsic.targetOperatingSystem() == "linux" {
+    plan = plan |> Plan.linkLibrary("wayland-cursor", Library.dynamicSearch())
+  }
+  if Intrinsic.targetOperatingSystem() == "windows" {
+    plan = plan |> Plan.linkArchive(Plan.archivePath("win32-bridge", "silkwindow.lib"))
+  }
+  if Intrinsic.targetOperatingSystem() == "windows" {
+    plan = plan |> Plan.linkLibrary("user32", Library.dynamicSearch())
+  }
+  if Intrinsic.targetOperatingSystem() == "windows" {
+    plan = plan |> Plan.linkLibrary("gdi32", Library.dynamicSearch())
+  }
+  if Intrinsic.targetOperatingSystem() == "windows" {
+    plan = plan |> Plan.linkLibrary("imm32", Library.dynamicSearch())
+  }
+  if Intrinsic.targetOperatingSystem() == "windows" {
+    plan = plan |> Plan.linkLibrary("dwmapi", Library.dynamicSearch())
+  }
+  if Intrinsic.targetOperatingSystem() == "windows" {
+    plan = plan |> Plan.linkLibrary("shell32", Library.dynamicSearch())
+  }
+  if Intrinsic.targetOperatingSystem() == "windows" {
+    plan = plan |> Plan.linkLibrary("comdlg32", Library.dynamicSearch())
+  }
+  if Intrinsic.targetOperatingSystem() == "windows" {
+    plan = plan |> Plan.linkLibrary("ole32", Library.dynamicSearch())
+  }
+  if Intrinsic.targetOperatingSystem() == "windows" {
+    plan = plan |> Plan.linkLibrary("uxtheme", Library.dynamicSearch())
+  }
+  if Intrinsic.targetOperatingSystem() == "windows" {
+    plan = plan |> Plan.linkLibrary("uuid", Library.dynamicSearch())
+  }
+  if Intrinsic.targetOperatingSystem() == "windows" {
+    plan = plan |> Plan.linkLibrary("advapi32", Library.dynamicSearch())
+  }
+  if Intrinsic.targetOperatingSystem() == "windows" {
+    plan = plan |> Plan.linkArchive(Plan.archivePath("win32-bridge", "kernel32.lib"))
+  }
+  if Intrinsic.targetOperatingSystem() == "windows" {
+    plan = plan |> Plan.linkArchive(Plan.archivePath("win32-bridge", "ucrt.lib"))
+  }
+  if Intrinsic.targetOperatingSystem() == "windows" {
+    plan = plan |> Plan.linkArchive(Plan.archivePath("win32-bridge", "vcruntime.lib"))
+  }
+  return plan
+}
+
+pub const PLAN: Plan = plan()

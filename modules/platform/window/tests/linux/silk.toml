@@ -1,7 +1,7 @@
 [package]
 name = "platform-window-tests-linux"
 version = "0.1.0"
-silk-version = "0.1.0-dev.74+205aea3f5b2e"
+silk-version = "0.1.0-dev.87+37fa5f8857de"
 
 [dependencies]
 smoke = { path = "../smoke", package = "platform-window-tests-smoke" }

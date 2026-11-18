@@ -1,0 +1,39 @@
+import silk.build.plan { Framework, Plan }
+import silk.build.step { sourcePath }
+
+static fn plan() -> Plan {
+  let mut plan = Plan.empty()
+  if Intrinsic.targetOperatingSystem() == "darwin" {
+    plan = plan
+      |> Plan.compileSources(
+        "objc",
+        sourcePath("native"),
+        "*.m",
+        &[
+          "-fno-objc-arc",
+          "-fblocks",
+          "-O2",
+          "-Wall",
+          "-Wextra",
+          "-Wno-deprecated-declarations",
+          "-mmacosx-version-min=14.0",
+        ],
+        &[sourcePath("native")],
+      )
+  }
+  if Intrinsic.targetOperatingSystem() == "darwin" {
+    plan = plan |> Plan.linkFramework("Foundation", Framework.make())
+  }
+  if Intrinsic.targetOperatingSystem() == "darwin" {
+    plan = plan |> Plan.linkFramework("Metal", Framework.make())
+  }
+  if Intrinsic.targetOperatingSystem() == "darwin" {
+    plan = plan |> Plan.linkFramework("QuartzCore", Framework.make())
+  }
+  if Intrinsic.targetOperatingSystem() == "darwin" {
+    plan = plan |> Plan.linkFramework("MetalPerformanceShaders", Framework.make())
+  }
+  return plan
+}
+
+pub const PLAN: Plan = plan()
