@@ -120,8 +120,11 @@ or a drawn title bar where the compositor wants client-side decorations; fractio
 with viewporter; frame callbacks for pacing (with a timer until the first one arrives, since
 hidden surfaces get none); xkbcommon with compose and key repeat; text-input-v3;
 `wl_data_device` for the clipboard; cursor-shape when offered. X11: XIM with preedit
-callbacks, the `CLIPBOARD` selection, `_NET_WM` hints. File dialogs run `zenity` or
-`kdialog` as a child process (`SILK_WINDOW_DIALOG` names another command).
+callbacks, the `CLIPBOARD` selection, `_NET_WM` hints. File dialogs use the
+`org.freedesktop.portal.FileChooser` portal when the session bus has one (inside Flatpak too;
+parented to the window under X11, unparented under Wayland), else run `zenity` or `kdialog` as
+a child process. `SILK_WINDOW_DIALOG` names another command and `SILK_WINDOW_PORTAL=0` skips
+the portal.
 
 **Browser** (`browser/window-host.js`). A window is a canvas; `RawSurface.Canvas` carries its
 handle and the canvas has the id `silk-window-<handle>` for `SurfaceTarget.canvasId`. Keys,

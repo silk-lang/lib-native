@@ -38,6 +38,8 @@ enum {
     SILK_EVENT_GLOBAL_SHORTCUT = 29,   // code: the shortcut's id
     SILK_EVENT_TRAY_CLICKED = 30,      // code: the mouse button
     SILK_EVENT_NOTIFICATION_CLICKED = 31, // code: the notification's id
+    SILK_EVENT_CONTEXT_MENU_CLOSED = 32,  // a context menu closed with nothing chosen
+    SILK_EVENT_TOUCH = 33,                // never sent: Macs have no touchscreens
 };
 
 // tray_commit flags.
@@ -105,9 +107,10 @@ void silk_macos_focus(uint32_t window);
 void silk_macos_minimize(uint32_t window);
 void silk_macos_toggle_full_screen(uint32_t window);
 void silk_macos_start_window_drag(uint32_t window);
-// Centres the window controls in a bar `height` points tall at the top of the content, as far
-// from the left edge as from the top; 0 leaves them where AppKit puts them.
-void silk_macos_set_controls_height(uint32_t window, double height);
+// Places the window controls in a bar `height` points tall at the top of the content, their
+// top-left corner `left` and `top` points from the window's edges. A 0 `top` centres them in
+// the bar and a 0 `left` matches the top gap; a 0 `height` leaves them where AppKit puts them.
+void silk_macos_set_controls(uint32_t window, double height, double left, double top);
 void silk_macos_set_cursor(uint32_t window, uint32_t cursor);
 void silk_macos_set_ime(uint32_t window, uint8_t enabled, double x, double y, double width,
                         double height);
@@ -150,6 +153,17 @@ void silk_macos_tray_begin(void);
 uint8_t silk_macos_tray_commit(const uint8_t *pixels, uint32_t width, uint32_t height,
                          const uint8_t *tooltip, size_t tooltipLength, uint32_t flags);
 void silk_macos_tray_remove(void);
+
+// A context menu at (x, y) in the window's content, in points. Its items are described with
+// the menu_* calls between context_menu_begin and context_menu_commit, like the tray's. A
+// chosen item delivers MENU_ACTION; closing it without a choice delivers CONTEXT_MENU_CLOSED.
+// Returns 1 when the menu will show.
+void silk_macos_context_menu_begin(void);
+uint8_t silk_macos_context_menu_commit(uint32_t window, double x, double y);
+
+// The dock icon's badge, "" for none, and its progress bar, a negative fraction for none.
+void silk_macos_set_badge(const uint8_t *text, size_t length);
+void silk_macos_set_progress(double fraction);
 
 // A shortcut that delivers GLOBAL_SHORTCUT with `id` whichever app has focus: the key with
 // KeyCode `code` and exactly the modifier bits `modifiers`. Registering an id again replaces

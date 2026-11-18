@@ -2,6 +2,9 @@
 //
 // - Notifications: org.freedesktop.Notifications. The server's ids are mapped to ours,
 //   and its ActionInvoked signal for the "default" action is a click.
+// - The dock badge and progress: com.canonical.Unity.LauncherEntry, which Ubuntu's dock, KDE's
+//   task manager, Plank and Dash to Dock read. The entry names the app's desktop file.
+// - File dialogs: org.freedesktop.portal.FileChooser, which works inside Flatpak too.
 // - The tray icon: a StatusNotifierItem registered with the StatusNotifierWatcher, which
 //   KDE, most panels and GNOME's AppIndicator extension host. Its menu is exported with
 //   com.canonical.dbusmenu.
@@ -39,6 +42,8 @@ enum { NAME_DO_NOT_QUEUE = 4 };
 #define T_INT32 'i'
 #define T_UINT32 'u'
 #define T_BOOLEAN 'b'
+#define T_INT64 'x'
+#define T_DOUBLE 'd'
 #define T_BYTE 'y'
 #define T_OBJECT_PATH 'o'
 #define T_ARRAY 'a'
@@ -274,6 +279,244 @@ static void notification_signal(DBusMessage *message) {
         }
         return;
     }
+}
+
+// ---------------------------------------------------------------------------------------
+// File dialogs: org.freedesktop.portal.FileChooser. The portal shows the desktop's own
+// chooser, outside a Flatpak sandbox too, and answers with a Response signal on a request
+// object whose path the caller can predict from its handle_token.
+
+#define PORTAL_NAME "org.freedesktop.portal.Desktop"
+#define PORTAL_PATH "/org/freedesktop/portal/desktop"
+#define CHOOSER_INTERFACE "org.freedesktop.portal.FileChooser"
+
+typedef struct PortalRequest {
+    uint32_t dialog;
+    char path[160];
+} PortalRequest;
+
+static PortalRequest portalRequests[16];
+static uint32_t portalVersion; // 0 until asked, UINT32_MAX when there is no FileChooser
+static uint32_t portalToken;
+
+// The FileChooser version, or 0 without the portal. Asking starts the portal if the bus can
+// activate it.
+static uint32_t chooser_version(void) {
+    if (portalVersion) return portalVersion == UINT32_MAX ? 0 : portalVersion;
+    portalVersion = UINT32_MAX;
+    if (!load()) return 0;
+    DBusMessage *call = dbus.message_new_method_call(PORTAL_NAME, PORTAL_PATH,
+                                                     "org.freedesktop.DBus.Properties", "Get");
+    if (!call) return 0;
+    DBusMessageIter args;
+    dbus.message_iter_init_append(call, &args);
+    append_string(&args, CHOOSER_INTERFACE);
+    append_string(&args, "version");
+    DBusError error;
+    dbus.error_init(&error);
+    DBusMessage *reply = dbus.connection_send_with_reply_and_block(bus, call, 5000, &error);
+    dbus.error_free(&error);
+    dbus.message_unref(call);
+    if (!reply) return 0;
+    DBusMessageIter values, variant;
+    uint32_t version = 0;
+    if (dbus.message_iter_init(reply, &values) && dbus.message_iter_get_arg_type(&values) == T_VARIANT) {
+        dbus.message_iter_recurse(&values, &variant);
+        if (dbus.message_iter_get_arg_type(&variant) == T_UINT32)
+            dbus.message_iter_get_basic(&variant, &version);
+    }
+    dbus.message_unref(reply);
+    if (!version) return 0;
+    portalVersion = version;
+    DBusError matchError;
+    dbus.error_init(&matchError);
+    dbus.bus_add_match(bus,
+                       "type='signal',interface='org.freedesktop.portal.Request',member='Response'",
+                       &matchError);
+    dbus.error_free(&matchError);
+    return version;
+}
+
+static void append_bytes_entry(DBusMessageIter *dict, const char *key, const char *text) {
+    DBusMessageIter entry, variant, bytes;
+    dbus.message_iter_open_container(dict, T_DICT_ENTRY, NULL, &entry);
+    append_string(&entry, key);
+    dbus.message_iter_open_container(&entry, T_VARIANT, "ay", &variant);
+    dbus.message_iter_open_container(&variant, T_ARRAY, "y", &bytes);
+    // A byte string with its final NUL, as the portal wants for paths.
+    const uint8_t *data = (const uint8_t *)text;
+    dbus.message_iter_append_fixed_array(&bytes, T_BYTE, &data, (int)strlen(text) + 1);
+    dbus.message_iter_close_container(&variant, &bytes);
+    dbus.message_iter_close_container(&entry, &variant);
+    dbus.message_iter_close_container(dict, &entry);
+}
+
+// One filter named `label` that matches `extensions`, in either case.
+static void append_filters(DBusMessageIter *dict, const char *label, char **extensions,
+                           size_t count) {
+    DBusMessageIter entry, variant, filters, filter, patterns, pattern;
+    dbus.message_iter_open_container(dict, T_DICT_ENTRY, NULL, &entry);
+    append_string(&entry, "filters");
+    dbus.message_iter_open_container(&entry, T_VARIANT, "a(sa(us))", &variant);
+    dbus.message_iter_open_container(&variant, T_ARRAY, "(sa(us))", &filters);
+    dbus.message_iter_open_container(&filters, T_STRUCT, NULL, &filter);
+    append_string(&filter, label);
+    dbus.message_iter_open_container(&filter, T_ARRAY, "(us)", &patterns);
+    for (size_t i = 0; i < count; i++) {
+        // Glob patterns are case sensitive; [pP][nN][gG] matches both.
+        size_t length = strlen(extensions[i]);
+        char *glob = malloc(length * 4 + 3);
+        if (!glob) abort();
+        char *at = glob;
+        *at++ = '*';
+        *at++ = '.';
+        for (size_t c = 0; c < length; c++) {
+            char lower = extensions[i][c], upper = lower;
+            if (lower >= 'a' && lower <= 'z') upper = (char)(lower - 32);
+            else if (lower >= 'A' && lower <= 'Z') lower = (char)(lower + 32);
+            if (lower == upper) {
+                *at++ = lower;
+            } else {
+                *at++ = '[';
+                *at++ = lower;
+                *at++ = upper;
+                *at++ = ']';
+            }
+        }
+        *at = 0;
+        uint32_t kind = 0;
+        dbus.message_iter_open_container(&patterns, T_STRUCT, NULL, &pattern);
+        dbus.message_iter_append_basic(&pattern, T_UINT32, &kind);
+        append_string(&pattern, glob);
+        dbus.message_iter_close_container(&patterns, &pattern);
+        free(glob);
+    }
+    dbus.message_iter_close_container(&filter, &patterns);
+    dbus.message_iter_close_container(&filters, &filter);
+    dbus.message_iter_close_container(&variant, &filters);
+    dbus.message_iter_close_container(&entry, &variant);
+    dbus.message_iter_close_container(dict, &entry);
+}
+
+bool silk_portal_dialog(uint32_t dialog, bool save, const char *title, const char *directory,
+                        const char *name, const char *label, char **extensions,
+                        size_t extensionCount, bool directories, bool multiple,
+                        const char *parent) {
+    const char *disabled = getenv("SILK_WINDOW_PORTAL");
+    if (disabled && strcmp(disabled, "0") == 0) return false;
+    uint32_t version = chooser_version();
+    // Directories need version 3; an older portal would let a file be chosen instead.
+    if (!version || (directories && version < 3)) return false;
+    PortalRequest *slot = NULL;
+    for (size_t i = 0; i < 16 && !slot; i++)
+        if (!portalRequests[i].dialog) slot = &portalRequests[i];
+    if (!slot) return false;
+
+    char token[32];
+    snprintf(token, sizeof token, "silk%u_%u", (unsigned)getpid(), ++portalToken);
+    // The request's path: the sender's unique name without ':' and with '.' as '_'.
+    const char *unique = dbus.bus_get_unique_name(bus);
+    char sender[96] = {0};
+    size_t s = 0;
+    for (const char *c = unique && unique[0] == ':' ? unique + 1 : unique; c && *c && s + 1 < sizeof sender; c++)
+        sender[s++] = *c == '.' ? '_' : *c;
+    snprintf(slot->path, sizeof slot->path, PORTAL_PATH "/request/%s/%s", sender, token);
+
+    DBusMessage *call = dbus.message_new_method_call(PORTAL_NAME, PORTAL_PATH, CHOOSER_INTERFACE,
+                                                     save ? "SaveFile" : "OpenFile");
+    if (!call) return false;
+    DBusMessageIter args, options;
+    dbus.message_iter_init_append(call, &args);
+    append_string(&args, parent);
+    append_string(&args, title);
+    dbus.message_iter_open_container(&args, T_ARRAY, "{sv}", &options);
+    const char *tokenText = token;
+    append_entry(&options, "handle_token", T_STRING, &tokenText);
+    dbus_bool_t modal = 1;
+    append_entry(&options, "modal", T_BOOLEAN, &modal);
+    if (save) {
+        if (name[0]) append_entry(&options, "current_name", T_STRING, &name);
+    } else {
+        dbus_bool_t many = multiple, folders = directories;
+        append_entry(&options, "multiple", T_BOOLEAN, &many);
+        if (directories) append_entry(&options, "directory", T_BOOLEAN, &folders);
+    }
+    if (directory[0] && (save || version >= 3)) append_bytes_entry(&options, "current_folder", directory);
+    if (!directories && extensionCount) append_filters(&options, label, extensions, extensionCount);
+    dbus.message_iter_close_container(&args, &options);
+
+    DBusError error;
+    dbus.error_init(&error);
+    DBusMessage *reply = dbus.connection_send_with_reply_and_block(bus, call, 5000, &error);
+    dbus.error_free(&error);
+    dbus.message_unref(call);
+    if (!reply) return false;
+    // Portals before version 0.9 answer with a path of their own choosing.
+    DBusMessageIter handle;
+    if (dbus.message_iter_init(reply, &handle) && dbus.message_iter_get_arg_type(&handle) == T_OBJECT_PATH) {
+        const char *path = NULL;
+        dbus.message_iter_get_basic(&handle, &path);
+        if (path) snprintf(slot->path, sizeof slot->path, "%s", path);
+    }
+    dbus.message_unref(reply);
+    slot->dialog = dialog;
+    return true;
+}
+
+static void portal_response(DBusMessage *message) {
+    const char *path = dbus.message_get_path(message);
+    PortalRequest *request = NULL;
+    for (size_t i = 0; i < 16 && path && !request; i++)
+        if (portalRequests[i].dialog && strcmp(portalRequests[i].path, path) == 0)
+            request = &portalRequests[i];
+    if (!request) return;
+    DBusMessageIter args, results, entry, variant, uris;
+    uint32_t response = 2;
+    // The chosen files as a text/uri-list, for the shared percent-decoding.
+    char *list = NULL;
+    size_t length = 0;
+    if (dbus.message_iter_init(message, &args) && dbus.message_iter_get_arg_type(&args) == T_UINT32) {
+        dbus.message_iter_get_basic(&args, &response);
+        if (response == 0 && dbus.message_iter_next(&args) &&
+            dbus.message_iter_get_arg_type(&args) == T_ARRAY) {
+            dbus.message_iter_recurse(&args, &results);
+            while (dbus.message_iter_get_arg_type(&results) == T_DICT_ENTRY) {
+                dbus.message_iter_recurse(&results, &entry);
+                const char *key = NULL;
+                dbus.message_iter_get_basic(&entry, &key);
+                if (key && strcmp(key, "uris") == 0 && dbus.message_iter_next(&entry)) {
+                    dbus.message_iter_recurse(&entry, &variant);
+                    if (dbus.message_iter_get_arg_type(&variant) == T_ARRAY) {
+                        dbus.message_iter_recurse(&variant, &uris);
+                        while (dbus.message_iter_get_arg_type(&uris) == T_STRING) {
+                            const char *uri = NULL;
+                            dbus.message_iter_get_basic(&uris, &uri);
+                            size_t add = strlen(uri);
+                            char *grown = realloc(list, length + add + 3);
+                            if (!grown) abort();
+                            list = grown;
+                            memcpy(list + length, uri, add);
+                            length += add;
+                            list[length++] = '\r';
+                            list[length++] = '\n';
+                            list[length] = 0;
+                            dbus.message_iter_next(&uris);
+                        }
+                    }
+                }
+                dbus.message_iter_next(&results);
+            }
+        }
+    }
+    SilkText texts[SILK_MAX_TEXTS];
+    size_t count = list ? silk_uri_list_paths((const uint8_t *)list, length, texts, SILK_MAX_TEXTS) : 0;
+    SilkWindowEvent event = silk_event(SILK_EVENT_DIALOG_CLOSED, 0);
+    event.code = request->dialog;
+    event.count = (uint32_t)count;
+    silk_queue_push_texts(&event, texts, count);
+    silk_free_texts(texts, count);
+    free(list);
+    request->dialog = 0;
 }
 
 // ---------------------------------------------------------------------------------------
@@ -715,6 +958,75 @@ void silk_window_tray_remove(void) {
 }
 
 // ---------------------------------------------------------------------------------------
+// The launcher entry: a count and progress on the app's icon in the dock.
+
+static int64_t launcherCount = -1; // negative: none
+static double launcherProgress = -1.0;
+
+// The desktop file the dock knows the app by: SILK_DESKTOP_ID (with or without .desktop),
+// else the program's name.
+static void launcher_uri(char *uri, size_t capacity) {
+    const char *id = getenv("SILK_DESKTOP_ID");
+    if (!id || !*id) id = program_invocation_short_name;
+    size_t length = strlen(id);
+    bool suffixed = length > 8 && strcmp(id + length - 8, ".desktop") == 0;
+    snprintf(uri, capacity, "application://%s%s", id, suffixed ? "" : ".desktop");
+}
+
+static uint8_t launcher_update(void) {
+    if (!load()) return 0;
+    DBusMessage *message = dbus.message_new_signal("/com/canonical/unity/launcherentry/silk",
+                                                   "com.canonical.Unity.LauncherEntry", "Update");
+    if (!message) return 0;
+    char uri[512];
+    launcher_uri(uri, sizeof uri);
+    DBusMessageIter args, properties;
+    dbus.message_iter_init_append(message, &args);
+    append_string(&args, uri);
+    dbus.message_iter_open_container(&args, T_ARRAY, "{sv}", &properties);
+    int64_t count = launcherCount < 0 ? 0 : launcherCount;
+    dbus_bool_t countShown = launcherCount >= 0;
+    double progress = launcherProgress < 0 ? 0 : launcherProgress;
+    dbus_bool_t progressShown = launcherProgress >= 0;
+    append_entry(&properties, "count", T_INT64, &count);
+    append_entry(&properties, "count-visible", T_BOOLEAN, &countShown);
+    append_entry(&properties, "progress", T_DOUBLE, &progress);
+    append_entry(&properties, "progress-visible", T_BOOLEAN, &progressShown);
+    dbus.message_iter_close_container(&args, &properties);
+    send_and_unref(message);
+    dbus.connection_flush(bus);
+    return 1;
+}
+
+uint8_t silk_window_set_badge(const uint8_t *text, size_t length) {
+    // Docks show counts only: other text shows no badge.
+    int64_t count = length ? 0 : -1;
+    for (size_t i = 0; i < length; i++) {
+        if (text[i] < '0' || text[i] > '9' || count > 1000000000) {
+            count = -1;
+            break;
+        }
+        count = count * 10 + (text[i] - '0');
+    }
+    launcherCount = count;
+    return launcher_update();
+}
+
+uint8_t silk_window_set_progress(double fraction) {
+    launcherProgress = fraction < 0 ? -1.0 : fraction > 1 ? 1.0 : fraction;
+    return launcher_update();
+}
+
+// A Linux window has no toolkit to draw a context menu: the app draws its own.
+uint8_t silk_window_context_menu_commit(uint32_t window, double x, double y) {
+    (void)window;
+    (void)x;
+    (void)y;
+    silk_context_commit_pending();
+    return 0;
+}
+
+// ---------------------------------------------------------------------------------------
 
 // For hosts that introspect before they call.
 static const char ITEM_XML[] =
@@ -770,6 +1082,8 @@ static void handle(DBusMessage *message) {
     if (type == MESSAGE_SIGNAL) {
         if (interface && strcmp(interface, "org.freedesktop.Notifications") == 0)
             notification_signal(message);
+        else if (interface && strcmp(interface, "org.freedesktop.portal.Request") == 0)
+            portal_response(message);
         return;
     }
     if (type != MESSAGE_METHOD_CALL || !path) return;

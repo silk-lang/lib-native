@@ -320,6 +320,9 @@ static void check_appearance(void) {
 @property(nonatomic, strong) SilkView *view;
 // The height of the app's own bar the window controls are centred in, 0 for AppKit's place.
 @property(nonatomic) double controlsHeight;
+// The controls' gaps from the left and top edges; 0 for the centred place.
+@property(nonatomic) double controlsLeft;
+@property(nonatomic) double controlsTop;
 @end
 
 static SilkWindow *find_window(uint32_t window) { return windows[@(window)]; }
@@ -831,7 +834,7 @@ static NSPoint top_left(NSWindow *window) {
     return NSMakePoint(frame.origin.x, top - NSMaxY(frame));
 }
 
-// Centres the window controls in the app's bar. AppKit lays the title bar out again whenever
+// Places the window controls in the app's bar, centred unless the app gave gaps. AppKit lays the title bar out again whenever
 // the window changes size or leaves full screen, so this runs after each.
 static void place_controls(SilkWindow *record) {
     double height = record.controlsHeight;
@@ -848,10 +851,13 @@ static void place_controls(SilkWindow *record) {
     bar.origin.y = window.frame.size.height - height;
     container.frame = bar;
     double pitch = minimize.frame.origin.x - close.frame.origin.x;
-    double margin = (height - close.frame.size.height) / 2;
+    double top = record.controlsTop > 0 ? record.controlsTop : (height - close.frame.size.height) / 2;
+    double left = record.controlsLeft > 0 ? record.controlsLeft : top;
+    // The container's origin is at its bottom.
+    double y = height - top - close.frame.size.height;
     NSArray<NSButton *> *controls = @[ close, minimize, zoom ];
     for (NSUInteger i = 0; i < controls.count; i++) {
-        [controls[i] setFrameOrigin:NSMakePoint(margin + pitch * i, margin)];
+        [controls[i] setFrameOrigin:NSMakePoint(left + pitch * i, y)];
     }
 }
 
@@ -1354,10 +1360,12 @@ void silk_macos_toggle_full_screen(uint32_t id) {
     }
 }
 
-void silk_macos_set_controls_height(uint32_t id, double height) {
+void silk_macos_set_controls(uint32_t id, double height, double left, double top) {
     SilkWindow *record = find_window(id);
     if (!record) return;
     record.controlsHeight = height;
+    record.controlsLeft = left;
+    record.controlsTop = top;
     place_controls(record);
 }
 
@@ -1886,6 +1894,59 @@ void silk_macos_tray_remove(void) {
     if (!statusItem) return;
     [NSStatusBar.systemStatusBar removeStatusItem:statusItem];
     statusItem = nil;
+}
+
+// Context menus share the tray's way of building a menu.
+void silk_macos_context_menu_begin(void) { silk_macos_tray_begin(); }
+
+uint8_t silk_macos_context_menu_commit(uint32_t window, double x, double y) {
+    NSMenu *menu = trayBuilding ? pendingBar : nil;
+    trayBuilding = NO;
+    pendingBar = nil;
+    [menuStack removeAllObjects];
+    SilkView *view = find_window(window).view;
+    if (!started || !menu || !view) return 0;
+    // The menu tracks in a loop of its own, so it opens once the current event is done.
+    dispatch_async(dispatch_get_main_queue(), ^{
+      BOOL chosen = [menu popUpMenuPositioningItem:nil atLocation:NSMakePoint(x, y) inView:view];
+      if (!chosen) {
+          push(blank_event(SILK_EVENT_CONTEXT_MENU_CLOSED, window));
+          flush();
+      }
+    });
+    return 1;
+}
+
+static NSProgressIndicator *dockProgress;
+
+void silk_macos_set_badge(const uint8_t *text, size_t length) {
+    NSApp.dockTile.badgeLabel = length ? string_from(text, length) : nil;
+}
+
+void silk_macos_set_progress(double fraction) {
+    NSDockTile *tile = NSApp.dockTile;
+    if (fraction < 0) {
+        if (!tile.contentView) return;
+        tile.contentView = nil;
+        dockProgress = nil;
+        [tile display];
+        return;
+    }
+    if (!dockProgress) {
+        NSSize size = tile.size;
+        NSImageView *icon = [NSImageView imageViewWithImage:NSApp.applicationIconImage];
+        icon.frame = NSMakeRect(0, 0, size.width, size.height);
+        dockProgress = [[NSProgressIndicator alloc]
+            initWithFrame:NSMakeRect(size.width * 0.1, size.height * 0.06, size.width * 0.8, 14)];
+        dockProgress.style = NSProgressIndicatorStyleBar;
+        dockProgress.indeterminate = NO;
+        dockProgress.minValue = 0;
+        dockProgress.maxValue = 1;
+        [icon addSubview:dockProgress];
+        tile.contentView = icon;
+    }
+    dockProgress.doubleValue = fraction > 1 ? 1 : fraction;
+    [tile display];
 }
 
 // ---------------------------------------------------------------------------------------

@@ -27,7 +27,7 @@ const EVENT = {
   MOUSE_ENTERED: 17, MOUSE_EXITED: 18, SCROLL: 19, PINCH: 20, MENU_ACTION: 21,
   DIALOG_CLOSED: 22, APPEARANCE_CHANGED: 23, QUIT_REQUESTED: 24, FILE_DRAG_ENTERED: 25,
   FILE_DRAG_MOVED: 26, FILE_DRAG_LEFT: 27, FILE_DROPPED: 28, GLOBAL_SHORTCUT: 29,
-  TRAY_CLICKED: 30, NOTIFICATION_CLICKED: 31,
+  TRAY_CLICKED: 30, NOTIFICATION_CLICKED: 31, CONTEXT_MENU_CLOSED: 32, TOUCH: 33,
 };
 const FLAG = { REPEAT: 1, IME_HANDLED: 2, ON: 4, PRECISE: 8 };
 const MOD = { SHIFT: 1, CONTROL: 2, ALT: 4, META: 8, CAPS_LOCK: 16 };
@@ -553,13 +553,33 @@ export class WindowHost {
       record.modifiers = modifiersOf(e);
       return record;
     };
+    // A finger is a Touch event, phase 1 down to 4 cancelled (src/bridge.silk PHASES); the
+    // canvas has touch-action: none, so the page leaves every gesture to the app.
+    const touch = (e, phase) => {
+      const record = at(event(EVENT.TOUCH, window.id), e);
+      record.code = e.pointerId >>> 0;
+      record.phase = phase;
+      this.push(record);
+    };
+    const finger = e => e.pointerType === 'touch';
     canvas.addEventListener('pointermove', e => {
+      if (finger(e)) {
+        if (e.buttons) touch(e, 2);
+        return;
+      }
       this.push(at(event(EVENT.MOUSE_MOVED, window.id), e));
+    }, options);
+    canvas.addEventListener('pointercancel', e => {
+      if (finger(e)) touch(e, 4);
     }, options);
     canvas.addEventListener('pointerdown', e => {
       this.focusInput(window.id);
       e.preventDefault();
       if (e.pointerId !== undefined) try { canvas.setPointerCapture(e.pointerId); } catch {}
+      if (finger(e)) {
+        touch(e, 1);
+        return;
+      }
       const record = at(event(EVENT.MOUSE_DOWN, window.id), e);
       record.code = BUTTONS[e.button] ?? 5;
       const clicks = window.clicks;
@@ -571,14 +591,20 @@ export class WindowHost {
       this.push(record);
     }, options);
     canvas.addEventListener('pointerup', e => {
+      if (finger(e)) {
+        touch(e, 3);
+        return;
+      }
       const record = at(event(EVENT.MOUSE_UP, window.id), e);
       record.code = BUTTONS[e.button] ?? 5;
       this.push(record);
     }, options);
     canvas.addEventListener('pointerenter', e => {
-      this.push(at(event(EVENT.MOUSE_ENTERED, window.id), e));
+      if (!finger(e)) this.push(at(event(EVENT.MOUSE_ENTERED, window.id), e));
     }, options);
-    canvas.addEventListener('pointerleave', () => this.push(event(EVENT.MOUSE_EXITED, window.id)), options);
+    canvas.addEventListener('pointerleave', e => {
+      if (!finger(e)) this.push(event(EVENT.MOUSE_EXITED, window.id));
+    }, options);
     canvas.addEventListener('contextmenu', e => e.preventDefault(), options);
     canvas.addEventListener('wheel', e => {
       e.preventDefault();
@@ -591,7 +617,8 @@ export class WindowHost {
       if (e.ctrlKey && e.deltaMode === 0) {
         // Trackpad pinches arrive as wheel events with Control held.
         const pinch = at(event(EVENT.PINCH, window.id), e);
-        pinch.dx = -e.deltaY / 100;
+        // Chromium reports a scale s as deltaY = -100 ln(s).
+        pinch.dx = Math.exp(-e.deltaY / 100) - 1;
         this.push(pinch);
         return;
       }
@@ -655,6 +682,21 @@ export class WindowHost {
   silk_window_tray_remove() {}
   silk_window_shortcut_register() { return 0; }
   silk_window_shortcut_unregister() {}
+  // The page's own context menu stays the app's to draw.
+  silk_window_context_menu_begin() { this.pendingMenu = null; }
+  silk_window_context_menu_commit() { return 0; }
+  silk_window_set_progress() { return 0; }
+
+  // An installed web app's badge (the Badging API): a count, or a dot for other text.
+  silk_window_set_badge(ptr, length) {
+    const nav = globalThis.navigator;
+    if (!nav?.setAppBadge) return 0;
+    const text = this.text(ptr, length);
+    const count = /^\d+$/.test(text) ? Number(text) : null;
+    const done = text === '' ? nav.clearAppBadge() : count !== null ? nav.setAppBadge(count) : nav.setAppBadge();
+    done?.catch?.(() => {});
+    return 1;
+  }
 
   silk_window_notify(titlePtr, titleLength, bodyPtr, bodyLength) {
     const Notice = globalThis.Notification;
@@ -701,7 +743,9 @@ export class WindowHost {
 
   // ---------------------------------------------------------------------------------
   // Dialogs: an open dialog is a file input, and needs a user gesture to show. Its paths
-  // are the file names; dialogFiles(id) has the File objects. Save dialogs are not offered.
+  // are the file names (relative paths for a directory); dialogFiles(id) has the File
+  // objects. A save dialog is showSaveFilePicker where the browser has it: its path is the
+  // chosen name, and dialogFiles(id) holds the FileSystemFileHandle to write through.
 
   silk_window_open_dialog(titlePtr, titleLength, dirPtr, dirLength, extPtr, extLength, flags, parent) {
     const document = globalThis.document;
@@ -734,7 +778,27 @@ export class WindowHost {
     return id;
   }
 
-  silk_window_save_dialog() { return 0; }
+  silk_window_save_dialog(titlePtr, titleLength, dirPtr, dirLength, namePtr, nameLength, extPtr, extLength, flags, parent) {
+    const pick = globalThis.showSaveFilePicker;
+    if (!this.started || typeof pick !== 'function') return 0;
+    const id = this.nextDialog++;
+    const extensions = this.text(extPtr, extLength).split(',').map(s => s.trim()).filter(Boolean);
+    const options = { suggestedName: this.text(namePtr, nameLength) || undefined };
+    if (extensions.length) {
+      options.types = [{ description: extensions.join(', '), accept: { 'application/octet-stream': extensions.map(e => `.${e}`) } }];
+    }
+    const finish = handles => {
+      this.dialogs.set(id, handles);
+      const record = event(EVENT.DIALOG_CLOSED);
+      record.code = id;
+      record.count = handles.length;
+      record.texts = handles.map(handle => handle.name);
+      this.push(record);
+    };
+    // Rejects when cancelled, or without a user gesture.
+    pick.call(globalThis, options).then(handle => finish([handle]), () => finish([]));
+    return id;
+  }
 
   // ---------------------------------------------------------------------------------
   // Clipboard: reads are synchronous, so they return what the app last wrote or what was

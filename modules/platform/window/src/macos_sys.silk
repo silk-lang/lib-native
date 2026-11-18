@@ -108,6 +108,8 @@ pub const TRAY_CLICKED: u32 = 30
 
 pub const NOTIFICATION_CLICKED: u32 = 31
 
+pub const CONTEXT_MENU_CLOSED: u32 = 32
+
 pub const TRAY_TEMPLATE: u32 = 1
 
 pub const FLAG_REPEAT: u32 = 1
@@ -167,7 +169,7 @@ static if Intrinsic.targetOperatingSystem() == "darwin" {
   pub unsafe extern "C" fn silk_macos_minimize(window: u32) -> ()
   pub unsafe extern "C" fn silk_macos_toggle_full_screen(window: u32) -> ()
   pub unsafe extern "C" fn silk_macos_start_window_drag(window: u32) -> ()
-  pub unsafe extern "C" fn silk_macos_set_controls_height(window: u32, height: f64) -> ()
+  pub unsafe extern "C" fn silk_macos_set_controls(window: u32, height: f64, left: f64, top: f64) -> ()
   pub unsafe extern "C" fn silk_macos_set_cursor(window: u32, cursor: u32) -> ()
   pub unsafe extern "C" fn silk_macos_set_ime(
     window: u32,
@@ -260,6 +262,10 @@ static if Intrinsic.targetOperatingSystem() == "darwin" {
     flags: u32,
   ) -> u8
   pub unsafe extern "C" fn silk_macos_tray_remove() -> ()
+  pub unsafe extern "C" fn silk_macos_context_menu_begin() -> ()
+  pub unsafe extern "C" fn silk_macos_context_menu_commit(window: u32, x: f64, y: f64) -> u8
+  pub unsafe extern "C" fn silk_macos_set_badge(text: ?[*]const u8, length: usize) -> ()
+  pub unsafe extern "C" fn silk_macos_set_progress(fraction: f64) -> ()
   pub unsafe extern "C" fn silk_macos_shortcut_register(id: u32, code: u32, modifiers: u32) -> u8
   pub unsafe extern "C" fn silk_macos_shortcut_unregister(id: u32) -> ()
   pub unsafe extern "C" fn silk_macos_notify(
@@ -357,7 +363,7 @@ static if Intrinsic.targetOperatingSystem() == "darwin" {
     return ()
   }
 
-  pub unsafe fn silk_macos_set_controls_height(window: u32, height: f64) -> () {
+  pub unsafe fn silk_macos_set_controls(window: u32, height: f64, left: f64, top: f64) -> () {
     return ()
   }
 
@@ -511,6 +517,22 @@ static if Intrinsic.targetOperatingSystem() == "darwin" {
   }
 
   pub unsafe fn silk_macos_tray_remove() -> () {
+    return ()
+  }
+
+  pub unsafe fn silk_macos_context_menu_begin() -> () {
+    return ()
+  }
+
+  pub unsafe fn silk_macos_context_menu_commit(window: u32, x: f64, y: f64) -> u8 {
+    return 0
+  }
+
+  pub unsafe fn silk_macos_set_badge(text: ?[*]const u8, length: usize) -> () {
+    return ()
+  }
+
+  pub unsafe fn silk_macos_set_progress(fraction: f64) -> () {
     return ()
   }
 
