@@ -1512,8 +1512,9 @@ static NSCursor *cursor_for(uint32_t cursor) {
     case 26: return private_cursor(@"zoomOutCursor", bundled_cursor(26, [NSCursor arrowCursor]));
     case 27: return bundled_cursor(27, [NSCursor crosshairCursor]);
     case 28: return bundled_cursor(28, [NSCursor operationNotAllowedCursor]);
-    case 29: return private_cursor(@"_moveCursor", bundled_cursor(29, [NSCursor openHandCursor]));
-    case 30: return private_cursor(@"_moveCursor", bundled_cursor(30, [NSCursor openHandCursor]));
+    // NSCursor answers to _moveCursor on macOS 26 but traps when called.
+    case 29: return bundled_cursor(29, [NSCursor openHandCursor]);
+    case 30: return bundled_cursor(29, [NSCursor openHandCursor]);
     case 31:
         return frame_cursor(FRAME_TOP | FRAME_LEFT, FRAME_OUTWARD,
                             private_cursor(@"_windowResizeNorthWestCursor", cursor_for(13)));
