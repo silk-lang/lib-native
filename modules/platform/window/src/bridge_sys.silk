@@ -219,6 +219,12 @@ static if Intrinsic.targetOperatingSystem() == "windows"
   pub unsafe extern "C" fn silk_window_context_menu_commit(window: u32, x: f64, y: f64) -> u8
   pub unsafe extern "C" fn silk_window_set_badge(text: ?[*]const u8, length: usize) -> u8
   pub unsafe extern "C" fn silk_window_set_progress(fraction: f64) -> u8
+  pub unsafe extern "C" fn silk_window_claim_instance(
+    name: ?[*]const u8,
+    nameLength: usize,
+    arguments: ?[*]const u8,
+    argumentsLength: usize,
+  ) -> u8
 } else {
   static if Intrinsic.targetArchitecture() == "wasm32" {
     pub unsafe extern "C" fn silk_window_start() -> i32 as "window#silk_window_start"
@@ -438,6 +444,12 @@ static if Intrinsic.targetOperatingSystem() == "windows"
     pub unsafe extern "C" fn silk_window_set_progress(
       fraction: f64,
     ) -> u8 as "window#silk_window_set_progress"
+    pub unsafe extern "C" fn silk_window_claim_instance(
+      name: ?[*]const u8,
+      nameLength: usize,
+      arguments: ?[*]const u8,
+      argumentsLength: usize,
+    ) -> u8 as "window#silk_window_claim_instance"
   } else {
     pub unsafe fn silk_window_start() -> i32 {
       return 3
@@ -735,6 +747,15 @@ static if Intrinsic.targetOperatingSystem() == "windows"
 
     pub unsafe fn silk_window_set_progress(fraction: f64) -> u8 {
       return 0
+    }
+
+    pub unsafe fn silk_window_claim_instance(
+      name: ?[*]const u8,
+      nameLength: usize,
+      arguments: ?[*]const u8,
+      argumentsLength: usize,
+    ) -> u8 {
+      return 1
     }
   }
 }

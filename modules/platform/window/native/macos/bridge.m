@@ -18,6 +18,8 @@
 #import <UserNotifications/UserNotifications.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 #import <objc/message.h>
+#include <errno.h>
+#include <fcntl.h>
 #include <math.h>
 #include <stdatomic.h>
 #include <pthread.h>
@@ -25,6 +27,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
+#include <sys/socket.h>
+#include <sys/un.h>
 #include "bridge.h"
 #include "keys.h"
 
@@ -917,6 +921,17 @@ static void place_controls(SilkWindow *record) {
     push(blank_event(SILK_EVENT_QUIT_REQUESTED, 0));
     flush();
     return NSTerminateCancel;
+}
+
+// Files opened from Finder and links of the app's URL schemes, at launch or later.
+- (void)application:(NSApplication *)application openURLs:(NSArray<NSURL *> *)urls {
+    NSMutableArray<NSData *> *texts = [NSMutableArray array];
+    for (NSURL *url in urls) {
+        NSString *text = url.isFileURL ? url.path : url.absoluteString;
+        if (text) [texts addObject:utf8(text)];
+    }
+    push_texts(blank_event(SILK_EVENT_OPEN_REQUESTED, 0), texts);
+    flush();
 }
 @end
 
@@ -1947,6 +1962,102 @@ void silk_macos_set_progress(double fraction) {
     }
     dockProgress.doubleValue = fraction > 1 ? 1 : fraction;
     [tile display];
+}
+
+// Single instance: the first launch listens on a Unix socket in the user's temporary
+// folder; a later one connects, writes its arguments and ends.
+static int instanceListener = -1;
+static dispatch_source_t instanceSource;
+
+static socklen_t instance_address(struct sockaddr_un *address, const uint8_t *name,
+                                  size_t length) {
+    memset(address, 0, sizeof *address);
+    address->sun_family = AF_UNIX;
+    NSString *folder = NSTemporaryDirectory();
+    NSString *base = [NSString stringWithFormat:@"silk-%@.sock", string_from(name, length)];
+    const char *path = [folder stringByAppendingPathComponent:base].fileSystemRepresentation;
+    // A long name is cut to fit sun_path; the folder is the user's own.
+    strlcpy(address->sun_path, path, sizeof address->sun_path);
+    address->sun_len = (uint8_t)SUN_LEN(address);
+    return (socklen_t)SUN_LEN(address);
+}
+
+static bool instance_hand_over(const struct sockaddr_un *address, socklen_t size,
+                               const uint8_t *arguments, size_t length) {
+    int fd = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (fd < 0) return false;
+    if (connect(fd, (const struct sockaddr *)address, size) != 0) {
+        close(fd);
+        return false;
+    }
+    size_t sent = 0;
+    while (sent < length) {
+        ssize_t wrote = write(fd, arguments + sent, length - sent);
+        if (wrote < 0 && errno == EINTR) continue;
+        if (wrote <= 0) break;
+        sent += (size_t)wrote;
+    }
+    close(fd);
+    return true;
+}
+
+static void instance_read(int fd) {
+    struct timeval limit = {1, 0};
+    setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &limit, sizeof limit);
+    NSMutableData *bytes = [NSMutableData data];
+    uint8_t chunk[4096];
+    while (bytes.length < (1u << 20)) {
+        ssize_t got = read(fd, chunk, sizeof chunk);
+        if (got < 0 && errno == EINTR) continue;
+        if (got <= 0) break;
+        [bytes appendBytes:chunk length:(NSUInteger)got];
+    }
+    NSMutableArray<NSData *> *texts = [NSMutableArray array];
+    const uint8_t *data = bytes.bytes;
+    NSUInteger start = 0;
+    for (NSUInteger i = 0; i < bytes.length; i++) {
+        if (data[i] != 0) continue;
+        [texts addObject:[NSData dataWithBytes:data + start length:i - start]];
+        start = i + 1;
+    }
+    push_texts(blank_event(SILK_EVENT_OPEN_REQUESTED, 0), texts);
+    flush();
+}
+
+uint8_t silk_macos_claim_instance(const uint8_t *name, size_t nameLength,
+                                  const uint8_t *arguments, size_t argumentsLength) {
+    struct sockaddr_un address;
+    socklen_t size = instance_address(&address, name, nameLength);
+    if (instance_hand_over(&address, size, arguments, argumentsLength)) return 0;
+    if (instanceListener >= 0) return 1;
+    // Nobody answered, so a socket file left there belongs to an instance that is gone.
+    unlink(address.sun_path);
+    int fd = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (fd < 0) return 1;
+    if (bind(fd, (const struct sockaddr *)&address, size) != 0 || listen(fd, 8) != 0) {
+        close(fd);
+        return 1;
+    }
+    fcntl(fd, F_SETFL, O_NONBLOCK);
+    fcntl(fd, F_SETFD, FD_CLOEXEC);
+    instanceListener = fd;
+    instanceSource = dispatch_source_create(DISPATCH_SOURCE_TYPE_READ, (uintptr_t)fd, 0,
+                                            dispatch_get_main_queue());
+    dispatch_source_set_event_handler(instanceSource, ^{
+      for (;;) {
+          int client = accept(instanceListener, NULL, NULL);
+          if (client < 0) {
+              if (errno == EINTR) continue;
+              break;
+          }
+          int flags = fcntl(client, F_GETFL);
+          fcntl(client, F_SETFL, flags & ~O_NONBLOCK);
+          instance_read(client);
+          close(client);
+      }
+    });
+    dispatch_resume(instanceSource);
+    return 1;
 }
 
 // ---------------------------------------------------------------------------------------

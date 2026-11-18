@@ -14,7 +14,7 @@ import event { Event, Key, Modifiers, MouseButton, Phase, ScrollDelta }
 import keys { keyCodeFromValue, namedKeyFromValue, KeyCode, NamedKey }
 import menu { MenuBar, MenuEntry, OpenDialog, SaveDialog, Shortcut, ShortcutKey, SystemItem }
 import platform { Platform }
-import shell { Tray, Notification }
+import shell { Tray, Notification, instanceArguments }
 import types {
   WindowId,
   DialogId,
@@ -108,6 +108,8 @@ const TRAY_CLICKED: u32 = 30
 const NOTIFICATION_CLICKED: u32 = 31
 
 const CONTEXT_MENU_CLOSED: u32 = 32
+
+const OPEN_REQUESTED: u32 = 33
 
 const TRAY_TEMPLATE: u32 = 1
 
@@ -564,6 +566,10 @@ impl BridgePlatform {
     if kind == CONTEXT_MENU_CLOSED {
       return Option<Event>.some(Event.ContextMenuClosed { window: window })
     }
+    if kind == OPEN_REQUESTED {
+      let arguments = run self.texts(raw.count)
+      return Option<Event>.some(Event.OpenRequested { arguments: move arguments })
+    }
     return Option<Event>.None
   }
 
@@ -1001,6 +1007,19 @@ impl Platform for BridgePlatform {
     ! OutOfMemoryError
     ? &mut Allocator {
     return unsafe sys.silk_window_set_progress(fraction) != 0
+  }
+
+  effect fn claimSingleInstance(self: &mut Self, name: string, arguments: &[String]) -> bool
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let bytes = run instanceArguments(arguments)
+    let first = unsafe sys.silk_window_claim_instance(
+      BridgePlatform.bytes(name),
+      String.byteLength(name),
+      Pointer.fromSlice(bytes.asSlice()),
+      bytes.length(),
+    )
+    return first != 0
   }
 
   effect fn registerShortcut(self: &mut Self, id: u32, code: KeyCode, modifiers: Modifiers) -> bool

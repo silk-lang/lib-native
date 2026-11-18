@@ -97,6 +97,12 @@ pub struct HeadlessPlatform {
   pub badge: String,
   /// The progress on the app's icon; negative for none.
   pub progress: f64,
+  /// The name `claimSingleInstance` claimed.
+  pub instance: Option<String>,
+  /// Set to pretend another instance runs: `claimSingleInstance` then hands it the
+  /// arguments, kept in `handedOver`, and says false.
+  pub otherInstance: bool,
+  pub handedOver: List<String>,
 }
 
 impl HeadlessPlatform {
@@ -124,6 +130,9 @@ impl HeadlessPlatform {
       contextMenu: Option<HeadlessContextMenu>.None,
       badge: String.make(),
       progress: -1.0,
+      instance: Option<String>.None,
+      otherInstance: false,
+      handedOver: List<String>.make(),
     }
   }
 
@@ -235,6 +244,19 @@ impl HeadlessPlatform {
     ! OutOfMemoryError
     ? &mut Allocator {
     run self.queue.append(Event.NotificationClicked { id: id })
+  }
+
+  /// Queues `Event.OpenRequested`, as a later launch with `arguments` would.
+  pub effect fn openRequested(self: &mut Self, arguments: &[string]) -> ()
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let mut list = List<String>.make()
+    let mut i: usize = 0
+    while i < arguments.length {
+      run list.append(run String.copy(arguments[i]))
+      i = i + 1
+    }
+    run self.queue.append(Event.OpenRequested { arguments: move list })
   }
 
   /// Chooses the item with `action` in the open context menu, or closes it without a choice
@@ -602,6 +624,21 @@ impl Platform for HeadlessPlatform {
     ! OutOfMemoryError
     ? &mut Allocator {
     self.progress = if fraction < 0.0 { -1.0 } else if fraction > 1.0 { 1.0 } else { fraction }
+    return true
+  }
+
+  effect fn claimSingleInstance(self: &mut Self, name: string, arguments: &[String]) -> bool
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    if self.otherInstance {
+      let mut i: usize = 0
+      while i < arguments.length {
+        run self.handedOver.append(run String.copy(String.view(&arguments[i])))
+        i = i + 1
+      }
+      return false
+    }
+    self.instance = Option<String>.some(run String.copy(name))
     return true
   }
 }

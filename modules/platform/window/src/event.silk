@@ -241,6 +241,10 @@ pub union Event {
   /// A menu from `Platform.showContextMenu` closed without an item chosen. A chosen item
   /// sends `MenuAction` instead.
   ContextMenuClosed { pub window: WindowId },
+  /// The app was asked to open `arguments`: a later launch handed over its command line
+  /// (see `Platform.claimSingleInstance`), or the system opened files or a link of the app's
+  /// URL scheme with it, which on macOS reaches the running app this way at any launch.
+  OpenRequested { pub arguments: List<String> },
   /// The user asked to quit, from the app menu or the system. The app decides whether to
   /// stop its event loop.
   QuitRequested,

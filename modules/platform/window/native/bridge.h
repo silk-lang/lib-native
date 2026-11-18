@@ -44,6 +44,7 @@ enum {
     SILK_EVENT_TRAY_CLICKED = 30,      // code: the mouse button
     SILK_EVENT_NOTIFICATION_CLICKED = 31, // code: the notification's id
     SILK_EVENT_CONTEXT_MENU_CLOSED = 32,  // window: closed without an item chosen
+    SILK_EVENT_OPEN_REQUESTED = 33,       // texts: the arguments to open
 };
 
 // tray_commit flags.
@@ -221,6 +222,13 @@ uint8_t silk_window_context_menu_commit(uint32_t window, double x, double y);
 // for it.
 uint8_t silk_window_set_badge(const uint8_t *text, size_t length);
 uint8_t silk_window_set_progress(double fraction);
+
+// Makes this process the only instance of the app `name` for this user. `arguments` holds
+// each argument followed by a zero byte. Returns 1 when this is the first instance, whose
+// later launches deliver OPEN_REQUESTED with their arguments; 0 when another instance runs and
+// was handed `arguments`, so this process should end.
+uint8_t silk_window_claim_instance(const uint8_t *name, size_t nameLength,
+                                   const uint8_t *arguments, size_t argumentsLength);
 
 // Test hooks for the smoke tests: drive the system as the user would. Each returns 1 when
 // it did something and 0 when the backend cannot simulate it.

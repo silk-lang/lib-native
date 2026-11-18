@@ -919,7 +919,20 @@ static void hotkey_pressed(int hotkey);
 static HWND trayWindow;
 static LRESULT tray_message(UINT message, WPARAM wParam, LPARAM lParam);
 
+static HWND instanceWindow;
+static void instance_launch(const COPYDATASTRUCT *data);
+// WM_COPYDATA's tag for a later launch's arguments.
+#define SILK_INSTANCE_TAG 0x53494c4b
+
 static LRESULT CALLBACK window_proc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
+    if (hwnd && hwnd == instanceWindow) {
+        if (message == WM_COPYDATA) {
+            instance_launch((const COPYDATASTRUCT *)lParam);
+            yield_if_ready();
+            return TRUE;
+        }
+        return DefWindowProcW(hwnd, message, wParam, lParam);
+    }
     if (hwnd && hwnd == trayWindow) {
         LRESULT result = tray_message(message, wParam, lParam);
         yield_if_ready();
@@ -1759,6 +1772,93 @@ static void apply_taskbar(Win32Window *window) {
         ITaskbarList3_SetProgressState(list, window->hwnd, TBPF_NORMAL);
         ITaskbarList3_SetProgressValue(list, window->hwnd, (ULONGLONG)lround(progressValue * 1000), 1000);
     }
+}
+
+// Single instance: the first launch holds a named mutex and a message-only window titled for
+// the app; a later one finds that window and sends it its arguments with WM_COPYDATA.
+static WCHAR *instance_title(const uint8_t *name, size_t length) {
+    static const char prefix[] = "silk-instance.";
+    size_t total = sizeof prefix - 1 + length;
+    uint8_t *joined = malloc(total ? total : 1);
+    if (!joined) return NULL;
+    memcpy(joined, prefix, sizeof prefix - 1);
+    memcpy(joined + sizeof prefix - 1, name, length);
+    WCHAR *title = wide(joined, total);
+    free(joined);
+    return title;
+}
+
+static void instance_launch(const COPYDATASTRUCT *data) {
+    if (!data || data->dwData != SILK_INSTANCE_TAG) return;
+    const uint8_t *bytes = data->lpData;
+    size_t length = data->cbData;
+    SilkText texts[SILK_MAX_TEXTS];
+    size_t count = 0, start = 0;
+    for (size_t i = 0; i < length && count < SILK_MAX_TEXTS; i++) {
+        if (bytes[i] != 0) continue;
+        texts[count].bytes = (uint8_t *)bytes + start;
+        texts[count].length = i - start;
+        count++;
+        start = i + 1;
+    }
+    SilkWindowEvent event = silk_event(SILK_EVENT_OPEN_REQUESTED, 0);
+    event.count = (uint32_t)count;
+    silk_queue_push_texts(&event, texts, count);
+}
+
+static HANDLE instanceMutex;
+
+static bool instance_hand_over(const WCHAR *title, const uint8_t *arguments, size_t length) {
+    // The first instance may still be starting: give its window a moment to appear.
+    for (int attempt = 0; attempt < 50; attempt++) {
+        HWND target = FindWindowExW(HWND_MESSAGE, NULL, L"SilkWindow", title);
+        if (target) {
+            DWORD process = 0;
+            GetWindowThreadProcessId(target, &process);
+            // Lets the first instance bring its window forward.
+            AllowSetForegroundWindow(process);
+            COPYDATASTRUCT data = {SILK_INSTANCE_TAG, (DWORD)length, (PVOID)arguments};
+            DWORD_PTR result = 0;
+            return SendMessageTimeoutW(target, WM_COPYDATA, 0, (LPARAM)&data, SMTO_ABORTIFHUNG,
+                                       5000, &result) != 0;
+        }
+        Sleep(20);
+    }
+    return false;
+}
+
+uint8_t silk_window_claim_instance(const uint8_t *name, size_t nameLength,
+                                   const uint8_t *arguments, size_t argumentsLength) {
+    WCHAR *title = instance_title(name, nameLength);
+    if (!title) return 1;
+    if (instanceWindow) {
+        bool handed = instance_hand_over(title, arguments, argumentsLength);
+        free(title);
+        return handed ? 0 : 1;
+    }
+    size_t titleLength = wcslen(title);
+    WCHAR *mutexName = malloc((titleLength + 7) * sizeof(WCHAR));
+    if (!mutexName) {
+        free(title);
+        return 1;
+    }
+    wcscpy(mutexName, L"Local\\");
+    wcscat(mutexName, title);
+    HANDLE held = CreateMutexW(NULL, TRUE, mutexName);
+    DWORD failure = GetLastError();
+    free(mutexName);
+    if (held && failure == ERROR_ALREADY_EXISTS) {
+        CloseHandle(held);
+        bool handed = instance_hand_over(title, arguments, argumentsLength);
+        free(title);
+        return handed ? 0 : 1;
+    }
+    // Held for the life of the process.
+    instanceMutex = held;
+    instanceWindow = CreateWindowExW(0, L"SilkWindow", title, 0, 0, 0, 0, 0, HWND_MESSAGE, NULL,
+                                     instance, NULL);
+    free(title);
+    return 1;
 }
 
 uint8_t silk_window_set_badge(const uint8_t *text, size_t length) {

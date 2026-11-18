@@ -174,4 +174,15 @@ pub interface Platform {
     ? &mut Allocator {
     return false
   }
+
+  /// Makes this process the only running instance of the app `name` (a reverse-DNS id such as
+  /// "com.example.notes"), for this user. True when it is the first: later launches hand
+  /// their `arguments` to it as `Event.OpenRequested` instead of running. False when another
+  /// instance runs: it has been handed `arguments`, and this process should end. A system
+  /// that cannot tell says true.
+  effect fn claimSingleInstance(self: &mut Self, name: string, arguments: &[String]) -> bool
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    return true
+  }
 }

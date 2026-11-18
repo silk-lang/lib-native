@@ -12,7 +12,7 @@ import macos_sys as sys
 import macos_sys { RawEvent }
 import menu { MenuBar, MenuEntry, OpenDialog, SaveDialog, Shortcut, ShortcutKey, SystemItem }
 import platform { Platform }
-import shell { Tray, Notification }
+import shell { Tray, Notification, instanceArguments }
 import types {
   WindowId,
   DialogId,
@@ -380,6 +380,10 @@ impl MacPlatform {
     }
     if kind == sys.NOTIFICATION_CLICKED {
       return Option<Event>.some(Event.NotificationClicked { id: raw.code })
+    }
+    if kind == sys.OPEN_REQUESTED {
+      let arguments = run self.texts(raw.count)
+      return Option<Event>.some(Event.OpenRequested { arguments: move arguments })
     }
     if kind == sys.CONTEXT_MENU_CLOSED {
       return Option<Event>.some(Event.ContextMenuClosed { window: WindowId { value: raw.window } })
@@ -751,6 +755,19 @@ impl Platform for MacPlatform {
     ? &mut Allocator {
     unsafe sys.silk_macos_set_progress(fraction)
     return true
+  }
+
+  effect fn claimSingleInstance(self: &mut Self, name: string, arguments: &[String]) -> bool
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let bytes = run instanceArguments(arguments)
+    let first = unsafe sys.silk_macos_claim_instance(
+      MacPlatform.bytes(name),
+      String.byteLength(name),
+      Pointer.fromSlice(bytes.asSlice()),
+      bytes.length(),
+    )
+    return first != 0
   }
 
   effect fn registerShortcut(self: &mut Self, id: u32, code: KeyCode, modifiers: Modifiers) -> bool

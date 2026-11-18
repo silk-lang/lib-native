@@ -1,6 +1,24 @@
 //! The desktop around the windows: a tray icon with a menu, notifications, and shortcuts
 //! that work while another app has focus. Options are borrowed while the platform reads them.
 import menu { MenuBar }
+import silk.collections.list { List }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.text.string { String }
+
+/// `arguments` as the native bridges take them for `Platform.claimSingleInstance`: each
+/// followed by a zero byte.
+pub effect fn instanceArguments(arguments: &[String]) -> List<u8>
+  ! OutOfMemoryError
+  ? &mut Allocator {
+  let mut bytes = List<u8>.make()
+  let mut i: usize = 0
+  while i < arguments.length {
+    run bytes.appendSlice(String.utf8Bytes(String.view(&arguments[i])))
+    run bytes.append(0)
+    i = i + 1
+  }
+  return move bytes
+}
 
 /// The tray's icon: RGBA pixels, not premultiplied, row by row from the top left. 32 by 32
 /// pixels looks right everywhere; the system scales it to its tray.
