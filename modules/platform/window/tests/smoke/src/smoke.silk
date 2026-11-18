@@ -9,9 +9,12 @@ import window.event { Event, Key, Modifiers, MouseButton, ScrollDelta }
 import window.keys { KeyCode, NamedKey }
 import window.menu { MenuBar, OpenDialog, Shortcut, SystemItem }
 import window.shell { Notification, Tray, TrayIcon }
+import window.clipboard { ClipboardEntry }
 // Interface methods resolve through this import; silk#2819 reports it as unused.
 import window.platform { Platform as _Platform }
 import window.types { WindowOptions, WindowError, Wait, ImeState, RawSurface }
+import silk.collections.bytes { Bytes }
+import silk.collections.list { List }
 import silk.core.effect { Effect }
 import silk.core.option { Option }
 import silk.geometry.point { Point2 }
@@ -482,6 +485,22 @@ effect fn smoke(checks: &mut Checks) -> ()
     _ => {
       checks.check(false, "clipboard round trip")
     }
+  }
+
+  let mut entries = List<ClipboardEntry>.make()
+  run entries.append(ClipboardEntry { mime: run String.copy("text/plain"), data: run Bytes.copy(b"bold") })
+  run entries.append(ClipboardEntry { mime: run String.copy("text/html"), data: run Bytes.copy(b"<b>bold</b>") })
+  run entries.append(ClipboardEntry { mime: run String.copy("image/png"), data: run Bytes.copy(b"\x89PNG\r\n") })
+  run platform.writeClipboardItem(entries.asSlice())
+  let types = run platform.clipboardTypes()
+  checks.check(types.length() == 3 && types.asSlice()[1].view() == "text/html", "a rich copy offers text, HTML and PNG")
+  match move run platform.readClipboardType("text/html") {
+    Option<Bytes>.Some { value } => checks.check(value.asSlice() == b"<b>bold</b>", "clipboard HTML round trip")
+    _ => checks.check(false, "clipboard HTML round trip")
+  }
+  match move run platform.readClipboardType("image/png") {
+    Option<Bytes>.Some { value } => checks.check(value.asSlice() == b"\x89PNG\r\n", "clipboard PNG round trip")
+    _ => checks.check(false, "clipboard PNG round trip")
   }
 
   if backend == Backend.X11 || backend == Backend.Wayland {

@@ -46,6 +46,8 @@ const BUTTONS = [0, 2, 1, 3, 4];
 const CODE_INDEX = new Map(CODES.map((name, index) => [name, index]));
 const NAMED_INDEX = new Map(NAMED.map((name, index) => [name, index]));
 const encoder = new TextEncoder();
+// The MIME types the clipboard maps, in the order clipboard_types lists them.
+const CLIPBOARD_TYPES = ['text/plain', 'text/html', 'image/png'];
 const decoder = new TextDecoder();
 const apple = /Mac|iPhone|iPad/.test(globalThis.navigator?.platform ?? '');
 
@@ -83,7 +85,9 @@ export class WindowHost {
     this.current = [];
     this.menu = [];
     this.pendingMenu = null;
-    this.clipboard = '';
+    this.clipboard = new Map(); // MIME type -> bytes
+    this.pendingClipboard = null;
+    this.readCache = null;
     this.dialogs = new Map();
     this.nextDialog = 1;
     this.dropped = [];
@@ -226,8 +230,16 @@ export class WindowHost {
       }
     });
     document.addEventListener('paste', e => {
-      const text = e.clipboardData?.getData('text/plain');
-      if (text) this.clipboard = text;
+      const data = e.clipboardData;
+      if (!data) return;
+      const item = new Map();
+      for (const type of ['text/plain', 'text/html']) {
+        const text = data.getData(type);
+        if (text) item.set(type, encoder.encode(text));
+      }
+      const image = [...data.files].find(file => file.type === 'image/png');
+      if (item.size || image) this.clipboard = item;
+      image?.arrayBuffer().then(buffer => { if (this.clipboard === item) item.set('image/png', new Uint8Array(buffer)); });
     });
     this.watchScale();
     return 0;
@@ -755,15 +767,56 @@ export class WindowHost {
   // Clipboard: reads are synchronous, so they return what the app last wrote or what was
   // last pasted into the page; writes also go to the system clipboard when allowed.
 
-  silk_window_clipboard_read(ptr, capacity) {
-    const bytes = encoder.encode(this.clipboard);
+  // The two-call read protocol of bridge.h: a call without a buffer reads, the next copies.
+  serveRead(ptr, capacity, read) {
+    if (!ptr || !this.readCache) this.readCache = { bytes: read() };
+    const bytes = this.readCache.bytes;
+    if (!bytes) return -1n;
     if (ptr && capacity) this.bytes(ptr, Math.min(capacity, bytes.length)).set(bytes.subarray(0, capacity));
+    if (ptr) this.readCache = null;
     return BigInt(bytes.length);
   }
 
+  silk_window_clipboard_read(ptr, capacity) {
+    return this.serveRead(ptr, capacity, () => this.clipboard.get('text/plain') ?? null);
+  }
+
   silk_window_clipboard_write(ptr, length) {
-    this.clipboard = this.text(ptr, length);
-    globalThis.navigator?.clipboard?.writeText?.(this.clipboard).catch(() => {});
+    this.clipboard = new Map([['text/plain', this.bytes(ptr, length).slice()]]);
+    globalThis.navigator?.clipboard?.writeText?.(this.text(ptr, length)).catch(() => {});
+  }
+
+  silk_window_clipboard_types(ptr, capacity) {
+    return this.serveRead(ptr, capacity, () => {
+      const types = CLIPBOARD_TYPES.filter(type => this.clipboard.has(type));
+      return types.length ? encoder.encode(types.join('\n')) : null;
+    });
+  }
+
+  silk_window_clipboard_read_type(mime, mimeLength, ptr, capacity) {
+    const type = this.text(mime, mimeLength);
+    return this.serveRead(ptr, capacity, () => this.clipboard.get(type) ?? null);
+  }
+
+  silk_window_clipboard_begin() { this.pendingClipboard = new Map(); }
+
+  silk_window_clipboard_add(mime, mimeLength, ptr, length) {
+    const type = this.text(mime, mimeLength);
+    if (CLIPBOARD_TYPES.includes(type)) this.pendingClipboard?.set(type, this.bytes(ptr, length).slice());
+  }
+
+  silk_window_clipboard_commit() {
+    const item = this.pendingClipboard ?? new Map();
+    this.pendingClipboard = null;
+    this.clipboard = item;
+    const clipboard = globalThis.navigator?.clipboard;
+    if (typeof globalThis.ClipboardItem === 'function' && clipboard?.write) {
+      const parts = {};
+      for (const [type, bytes] of item) parts[type] = new Blob([bytes], { type });
+      clipboard.write([new ClipboardItem(parts)]).catch(() => {});
+    } else if (item.has('text/plain')) {
+      clipboard?.writeText?.(decoder.decode(item.get('text/plain'))).catch(() => {});
+    }
   }
 
   // ---------------------------------------------------------------------------------

@@ -26,7 +26,9 @@
 #include <shellapi.h>
 #include <shlobj.h>
 #include <shobjidl.h>
+#include <wincodec.h>
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "../common/core.h"
@@ -112,9 +114,6 @@ static double deadline;
 static HANDLE vblankEvent;
 static HANDLE wantVblank;
 
-// Clipboard.
-static uint8_t *clipboardText;
-static int64_t clipboardLength = -1;
 
 static Win32Window *find(uint32_t id) {
     for (size_t i = 0; i < windowCount; i++)
@@ -1850,48 +1849,312 @@ uint32_t silk_window_save_dialog(const uint8_t *title, size_t titleLength,
 // ---------------------------------------------------------------------------------------
 // Clipboard.
 
-int64_t silk_window_clipboard_read(uint8_t *destination, size_t capacity) {
-    if (!destination || clipboardLength < 0) {
-        free(clipboardText);
-        clipboardText = NULL;
-        clipboardLength = -1;
-        if (!OpenClipboard(helper)) return -1;
-        HANDLE data = GetClipboardData(CF_UNICODETEXT);
-        if (data) {
-            const WCHAR *text = GlobalLock(data);
-            if (text) {
-                size_t length = 0;
-                clipboardText = narrow(text, -1, &length);
-                clipboardLength = (int64_t)length;
-                GlobalUnlock(data);
+// "HTML Format" and "PNG", registered by the apps that use them; CF_DIBV5 stands in for PNG
+// for apps that only know bitmaps.
+static UINT html_format(void) {
+    static UINT format;
+    if (!format) format = RegisterClipboardFormatW(L"HTML Format");
+    return format;
+}
+static UINT png_format(void) {
+    static UINT format;
+    if (!format) format = RegisterClipboardFormatW(L"PNG");
+    return format;
+}
+
+// WIC, for converting between PNG and bitmaps. The GUIDs are spelled out so that no import
+// library is needed for them.
+static const GUID wicFactoryClass = {0xcacaf262, 0x9370, 0x4615, {0xa1, 0x3b, 0x9f, 0x55, 0x39, 0xda, 0x4c, 0x0a}};
+static const GUID wicFactoryInterface = {0xec5ec8a9, 0xc395, 0x4314, {0x9c, 0x77, 0x54, 0xd7, 0xa9, 0x35, 0xff, 0x70}};
+static const GUID wicPng = {0x1b7cfaf4, 0x713f, 0x473c, {0xbb, 0xcd, 0x61, 0x37, 0x42, 0x5f, 0xae, 0xaf}};
+static const GUID wicBgra = {0x6fddc324, 0x4e03, 0x4bfe, {0xb1, 0x85, 0x3d, 0x77, 0x76, 0x8d, 0xc9, 0x0f}};
+
+static IWICImagingFactory *wic(void) {
+    static IWICImagingFactory *factory;
+    if (!factory &&
+        FAILED(CoCreateInstance(&wicFactoryClass, NULL, CLSCTX_INPROC_SERVER, &wicFactoryInterface,
+                                (void **)&factory)))
+        factory = NULL;
+    return factory;
+}
+
+// `width` x `height` BGRA rows, top first, as PNG bytes (malloc'd), or NULL.
+static uint8_t *encode_png(const uint8_t *bgra, UINT width, UINT height, size_t *length) {
+    IWICImagingFactory *factory = wic();
+    if (!factory) return NULL;
+    uint8_t *out = NULL;
+    IStream *stream = NULL;
+    IWICBitmapEncoder *encoder = NULL;
+    IWICBitmapFrameEncode *frame = NULL;
+    if (FAILED(CreateStreamOnHGlobal(NULL, TRUE, &stream))) return NULL;
+    WICPixelFormatGUID format = wicBgra;
+    if (SUCCEEDED(IWICImagingFactory_CreateEncoder(factory, &wicPng, NULL, &encoder)) &&
+        SUCCEEDED(IWICBitmapEncoder_Initialize(encoder, stream, WICBitmapEncoderNoCache)) &&
+        SUCCEEDED(IWICBitmapEncoder_CreateNewFrame(encoder, &frame, NULL)) &&
+        SUCCEEDED(IWICBitmapFrameEncode_Initialize(frame, NULL)) &&
+        SUCCEEDED(IWICBitmapFrameEncode_SetSize(frame, width, height)) &&
+        SUCCEEDED(IWICBitmapFrameEncode_SetPixelFormat(frame, &format)) && IsEqualGUID(&format, &wicBgra) &&
+        SUCCEEDED(IWICBitmapFrameEncode_WritePixels(frame, height, width * 4, width * height * 4, (BYTE *)bgra)) &&
+        SUCCEEDED(IWICBitmapFrameEncode_Commit(frame)) && SUCCEEDED(IWICBitmapEncoder_Commit(encoder))) {
+        HGLOBAL memory = NULL;
+        STATSTG stat;
+        if (SUCCEEDED(GetHGlobalFromStream(stream, &memory)) &&
+            SUCCEEDED(IStream_Stat(stream, &stat, STATFLAG_NONAME))) {
+            *length = (size_t)stat.cbSize.QuadPart;
+            out = malloc(*length ? *length : 1);
+            if (!out) abort();
+            memcpy(out, GlobalLock(memory), *length);
+            GlobalUnlock(memory);
+        }
+    }
+    if (frame) IWICBitmapFrameEncode_Release(frame);
+    if (encoder) IWICBitmapEncoder_Release(encoder);
+    IStream_Release(stream);
+    return out;
+}
+
+// A packed DIB (CF_DIB or CF_DIBV5) of 24 or 32 bits as PNG bytes, or NULL.
+static uint8_t *dib_to_png(const uint8_t *dib, size_t size, size_t *length) {
+    if (size < sizeof(BITMAPINFOHEADER)) return NULL;
+    const BITMAPINFOHEADER *header = (const BITMAPINFOHEADER *)dib;
+    LONG width = header->biWidth, height = header->biHeight;
+    bool bottomUp = height > 0;
+    if (!bottomUp) height = -height;
+    WORD bits = header->biBitCount;
+    if (width <= 0 || height <= 0 || (bits != 24 && bits != 32)) return NULL;
+    if (header->biCompression != BI_RGB && header->biCompression != BI_BITFIELDS) return NULL;
+    size_t offset = header->biSize;
+    if (header->biCompression == BI_BITFIELDS && header->biSize == sizeof(BITMAPINFOHEADER)) offset += 12;
+    size_t stride = (((size_t)width * bits + 31) / 32) * 4;
+    if (offset + stride * (size_t)height > size) return NULL;
+    uint8_t *bgra = malloc((size_t)width * (size_t)height * 4);
+    if (!bgra) abort();
+    bool anyAlpha = false;
+    for (LONG y = 0; y < height; y++) {
+        const uint8_t *row = dib + offset + stride * (size_t)(bottomUp ? height - 1 - y : y);
+        uint8_t *out = bgra + (size_t)y * (size_t)width * 4;
+        for (LONG x = 0; x < width; x++) {
+            const uint8_t *pixel = row + (size_t)x * (bits / 8);
+            out[x * 4] = pixel[0];
+            out[x * 4 + 1] = pixel[1];
+            out[x * 4 + 2] = pixel[2];
+            out[x * 4 + 3] = bits == 32 ? pixel[3] : 255;
+            if (bits == 32 && pixel[3]) anyAlpha = true;
+        }
+    }
+    // 32-bit bitmaps without alpha leave it 0: they are opaque.
+    if (bits == 32 && !anyAlpha)
+        for (size_t i = 3; i < (size_t)width * (size_t)height * 4; i += 4) bgra[i] = 255;
+    uint8_t *png = encode_png(bgra, (UINT)width, (UINT)height, length);
+    free(bgra);
+    return png;
+}
+
+// PNG bytes as a CF_DIBV5 global (bottom-up BGRA), or NULL.
+static HGLOBAL png_to_dib(const uint8_t *png, size_t length) {
+    IWICImagingFactory *factory = wic();
+    if (!factory) return NULL;
+    HGLOBAL result = NULL;
+    IWICStream *stream = NULL;
+    IWICBitmapDecoder *decoder = NULL;
+    IWICBitmapFrameDecode *frame = NULL;
+    IWICFormatConverter *converter = NULL;
+    UINT width = 0, height = 0;
+    if (SUCCEEDED(IWICImagingFactory_CreateStream(factory, &stream)) &&
+        SUCCEEDED(IWICStream_InitializeFromMemory(stream, (BYTE *)png, (DWORD)length)) &&
+        SUCCEEDED(IWICImagingFactory_CreateDecoderFromStream(factory, (IStream *)stream, NULL,
+                                                             WICDecodeMetadataCacheOnDemand, &decoder)) &&
+        SUCCEEDED(IWICBitmapDecoder_GetFrame(decoder, 0, &frame)) &&
+        SUCCEEDED(IWICImagingFactory_CreateFormatConverter(factory, &converter)) &&
+        SUCCEEDED(IWICFormatConverter_Initialize(converter, (IWICBitmapSource *)frame, &wicBgra,
+                                                 WICBitmapDitherTypeNone, NULL, 0.0,
+                                                 WICBitmapPaletteTypeCustom)) &&
+        SUCCEEDED(IWICFormatConverter_GetSize(converter, &width, &height)) && width && height) {
+        size_t stride = (size_t)width * 4, pixels = stride * height;
+        uint8_t *rows = malloc(pixels);
+        if (!rows) abort();
+        if (SUCCEEDED(IWICFormatConverter_CopyPixels(converter, NULL, (UINT)stride, (UINT)pixels, rows))) {
+            result = GlobalAlloc(GMEM_MOVEABLE, sizeof(BITMAPV5HEADER) + pixels);
+            if (result) {
+                uint8_t *out = GlobalLock(result);
+                BITMAPV5HEADER *header = (BITMAPV5HEADER *)out;
+                memset(header, 0, sizeof *header);
+                header->bV5Size = sizeof *header;
+                header->bV5Width = (LONG)width;
+                header->bV5Height = (LONG)height;
+                header->bV5Planes = 1;
+                header->bV5BitCount = 32;
+                header->bV5Compression = BI_BITFIELDS;
+                header->bV5SizeImage = (DWORD)pixels;
+                header->bV5RedMask = 0x00FF0000;
+                header->bV5GreenMask = 0x0000FF00;
+                header->bV5BlueMask = 0x000000FF;
+                header->bV5AlphaMask = 0xFF000000;
+                header->bV5CSType = 0x73524742; // LCS_sRGB, 'sRGB'
+                header->bV5Intent = LCS_GM_IMAGES;
+                for (UINT y = 0; y < height; y++)
+                    memcpy(out + sizeof *header + stride * y, rows + stride * (height - 1 - y), stride);
+                GlobalUnlock(result);
             }
         }
-        CloseClipboard();
-        if (clipboardLength < 0) return -1;
+        free(rows);
     }
-    if (destination && capacity)
-        memcpy(destination, clipboardText, (size_t)clipboardLength < capacity ? (size_t)clipboardLength : capacity);
-    int64_t length = clipboardLength;
-    if (destination) clipboardLength = -1; // the next read asks the system again
-    return length;
+    if (converter) IWICFormatConverter_Release(converter);
+    if (frame) IWICBitmapFrameDecode_Release(frame);
+    if (decoder) IWICBitmapDecoder_Release(decoder);
+    if (stream) IWICStream_Release(stream);
+    return result;
+}
+
+// The number after `key` in a CF_HTML header, or -1.
+static long html_offset(const char *header, size_t length, const char *key) {
+    size_t keyLength = strlen(key);
+    for (size_t i = 0; i + keyLength < length && i < 1024; i++)
+        if (memcmp(header + i, key, keyLength) == 0) return strtol(header + i + keyLength, NULL, 10);
+    return -1;
+}
+
+// `html` wrapped in the CF_HTML header that gives the offsets of the document and fragment.
+static HGLOBAL html_global(const uint8_t *html, size_t length) {
+    static const char prefix[] = "<html><body>\r\n<!--StartFragment-->";
+    static const char suffix[] = "<!--EndFragment-->\r\n</body></html>";
+    char header[160];
+    int headerLength = 0;
+    for (int pass = 0; pass < 2; pass++) {
+        size_t startFragment = (size_t)headerLength + sizeof prefix - 1;
+        size_t endFragment = startFragment + length;
+        headerLength = snprintf(header, sizeof header,
+                                "Version:0.9\r\nStartHTML:%010d\r\nEndHTML:%010d\r\n"
+                                "StartFragment:%010d\r\nEndFragment:%010d\r\n",
+                                headerLength, (int)(endFragment + sizeof suffix - 1),
+                                (int)startFragment, (int)endFragment);
+    }
+    size_t total = (size_t)headerLength + sizeof prefix - 1 + length + sizeof suffix - 1;
+    HGLOBAL memory = GlobalAlloc(GMEM_MOVEABLE, total + 1);
+    if (!memory) return NULL;
+    char *out = GlobalLock(memory);
+    memcpy(out, header, (size_t)headerLength);
+    memcpy(out + headerLength, prefix, sizeof prefix - 1);
+    memcpy(out + headerLength + sizeof prefix - 1, html, length);
+    memcpy(out + headerLength + sizeof prefix - 1 + length, suffix, sizeof suffix);
+    GlobalUnlock(memory);
+    return memory;
+}
+
+int64_t silk_window_clipboard_types(uint8_t *destination, size_t capacity) {
+    if (silk_read_needs_fetch(destination)) {
+        bool has[SILK_CLIP_KINDS] = {
+            IsClipboardFormatAvailable(CF_UNICODETEXT) != 0,
+            IsClipboardFormatAvailable(html_format()) != 0,
+            IsClipboardFormatAvailable(png_format()) || IsClipboardFormatAvailable(CF_DIBV5) ||
+                IsClipboardFormatAvailable(CF_DIB),
+        };
+        char list[64];
+        size_t length = silk_clip_types_of(has, list);
+        silk_read_set(length ? (const uint8_t *)list : NULL, length);
+    }
+    return silk_read_serve(destination, capacity);
+}
+
+// Reads kind `kind` from the open clipboard into the read cache.
+static void read_kind(int kind) {
+    silk_read_set(NULL, 0);
+    UINT format = kind == SILK_CLIP_TEXT ? CF_UNICODETEXT : kind == SILK_CLIP_HTML ? html_format() : png_format();
+    HANDLE data = GetClipboardData(format);
+    if (!data && kind == SILK_CLIP_PNG) {
+        data = GetClipboardData(CF_DIBV5);
+        if (!data) data = GetClipboardData(CF_DIB);
+        if (!data) return;
+        const uint8_t *dib = GlobalLock(data);
+        if (!dib) return;
+        size_t length = 0;
+        uint8_t *png = dib_to_png(dib, GlobalSize(data), &length);
+        GlobalUnlock(data);
+        if (png) silk_read_adopt(png, length);
+        return;
+    }
+    if (!data) return;
+    const uint8_t *bytes = GlobalLock(data);
+    if (!bytes) return;
+    size_t size = GlobalSize(data);
+    if (kind == SILK_CLIP_TEXT) {
+        size_t length = 0;
+        uint8_t *text = narrow((const WCHAR *)bytes, (int)wcsnlen((const WCHAR *)bytes, size / sizeof(WCHAR)), &length);
+        silk_read_adopt(text, length);
+    } else if (kind == SILK_CLIP_HTML) {
+        // The fragment that was copied, as browsers read it; the whole document without one.
+        long start = html_offset((const char *)bytes, size, "StartFragment:");
+        long end = html_offset((const char *)bytes, size, "EndFragment:");
+        if (start < 0 || end < start) {
+            start = html_offset((const char *)bytes, size, "StartHTML:");
+            end = html_offset((const char *)bytes, size, "EndHTML:");
+        }
+        if (start >= 0 && end >= start && (size_t)end <= size)
+            silk_read_set(bytes + start, (size_t)(end - start));
+    } else {
+        silk_read_set(bytes, size);
+    }
+    GlobalUnlock(data);
+}
+
+int64_t silk_window_clipboard_read_type(const uint8_t *mime, size_t mimeLength,
+                                        uint8_t *destination, size_t capacity) {
+    int kind = silk_clip_kind(mime, mimeLength);
+    if (kind < 0) return -1;
+    if (silk_read_needs_fetch(destination)) {
+        silk_read_set(NULL, 0);
+        if (OpenClipboard(helper)) {
+            read_kind(kind);
+            CloseClipboard();
+        }
+    }
+    return silk_read_serve(destination, capacity);
+}
+
+int64_t silk_window_clipboard_read(uint8_t *destination, size_t capacity) {
+    return silk_window_clipboard_read_type((const uint8_t *)"text/plain", 10, destination, capacity);
+}
+
+void silk_window_clipboard_commit(void) {
+    SilkClip clip = {0};
+    silk_clip_take_pending(&clip);
+    if (OpenClipboard(helper)) {
+        EmptyClipboard();
+        if (clip.has[SILK_CLIP_TEXT]) {
+            WCHAR *converted = wide(clip.data[SILK_CLIP_TEXT].bytes, clip.data[SILK_CLIP_TEXT].length);
+            size_t units = wcslen(converted) + 1;
+            HGLOBAL memory = GlobalAlloc(GMEM_MOVEABLE, units * sizeof(WCHAR));
+            if (memory) {
+                memcpy(GlobalLock(memory), converted, units * sizeof(WCHAR));
+                GlobalUnlock(memory);
+                if (!SetClipboardData(CF_UNICODETEXT, memory)) GlobalFree(memory);
+            }
+            free(converted);
+        }
+        if (clip.has[SILK_CLIP_HTML]) {
+            HGLOBAL memory = html_global(clip.data[SILK_CLIP_HTML].bytes, clip.data[SILK_CLIP_HTML].length);
+            if (memory && !SetClipboardData(html_format(), memory)) GlobalFree(memory);
+        }
+        if (clip.has[SILK_CLIP_PNG]) {
+            const SilkText *png = &clip.data[SILK_CLIP_PNG];
+            HGLOBAL memory = GlobalAlloc(GMEM_MOVEABLE, png->length ? png->length : 1);
+            if (memory) {
+                memcpy(GlobalLock(memory), png->bytes, png->length);
+                GlobalUnlock(memory);
+                if (!SetClipboardData(png_format(), memory)) GlobalFree(memory);
+            }
+            HGLOBAL dib = png_to_dib(png->bytes, png->length);
+            if (dib && !SetClipboardData(CF_DIBV5, dib)) GlobalFree(dib);
+        }
+        CloseClipboard();
+    }
+    silk_clip_free(&clip);
 }
 
 void silk_window_clipboard_write(const uint8_t *text, size_t length) {
-    WCHAR *converted = wide(text, length);
-    size_t units = wcslen(converted) + 1;
-    HGLOBAL memory = GlobalAlloc(GMEM_MOVEABLE, units * sizeof(WCHAR));
-    if (memory) {
-        memcpy(GlobalLock(memory), converted, units * sizeof(WCHAR));
-        GlobalUnlock(memory);
-        if (OpenClipboard(helper)) {
-            EmptyClipboard();
-            if (!SetClipboardData(CF_UNICODETEXT, memory)) GlobalFree(memory);
-            CloseClipboard();
-        } else {
-            GlobalFree(memory);
-        }
-    }
-    free(converted);
+    silk_window_clipboard_begin();
+    silk_window_clipboard_add((const uint8_t *)"text/plain", 10, text, length);
+    silk_window_clipboard_commit();
 }
 
 // ---------------------------------------------------------------------------------------

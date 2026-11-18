@@ -123,6 +123,16 @@ hidden surfaces get none); xkbcommon with compose and key repeat; text-input-v3;
 callbacks, the `CLIPBOARD` selection, `_NET_WM` hints. File dialogs run `zenity` or
 `kdialog` as a child process (`SILK_WINDOW_DIALOG` names another command).
 
+**Clipboard** (`clipboard`). The clipboard holds one item with a representation per MIME
+type: `writeClipboardItem` puts text/plain, text/html and image/png on it in one write,
+`clipboardTypes` and `readClipboardType` read them back, and `readClipboard` and
+`writeClipboard` are the text-only shorthand. macOS maps them to the string, HTML and PNG
+pasteboard types (TIFF is converted when an app put no PNG). Windows uses `CF_UNICODETEXT`,
+`HTML Format` (the copied fragment, as browsers read it) and `PNG`, and also writes a
+`CF_DIBV5` bitmap for apps that only read bitmaps; reads fall back to `CF_DIBV5`/`CF_DIB`,
+converted with WIC. X11 offers `UTF8_STRING`, `text/html` and `image/png` targets and moves
+large data with INCR both ways. Wayland offers and receives the same MIME types.
+
 **Browser** (`browser/window-host.js`). A window is a canvas; `RawSurface.Canvas` carries its
 handle and the canvas has the id `silk-window-<handle>` for `SurfaceTarget.canvasId`. Keys,
 text and composition go through one hidden textarea placed at the caret, so input methods
@@ -220,7 +230,7 @@ wayland-protocols and wayland-scanner); `silk generate --check` checks all decla
   `startWindowDrag`.
 - Wayland global shortcuts, which go through the desktop portal and ask the user to bind them.
 - X11: frames are paced at 60 Hz (or `SILK_WINDOW_REFRESH_HZ`) rather than read from
-  XRandR, and clipboard transfers do not use INCR, so very large texts are refused.
+  XRandR.
 - Wayland: `focus` cannot raise a window (the protocol leaves that to the compositor), and
   the drawn title bar has no resize edges.
 - Windows: Text Services Framework; IMM32 covers the input methods people use, and TSF would

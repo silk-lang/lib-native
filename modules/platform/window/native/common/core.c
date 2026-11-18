@@ -388,3 +388,85 @@ void silk_free_extensions(char **list) {
     for (char **p = list; *p; p++) free(*p);
     free(list);
 }
+
+// ---------------------------------------------------------------------------------------
+// Clipboard.
+
+const char *const silk_clip_mime[SILK_CLIP_KINDS] = {"text/plain", "text/html", "image/png"};
+
+int silk_clip_kind(const uint8_t *mime, size_t length) {
+    size_t end = 0;
+    while (end < length && mime[end] != ';' && mime[end] != ' ') end++;
+    for (int kind = 0; kind < SILK_CLIP_KINDS; kind++) {
+        const char *name = silk_clip_mime[kind];
+        if (strlen(name) == end && memcmp(name, mime, end) == 0) return kind;
+    }
+    return -1;
+}
+
+SilkClip silk_clip_pending;
+
+void silk_clip_free(SilkClip *clip) {
+    for (int kind = 0; kind < SILK_CLIP_KINDS; kind++) free(clip->data[kind].bytes);
+    memset(clip, 0, sizeof *clip);
+}
+
+void silk_clip_take_pending(SilkClip *out) {
+    silk_clip_free(out);
+    *out = silk_clip_pending;
+    memset(&silk_clip_pending, 0, sizeof silk_clip_pending);
+}
+
+size_t silk_clip_types_of(const bool has[SILK_CLIP_KINDS], char *out) {
+    size_t length = 0;
+    for (int kind = 0; kind < SILK_CLIP_KINDS; kind++) {
+        if (!has[kind]) continue;
+        if (length) out[length++] = '\n';
+        size_t size = strlen(silk_clip_mime[kind]);
+        memcpy(out + length, silk_clip_mime[kind], size);
+        length += size;
+    }
+    return length;
+}
+
+void silk_window_clipboard_begin(void) { silk_clip_free(&silk_clip_pending); }
+
+void silk_window_clipboard_add(const uint8_t *mime, size_t mimeLength, const uint8_t *data,
+                               size_t length) {
+    int kind = silk_clip_kind(mime, mimeLength);
+    if (kind < 0) return;
+    free(silk_clip_pending.data[kind].bytes);
+    uint8_t *copy = malloc(length ? length : 1);
+    if (!copy) abort();
+    if (length) memcpy(copy, data, length);
+    silk_clip_pending.has[kind] = true;
+    silk_clip_pending.data[kind] = (SilkText){copy, length};
+}
+
+static uint8_t *readCache;
+static int64_t readCacheLength = -1;
+
+bool silk_read_needs_fetch(const uint8_t *destination) { return !destination || readCacheLength < 0; }
+
+void silk_read_adopt(uint8_t *bytes, size_t length) {
+    free(readCache);
+    readCache = bytes;
+    readCacheLength = bytes ? (int64_t)length : -1;
+}
+
+void silk_read_set(const uint8_t *bytes, size_t length) {
+    uint8_t *copy = NULL;
+    if (bytes) {
+        copy = malloc(length ? length : 1);
+        if (!copy) abort();
+        if (length) memcpy(copy, bytes, length);
+    }
+    silk_read_adopt(copy, length);
+}
+
+int64_t silk_read_serve(uint8_t *destination, size_t capacity) {
+    if (destination && capacity && readCacheLength > 0)
+        memcpy(destination, readCache,
+               (size_t)readCacheLength < capacity ? (size_t)readCacheLength : capacity);
+    return readCacheLength;
+}

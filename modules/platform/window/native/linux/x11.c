@@ -63,15 +63,13 @@ static uint32_t nextWindow = 1;
 static uint8_t pressed[32];
 static Cursor cursors[32];
 static Cursor blankCursor;
-static uint8_t *clipboardText;
-static size_t clipboardLength;
+static SilkClip clipboard; // what this program put on CLIPBOARD
 static bool clipboardOwned;
-static uint8_t *clipboardRead;
-static int64_t clipboardReadLength = -1;
 
 static Atom WM_PROTOCOLS, WM_DELETE_WINDOW, NET_WM_NAME, UTF8_STRING, NET_WM_STATE,
     NET_WM_STATE_FULLSCREEN, NET_WM_MOVERESIZE, NET_ACTIVE_WINDOW, MOTIF_WM_HINTS, CLIPBOARD,
-    TARGETS, SILK_SELECTION, NET_WM_PID, RESOURCE_MANAGER, TEXT_ATOM;
+    TARGETS, SILK_SELECTION, NET_WM_PID, RESOURCE_MANAGER, TEXT_ATOM, INCR, TEXT_HTML,
+    IMAGE_PNG, TEXT_PLAIN, TEXT_PLAIN_UTF8;
 // XDND, the drag and drop protocol.
 static Atom XdndAware, XdndEnter, XdndPosition, XdndStatus, XdndLeave, XdndDrop, XdndFinished,
     XdndSelection, XdndActionCopy, XdndTypeList, URI_LIST, SILK_DND;
@@ -361,9 +359,11 @@ bool silk_x11_start(void) {
     const char *names[] = {"WM_PROTOCOLS", "WM_DELETE_WINDOW", "_NET_WM_NAME", "UTF8_STRING",
                            "_NET_WM_STATE", "_NET_WM_STATE_FULLSCREEN", "_NET_WM_MOVERESIZE",
                            "_NET_ACTIVE_WINDOW", "_MOTIF_WM_HINTS", "CLIPBOARD", "TARGETS",
-                           "SILK_SELECTION", "_NET_WM_PID", "RESOURCE_MANAGER", "TEXT"};
-    Atom atoms[15];
-    XInternAtoms(display, (char **)names, 15, False, atoms);
+                           "SILK_SELECTION", "_NET_WM_PID", "RESOURCE_MANAGER", "TEXT",
+                           "INCR", "text/html", "image/png", "text/plain",
+                           "text/plain;charset=utf-8"};
+    Atom atoms[20];
+    XInternAtoms(display, (char **)names, 20, False, atoms);
     WM_PROTOCOLS = atoms[0];
     WM_DELETE_WINDOW = atoms[1];
     NET_WM_NAME = atoms[2];
@@ -379,6 +379,11 @@ bool silk_x11_start(void) {
     NET_WM_PID = atoms[12];
     RESOURCE_MANAGER = atoms[13];
     TEXT_ATOM = atoms[14];
+    INCR = atoms[15];
+    TEXT_HTML = atoms[16];
+    IMAGE_PNG = atoms[17];
+    TEXT_PLAIN = atoms[18];
+    TEXT_PLAIN_UTF8 = atoms[19];
     const char *dndNames[] = {"XdndAware", "XdndEnter", "XdndPosition", "XdndStatus",
                               "XdndLeave", "XdndDrop", "XdndFinished", "XdndSelection",
                               "XdndActionCopy", "XdndTypeList", "text/uri-list", "SILK_DND"};
@@ -404,6 +409,7 @@ bool silk_x11_start(void) {
     if (hz && atof(hz) > 0) refreshInterval = 1.0 / atof(hz);
     frameEpoch = silk_now();
     helper = XCreateSimpleWindow(display, root, 0, 0, 1, 1, 0, 0, 0);
+    XSelectInput(display, helper, PropertyChangeMask); // INCR transfers
     XSelectInput(display, root, PropertyChangeMask);
     open_im();
     return true;
@@ -501,6 +507,77 @@ void silk_x11_close(uint32_t id) {
 static char *testDrag;
 static size_t testDragLength;
 
+static int target_kind(Atom target);
+
+// Larger properties go in INCR chunks of this size.
+static size_t incr_chunk(void) {
+    long words = XExtendedMaxRequestSize(display);
+    if (!words) words = XMaxRequestSize(display);
+    size_t bytes = (size_t)words * 4;
+    return bytes > 4096 ? (bytes - 1024 > 262144 ? 262144 : bytes - 1024) : 4096;
+}
+
+// An INCR transfer to another client: a chunk each time it deletes the property.
+typedef struct Transfer {
+    Window requestor;
+    Atom property, type;
+    uint8_t *bytes;
+    size_t length, sent;
+    bool done; // the closing empty chunk went out
+} Transfer;
+static Transfer transfers[8];
+
+static void send_property(Window requestor, Atom property, Atom type, const SilkText *data) {
+    if (data->length <= incr_chunk()) {
+        XChangeProperty(display, requestor, property, type, 8, PropModeReplace, data->bytes,
+                        (int)data->length);
+        return;
+    }
+    Transfer *transfer = NULL;
+    for (size_t i = 0; i < 8 && !transfer; i++)
+        if (!transfers[i].bytes) transfer = &transfers[i];
+    if (!transfer) return; // too many at once; the requestor times out
+    transfer->bytes = malloc(data->length);
+    if (!transfer->bytes) abort();
+    memcpy(transfer->bytes, data->bytes, data->length);
+    transfer->requestor = requestor;
+    transfer->property = property;
+    transfer->type = type;
+    transfer->length = data->length;
+    transfer->sent = 0;
+    transfer->done = false;
+    XSelectInput(display, requestor, PropertyChangeMask);
+    long size = (long)data->length;
+    XChangeProperty(display, requestor, property, INCR, 32, PropModeReplace,
+                    (unsigned char *)&size, 1);
+}
+
+// The next chunk of a transfer, once the requestor deleted the last. True when it was one.
+static bool continue_transfer(XPropertyEvent *event) {
+    if (event->state != PropertyDelete) return false;
+    for (size_t i = 0; i < 8; i++) {
+        Transfer *transfer = &transfers[i];
+        if (!transfer->bytes || transfer->requestor != event->window ||
+            transfer->property != event->atom)
+            continue;
+        if (transfer->done) {
+            free(transfer->bytes);
+            transfer->bytes = NULL;
+            XSelectInput(display, event->window, NoEventMask);
+            return true;
+        }
+        size_t chunk = transfer->length - transfer->sent;
+        if (chunk > incr_chunk()) chunk = incr_chunk();
+        XChangeProperty(display, transfer->requestor, transfer->property, transfer->type, 8,
+                        PropModeReplace, transfer->bytes + transfer->sent, (int)chunk);
+        transfer->sent += chunk;
+        if (chunk == 0) transfer->done = true;
+        XFlush(display);
+        return true;
+    }
+    return false;
+}
+
 static void answer_selection_request(XSelectionRequestEvent *request) {
     XSelectionEvent reply;
     memset(&reply, 0, sizeof reply);
@@ -524,16 +601,30 @@ static void answer_selection_request(XSelectionRequestEvent *request) {
         }
     } else if (request->selection == CLIPBOARD && clipboardOwned) {
         if (request->target == TARGETS) {
-            Atom targets[] = {TARGETS, UTF8_STRING, XA_STRING, TEXT_ATOM};
+            Atom targets[9];
+            int count = 0;
+            targets[count++] = TARGETS;
+            if (clipboard.has[SILK_CLIP_TEXT]) {
+                targets[count++] = UTF8_STRING;
+                targets[count++] = TEXT_PLAIN_UTF8;
+                targets[count++] = TEXT_PLAIN;
+                targets[count++] = XA_STRING;
+                targets[count++] = TEXT_ATOM;
+            }
+            if (clipboard.has[SILK_CLIP_HTML]) targets[count++] = TEXT_HTML;
+            if (clipboard.has[SILK_CLIP_PNG]) targets[count++] = IMAGE_PNG;
             XChangeProperty(display, request->requestor, property, XA_ATOM, 32,
-                            PropModeReplace, (unsigned char *)targets, 4);
+                            PropModeReplace, (unsigned char *)targets, count);
             reply.property = property;
-        } else if (request->target == UTF8_STRING || request->target == XA_STRING ||
-                   request->target == TEXT_ATOM) {
-            XChangeProperty(display, request->requestor, property,
-                            request->target == XA_STRING ? XA_STRING : UTF8_STRING, 8,
-                            PropModeReplace, clipboardText, (int)clipboardLength);
-            reply.property = property;
+        } else {
+            int kind = target_kind(request->target);
+            if (kind >= 0 && clipboard.has[kind]) {
+                Atom type = request->target == XA_STRING ? XA_STRING
+                            : request->target == TEXT_ATOM ? UTF8_STRING
+                                                           : request->target;
+                send_property(request->requestor, property, type, &clipboard.data[kind]);
+                reply.property = property;
+            }
         }
     }
     XSendEvent(display, request->requestor, False, 0, (XEvent *)&reply);
@@ -541,67 +632,152 @@ static void answer_selection_request(XSelectionRequestEvent *request) {
 
 static void handle_event(XEvent *event);
 
-int64_t silk_x11_clipboard_read(uint8_t *destination, size_t capacity) {
-    if (clipboardOwned) {
-        if (destination && capacity)
-            memcpy(destination, clipboardText, clipboardLength < capacity ? clipboardLength : capacity);
-        return (int64_t)clipboardLength;
-    }
-    // A second call (with a buffer) reads what the first one fetched.
-    if (destination && clipboardReadLength >= 0) {
-        size_t length = (size_t)clipboardReadLength;
-        if (capacity) memcpy(destination, clipboardRead, length < capacity ? length : capacity);
-        return clipboardReadLength;
-    }
-    free(clipboardRead);
-    clipboardRead = NULL;
-    clipboardReadLength = -1;
-    if (XGetSelectionOwner(display, CLIPBOARD) == None) return -1;
-    XConvertSelection(display, CLIPBOARD, UTF8_STRING, SILK_SELECTION, helper, CurrentTime);
-    XFlush(display);
+// Waits up to a second for an event on `helper` that `match` accepts, handling the others.
+static bool wait_helper(bool (*match)(XEvent *), XEvent *out) {
     double deadline = silk_now() + 1.0;
     for (;;) {
         while (XPending(display)) {
-            XEvent event;
-            XNextEvent(display, &event);
-            if (event.type == SelectionNotify && event.xselection.requestor == helper) {
-                if (event.xselection.property == None) return -1;
-                Atom type;
-                int format;
-                unsigned long count, remaining;
-                unsigned char *data = NULL;
-                XGetWindowProperty(display, helper, SILK_SELECTION, 0, 0x7FFFFFFF, True,
-                                   AnyPropertyType, &type, &format, &count, &remaining, &data);
-                if (!data || format != 8) {
-                    if (data) XFree(data);
-                    return -1;
-                }
-                clipboardRead = malloc(count ? count : 1);
-                if (!clipboardRead) abort();
-                memcpy(clipboardRead, data, count);
-                clipboardReadLength = (int64_t)count;
-                XFree(data);
-                if (destination && capacity) memcpy(destination, clipboardRead, count < capacity ? count : capacity);
-                return clipboardReadLength;
-            }
-            if (!XFilterEvent(&event, None)) handle_event(&event);
+            XNextEvent(display, out);
+            if (out->xany.window == helper && match(out)) return true;
+            if (!XFilterEvent(out, None)) handle_event(out);
         }
         double now = silk_now();
-        if (now >= deadline) return -1;
+        if (now >= deadline) return false;
         struct pollfd fd = {ConnectionNumber(display), POLLIN, 0};
         poll(&fd, 1, (int)ceil((deadline - now) * 1000.0));
     }
 }
 
-void silk_x11_clipboard_write(const uint8_t *text, size_t length) {
-    free(clipboardText);
-    clipboardText = malloc(length ? length : 1);
-    if (!clipboardText) abort();
-    if (length) memcpy(clipboardText, text, length);
-    clipboardLength = length;
+static bool is_selection_notify(XEvent *event) { return event->type == SelectionNotify; }
+static bool is_new_value(XEvent *event) {
+    return event->type == PropertyNotify && event->xproperty.atom == SILK_SELECTION &&
+           event->xproperty.state == PropertyNewValue;
+}
+
+// Asks CLIPBOARD's owner for `target` and caches what it sends (through INCR when large).
+static bool convert(Atom target) {
+    XConvertSelection(display, CLIPBOARD, target, SILK_SELECTION, helper, CurrentTime);
+    XFlush(display);
+    XEvent event;
+    if (!wait_helper(is_selection_notify, &event) || event.xselection.property == None) return false;
+    Atom type;
+    int format;
+    unsigned long count, remaining;
+    unsigned char *data = NULL;
+    XGetWindowProperty(display, helper, SILK_SELECTION, 0, 0x7FFFFFFF, True, AnyPropertyType,
+                       &type, &format, &count, &remaining, &data);
+    if (type != INCR) {
+        bool ok = data && (format == 8 || (format == 32 && target == TARGETS));
+        if (ok) {
+            size_t size = format == 32 ? count * sizeof(Atom) : count;
+            silk_read_set(data, size);
+        }
+        if (data) XFree(data);
+        return ok;
+    }
+    if (data) XFree(data);
+    // INCR: the owner sends chunks, each after we delete the last; an empty one ends it.
+    uint8_t *bytes = NULL;
+    size_t length = 0;
+    for (;;) {
+        if (!wait_helper(is_new_value, &event)) {
+            free(bytes);
+            return false;
+        }
+        XGetWindowProperty(display, helper, SILK_SELECTION, 0, 0x7FFFFFFF, True, AnyPropertyType,
+                           &type, &format, &count, &remaining, &data);
+        if (!data || count == 0) {
+            if (data) XFree(data);
+            silk_read_adopt(bytes ? bytes : malloc(1), length);
+            return true;
+        }
+        uint8_t *grown = realloc(bytes, length + count);
+        if (!grown) abort();
+        bytes = grown;
+        memcpy(bytes + length, data, count);
+        length += count;
+        XFree(data);
+    }
+}
+
+// The kind an X target names, or -1.
+static int target_kind(Atom target) {
+    if (target == UTF8_STRING || target == TEXT_PLAIN_UTF8 || target == TEXT_PLAIN ||
+        target == XA_STRING || target == TEXT_ATOM)
+        return SILK_CLIP_TEXT;
+    if (target == TEXT_HTML) return SILK_CLIP_HTML;
+    if (target == IMAGE_PNG) return SILK_CLIP_PNG;
+    return -1;
+}
+
+// Whether CLIPBOARD's owner lists a target of kind `kind`.
+static bool offers(int kind) {
+    if (!convert(TARGETS)) return false;
+    Atom targets[64];
+    size_t count = (size_t)silk_read_serve((uint8_t *)targets, sizeof targets) / sizeof(Atom);
+    for (size_t i = 0; i < count && i < 64; i++)
+        if (target_kind(targets[i]) == kind) return true;
+    return false;
+}
+
+int64_t silk_x11_clipboard_types(uint8_t *destination, size_t capacity) {
+    if (silk_read_needs_fetch(destination)) {
+        bool has[SILK_CLIP_KINDS] = {false};
+        if (clipboardOwned) {
+            memcpy(has, clipboard.has, sizeof has);
+        } else {
+            if (XGetSelectionOwner(display, CLIPBOARD) == None || !convert(TARGETS)) {
+                silk_read_set(NULL, 0);
+                return -1;
+            }
+            Atom targets[64];
+            size_t count = (size_t)silk_read_serve((uint8_t *)targets, sizeof targets) / sizeof(Atom);
+            for (size_t i = 0; i < count && i < 64; i++) {
+                int kind = target_kind(targets[i]);
+                if (kind >= 0) has[kind] = true;
+            }
+        }
+        char list[64];
+        size_t length = silk_clip_types_of(has, list);
+        silk_read_set(length ? (const uint8_t *)list : NULL, length);
+    }
+    return silk_read_serve(destination, capacity);
+}
+
+int64_t silk_x11_clipboard_read_type(int kind, uint8_t *destination, size_t capacity) {
+    if (silk_read_needs_fetch(destination)) {
+        if (clipboardOwned) {
+            if (clipboard.has[kind])
+                silk_read_set(clipboard.data[kind].bytes, clipboard.data[kind].length);
+            else
+                silk_read_set(NULL, 0);
+        } else {
+            Atom target = kind == SILK_CLIP_TEXT ? UTF8_STRING : kind == SILK_CLIP_HTML ? TEXT_HTML : IMAGE_PNG;
+            // Some owners send their data for any target, so ask only for one they list.
+            if (XGetSelectionOwner(display, CLIPBOARD) == None || !offers(kind) || !convert(target)) {
+                silk_read_set(NULL, 0);
+                return -1;
+            }
+        }
+    }
+    return silk_read_serve(destination, capacity);
+}
+
+int64_t silk_x11_clipboard_read(uint8_t *destination, size_t capacity) {
+    return silk_x11_clipboard_read_type(SILK_CLIP_TEXT, destination, capacity);
+}
+
+void silk_x11_clipboard_commit(void) {
+    silk_clip_take_pending(&clipboard);
     XSetSelectionOwner(display, CLIPBOARD, helper, CurrentTime);
     clipboardOwned = XGetSelectionOwner(display, CLIPBOARD) == helper;
     XFlush(display);
+}
+
+void silk_x11_clipboard_write(const uint8_t *text, size_t length) {
+    silk_window_clipboard_begin();
+    silk_window_clipboard_add((const uint8_t *)"text/plain", 10, text, length);
+    silk_x11_clipboard_commit();
 }
 
 // ---------------------------------------------------------------------------------------
@@ -1035,6 +1211,7 @@ static void handle_event(XEvent *event) {
         if (event->xselectionclear.selection == CLIPBOARD) clipboardOwned = false;
         return;
     }
+    if (event->type == PropertyNotify && continue_transfer(&event->xproperty)) return;
     if (event->type == PropertyNotify && event->xproperty.window == root) {
         if (event->xproperty.atom == RESOURCE_MANAGER) rescale();
         return;

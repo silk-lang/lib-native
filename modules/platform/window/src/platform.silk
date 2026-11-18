@@ -28,6 +28,7 @@
 import event { Event, Modifiers }
 import keys { KeyCode }
 import shell { Tray, Notification }
+import clipboard { ClipboardEntry }
 import menu { MenuBar, OpenDialog, SaveDialog }
 import types {
   WindowId,
@@ -43,7 +44,10 @@ import types {
 import silk.core.option { Option }
 import silk.geometry.size { Size2 }
 import silk.mem.allocator { Allocator, OutOfMemoryError }
-import silk.text.string { String }
+import silk.text.string { String, InvalidUtf8 }
+import silk.collections.bytes { Bytes }
+import silk.collections.list { List }
+import silk.core.result { Result }
 
 pub interface Platform {
   // Windows.
@@ -120,6 +124,51 @@ pub interface Platform {
   effect fn readClipboard(self: &mut Self) -> Option<String> ! OutOfMemoryError ? &mut Allocator
 
   effect fn writeClipboard(self: &mut Self, text: string) -> () ! OutOfMemoryError ? &mut Allocator
+
+  /// The MIME types the clipboard holds now, of text/plain, text/html and image/png, in that
+  /// order.
+  effect fn clipboardTypes(self: &mut Self) -> List<String> ! OutOfMemoryError ? &mut Allocator {
+    let mut types = List<String>.make()
+    match move run self.readClipboard() {
+      Option<String>.Some { value } => {
+        drop value
+        run types.append(run String.copy("text/plain"))
+      }
+      _ => {}
+    }
+    return move types
+  }
+
+  /// The clipboard's data as MIME type `mime`, none when it does not hold that type.
+  effect fn readClipboardType(self: &mut Self, mime: string) -> Option<Bytes> ! OutOfMemoryError ? &mut Allocator {
+    if mime != "text/plain" { return Option<Bytes>.None }
+    match move run self.readClipboard() {
+      Option<String>.Some { value } => {
+        let bytes = run Bytes.copy(String.utf8Bytes(value.view()))
+        return Option<Bytes>.some(move bytes)
+      }
+      _ => {
+        return Option<Bytes>.None
+      }
+    }
+  }
+
+  /// Replaces the clipboard with one item that has a representation per entry, so a copy
+  /// with text and HTML is one write. Entries of types the clipboard does not map are left
+  /// out.
+  effect fn writeClipboardItem(self: &mut Self, entries: &[ClipboardEntry]) -> () ! OutOfMemoryError ? &mut Allocator {
+    let mut i: usize = 0
+    while i < entries.length {
+      if entries[i].mime.view() == "text/plain" {
+        match String.fromUtf8(entries[i].data.asSlice()) {
+          Result<string, InvalidUtf8>.Success { value } => run self.writeClipboard(value)
+          _ => {}
+        }
+        return ()
+      }
+      i = i + 1
+    }
+  }
 
   fn appearance(self: &Self) -> Appearance
 

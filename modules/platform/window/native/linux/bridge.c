@@ -269,6 +269,20 @@ void silk_window_clipboard_write(const uint8_t *text, size_t length) {
     if (backend) DISPATCH(clipboard_write)(text, length);
 }
 
+int64_t silk_window_clipboard_types(uint8_t *destination, size_t capacity) {
+    return backend ? DISPATCH(clipboard_types)(destination, capacity) : -1;
+}
+
+int64_t silk_window_clipboard_read_type(const uint8_t *mime, size_t mimeLength,
+                                        uint8_t *destination, size_t capacity) {
+    int kind = silk_clip_kind(mime, mimeLength);
+    return backend && kind >= 0 ? DISPATCH(clipboard_read_type)(kind, destination, capacity) : -1;
+}
+
+void silk_window_clipboard_commit(void) {
+    if (backend) DISPATCH(clipboard_commit)();
+}
+
 uint8_t silk_window_test_key(uint32_t window, uint32_t code, const uint8_t *text, size_t length,
                              uint32_t modifiers) {
     return backend ? DISPATCH(test_key)(window, code, text, length, modifiers) : 0;

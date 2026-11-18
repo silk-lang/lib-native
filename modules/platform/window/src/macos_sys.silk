@@ -219,6 +219,10 @@ static if Intrinsic.targetOperatingSystem() == "darwin" {
   ) -> u32
   pub unsafe extern "C" fn silk_macos_clipboard_read(length: *mut usize) -> ?[*]const u8
   pub unsafe extern "C" fn silk_macos_clipboard_write(text: ?[*]const u8, length: usize) -> ()
+  pub unsafe extern "C" fn silk_macos_clipboard_types() -> u32
+  pub unsafe extern "C" fn silk_macos_clipboard_read_type(kind: u32, length: *mut usize) -> ?[*]const u8
+  pub unsafe extern "C" fn silk_macos_clipboard_begin() -> ()
+  pub unsafe extern "C" fn silk_macos_clipboard_add(kind: u32, data: ?[*]const u8, length: usize) -> ()
   pub unsafe extern "C" fn silk_macos_appearance() -> u32
   pub unsafe extern "C" fn silk_macos_test_post_key(
     window: u32,
@@ -452,6 +456,22 @@ static if Intrinsic.targetOperatingSystem() == "darwin" {
   }
 
   pub unsafe fn silk_macos_clipboard_write(text: ?[*]const u8, length: usize) -> () {
+    return ()
+  }
+
+  pub unsafe fn silk_macos_clipboard_types() -> u32 {
+    return 0
+  }
+
+  pub unsafe fn silk_macos_clipboard_read_type(kind: u32, length: *mut usize) -> ?[*]const u8 {
+    return unsafe Intrinsic.pointerRequalify<?*mut u8, ?[*]const u8>(Pointer.null<u8>())
+  }
+
+  pub unsafe fn silk_macos_clipboard_begin() -> () {
+    return ()
+  }
+
+  pub unsafe fn silk_macos_clipboard_add(kind: u32, data: ?[*]const u8, length: usize) -> () {
     return ()
   }
 

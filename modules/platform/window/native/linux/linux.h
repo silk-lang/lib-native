@@ -68,6 +68,9 @@ void silk_dialog_dispatch(void);
                          double height);                                                    \
     int64_t prefix##clipboard_read(uint8_t *destination, size_t capacity);                  \
     void prefix##clipboard_write(const uint8_t *text, size_t length);                       \
+    int64_t prefix##clipboard_types(uint8_t *destination, size_t capacity);                 \
+    int64_t prefix##clipboard_read_type(int kind, uint8_t *destination, size_t capacity);   \
+    void prefix##clipboard_commit(void);                                                    \
     uint8_t prefix##test_key(uint32_t window, uint32_t code, const uint8_t *text,           \
                              size_t length, uint32_t modifiers);                            \
     uint8_t prefix##test_mouse(uint32_t window, uint32_t kind, uint32_t button, double x,   \

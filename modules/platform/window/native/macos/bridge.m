@@ -1678,6 +1678,57 @@ void silk_macos_clipboard_write(const uint8_t *text, size_t length) {
     }
 }
 
+static NSPasteboardType pasteboard_type(uint32_t kind) {
+    return kind == 0 ? NSPasteboardTypeString : kind == 1 ? NSPasteboardTypeHTML : NSPasteboardTypePNG;
+}
+
+uint32_t silk_macos_clipboard_types(void) {
+    @autoreleasepool {
+        NSArray<NSPasteboardType> *types = [NSPasteboard generalPasteboard].types;
+        uint32_t kinds = 0;
+        if ([types containsObject:NSPasteboardTypeString]) kinds |= 1;
+        if ([types containsObject:NSPasteboardTypeHTML]) kinds |= 2;
+        if ([types containsObject:NSPasteboardTypePNG] || [types containsObject:NSPasteboardTypeTIFF]) kinds |= 4;
+        return kinds;
+    }
+}
+
+const uint8_t *silk_macos_clipboard_read_type(uint32_t kind, size_t *length) {
+    @autoreleasepool {
+        NSPasteboard *pasteboard = [NSPasteboard generalPasteboard];
+        NSData *data = nil;
+        if (kind == 0) {
+            NSString *text = [pasteboard stringForType:NSPasteboardTypeString];
+            data = text ? utf8(text) : nil;
+        } else {
+            data = [pasteboard dataForType:pasteboard_type(kind)];
+            if (!data && kind == 2) {
+                NSData *tiff = [pasteboard dataForType:NSPasteboardTypeTIFF];
+                NSBitmapImageRep *image = tiff ? [NSBitmapImageRep imageRepWithData:tiff] : nil;
+                data = image ? [image representationUsingType:NSBitmapImageFileTypePNG properties:@{}] : nil;
+            }
+        }
+        clipboardText = [data copy];
+        *length = clipboardText.length;
+        if (!clipboardText) return NULL;
+        return clipboardText.length ? clipboardText.bytes : (const uint8_t *)"";
+    }
+}
+
+void silk_macos_clipboard_begin(void) {
+    @autoreleasepool {
+        [[NSPasteboard generalPasteboard] clearContents];
+    }
+}
+
+void silk_macos_clipboard_add(uint32_t kind, const uint8_t *data, size_t length) {
+    @autoreleasepool {
+        if (kind > 2) return;
+        [[NSPasteboard generalPasteboard] setData:[NSData dataWithBytes:data length:length]
+                                          forType:pasteboard_type(kind)];
+    }
+}
+
 uint32_t silk_macos_appearance(void) {
     @autoreleasepool {
         return started ? current_appearance() : 0;
