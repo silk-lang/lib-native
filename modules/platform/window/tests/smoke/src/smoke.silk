@@ -11,7 +11,7 @@ import window.menu { MenuBar, OpenDialog, Shortcut, SystemItem }
 import window.shell { Notification, Tray, TrayIcon }
 // Interface methods resolve through this import; silk#2819 reports it as unused.
 import window.platform { Platform as _Platform }
-import window.types { WindowOptions, WindowError, Wait, ImeState, RawSurface }
+import window.types { WindowOptions, WindowError, Wait, ImeState, RawSurface, Cursor, CursorImage }
 import silk.core.effect { Effect }
 import silk.core.option { Option }
 import silk.geometry.point { Point2 }
@@ -473,6 +473,26 @@ effect fn smoke(checks: &mut Checks) -> ()
   } else {
     checks.skip("pointer input", "the backend cannot simulate it")
   }
+
+  // Every keyword, then a cursor from pixels.
+  platform.setCursor(window, Cursor.ZoomIn)
+  platform.setCursor(window, Cursor.Cell)
+  platform.setCursor(window, Cursor.NoDrop)
+  platform.setCursor(window, Cursor.Move)
+  platform.setCursor(window, Cursor.ResizeDownRight)
+  platform.setCursor(window, Cursor.OpenHand)
+  let mut cursorPixels: [u8; 1024] = [0; 1024]
+  cursorPixels[3] = 255
+  let cursorImage = CursorImage {
+    width: 16,
+    height: 16,
+    pixels: &cursorPixels,
+    hotX: 0,
+    hotY: 0,
+    scale: 1.0,
+  }
+  checks.soft(platform.setCursorImage(window, &cursorImage), "a cursor from pixels", "no libXcursor")
+  platform.setCursor(window, Cursor.Arrow)
 
   run platform.writeClipboard("silk ✓")
   match move run platform.readClipboard() {

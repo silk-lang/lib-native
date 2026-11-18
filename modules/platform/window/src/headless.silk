@@ -13,6 +13,8 @@ import types {
   WindowError,
   Wait,
   Cursor,
+  CursorImage,
+  cursorImageFits,
   ImeState,
   Appearance,
   RawSurface,
@@ -39,6 +41,12 @@ pub struct HeadlessWindow {
   pub minimized: bool,
   pub fullScreen: bool,
   pub cursor: Cursor,
+  /// The size and hot spot of the image `setCursorImage` showed last, 0 x 0 while `cursor`
+  /// shows.
+  pub cursorImageWidth: u32,
+  pub cursorImageHeight: u32,
+  pub cursorHotX: u32,
+  pub cursorHotY: u32,
   pub ime: ImeState,
   /// A frame was requested and not yet delivered.
   pub framePending: bool,
@@ -332,6 +340,10 @@ impl Platform for HeadlessPlatform {
         minimized: false,
         fullScreen: false,
         cursor: Cursor.Arrow,
+        cursorImageWidth: 0,
+        cursorImageHeight: 0,
+        cursorHotX: 0,
+        cursorHotY: 0,
         ime: ImeState.disabled(),
         framePending: options.visible,
         frames: 0,
@@ -476,7 +488,22 @@ impl Platform for HeadlessPlatform {
     if value < self.windows.length() {
       let windows = self.windows.asMutSlice()
       windows[value].cursor = cursor
+      windows[value].cursorImageWidth = 0
+      windows[value].cursorImageHeight = 0
     }
+  }
+
+  fn setCursorImage(self: &mut Self, window: WindowId, image: &CursorImage<'_>) -> bool {
+    let value = self.find(window)
+    if value >= self.windows.length() || !cursorImageFits(image) {
+      return false
+    }
+    let windows = self.windows.asMutSlice()
+    windows[value].cursorImageWidth = image.width
+    windows[value].cursorImageHeight = image.height
+    windows[value].cursorHotX = image.hotX
+    windows[value].cursorHotY = image.hotY
+    return true
   }
 
   fn setIme(self: &mut Self, window: WindowId, ime: ImeState) -> () {

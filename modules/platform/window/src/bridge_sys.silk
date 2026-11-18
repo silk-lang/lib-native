@@ -101,6 +101,15 @@ static if Intrinsic.targetOperatingSystem() == "windows"
   pub unsafe extern "C" fn silk_window_toggle_full_screen(window: u32) -> ()
   pub unsafe extern "C" fn silk_window_start_window_drag(window: u32) -> ()
   pub unsafe extern "C" fn silk_window_set_cursor(window: u32, cursor: u32) -> ()
+  pub unsafe extern "C" fn silk_window_set_cursor_image(
+    window: u32,
+    pixels: ?[*]const u8,
+    width: u32,
+    height: u32,
+    hotX: u32,
+    hotY: u32,
+    scale: f64,
+  ) -> u8
   pub unsafe extern "C" fn silk_window_set_ime(
     window: u32,
     enabled: u8,
@@ -293,6 +302,15 @@ static if Intrinsic.targetOperatingSystem() == "windows"
       window: u32,
       cursor: u32,
     ) -> () as "window#silk_window_set_cursor"
+    pub unsafe extern "C" fn silk_window_set_cursor_image(
+      window: u32,
+      pixels: ?[*]const u8,
+      width: u32,
+      height: u32,
+      hotX: u32,
+      hotY: u32,
+      scale: f64,
+    ) -> u8 as "window#silk_window_set_cursor_image"
     pub unsafe extern "C" fn silk_window_set_ime(
       window: u32,
       enabled: u8,
@@ -534,6 +552,18 @@ static if Intrinsic.targetOperatingSystem() == "windows"
 
     pub unsafe fn silk_window_set_cursor(window: u32, cursor: u32) -> () {
       return ()
+    }
+
+    pub unsafe fn silk_window_set_cursor_image(
+      window: u32,
+      pixels: ?[*]const u8,
+      width: u32,
+      height: u32,
+      hotX: u32,
+      hotY: u32,
+      scale: f64,
+    ) -> u8 {
+      return 0
     }
 
     pub unsafe fn silk_window_set_ime(

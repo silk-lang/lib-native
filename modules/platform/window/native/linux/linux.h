@@ -13,6 +13,12 @@ uint32_t silk_keysym_named(uint32_t keysym);
 uint32_t silk_evdev_code(uint32_t evdev);
 // The evdev key code of a KeyCode, or 0.
 uint32_t silk_evdev_from_code(uint32_t code);
+
+// The cursor theme names of types.Cursor `cursor`, best first and ending in NULL: the CSS
+// keyword, then older names themes use.
+const char *const *silk_cursor_names(uint32_t cursor);
+// The theme's cursor size in pixels, from XCURSOR_SIZE, 24 when unset.
+int silk_cursor_theme_size(void);
 // The modifier bit a NamedKey stands for, or 0.
 uint32_t silk_named_modifier(uint32_t named);
 
@@ -64,6 +70,9 @@ void silk_dialog_dispatch(void);
     void prefix##toggle_full_screen(uint32_t window);                                       \
     void prefix##start_window_drag(uint32_t window);                                        \
     void prefix##set_cursor(uint32_t window, uint32_t cursor);                              \
+    uint8_t prefix##set_cursor_image(uint32_t window, const uint8_t *pixels, uint32_t width, \
+                                     uint32_t height, uint32_t hotX, uint32_t hotY,         \
+                                     double scale);                                         \
     void prefix##set_ime(uint32_t window, bool enabled, double x, double y, double width,   \
                          double height);                                                    \
     int64_t prefix##clipboard_read(uint8_t *destination, size_t capacity);                  \

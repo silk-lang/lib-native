@@ -9,6 +9,7 @@
 #include <X11/Xresource.h>
 #include <X11/Xutil.h>
 #include <X11/cursorfont.h>
+#include <dlfcn.h>
 #include <locale.h>
 #include <math.h>
 #include <stdio.h>
@@ -17,6 +18,7 @@
 #include <unistd.h>
 #include <xkbcommon/xkbcommon.h>
 #include "linux.h"
+#include "../common/cursors.h"
 
 typedef struct X11Window {
     uint32_t id;
@@ -36,6 +38,7 @@ typedef struct X11Window {
     SilkFrameState frame;
     double due; // when a requested frame is delivered: the next refresh tick
     uint32_t cursor;
+    Cursor custom; // from set_cursor_image, while it shows
     double imeX, imeY, imeWidth, imeHeight; // points
     bool imeEnabled;
     uint32_t preedit[256];
@@ -61,7 +64,7 @@ static X11Window *windows;
 static size_t windowCount, windowCapacity;
 static uint32_t nextWindow = 1;
 static uint8_t pressed[32];
-static Cursor cursors[32];
+static Cursor cursors[40];
 static Cursor blankCursor;
 static uint8_t *clipboardText;
 static size_t clipboardLength;
@@ -489,6 +492,8 @@ void silk_x11_close(uint32_t id) {
     if (!window) return;
     if (window->ic) XDestroyIC(window->ic);
     XDestroyWindow(display, window->xid);
+    if (window->custom) XFreeCursor(display, window->custom);
+    window->custom = None;
     XFreeColormap(display, window->colormap);
     window->open = false;
     XFlush(display);
@@ -1337,8 +1342,53 @@ void silk_x11_start_window_drag(uint32_t id) {
     XFlush(display);
 }
 
+// libXcursor, loaded with dlopen on first use: theme cursors by name and cursors from pixels.
+// Without it the core cursor font serves keywords and set_cursor_image returns 0.
+typedef struct {
+    unsigned version, size, width, height, xhot, yhot, delay;
+    unsigned *pixels; // premultiplied ARGB
+} XcursorImage;
+static struct {
+    bool tried, loaded;
+    Cursor (*LibraryLoadCursor)(Display *, const char *);
+    XcursorImage *(*ImageCreate)(int, int);
+    void (*ImageDestroy)(XcursorImage *);
+    Cursor (*ImageLoadCursor)(Display *, const XcursorImage *);
+} xcursor;
+
+static bool xcursor_load(void) {
+    if (xcursor.tried) return xcursor.loaded;
+    xcursor.tried = true;
+    void *library = dlopen("libXcursor.so.1", RTLD_NOW | RTLD_LOCAL);
+    if (!library) return false;
+    *(void **)&xcursor.LibraryLoadCursor = dlsym(library, "XcursorLibraryLoadCursor");
+    *(void **)&xcursor.ImageCreate = dlsym(library, "XcursorImageCreate");
+    *(void **)&xcursor.ImageDestroy = dlsym(library, "XcursorImageDestroy");
+    *(void **)&xcursor.ImageLoadCursor = dlsym(library, "XcursorImageLoadCursor");
+    xcursor.loaded = xcursor.LibraryLoadCursor && xcursor.ImageCreate && xcursor.ImageDestroy &&
+                     xcursor.ImageLoadCursor;
+    return xcursor.loaded;
+}
+
+static Cursor pixel_cursor(const uint8_t *rgba, uint32_t width, uint32_t height, uint32_t hotX,
+                           uint32_t hotY) {
+    if (!xcursor_load()) return None;
+    XcursorImage *image = xcursor.ImageCreate((int)width, (int)height);
+    if (!image) return None;
+    image->xhot = hotX;
+    image->yhot = hotY;
+    for (size_t i = 0; i < (size_t)width * height; i++) {
+        const uint8_t *p = rgba + i * 4;
+        unsigned a = p[3];
+        image->pixels[i] = (a << 24) | ((p[0] * a / 255) << 16) | ((p[1] * a / 255) << 8) | (p[2] * a / 255);
+    }
+    Cursor cursor = xcursor.ImageLoadCursor(display, image);
+    xcursor.ImageDestroy(image);
+    return cursor;
+}
+
 static Cursor cursor_for(uint32_t cursor) {
-    if (cursor >= 32) return None;
+    if (cursor >= sizeof cursors / sizeof cursors[0]) return None;
     if (cursor == 21) { // Cursor.None
         if (!blankCursor) {
             char data = 0;
@@ -1348,6 +1398,20 @@ static Cursor cursor_for(uint32_t cursor) {
             XFreePixmap(display, pixmap);
         }
         return blankCursor;
+    }
+    if (cursors[cursor]) return cursors[cursor];
+    // The theme's cursor, then the bundled image, then the nearest in the core cursor font.
+    if (xcursor_load()) {
+        for (const char *const *name = silk_cursor_names(cursor); *name && !cursors[cursor]; name++)
+            cursors[cursor] = xcursor.LibraryLoadCursor(display, *name);
+        if (cursors[cursor]) return cursors[cursor];
+        uint32_t factor = silk_cursor_theme_size() >= 40 ? 2 : 1;
+        uint32_t size = SILK_CURSOR_ART * factor, hotX, hotY;
+        uint8_t *rgba = malloc((size_t)size * size * 4);
+        if (rgba && silk_cursor_bundled(cursor, factor, rgba, &hotX, &hotY))
+            cursors[cursor] = pixel_cursor(rgba, size, size, hotX, hotY);
+        free(rgba);
+        if (cursors[cursor]) return cursors[cursor];
     }
     static const unsigned shapes[] = {
         XC_left_ptr,          // Arrow
@@ -1377,10 +1441,24 @@ static Cursor cursor_for(uint32_t cursor) {
         XC_question_arrow,    // Help
         XC_left_ptr,          // ZoomIn
         XC_left_ptr,          // ZoomOut
+        XC_plus,              // Cell
+        XC_X_cursor,          // NoDrop
+        XC_fleur,             // Move
+        XC_fleur,             // AllScroll
+        XC_top_left_corner,   // ResizeUpLeft
+        XC_top_right_corner,  // ResizeUpRight
+        XC_bottom_left_corner,  // ResizeDownLeft
+        XC_bottom_right_corner, // ResizeDownRight
     };
     if (cursor >= sizeof shapes / sizeof shapes[0]) return None;
-    if (!cursors[cursor]) cursors[cursor] = XCreateFontCursor(display, shapes[cursor]);
+    cursors[cursor] = XCreateFontCursor(display, shapes[cursor]);
     return cursors[cursor];
+}
+
+static void drop_custom(X11Window *window) {
+    if (!window->custom) return;
+    XFreeCursor(display, window->custom);
+    window->custom = None;
 }
 
 void silk_x11_set_cursor(uint32_t id, uint32_t cursor) {
@@ -1388,7 +1466,21 @@ void silk_x11_set_cursor(uint32_t id, uint32_t cursor) {
     if (!window) return;
     window->cursor = cursor;
     XDefineCursor(display, window->xid, cursor_for(cursor));
+    drop_custom(window);
     XFlush(display);
+}
+
+uint8_t silk_x11_set_cursor_image(uint32_t id, const uint8_t *pixels, uint32_t width,
+                                  uint32_t height, uint32_t hotX, uint32_t hotY, double scale) {
+    X11Window *window = find(id);
+    if (!window) return 0;
+    Cursor cursor = pixel_cursor(pixels, width, height, hotX, hotY);
+    if (!cursor) return 0;
+    XDefineCursor(display, window->xid, cursor);
+    drop_custom(window);
+    window->custom = cursor;
+    XFlush(display);
+    return 1;
 }
 
 void silk_x11_set_ime(uint32_t id, bool enabled, double x, double y, double width, double height) {

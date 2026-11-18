@@ -18,6 +18,7 @@
 #import <UserNotifications/UserNotifications.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 #import <objc/message.h>
+#include "../common/cursors.h"
 #include <math.h>
 #include <stdatomic.h>
 #include <pthread.h>
@@ -1410,6 +1411,72 @@ static NSCursor *hidden_cursor(void) {
     return cursor;
 }
 
+// A cursor from `pixels` (width * height RGBA, not premultiplied), `scale` pixels per point.
+static NSCursor *pixel_cursor(const uint8_t *pixels, uint32_t width, uint32_t height,
+                              uint32_t hotX, uint32_t hotY, double scale) {
+    NSBitmapImageRep *rep = [[NSBitmapImageRep alloc]
+        initWithBitmapDataPlanes:NULL
+                      pixelsWide:(NSInteger)width
+                      pixelsHigh:(NSInteger)height
+                   bitsPerSample:8
+                 samplesPerPixel:4
+                        hasAlpha:YES
+                        isPlanar:NO
+                  colorSpaceName:NSDeviceRGBColorSpace
+                    bitmapFormat:NSBitmapFormatAlphaNonpremultiplied
+                     bytesPerRow:(NSInteger)width * 4
+                    bitsPerPixel:32];
+    if (!rep) return nil;
+    memcpy(rep.bitmapData, pixels, (size_t)width * height * 4);
+    if (scale <= 0) scale = 1;
+    NSImage *image = [[NSImage alloc] initWithSize:NSMakeSize(width / scale, height / scale)];
+    [image addRepresentation:rep];
+    return [[NSCursor alloc] initWithImage:image hotSpot:NSMakePoint(hotX / scale, hotY / scale)];
+}
+
+// The bundled image of `cursor`, drawn for a 2x display, or `fallback`.
+static NSCursor *bundled_cursor(uint32_t cursor, NSCursor *fallback) {
+    static NSCursor *made[40];
+    if (cursor < 40 && made[cursor]) return made[cursor];
+    uint32_t size = SILK_CURSOR_ART * 2, hotX, hotY;
+    uint8_t *rgba = malloc((size_t)size * size * 4);
+    NSCursor *result = nil;
+    if (rgba && silk_cursor_bundled(cursor, 2, rgba, &hotX, &hotY))
+        result = pixel_cursor(rgba, size, size, hotX, hotY, 2.0);
+    free(rgba);
+    if (!result) return fallback;
+    if (cursor < 40) made[cursor] = result;
+    return result;
+}
+
+// macOS 15's frame resize cursors: `position` and `directions` are
+// NSCursorFrameResizePosition and NSCursorFrameResizeDirections bits.
+static NSCursor *frame_cursor(NSUInteger position, NSUInteger directions, NSCursor *fallback) {
+    SEL selector = NSSelectorFromString(@"frameResizeCursorFromPosition:inDirections:");
+    if ([NSCursor respondsToSelector:selector]) {
+        NSCursor *(*send)(id, SEL, NSUInteger, NSUInteger) =
+            (NSCursor * (*)(id, SEL, NSUInteger, NSUInteger)) objc_msgSend;
+        NSCursor *cursor = send([NSCursor class], selector, position, directions);
+        if (cursor) return cursor;
+    }
+    return fallback;
+}
+
+// macOS 15's column and row resize cursors, both directions.
+static NSCursor *split_cursor(NSString *name, NSString *older, NSCursor *fallback) {
+    SEL selector = NSSelectorFromString(name);
+    if ([NSCursor respondsToSelector:selector]) {
+        NSCursor *(*send)(id, SEL, NSUInteger) = (NSCursor * (*)(id, SEL, NSUInteger)) objc_msgSend;
+        NSCursor *cursor = send([NSCursor class], selector, 3);
+        if (cursor) return cursor;
+    }
+    return private_cursor(older, fallback);
+}
+
+// NSCursorFrameResizePosition and NSCursorFrameResizeDirections values.
+enum { FRAME_TOP = 1, FRAME_LEFT = 2, FRAME_BOTTOM = 4, FRAME_RIGHT = 8 };
+enum { FRAME_OUTWARD = 2, FRAME_BOTH = 3 };
+
 static NSCursor *cursor_for(uint32_t cursor) {
     // types.Cursor, in declaration order.
     switch (cursor) {
@@ -1426,10 +1493,14 @@ static NSCursor *cursor_for(uint32_t cursor) {
     case 10: return [NSCursor resizeRightCursor];
     case 11: return [NSCursor resizeUpCursor];
     case 12: return [NSCursor resizeDownCursor];
-    case 13: return private_cursor(@"_windowResizeNorthWestSouthEastCursor", [NSCursor crosshairCursor]);
-    case 14: return private_cursor(@"_windowResizeNorthEastSouthWestCursor", [NSCursor crosshairCursor]);
-    case 15: return private_cursor(@"columnResizeCursor", [NSCursor resizeLeftRightCursor]);
-    case 16: return private_cursor(@"rowResizeCursor", [NSCursor resizeUpDownCursor]);
+    case 13:
+        return frame_cursor(FRAME_TOP | FRAME_LEFT, FRAME_BOTH,
+                            private_cursor(@"_windowResizeNorthWestSouthEastCursor", [NSCursor crosshairCursor]));
+    case 14:
+        return frame_cursor(FRAME_TOP | FRAME_RIGHT, FRAME_BOTH,
+                            private_cursor(@"_windowResizeNorthEastSouthWestCursor", [NSCursor crosshairCursor]));
+    case 15: return split_cursor(@"columnResizeCursorInDirections:", @"columnResizeCursor", [NSCursor resizeLeftRightCursor]);
+    case 16: return split_cursor(@"rowResizeCursorInDirections:", @"rowResizeCursor", [NSCursor resizeUpDownCursor]);
     case 17: return [NSCursor IBeamCursorForVerticalLayout];
     case 18: return [NSCursor dragCopyCursor];
     case 19: return [NSCursor dragLinkCursor];
@@ -1437,20 +1508,52 @@ static NSCursor *cursor_for(uint32_t cursor) {
     case 22: return private_cursor(@"busyButClickableCursor", [NSCursor arrowCursor]);
     case 23: return private_cursor(@"busyButClickableCursor", [NSCursor arrowCursor]);
     case 24: return private_cursor(@"_helpCursor", [NSCursor arrowCursor]);
-    case 25: return private_cursor(@"zoomInCursor", [NSCursor arrowCursor]);
-    case 26: return private_cursor(@"zoomOutCursor", [NSCursor arrowCursor]);
+    case 25: return private_cursor(@"zoomInCursor", bundled_cursor(25, [NSCursor arrowCursor]));
+    case 26: return private_cursor(@"zoomOutCursor", bundled_cursor(26, [NSCursor arrowCursor]));
+    case 27: return bundled_cursor(27, [NSCursor crosshairCursor]);
+    case 28: return bundled_cursor(28, [NSCursor operationNotAllowedCursor]);
+    case 29: return private_cursor(@"_moveCursor", bundled_cursor(29, [NSCursor openHandCursor]));
+    case 30: return private_cursor(@"_moveCursor", bundled_cursor(30, [NSCursor openHandCursor]));
+    case 31:
+        return frame_cursor(FRAME_TOP | FRAME_LEFT, FRAME_OUTWARD,
+                            private_cursor(@"_windowResizeNorthWestCursor", cursor_for(13)));
+    case 32:
+        return frame_cursor(FRAME_TOP | FRAME_RIGHT, FRAME_OUTWARD,
+                            private_cursor(@"_windowResizeNorthEastCursor", cursor_for(14)));
+    case 33:
+        return frame_cursor(FRAME_BOTTOM | FRAME_LEFT, FRAME_OUTWARD,
+                            private_cursor(@"_windowResizeSouthWestCursor", cursor_for(14)));
+    case 34:
+        return frame_cursor(FRAME_BOTTOM | FRAME_RIGHT, FRAME_OUTWARD,
+                            private_cursor(@"_windowResizeSouthEastCursor", cursor_for(13)));
     default: return hidden_cursor();
     }
+}
+
+static void show_cursor(SilkWindow *record, NSCursor *cursor) {
+    record.view.cursor = cursor;
+    NSPoint mouse = [record.window mouseLocationOutsideOfEventStream];
+    NSPoint local = [record.view convertPoint:mouse fromView:nil];
+    if (NSPointInRect(local, record.view.bounds)) [record.view.cursor set];
 }
 
 void silk_macos_set_cursor(uint32_t id, uint32_t cursor) {
     @autoreleasepool {
         SilkWindow *record = find_window(id);
         if (!record) return;
-        record.view.cursor = cursor_for(cursor);
-        NSPoint mouse = [record.window mouseLocationOutsideOfEventStream];
-        NSPoint local = [record.view convertPoint:mouse fromView:nil];
-        if (NSPointInRect(local, record.view.bounds)) [record.view.cursor set];
+        show_cursor(record, cursor_for(cursor));
+    }
+}
+
+uint8_t silk_macos_set_cursor_image(uint32_t id, const uint8_t *pixels, uint32_t width,
+                                    uint32_t height, uint32_t hotX, uint32_t hotY, double scale) {
+    @autoreleasepool {
+        SilkWindow *record = find_window(id);
+        if (!record) return 0;
+        NSCursor *cursor = pixel_cursor(pixels, width, height, hotX, hotY, scale);
+        if (!cursor) return 0;
+        show_cursor(record, cursor);
+        return 1;
     }
 }
 

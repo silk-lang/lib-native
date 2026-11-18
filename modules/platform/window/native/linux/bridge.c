@@ -196,6 +196,59 @@ void silk_window_set_cursor(uint32_t window, uint32_t cursor) {
     if (backend) DISPATCH(set_cursor)(window, cursor);
 }
 
+const char *const *silk_cursor_names(uint32_t cursor) {
+    // types.Cursor, in declaration order.
+    static const char *const names[][4] = {
+        {"default", "left_ptr", NULL},
+        {"text", "xterm", NULL},
+        {"pointer", "hand2", NULL},
+        {"crosshair", "cross", NULL},
+        {"grabbing", "closedhand", NULL},
+        {"grab", "openhand", NULL},
+        {"not-allowed", "crossed_circle", NULL},
+        {"ew-resize", "sb_h_double_arrow", NULL},
+        {"ns-resize", "sb_v_double_arrow", NULL},
+        {"w-resize", "left_side", NULL},
+        {"e-resize", "right_side", NULL},
+        {"n-resize", "top_side", NULL},
+        {"s-resize", "bottom_side", NULL},
+        {"nwse-resize", "bd_double_arrow", "size_fdiag", NULL},
+        {"nesw-resize", "fd_double_arrow", "size_bdiag", NULL},
+        {"col-resize", "split_h", NULL},
+        {"row-resize", "split_v", NULL},
+        {"vertical-text", NULL},
+        {"copy", "dnd-copy", NULL},
+        {"alias", "dnd-link", NULL},
+        {"context-menu", NULL},
+        {NULL},
+        {"wait", "watch", NULL},
+        {"progress", "left_ptr_watch", NULL},
+        {"help", "question_arrow", NULL},
+        {"zoom-in", NULL},
+        {"zoom-out", NULL},
+        {"cell", "plus", NULL},
+        {"no-drop", "dnd-no-drop", NULL},
+        {"move", "fleur", NULL},
+        {"all-scroll", "fleur", NULL},
+        {"nw-resize", "top_left_corner", NULL},
+        {"ne-resize", "top_right_corner", NULL},
+        {"sw-resize", "bottom_left_corner", NULL},
+        {"se-resize", "bottom_right_corner", NULL},
+    };
+    return cursor < sizeof names / sizeof names[0] ? names[cursor] : names[0];
+}
+
+int silk_cursor_theme_size(void) {
+    const char *size = getenv("XCURSOR_SIZE");
+    int value = size ? atoi(size) : 0;
+    return value > 0 ? value : 24;
+}
+
+uint8_t silk_window_set_cursor_image(uint32_t window, const uint8_t *pixels, uint32_t width,
+                                     uint32_t height, uint32_t hotX, uint32_t hotY, double scale) {
+    return backend ? DISPATCH(set_cursor_image)(window, pixels, width, height, hotX, hotY, scale) : 0;
+}
+
 void silk_window_set_ime(uint32_t window, uint8_t enabled, double x, double y, double width,
                          double height) {
     if (backend) DISPATCH(set_ime)(window, enabled != 0, x, y, width, height);

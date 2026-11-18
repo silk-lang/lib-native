@@ -6,6 +6,7 @@
 import silk.core.equal { Equal }
 import silk.core.option { Option }
 import silk.core.ownership { Copy }
+import silk.num.u32
 import silk.geometry.rect { Rect }
 import silk.geometry.size { Size2 }
 
@@ -129,6 +130,47 @@ pub enum Cursor {
   Help,
   ZoomIn,
   ZoomOut,
+  /// A cell or a set of cells may be selected.
+  Cell,
+  /// The dragged item cannot be dropped here.
+  NoDrop,
+  /// Something is to be moved.
+  Move,
+  /// Something can be scrolled in any direction.
+  AllScroll,
+  /// The top left corner is to be moved.
+  ResizeUpLeft,
+  /// The top right corner is to be moved.
+  ResizeUpRight,
+  /// The bottom left corner is to be moved.
+  ResizeDownLeft,
+  /// The bottom right corner is to be moved.
+  ResizeDownRight,
+}
+
+/// A cursor drawn from pixels, for `Platform.setCursorImage`.
+pub struct CursorImage<'a> {
+  pub width: u32,
+  pub height: u32,
+  /// `width * height` RGBA pixels, not premultiplied.
+  pub pixels: &'a [u8],
+  /// The point that clicks, in pixels from the top left.
+  pub hotX: u32,
+  pub hotY: u32,
+  /// Pixels per point: 2 for an image drawn for a 2x display, 1 for one shown pixel for point.
+  pub scale: f64,
+}
+
+/// Whether backends take `image`: 1 to 256 pixels a side, with all its pixels, the hot spot
+/// inside.
+pub fn cursorImageFits(image: &CursorImage<'_>) -> bool {
+  if image.width == 0 || image.height == 0 || image.width > 256 || image.height > 256 {
+    return false
+  }
+  if image.hotX >= image.width || image.hotY >= image.height {
+    return false
+  }
+  return image.pixels.length >= u32.toUsize(image.width) * u32.toUsize(image.height) * 4
 }
 
 /// What the input method needs from the focused text field.

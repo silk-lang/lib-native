@@ -40,7 +40,8 @@ const EVENT_SIZE = 88;
 const CURSORS = ['default', 'text', 'pointer', 'crosshair', 'grabbing', 'grab', 'not-allowed',
   'ew-resize', 'ns-resize', 'w-resize', 'e-resize', 'n-resize', 's-resize', 'nwse-resize',
   'nesw-resize', 'col-resize', 'row-resize', 'vertical-text', 'copy', 'alias', 'context-menu',
-  'none'];
+  'none', 'wait', 'progress', 'help', 'zoom-in', 'zoom-out', 'cell', 'no-drop', 'move', 'all-scroll',
+  'nw-resize', 'ne-resize', 'sw-resize', 'se-resize'];
 // DOM MouseEvent.button to event.MouseButton.
 const BUTTONS = [0, 2, 1, 3, 4];
 const CODE_INDEX = new Map(CODES.map((name, index) => [name, index]));
@@ -405,6 +406,23 @@ export class WindowHost {
   silk_window_set_cursor(id, cursor) {
     const window = this.windows.get(id);
     if (window) window.canvas.style.cursor = CURSORS[cursor] ?? 'default';
+  }
+
+  // RGBA pixels as a data URL, `scale` pixels per CSS pixel.
+  silk_window_set_cursor_image(id, ptr, width, height, hotX, hotY, scale) {
+    const window = this.windows.get(id);
+    const canvas = globalThis.document?.createElement('canvas');
+    const context = canvas?.getContext('2d');
+    if (!window || !context) return 0;
+    canvas.width = width;
+    canvas.height = height;
+    context.putImageData(new ImageData(new Uint8ClampedArray(this.bytes(ptr, width * height * 4)), width, height), 0, 0);
+    const url = `url(${canvas.toDataURL()})`;
+    const image = scale > 0 && scale !== 1 ? `image-set(${url} ${scale}x)` : url;
+    const x = Math.round(hotX / (scale || 1));
+    const y = Math.round(hotY / (scale || 1));
+    window.canvas.style.cursor = `${image} ${x} ${y}, default`;
+    return 1;
   }
 
   silk_window_set_ime(id, enabled, x, y, width, height) {
