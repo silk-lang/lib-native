@@ -100,6 +100,7 @@ uint8_t silk_window_next_event(double timeout, SilkWindowEvent *event) {
         DISPATCH(dispatch)();
         silk_dialog_dispatch();
         silk_dbus_dispatch();
+        silk_instance_dispatch();
         double now = silk_now();
         double nextFrame = DISPATCH(frames)(now);
         if (silk_queue_pop(event)) return 1;
@@ -113,13 +114,19 @@ uint8_t silk_window_next_event(double timeout, SilkWindowEvent *event) {
             milliseconds = wait <= 0 ? 0 : (int)ceil(wait);
         }
         if (!DISPATCH(prepare_wait)()) continue;
-        struct pollfd fds[17];
+        struct pollfd fds[18];
         fds[0].fd = DISPATCH(fd)();
         fds[0].events = POLLIN;
         fds[0].revents = 0;
         int count = 1 + silk_dialog_fds(fds + 1, 14);
         if (silk_dbus_fd() >= 0) {
             fds[count].fd = silk_dbus_fd();
+            fds[count].events = POLLIN;
+            fds[count].revents = 0;
+            count++;
+        }
+        if (silk_instance_fd() >= 0) {
+            fds[count].fd = silk_instance_fd();
             fds[count].events = POLLIN;
             fds[count].revents = 0;
             count++;

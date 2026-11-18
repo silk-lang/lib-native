@@ -105,6 +105,10 @@ void silk_free_texts(SilkText *texts, size_t count);
 
 // The session bus (dbus.c): tray icon and notifications, the same on X11 and Wayland.
 // The connection's descriptor while connected, or -1.
+// The single-instance socket (instance.c): its fd, -1 when there is none, and accepting
+// what later launches send.
+int silk_instance_fd(void);
+void silk_instance_dispatch(void);
 int silk_dbus_fd(void);
 // Reads and handles what the bus sent.
 void silk_dbus_dispatch(void);

@@ -12,6 +12,7 @@ import window.shell { Notification, Tray, TrayIcon }
 // Interface methods resolve through this import; silk#2819 reports it as unused.
 import window.platform { Platform as _Platform }
 import window.types { WindowOptions, WindowError, Wait, ImeState, RawSurface }
+import silk.collections.list { List }
 import silk.core.effect { Effect }
 import silk.core.option { Option }
 import silk.geometry.point { Point2 }
@@ -57,6 +58,8 @@ struct Tally {
   dropX: f64,
   droppedPaths: u32,
   droppedPath: String,
+  opens: u32,
+  opened: String,
 }
 
 impl Tally {
@@ -94,6 +97,8 @@ impl Tally {
       dropX: 0.0,
       droppedPaths: 0,
       droppedPath: String.make(),
+      opens: 0,
+      opened: String.make(),
     }
   }
 }
@@ -194,6 +199,19 @@ effect fn collect(platform: &mut BridgePlatform, seconds: f64) -> Tally
           }
           Event.FileDragLeft { .. } => {
             tally.dragLeaves = tally.dragLeaves + 1
+          }
+          Event.OpenRequested { arguments } => {
+            tally.opens = tally.opens + 1
+            tally.opened.clear()
+            let list = arguments.asSlice()
+            let mut i: usize = 0
+            while i < list.length {
+              if i > 0 {
+                run tally.opened.append("|")
+              }
+              run tally.opened.append(list[i].view())
+              i = i + 1
+            }
           }
           Event.FileDropped { position, paths, .. } => {
             tally.drops = tally.drops + 1
@@ -416,6 +434,20 @@ effect fn smoke(checks: &mut Checks) -> ()
   platform.removeTray()
   let notified = run platform.notify(&Notification { title: "Smoke", body: "A notification" })
   checks.soft(notified != 0, "a notification is shown", "no notification service")
+  // The second claim plays the later launch: it finds the first, which this process holds.
+  let none: [String; 0] = []
+  let first = run platform.claimSingleInstance("dev.silk.smoke", &none)
+  let mut later = List<String>.make()
+  run later.append(run String.copy("silk://open?note=1"))
+  run later.append(run String.copy(""))
+  run later.append(run String.copy("/tmp/a b.txt"))
+  let second = run platform.claimSingleInstance("dev.silk.smoke", later.asSlice())
+  let launched = run collect(&mut platform, 0.3)
+  checks.check(
+    first && !second && launched.opens == 1
+      && launched.opened.view() == "silk://open?note=1||/tmp/a b.txt",
+    "a later launch hands its arguments to the first",
+  )
   let mut bar = MenuBar.make()
   run bar.begin("App")
   run bar.system(SystemItem.Quit)
