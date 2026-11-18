@@ -126,6 +126,12 @@ parented to the window under X11, unparented under Wayland), else run `zenity` o
 a child process. `SILK_WINDOW_DIALOG` names another command and `SILK_WINDOW_PORTAL=0` skips
 the portal.
 
+**Cursors.** Every CSS cursor keyword has a `Cursor`. A host shows its own where it has one
+(the X11 theme's by CSS name through libXcursor, loaded with `dlopen`; Wayland cursor-shape or
+the theme; macOS 15 frame resize cursors) and otherwise a bundled image from
+`native/common/cursors.h`, drawn through the same path as `setCursorImage`, which shows CSS
+`url()` cursors.
+
 **Browser** (`browser/window-host.js`). A window is a canvas; `RawSurface.Canvas` carries its
 handle and the canvas has the id `silk-window-<handle>` for `SurfaceTarget.canvasId`. Keys,
 text and composition go through one hidden textarea placed at the caret, so input methods

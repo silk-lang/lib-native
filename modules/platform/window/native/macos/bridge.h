@@ -112,6 +112,11 @@ void silk_macos_start_window_drag(uint32_t window);
 // the bar and a 0 `left` matches the top gap; a 0 `height` leaves them where AppKit puts them.
 void silk_macos_set_controls(uint32_t window, double height, double left, double top);
 void silk_macos_set_cursor(uint32_t window, uint32_t cursor);
+// A cursor drawn from `pixels` (width * height RGBA, not premultiplied) with its hot spot at
+// (hotX, hotY) in pixels, shown until the next set_cursor or set_cursor_image. `scale` is pixels
+// per point. Returns 1 when shown, 0 when the system has no custom cursors.
+uint8_t silk_macos_set_cursor_image(uint32_t window, const uint8_t *pixels, uint32_t width,
+                                    uint32_t height, uint32_t hotX, uint32_t hotY, double scale);
 void silk_macos_set_ime(uint32_t window, uint8_t enabled, double x, double y, double width,
                         double height);
 
