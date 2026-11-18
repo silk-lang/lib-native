@@ -819,6 +819,40 @@ static void push_button(Win32Window *window, bool down, uint32_t button, LPARAM 
     silk_queue_push(&event);
 }
 
+// Phase numbers, as src/bridge.silk's PHASES.
+enum { PHASE_BEGAN = 1, PHASE_CHANGED = 2, PHASE_ENDED = 3, PHASE_CANCELLED = 4 };
+
+// Turns a pointer message of a finger into a Touch event. Returns false for other pointers.
+static bool push_touch(Win32Window *window, UINT message, WPARAM wParam) {
+    UINT32 id = GET_POINTERID_WPARAM(wParam);
+    POINTER_INPUT_TYPE type = PT_POINTER;
+    if (!GetPointerType(id, &type) || type != PT_TOUCH) return false;
+    POINTER_INFO info;
+    if (!GetPointerInfo(id, &info)) return false;
+    uint32_t phase = PHASE_CHANGED;
+    if (message == WM_POINTERDOWN) {
+        phase = PHASE_BEGAN;
+    } else if (message == WM_POINTERUP) {
+        phase = (info.pointerFlags & POINTER_FLAG_CANCELED) ? PHASE_CANCELLED : PHASE_ENDED;
+    } else if (message == WM_POINTERCAPTURECHANGED) {
+        phase = PHASE_CANCELLED;
+    } else if (!(info.pointerFlags & POINTER_FLAG_INCONTACT)) {
+        // A finger hovering over a screen that senses it: nothing is touched.
+        return true;
+    }
+    POINT point = info.ptPixelLocation;
+    ScreenToClient(window->hwnd, &point);
+    SilkWindowEvent event = silk_event(SILK_EVENT_TOUCH, window->id);
+    event.code = id;
+    event.phase = phase;
+    event.x = point.x / window->scale;
+    event.y = point.y / window->scale;
+    event.modifiers = current_modifiers();
+    silk_queue_push(&event);
+    return true;
+}
+
+
 // A cursor from `rgba` (width * height, not premultiplied), each pixel drawn `factor` times
 // larger.
 static HCURSOR pixel_cursor(const uint8_t *rgba, uint32_t width, uint32_t height, uint32_t hotX,
@@ -1211,6 +1245,14 @@ static LRESULT CALLBACK window_proc(HWND hwnd, UINT message, WPARAM wParam, LPAR
         push_button(window, message == WM_XBUTTONDOWN,
                     HIWORD(wParam) == XBUTTON1 ? SILK_BUTTON_BACK : SILK_BUTTON_FORWARD, lParam);
         result = TRUE;
+        break;
+    case WM_POINTERDOWN:
+    case WM_POINTERUPDATE:
+    case WM_POINTERUP:
+    case WM_POINTERCAPTURECHANGED:
+        // Fingers become Touch events. Handling their pointer messages keeps Windows from
+        // also sending them as mouse messages; mouse and pen go on to DefWindowProc.
+        handled = push_touch(window, message, wParam);
         break;
     case WM_MOUSEWHEEL:
     case WM_MOUSEHWHEEL: {

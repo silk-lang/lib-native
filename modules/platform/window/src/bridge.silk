@@ -110,6 +110,7 @@ const TRAY_CLICKED: u32 = 30
 const NOTIFICATION_CLICKED: u32 = 31
 
 const CONTEXT_MENU_CLOSED: u32 = 32
+const TOUCH: u32 = 33
 
 const TRAY_TEMPLATE: u32 = 1
 
@@ -509,6 +510,17 @@ impl BridgePlatform {
           position: position,
           delta: raw.dx,
           phase: BridgePlatform.phase(raw.phase),
+        },
+      )
+    }
+    if kind == TOUCH {
+      return Option<Event>.some(
+        Event.Touch {
+          window: window,
+          id: raw.code,
+          position: position,
+          phase: BridgePlatform.phase(raw.phase),
+          modifiers: modifiers,
         },
       )
     }
