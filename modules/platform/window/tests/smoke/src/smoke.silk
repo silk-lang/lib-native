@@ -12,7 +12,7 @@ import window.shell { Notification, Tray, TrayIcon }
 import window.clipboard { ClipboardEntry }
 // Interface methods resolve through this import; silk#2819 reports it as unused.
 import window.platform { Platform as _Platform }
-import window.types { WindowOptions, WindowError, Wait, ImeState, RawSurface }
+import window.types { WindowOptions, WindowError, Wait, ImeState, RawSurface, WindowId }
 import silk.collections.bytes { Bytes }
 import silk.collections.list { List }
 import silk.core.effect { Effect }
@@ -504,8 +504,10 @@ effect fn smoke(checks: &mut Checks) -> ()
   }
 
   if backend == Backend.X11 || backend == Backend.Wayland {
-    // The Linux smoke task points SILK_WINDOW_DIALOG at a command that prints a path.
-    let dialogOptions = OpenDialog.file("Open", "svg,png")
+    // The Linux smoke task points SILK_WINDOW_DIALOG at a command that prints a path, or under
+    // X11 runs a FileChooser portal that answers the same (tests/linux/portal).
+    let mut dialogOptions = OpenDialog.file("Open", "svg,png")
+    dialogOptions.parent = Option<WindowId>.Some { value: window }
     drop run platform.openFileDialog(&dialogOptions)
     let closedDialog = run collect(&mut platform, 1.0)
     checks.check(

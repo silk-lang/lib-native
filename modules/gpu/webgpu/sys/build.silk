@@ -1,0 +1,75 @@
+import silk.build.plan { Framework, Library, Plan }
+import silk.build.step { sourcePath }
+
+static fn plan() -> Plan {
+  let mut plan = Plan.empty()
+  if Intrinsic.targetOperatingSystem() == "darwin" || Intrinsic.targetOperatingSystem() == "linux" {
+    plan = plan
+      |> Plan.compileNative(
+        "c",
+        sourcePath("native/callbacks.c"),
+        &["-std=c11", "-O2"],
+        &[Plan.archivePath("dawn", "include")],
+      )
+  }
+  if Intrinsic.targetOperatingSystem() == "darwin" {
+    plan = plan |> Plan.linkArchive(Plan.archivePath("dawn", "lib/libwebgpu_dawn.a"))
+  }
+  if Intrinsic.targetOperatingSystem() == "darwin" {
+    plan = plan |> Plan.linkLibrary("c++", Library.dynamicSearch())
+  }
+  if Intrinsic.targetOperatingSystem() == "darwin" {
+    plan = plan |> Plan.linkFramework("CoreFoundation", Framework.make())
+  }
+  if Intrinsic.targetOperatingSystem() == "darwin" {
+    plan = plan |> Plan.linkFramework("Foundation", Framework.make())
+  }
+  if Intrinsic.targetOperatingSystem() == "darwin" {
+    plan = plan |> Plan.linkFramework("IOSurface", Framework.make())
+  }
+  if Intrinsic.targetOperatingSystem() == "darwin" {
+    plan = plan |> Plan.linkFramework("QuartzCore", Framework.make())
+  }
+  if Intrinsic.targetOperatingSystem() == "darwin" {
+    plan = plan |> Plan.linkFramework("Cocoa", Framework.make())
+  }
+  if Intrinsic.targetOperatingSystem() == "darwin" {
+    plan = plan |> Plan.linkFramework("IOKit", Framework.make())
+  }
+  if Intrinsic.targetOperatingSystem() == "darwin" {
+    plan = plan |> Plan.linkFramework("Metal", Framework.make())
+  }
+  if Intrinsic.targetOperatingSystem() == "linux" {
+    plan = plan |> Plan.linkArchive(Plan.archivePath("dawn", "lib64/libwebgpu_dawn.a"))
+  }
+  if Intrinsic.targetOperatingSystem() == "linux" {
+    plan = plan |> Plan.linkLibrary("stdc++", Library.dynamicSearch())
+  }
+  if Intrinsic.targetOperatingSystem() == "linux" {
+    plan = plan |> Plan.linkLibrary("m", Library.dynamicSearch())
+  }
+  if Intrinsic.targetOperatingSystem() == "linux" {
+    plan = plan |> Plan.linkLibrary("dl", Library.dynamicSearch())
+  }
+  if Intrinsic.targetOperatingSystem() == "linux" {
+    plan = plan |> Plan.linkLibrary("rt", Library.dynamicSearch())
+  }
+  if Intrinsic.targetOperatingSystem() == "linux" {
+    plan = plan |> Plan.linkLibrary("pthread", Library.dynamicSearch())
+  }
+  if Intrinsic.targetOperatingSystem() == "windows" {
+    plan = plan |> Plan.linkArchive(Plan.archivePath("dawn", "lib/nonstd_dawn.lib"))
+  }
+  if Intrinsic.targetOperatingSystem() == "windows" {
+    plan = plan |> Plan.linkArchive(Plan.archivePath("dawn", "lib/nonstd_callbacks.lib"))
+  }
+  if Intrinsic.targetOperatingSystem() == "windows" {
+    plan = plan |> Plan.linkArchive(Plan.archivePath("dawn", "lib/ucrt.lib"))
+  }
+  if Intrinsic.targetOperatingSystem() == "windows" {
+    plan = plan |> Plan.linkArchive(Plan.archivePath("dawn", "lib/vcruntime.lib"))
+  }
+  return plan
+}
+
+pub const PLAN: Plan = plan()

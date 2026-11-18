@@ -18,7 +18,12 @@ pub effect fn locate(name: string, target: string, packagePath: string, release:
   let root = run support.root()
   let package = run support.resolve(packagePath)
   let mut filename = run String.copy(name)
-  if String.contains(target, "windows") { run String.append(&mut filename, ".exe") }
+  if String.contains(target, "windows") {
+    run String.append(&mut filename, ".exe")
+  }
+  if String.contains(target, "wasm32") {
+    run String.append(&mut filename, ".wasm")
+  }
   let rootOutput = run outputDirectory(&root, target, release)
   let mut found = Option<Path>.none()
   let mut count: usize = 0
@@ -26,6 +31,7 @@ pub effect fn locate(name: string, target: string, packagePath: string, release:
     found = Option<Path>.some(run Path.join(&rootOutput, String.view(&filename)))
     count = count + 1
   }
+
   // Match the original Set of resolved roots: never count the same root twice.
   if support.text(&root) != support.text(&package) {
     let packageOutput = run outputDirectory(&package, target, release)
@@ -40,8 +46,11 @@ pub effect fn locate(name: string, target: string, packagePath: string, release:
     run String.append(&mut message, " for ")
     run String.append(&mut message, target)
     run String.append(&mut message, ", found ")
-    if count == 0 { run String.append(&mut message, "0") }
-    else { run String.append(&mut message, "2") }
+    if count == 0 {
+      run String.append(&mut message, "0")
+    } else {
+      run String.append(&mut message, "2")
+    }
     fail TaskError { message: move message, status: 1 }
   }
   return match move found {
@@ -60,9 +69,16 @@ pub effect fn printArtifact(name: string, target: string, packagePath: string, r
 effect fn outputDirectory(root: &Path, target: string, release: bool) -> Path
   ! TaskError | ProcessError | FileError | HostInputError | OutOfMemoryError | WriterError
   ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
-  let llvm = run Path.resolve(root, "build/llvm")
-  let platform = run Path.resolve(&llvm, target)
-  return run Path.join(&platform, if release { "release" } else { "debug" })
+  let output = run Path.resolve(root, "build")
+  let platform = run Path.resolve(&output, target)
+  return run Path.join(
+    &platform,
+    if release {
+      "release"
+    } else {
+      "dev"
+    },
+  )
 }
 
 effect fn contains(directory: &Path, filename: string) -> bool
@@ -70,19 +86,27 @@ effect fn contains(directory: &Path, filename: string) -> bool
   ? &mut HostInput | &mut Allocator | &mut ChildProcess | &mut FileSystem {
   let entries = match move run Effect.result(FileSystem.listDirectory(directory)) {
     Result<List<DirectoryEntry>, FileError | OutOfMemoryError>.Success { value } => move value
-    Result<List<DirectoryEntry>, FileError | OutOfMemoryError>.Failure { error } => match move error {
+    Result<List<DirectoryEntry>, FileError | OutOfMemoryError>.Failure {
+      error
+    } => match move error {
       FileError failure => {
-        if failure.reason.code == FileSystem.notFound().code { return false }
+        if failure.reason.code == FileSystem.notFound().code {
+          return false
+        }
         fail move failure
       }
-      OutOfMemoryError failure => { fail move failure }
+      OutOfMemoryError failure => {
+        fail move failure
+      }
     }
   }
   let items = List<DirectoryEntry>.asSlice(&entries)
   let mut index: usize = 0
   while index < items.length {
     if let Option<string>.Some { value } = Path.name(&items[index].path) {
-      if value == filename { return true }
+      if value == filename {
+        return true
+      }
     }
     index = index + 1
   }
