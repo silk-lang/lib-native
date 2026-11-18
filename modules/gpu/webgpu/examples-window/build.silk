@@ -1,0 +1,28 @@
+import silk.build.plan { Framework, Library, Plan }
+import silk.build.step { sourcePath }
+
+static fn plan() -> Plan {
+  let mut plan = Plan.empty()
+  if Intrinsic.targetOperatingSystem() == "darwin" {
+    plan = plan
+      |> Plan.compileNative("objc", sourcePath("native/metal_layer.m"), &["-fobjc-arc", "-O2"], &[])
+  }
+  if Intrinsic.targetOperatingSystem() == "linux" || Intrinsic.targetOperatingSystem() == "darwin" {
+    plan = plan |> Plan.linkLibrary("glfw", Library.dynamicSearch())
+  }
+  if Intrinsic.targetOperatingSystem() == "darwin" {
+    plan = plan |> Plan.linkFramework("Cocoa", Framework.make())
+  }
+  if Intrinsic.targetOperatingSystem() == "darwin" {
+    plan = plan |> Plan.linkFramework("QuartzCore", Framework.make())
+  }
+  if Intrinsic.targetOperatingSystem() == "windows" {
+    plan = plan |> Plan.linkArchive(Plan.archivePath("glfw", "lib-vc2022/glfw3dll.lib"))
+  }
+  if Intrinsic.targetOperatingSystem() == "windows" {
+    plan = plan |> Plan.linkArchive(Plan.archivePath("glfw", "lib-vc2022/kernel32.lib"))
+  }
+  return plan
+}
+
+pub const PLAN: Plan = plan()

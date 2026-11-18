@@ -1,12 +1,10 @@
 [package]
 name = "platform-window-tests-browser"
 version = "0.1.0"
-silk-version = "0.1.0-dev.74+205aea3f5b2e"
+silk-version = "0.1.0-dev.87+37fa5f8857de"
 kind = "executable"
 
 [dependencies]
 smoke = { path = "../smoke", package = "platform-window-tests-smoke" }
 
 # A browser program: it builds for the browser whatever the host.
-[build]
-targets = ["wasm32-unknown-unknown"]
