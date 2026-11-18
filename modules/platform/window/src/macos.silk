@@ -6,7 +6,7 @@
 //!
 //! AppKit's own loops (live resize, menu tracking) run on a second stack of the main thread,
 //! so `nextEvent` keeps returning events and frames while they run. See the README.
-import event { Event, Key, Modifiers, MouseButton, Phase, ScrollDelta }
+import event { Event, EditCommand, Key, Modifiers, MouseButton, Phase, ScrollDelta }
 import keys { keyCodeFromValue, namedKeyFromValue, KeyCode, NamedKey }
 import macos_sys as sys
 import macos_sys { RawEvent }
@@ -385,6 +385,22 @@ impl MacPlatform {
     }
     if kind == sys.CONTEXT_MENU_CLOSED {
       return Option<Event>.some(Event.ContextMenuClosed { window: WindowId { value: raw.window } })
+    }
+    if kind == sys.EDIT_COMMAND {
+      let command = if raw.code == 0 {
+        EditCommand.Undo
+      } else if raw.code == 1 {
+        EditCommand.Redo
+      } else if raw.code == 2 {
+        EditCommand.Cut
+      } else if raw.code == 3 {
+        EditCommand.Copy
+      } else if raw.code == 4 {
+        EditCommand.Paste
+      } else {
+        EditCommand.SelectAll
+      }
+      return Option<Event>.some(Event.EditCommand { window: WindowId { value: raw.window }, command: command })
     }
     return Option<Event>.None
   }

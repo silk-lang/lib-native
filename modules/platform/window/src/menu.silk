@@ -61,7 +61,17 @@ pub enum SystemItem {
   Zoom,
   ToggleFullScreen,
   BringAllToFront,
+  /// The Edit menu's items (macOS), with their usual shortcuts. Choosing one sends
+  /// `Event.EditCommand` to the key window; their shortcuts reach the window as `KeyDown`
+  /// first, as everywhere else, so an app handles the key and the menu alike.
+  Undo,
+  Redo,
+  Cut,
+  Copy,
+  Paste,
+  SelectAll,
 }
+
 
 /// One step of a menu bar's description, in order.
 pub union MenuEntry {

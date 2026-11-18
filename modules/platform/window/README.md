@@ -123,6 +123,11 @@ hidden surfaces get none); xkbcommon with compose and key repeat; text-input-v3;
 callbacks, the `CLIPBOARD` selection, `_NET_WM` hints. File dialogs run `zenity` or
 `kdialog` as a child process (`SILK_WINDOW_DIALOG` names another command).
 
+**Edit menu** (`SystemItem.Undo` to `SelectAll`). macOS installs Edit with these by default,
+and both macOS and Windows menu bars take them. Their shortcuts still reach the window as
+`KeyDown`, as on every system, so an app sees the key first; choosing an item with the mouse
+sends `Event.EditCommand`.
+
 **Clipboard** (`clipboard`). The clipboard holds one item with a representation per MIME
 type: `writeClipboardItem` puts text/plain, text/html and image/png on it in one write,
 `clipboardTypes` and `readClipboardType` read them back, and `readClipboard` and

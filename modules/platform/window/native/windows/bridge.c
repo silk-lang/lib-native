@@ -466,6 +466,12 @@ static HMENU build_menu_from(const SilkMenuEntry *entries, size_t count, bool po
             case SILK_ITEM_MINIMIZE: label = L"Mi&nimize"; break;
             case SILK_ITEM_ZOOM: label = L"&Maximize"; break;
             case SILK_ITEM_TOGGLE_FULL_SCREEN: label = L"&Full Screen"; break;
+            case SILK_ITEM_UNDO: label = L"&Undo\tCtrl+Z"; break;
+            case SILK_ITEM_REDO: label = L"&Redo\tCtrl+Y"; break;
+            case SILK_ITEM_CUT: label = L"Cu&t\tCtrl+X"; break;
+            case SILK_ITEM_COPY: label = L"&Copy\tCtrl+C"; break;
+            case SILK_ITEM_PASTE: label = L"&Paste\tCtrl+V"; break;
+            case SILK_ITEM_SELECT_ALL: label = L"Select &All\tCtrl+A"; break;
             default: break; // macOS-only items have no counterpart
             }
             if (!label) break;
@@ -940,6 +946,19 @@ static void system_item(Win32Window *window, uint32_t item) {
         break;
     case SILK_ITEM_TOGGLE_FULL_SCREEN:
         if (window) set_full_screen(window, !window->fullScreen);
+        break;
+    case SILK_ITEM_UNDO:
+    case SILK_ITEM_REDO:
+    case SILK_ITEM_CUT:
+    case SILK_ITEM_COPY:
+    case SILK_ITEM_PASTE:
+    case SILK_ITEM_SELECT_ALL:
+        // The shortcuts reach the window as keys; a click on the item sends the command.
+        if (window) {
+            event = silk_event(SILK_EVENT_EDIT_COMMAND, window->id);
+            event.code = item - SILK_ITEM_UNDO;
+            silk_queue_push(&event);
+        }
         break;
     default:
         break;

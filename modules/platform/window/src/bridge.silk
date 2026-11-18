@@ -10,7 +10,7 @@
 //! `backend()` says which one is running. See the README for how each behaves.
 import bridge_sys as sys
 import bridge_sys { RawEvent }
-import event { Event, Key, Modifiers, MouseButton, Phase, ScrollDelta }
+import event { Event, EditCommand, Key, Modifiers, MouseButton, Phase, ScrollDelta }
 import keys { keyCodeFromValue, namedKeyFromValue, KeyCode, NamedKey }
 import menu { MenuBar, MenuEntry, OpenDialog, SaveDialog, Shortcut, ShortcutKey, SystemItem }
 import platform { Platform }
@@ -111,6 +111,7 @@ const NOTIFICATION_CLICKED: u32 = 31
 
 const CONTEXT_MENU_CLOSED: u32 = 32
 const TOUCH: u32 = 33
+const EDIT_COMMAND: u32 = 34
 
 const TRAY_TEMPLATE: u32 = 1
 
@@ -577,6 +578,22 @@ impl BridgePlatform {
     }
     if kind == CONTEXT_MENU_CLOSED {
       return Option<Event>.some(Event.ContextMenuClosed { window: window })
+    }
+    if kind == EDIT_COMMAND {
+      let command = if raw.code == 0 {
+        EditCommand.Undo
+      } else if raw.code == 1 {
+        EditCommand.Redo
+      } else if raw.code == 2 {
+        EditCommand.Cut
+      } else if raw.code == 3 {
+        EditCommand.Copy
+      } else if raw.code == 4 {
+        EditCommand.Paste
+      } else {
+        EditCommand.SelectAll
+      }
+      return Option<Event>.some(Event.EditCommand { window: window, command: command })
     }
     return Option<Event>.None
   }

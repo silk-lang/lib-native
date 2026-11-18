@@ -68,6 +68,13 @@ enum {
     SILK_ITEM_ZOOM = 8,
     SILK_ITEM_TOGGLE_FULL_SCREEN = 9,
     SILK_ITEM_BRING_ALL_TO_FRONT = 10,
+    // The Edit menu; chosen, they send SILK_EVENT_EDIT_COMMAND with code item - SILK_ITEM_UNDO.
+    SILK_ITEM_UNDO = 11,
+    SILK_ITEM_REDO = 12,
+    SILK_ITEM_CUT = 13,
+    SILK_ITEM_COPY = 14,
+    SILK_ITEM_PASTE = 15,
+    SILK_ITEM_SELECT_ALL = 16,
 };
 
 // The committed menu bar.

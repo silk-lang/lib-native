@@ -109,6 +109,7 @@ pub const TRAY_CLICKED: u32 = 30
 pub const NOTIFICATION_CLICKED: u32 = 31
 
 pub const CONTEXT_MENU_CLOSED: u32 = 32
+pub const EDIT_COMMAND: u32 = 34
 
 pub const TRAY_TEMPLATE: u32 = 1
 
