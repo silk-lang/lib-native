@@ -40,6 +40,7 @@ enum {
     SILK_EVENT_NOTIFICATION_CLICKED = 31, // code: the notification's id
     SILK_EVENT_CONTEXT_MENU_CLOSED = 32,  // a context menu closed with nothing chosen
     SILK_EVENT_TOUCH = 33,                // never sent: Macs have no touchscreens
+    SILK_EVENT_EDIT_COMMAND = 34,         // window; code: menu.EditCommand (the Edit menu)
 };
 
 // tray_commit flags.
