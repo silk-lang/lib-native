@@ -493,7 +493,9 @@ impl Platform for HeadlessPlatform {
     }
   }
 
-  fn setCursorImage(self: &mut Self, window: WindowId, image: &CursorImage<'_>) -> bool {
+  effect fn setCursorImage(self: &mut Self, window: WindowId, image: &CursorImage<'_>) -> bool
+    ! OutOfMemoryError
+    ? &mut Allocator {
     let value = self.find(window)
     if value >= self.windows.length() || !cursorImageFits(image) {
       return false

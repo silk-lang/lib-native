@@ -850,7 +850,9 @@ impl Platform for BridgePlatform {
     unsafe sys.silk_window_set_cursor(window.value, u8.toU32(Cursor.value(cursor)))
   }
 
-  fn setCursorImage(self: &mut Self, window: WindowId, image: &CursorImage<'_>) -> bool {
+  effect fn setCursorImage(self: &mut Self, window: WindowId, image: &CursorImage<'_>) -> bool
+    ! OutOfMemoryError
+    ? &mut Allocator {
     if !cursorImageFits(image) {
       return false
     }

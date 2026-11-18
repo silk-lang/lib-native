@@ -220,7 +220,7 @@ effect fn smoke(checks: &mut Checks) -> ()
     hotY: 0,
     scale: 1.0,
   }
-  checks.check(platform.setCursorImage(window, &cursorImage), "a cursor from pixels")
+  checks.check((run platform.setCursorImage(window, &cursorImage)), "a cursor from pixels")
   platform.setCursor(window, Cursor.Arrow)
 
   run platform.writeClipboard("silk ✓")

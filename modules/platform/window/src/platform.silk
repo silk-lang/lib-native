@@ -104,7 +104,9 @@ pub interface Platform {
   /// Shows `image` over the window's content area until the next `setCursor` or
   /// `setCursorImage`, as CSS `cursor: url(...)` does. False when this backend draws no custom
   /// cursors, or the image is empty or larger than 256 pixels a side; keep a keyword then.
-  fn setCursorImage(self: &mut Self, window: WindowId, image: &CursorImage<'_>) -> bool {
+  effect fn setCursorImage(self: &mut Self, window: WindowId, image: &CursorImage<'_>) -> bool
+    ! OutOfMemoryError
+    ? &mut Allocator {
     return false
   }
 

@@ -162,11 +162,14 @@ test effect fn showsCursorImages() -> ()
   let window = run opened(&mut platform) |> Effect.provideMut<Allocator>(&mut allocator)
   let pixels: [u8; 64] = [255; 64]
   let image = CursorImage { width: 4, height: 4, pixels: &pixels, hotX: 1, hotY: 2, scale: 1.0 }
-  run Testing.expect(platform.setCursorImage(window, &image), "shown")
+  let shown = run platform.setCursorImage(window, &image) |> Effect.provideMut<Allocator>(&mut allocator)
+  run Testing.expect(shown, "shown")
   let short = CursorImage { width: 5, height: 4, pixels: &pixels, hotX: 1, hotY: 2, scale: 1.0 }
-  run Testing.expect(!platform.setCursorImage(window, &short), "pixels missing")
+  let shortShown = run platform.setCursorImage(window, &short) |> Effect.provideMut<Allocator>(&mut allocator)
+  run Testing.expect(!shortShown, "pixels missing")
   let outside = CursorImage { width: 4, height: 4, pixels: &pixels, hotX: 4, hotY: 0, scale: 1.0 }
-  run Testing.expect(!platform.setCursorImage(window, &outside), "hot spot outside")
+  let outsideShown = run platform.setCursorImage(window, &outside) |> Effect.provideMut<Allocator>(&mut allocator)
+  run Testing.expect(!outsideShown, "hot spot outside")
   match platform.window(window) {
     Option<&HeadlessWindow>.Some { value } => {
       run Testing.expect(value.cursorImageWidth == 4 && value.cursorHotY == 2, "recorded")

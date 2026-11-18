@@ -491,7 +491,7 @@ effect fn smoke(checks: &mut Checks) -> ()
     hotY: 0,
     scale: 1.0,
   }
-  checks.soft(platform.setCursorImage(window, &cursorImage), "a cursor from pixels", "no libXcursor")
+  checks.soft((run platform.setCursorImage(window, &cursorImage)), "a cursor from pixels", "no libXcursor")
   platform.setCursor(window, Cursor.Arrow)
 
   run platform.writeClipboard("silk ✓")
