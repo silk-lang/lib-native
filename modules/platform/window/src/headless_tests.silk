@@ -200,6 +200,42 @@ test effect fn menusAndDialogs() -> ()
   }
 }
 
+test effect fn contextMenusAndBadges() -> ()
+  ! AssertionError<'static> | WindowError | OutOfMemoryError {
+  let mut allocator = Allocator.systemAllocatorProvider()
+  let mut platform = HeadlessPlatform.make()
+  let window = run opened(&mut platform) |> Effect.provideMut<Allocator>(&mut allocator)
+  drop run drain(&mut platform) |> Effect.provideMut<Allocator>(&mut allocator)
+  let mut menu = MenuBar.make()
+  run menu.action("Copy", 7, Option<Shortcut>.None) |> Effect.provideMut<Allocator>(&mut allocator)
+  run menu.action("Paste", 8, Option<Shortcut>.None) |> Effect.provideMut<Allocator>(&mut allocator)
+  let shown = run platform.showContextMenu(window, 20.0, 30.0, &menu)
+    |> Effect.provideMut<Allocator>(&mut allocator)
+  run Testing.expect(shown && platform.contextMenu.isSome(), "the menu opens")
+  drop run platform.answerContextMenu(Option<u32>.some(8)) |> Effect.provideMut<Allocator>(&mut allocator)
+  match move run platform.nextEvent(Wait.Poll) |> Effect.provideMut<Allocator>(&mut allocator) {
+    Option<Event>.Some { value: Event.MenuAction { action } } => {
+      run Testing.expect(action == 8, "the chosen item's action")
+    }
+    _ => {
+      run Testing.expect(false, "a chosen item sends MenuAction")
+    }
+  }
+  drop run platform.showContextMenu(window, 20.0, 30.0, &menu) |> Effect.provideMut<Allocator>(&mut allocator)
+  drop run platform.answerContextMenu(Option<u32>.None) |> Effect.provideMut<Allocator>(&mut allocator)
+  match move run platform.nextEvent(Wait.Poll) |> Effect.provideMut<Allocator>(&mut allocator) {
+    Option<Event>.Some { value: Event.ContextMenuClosed { window: closed } } => {
+      run Testing.expect(closed.value == window.value && platform.contextMenu.isNone(), "closed without a choice")
+    }
+    _ => {
+      run Testing.expect(false, "a dismissed menu sends ContextMenuClosed")
+    }
+  }
+  drop run platform.setBadge("3") |> Effect.provideMut<Allocator>(&mut allocator)
+  drop run platform.setProgress(1.5) |> Effect.provideMut<Allocator>(&mut allocator)
+  run Testing.expect(String.view(&platform.badge) == "3" && platform.progress == 1.0, "badge and progress, clamped")
+}
+
 test effect fn keyTables() -> ()
   ! AssertionError<'static> {
   run Testing.expect(keyCodeFromValue(0) == KeyCode.Unidentified, "unidentified code")

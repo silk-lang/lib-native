@@ -107,6 +107,9 @@ const TRAY_CLICKED: u32 = 30
 
 const NOTIFICATION_CLICKED: u32 = 31
 
+const CONTEXT_MENU_CLOSED: u32 = 32
+const TOUCH: u32 = 33
+
 const TRAY_TEMPLATE: u32 = 1
 
 const FLAG_REPEAT: u32 = 1
@@ -508,6 +511,17 @@ impl BridgePlatform {
         },
       )
     }
+    if kind == TOUCH {
+      return Option<Event>.some(
+        Event.Touch {
+          window: window,
+          id: raw.code,
+          position: position,
+          phase: BridgePlatform.phase(raw.phase),
+          modifiers: modifiers,
+        },
+      )
+    }
     if kind == MENU_ACTION {
       return Option<Event>.some(Event.MenuAction { action: raw.code })
     }
@@ -558,6 +572,9 @@ impl BridgePlatform {
     }
     if kind == NOTIFICATION_CLICKED {
       return Option<Event>.some(Event.NotificationClicked { id: raw.code })
+    }
+    if kind == CONTEXT_MENU_CLOSED {
+      return Option<Event>.some(Event.ContextMenuClosed { window: window })
     }
     return Option<Event>.None
   }
@@ -976,6 +993,26 @@ impl Platform for BridgePlatform {
 
   fn removeTray(self: &mut Self) -> () {
     unsafe sys.silk_window_tray_remove()
+  }
+
+  effect fn showContextMenu(self: &mut Self, window: WindowId, x: f64, y: f64, menu: &MenuBar) -> bool
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    unsafe sys.silk_window_context_menu_begin()
+    BridgePlatform.describeMenu(menu)
+    return unsafe sys.silk_window_context_menu_commit(window.value, x, y) != 0
+  }
+
+  effect fn setBadge(self: &mut Self, text: string) -> bool
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    return unsafe sys.silk_window_set_badge(BridgePlatform.bytes(text), String.byteLength(text)) != 0
+  }
+
+  effect fn setProgress(self: &mut Self, fraction: f64) -> bool
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    return unsafe sys.silk_window_set_progress(fraction) != 0
   }
 
   effect fn registerShortcut(self: &mut Self, id: u32, code: KeyCode, modifiers: Modifiers) -> bool

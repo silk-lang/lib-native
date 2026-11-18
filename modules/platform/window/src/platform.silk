@@ -145,4 +145,33 @@ pub interface Platform {
   effect fn notify(self: &mut Self, notification: &Notification<'_>) -> u32
     ! OutOfMemoryError
     ? &mut Allocator
+
+  /// Opens `menu` as a context menu at `x`, `y` (points in `window`'s content area), with its
+  /// items at the top level and `begin`/`end` for submenus. It returns at once: a chosen item
+  /// sends `Event.MenuAction`, a menu closed without a choice `Event.ContextMenuClosed`. False
+  /// when the system has no context menus to show (Linux without a toolkit, the browser): the
+  /// app draws its own in the window.
+  effect fn showContextMenu(self: &mut Self, window: WindowId, x: f64, y: f64, menu: &MenuBar) -> bool
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    return false
+  }
+
+  /// Puts `text` on the app's icon in the dock or taskbar, such as an unread count; "" takes
+  /// it off. Windows shows numbers up to 99 (more as "99+") and a dot for other text; Linux
+  /// docks that read the launcher entry API show numbers only. False when the system shows
+  /// no badges.
+  effect fn setBadge(self: &mut Self, text: string) -> bool
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    return false
+  }
+
+  /// Shows progress on the app's icon in the dock or taskbar, `fraction` from 0 to 1; a
+  /// negative fraction takes it off. False when the system shows no progress there.
+  effect fn setProgress(self: &mut Self, fraction: f64) -> bool
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    return false
+  }
 }

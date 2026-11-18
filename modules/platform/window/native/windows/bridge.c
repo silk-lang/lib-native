@@ -81,8 +81,10 @@ typedef struct Win32Window {
 } Win32Window;
 
 typedef struct Task {
-    int kind; // 1 open dialog, 2 save dialog, 3 window drag
+    int kind; // 1 open dialog, 2 save dialog, 3 window drag, 4 context menu
     uint32_t id;
+    POINT point;
+    HMENU menu;
     uint32_t window;
     uint32_t flags;
     WCHAR *title, *directory, *name;
@@ -815,6 +817,39 @@ static void push_button(Win32Window *window, bool down, uint32_t button, LPARAM 
     silk_queue_push(&event);
 }
 
+// Phase numbers, as src/bridge.silk's PHASES.
+enum { PHASE_BEGAN = 1, PHASE_CHANGED = 2, PHASE_ENDED = 3, PHASE_CANCELLED = 4 };
+
+// Turns a pointer message of a finger into a Touch event. Returns false for other pointers.
+static bool push_touch(Win32Window *window, UINT message, WPARAM wParam) {
+    UINT32 id = GET_POINTERID_WPARAM(wParam);
+    POINTER_INPUT_TYPE type = PT_POINTER;
+    if (!GetPointerType(id, &type) || type != PT_TOUCH) return false;
+    POINTER_INFO info;
+    if (!GetPointerInfo(id, &info)) return false;
+    uint32_t phase = PHASE_CHANGED;
+    if (message == WM_POINTERDOWN) {
+        phase = PHASE_BEGAN;
+    } else if (message == WM_POINTERUP) {
+        phase = (info.pointerFlags & POINTER_FLAG_CANCELED) ? PHASE_CANCELLED : PHASE_ENDED;
+    } else if (message == WM_POINTERCAPTURECHANGED) {
+        phase = PHASE_CANCELLED;
+    } else if (!(info.pointerFlags & POINTER_FLAG_INCONTACT)) {
+        // A finger hovering over a screen that senses it: nothing is touched.
+        return true;
+    }
+    POINT point = info.ptPixelLocation;
+    ScreenToClient(window->hwnd, &point);
+    SilkWindowEvent event = silk_event(SILK_EVENT_TOUCH, window->id);
+    event.code = id;
+    event.phase = phase;
+    event.x = point.x / window->scale;
+    event.y = point.y / window->scale;
+    event.modifiers = current_modifiers();
+    silk_queue_push(&event);
+    return true;
+}
+
 static HCURSOR cursor_handle(uint32_t cursor) {
     static const WORD ids[] = {
         32512, // Arrow IDC_ARROW
@@ -1131,6 +1166,14 @@ static LRESULT CALLBACK window_proc(HWND hwnd, UINT message, WPARAM wParam, LPAR
         push_button(window, message == WM_XBUTTONDOWN,
                     HIWORD(wParam) == XBUTTON1 ? SILK_BUTTON_BACK : SILK_BUTTON_FORWARD, lParam);
         result = TRUE;
+        break;
+    case WM_POINTERDOWN:
+    case WM_POINTERUPDATE:
+    case WM_POINTERUP:
+    case WM_POINTERCAPTURECHANGED:
+        // Fingers become Touch events. Handling their pointer messages keeps Windows from
+        // also sending them as mouse messages; mouse and pen go on to DefWindowProc.
+        handled = push_touch(window, message, wParam);
         break;
     case WM_MOUSEWHEEL:
     case WM_MOUSEHWHEEL: {
@@ -1638,8 +1681,161 @@ static void run_dialog(Task *task) {
     for (size_t i = 0; i < count; i++) free(texts[i].bytes);
 }
 
+static void run_context_menu(Task *task) {
+    Win32Window *window = find(task->window);
+    UINT command = 0;
+    if (window) {
+        command = (UINT)TrackPopupMenu(task->menu, TPM_RETURNCMD | TPM_RIGHTBUTTON | TPM_NONOTIFY,
+                                       task->point.x, task->point.y, 0, window->hwnd, NULL);
+    }
+    DestroyMenu(task->menu);
+    if (command >= MENU_ACTION_BASE) {
+        SilkWindowEvent event = silk_event(SILK_EVENT_MENU_ACTION, 0);
+        event.code = command - MENU_ACTION_BASE;
+        silk_queue_push(&event);
+    } else if (command >= MENU_SYSTEM_BASE) {
+        system_item(window, command - MENU_SYSTEM_BASE);
+    } else {
+        SilkWindowEvent event = silk_event(SILK_EVENT_CONTEXT_MENU_CLOSED, task->window);
+        silk_queue_push(&event);
+    }
+}
+
+uint8_t silk_window_context_menu_commit(uint32_t id, double x, double y) {
+    silk_context_commit_pending();
+    Win32Window *window = find(id);
+    if (!window) return 0;
+    Task *task = calloc(1, sizeof *task);
+    if (!task) return 0;
+    task->menu = build_menu_from(silk_context_entries, silk_context_count, true);
+    if (!task->menu) {
+        free(task);
+        return 0;
+    }
+    task->kind = 4;
+    task->window = id;
+    task->point.x = (LONG)lround(x * window->scale);
+    task->point.y = (LONG)lround(y * window->scale);
+    ClientToScreen(window->hwnd, &task->point);
+    post_task(task);
+    return 1;
+}
+
+// Taskbar badge and progress, through ITaskbarList3 on every window's button.
+static ITaskbarList3 *taskbar;
+static HICON badgeIcon;
+static double progressValue = -1;
+
+static ITaskbarList3 *taskbar_list(void) {
+    if (taskbar) return taskbar;
+    ITaskbarList3 *list = NULL;
+    if (FAILED(CoCreateInstance(&CLSID_TaskbarList, NULL, CLSCTX_INPROC_SERVER, &IID_ITaskbarList3,
+                                (void **)&list)))
+        return NULL;
+    if (FAILED(ITaskbarList3_HrInit(list))) {
+        ITaskbarList3_Release(list);
+        return NULL;
+    }
+    taskbar = list;
+    return taskbar;
+}
+
+static HICON badge_icon(const WCHAR *label) {
+    enum { SIZE = 32 };
+    BITMAPINFO info = {0};
+    info.bmiHeader.biSize = sizeof info.bmiHeader;
+    info.bmiHeader.biWidth = SIZE;
+    info.bmiHeader.biHeight = -SIZE;
+    info.bmiHeader.biPlanes = 1;
+    info.bmiHeader.biBitCount = 32;
+    info.bmiHeader.biCompression = BI_RGB;
+    void *bits = NULL;
+    HDC dc = CreateCompatibleDC(NULL);
+    HBITMAP color = CreateDIBSection(dc, &info, DIB_RGB_COLORS, &bits, NULL, 0);
+    if (!dc || !color || !bits) {
+        if (color) DeleteObject(color);
+        if (dc) DeleteDC(dc);
+        return NULL;
+    }
+    HGDIOBJ old = SelectObject(dc, color);
+    HBRUSH red = CreateSolidBrush(RGB(220, 38, 38));
+    HGDIOBJ oldBrush = SelectObject(dc, red);
+    HGDIOBJ oldPen = SelectObject(dc, GetStockObject(NULL_PEN));
+    Ellipse(dc, 0, 0, SIZE + 1, SIZE + 1);
+    if (label[0]) {
+        HFONT font = CreateFontW(label[2] ? -14 : -20, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0,
+                                 0, CLEARTYPE_QUALITY, 0, L"Segoe UI");
+        HGDIOBJ oldFont = SelectObject(dc, font);
+        SetBkMode(dc, TRANSPARENT);
+        SetTextColor(dc, RGB(255, 255, 255));
+        RECT rect = {0, 0, SIZE, SIZE};
+        DrawTextW(dc, label, -1, &rect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+        SelectObject(dc, oldFont);
+        DeleteObject(font);
+    }
+    SelectObject(dc, oldPen);
+    SelectObject(dc, oldBrush);
+    DeleteObject(red);
+    SelectObject(dc, old);
+    // GDI leaves alpha at zero: painted pixels become opaque, the rest stays clear.
+    uint32_t *pixels = bits;
+    for (int i = 0; i < SIZE * SIZE; i++)
+        if (pixels[i]) pixels[i] |= 0xff000000u;
+    HBITMAP mask = CreateBitmap(SIZE, SIZE, 1, 1, NULL);
+    ICONINFO icon = {TRUE, 0, 0, mask, color};
+    HICON result = CreateIconIndirect(&icon);
+    DeleteObject(mask);
+    DeleteObject(color);
+    DeleteDC(dc);
+    return result;
+}
+
+static void apply_taskbar(Win32Window *window) {
+    ITaskbarList3 *list = taskbar_list();
+    if (!list) return;
+    ITaskbarList3_SetOverlayIcon(list, window->hwnd, badgeIcon, NULL);
+    if (progressValue < 0) {
+        ITaskbarList3_SetProgressState(list, window->hwnd, TBPF_NOPROGRESS);
+    } else {
+        ITaskbarList3_SetProgressState(list, window->hwnd, TBPF_NORMAL);
+        ITaskbarList3_SetProgressValue(list, window->hwnd, (ULONGLONG)lround(progressValue * 1000), 1000);
+    }
+}
+
+uint8_t silk_window_set_badge(const uint8_t *text, size_t length) {
+    if (!taskbar_list()) return 0;
+    WCHAR label[4] = {0};
+    bool digits = length > 0;
+    for (size_t i = 0; i < length; i++)
+        if (text[i] < '0' || text[i] > '9') digits = false;
+    if (digits) {
+        size_t start = 0;
+        while (start + 1 < length && text[start] == '0') start++;
+        if (length - start > 2) {
+            wcscpy(label, L"99+");
+        } else {
+            for (size_t i = start; i < length; i++) label[i - start] = text[i];
+        }
+    }
+    if (badgeIcon) DestroyIcon(badgeIcon);
+    badgeIcon = length ? badge_icon(label) : NULL;
+    for (size_t i = 0; i < windowCount; i++)
+        if (windows[i]->open) apply_taskbar(windows[i]);
+    return 1;
+}
+
+uint8_t silk_window_set_progress(double fraction) {
+    if (!taskbar_list()) return 0;
+    progressValue = fraction < 0 ? -1 : fraction > 1 ? 1 : fraction;
+    for (size_t i = 0; i < windowCount; i++)
+        if (windows[i]->open) apply_taskbar(windows[i]);
+    return 1;
+}
+
 static void run_task(Task *task) {
-    if (task->kind == 3) {
+    if (task->kind == 4) {
+        run_context_menu(task);
+    } else if (task->kind == 3) {
         Win32Window *window = find(task->window);
         if (window) {
             ReleaseCapture();
