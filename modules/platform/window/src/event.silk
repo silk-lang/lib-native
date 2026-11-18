@@ -238,6 +238,9 @@ pub union Event {
   TrayClicked { pub button: MouseButton },
   /// The user clicked a notification from `Platform.notify`.
   NotificationClicked { pub id: u32 },
+  /// A menu from `Platform.showContextMenu` closed without an item chosen. A chosen item
+  /// sends `MenuAction` instead.
+  ContextMenuClosed { pub window: WindowId },
   /// The user asked to quit, from the app menu or the system. The app decides whether to
   /// stop its event loop.
   QuitRequested,

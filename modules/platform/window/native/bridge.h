@@ -43,6 +43,7 @@ enum {
     SILK_EVENT_GLOBAL_SHORTCUT = 29,   // code: the shortcut's id
     SILK_EVENT_TRAY_CLICKED = 30,      // code: the mouse button
     SILK_EVENT_NOTIFICATION_CLICKED = 31, // code: the notification's id
+    SILK_EVENT_CONTEXT_MENU_CLOSED = 32,  // window: closed without an item chosen
 };
 
 // tray_commit flags.
@@ -206,6 +207,20 @@ void silk_window_shortcut_unregister(uint32_t id);
 // it could not be shown.
 uint32_t silk_window_notify(const uint8_t *title, size_t titleLength, const uint8_t *body,
                      size_t bodyLength);
+
+// A context menu, described with the menu_* calls between context_menu_begin and
+// context_menu_commit, items at the top level and begin/end for submenus. Commit opens it at
+// x, y (points in the window's content area) and returns at once: 1 when it opened, 0 when the
+// backend has no context menus. A chosen item delivers MENU_ACTION, a menu closed without a
+// choice CONTEXT_MENU_CLOSED.
+void silk_window_context_menu_begin(void);
+uint8_t silk_window_context_menu_commit(uint32_t window, double x, double y);
+
+// The badge on the app's dock or taskbar icon ("" removes it), and progress there from 0 to
+// 1 (negative removes it). Each returns 1 when the system shows it, 0 when it has no place
+// for it.
+uint8_t silk_window_set_badge(const uint8_t *text, size_t length);
+uint8_t silk_window_set_progress(double fraction);
 
 // Test hooks for the smoke tests: drive the system as the user would. Each returns 1 when
 // it did something and 0 when the backend cannot simulate it.

@@ -27,7 +27,7 @@ const EVENT = {
   MOUSE_ENTERED: 17, MOUSE_EXITED: 18, SCROLL: 19, PINCH: 20, MENU_ACTION: 21,
   DIALOG_CLOSED: 22, APPEARANCE_CHANGED: 23, QUIT_REQUESTED: 24, FILE_DRAG_ENTERED: 25,
   FILE_DRAG_MOVED: 26, FILE_DRAG_LEFT: 27, FILE_DROPPED: 28, GLOBAL_SHORTCUT: 29,
-  TRAY_CLICKED: 30, NOTIFICATION_CLICKED: 31,
+  TRAY_CLICKED: 30, NOTIFICATION_CLICKED: 31, CONTEXT_MENU_CLOSED: 32,
 };
 const FLAG = { REPEAT: 1, IME_HANDLED: 2, ON: 4, PRECISE: 8 };
 const MOD = { SHIFT: 1, CONTROL: 2, ALT: 4, META: 8, CAPS_LOCK: 16 };
@@ -655,6 +655,21 @@ export class WindowHost {
   silk_window_tray_remove() {}
   silk_window_shortcut_register() { return 0; }
   silk_window_shortcut_unregister() {}
+  // The page's own context menu stays the app's to draw.
+  silk_window_context_menu_begin() { this.pendingMenu = null; }
+  silk_window_context_menu_commit() { return 0; }
+  silk_window_set_progress() { return 0; }
+
+  // An installed web app's badge (the Badging API): a count, or a dot for other text.
+  silk_window_set_badge(ptr, length) {
+    const nav = globalThis.navigator;
+    if (!nav?.setAppBadge) return 0;
+    const text = this.text(ptr, length);
+    const count = /^\d+$/.test(text) ? Number(text) : null;
+    const done = text === '' ? nav.clearAppBadge() : count !== null ? nav.setAppBadge(count) : nav.setAppBadge();
+    done?.catch?.(() => {});
+    return 1;
+  }
 
   silk_window_notify(titlePtr, titleLength, bodyPtr, bodyLength) {
     const Notice = globalThis.Notification;

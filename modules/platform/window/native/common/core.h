@@ -84,6 +84,11 @@ extern SilkMenuEntry *silk_tray_entries;
 extern size_t silk_tray_count;
 void silk_tray_commit_pending(void);
 
+// The last context menu's entries, kept by context_menu_commit until the next one.
+extern SilkMenuEntry *silk_context_entries;
+extern size_t silk_context_count;
+void silk_context_commit_pending(void);
+
 // What a matched shortcut does.
 typedef struct SilkShortcutMatch {
     uint32_t type;   // 0 none, SILK_MENU_ACTION or SILK_MENU_SYSTEM

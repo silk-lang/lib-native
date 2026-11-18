@@ -191,6 +191,19 @@ void silk_tray_commit_pending(void) {
 
 void silk_window_tray_begin(void) { silk_menu_reset_pending(); }
 
+SilkMenuEntry *silk_context_entries;
+size_t silk_context_count;
+
+void silk_context_commit_pending(void) {
+    free_entries(silk_context_entries, silk_context_count);
+    silk_context_entries = pending;
+    silk_context_count = pendingCount;
+    pending = NULL;
+    pendingCount = pendingCapacity = 0;
+}
+
+void silk_window_context_menu_begin(void) { silk_menu_reset_pending(); }
+
 size_t silk_split_paths(const uint8_t *paths, size_t length, SilkText *out, size_t capacity) {
     size_t count = 0, start = 0;
     for (size_t i = 0; i <= length && count < capacity; i++) {
