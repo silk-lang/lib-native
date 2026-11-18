@@ -103,6 +103,7 @@ static struct wl_data_device_manager *dataDeviceManager;
 static struct wl_seat *seat;
 static struct wl_keyboard *keyboard;
 static struct wl_pointer *pointer;
+static struct wl_touch *touch;
 static struct wp_cursor_shape_device_v1 *cursorShapeDevice;
 static struct zwp_text_input_v3 *textInput;
 static struct wl_data_device *dataDevice;
@@ -1265,6 +1266,89 @@ void silk_wl_clipboard_write(const uint8_t *text, size_t length) {
 }
 
 // ---------------------------------------------------------------------------------------
+// Touch.
+
+// Phase numbers, as src/bridge.silk's PHASES.
+enum { PHASE_BEGAN = 1, PHASE_CHANGED = 2, PHASE_ENDED = 3, PHASE_CANCELLED = 4 };
+
+// The fingers down on a window's content, by the compositor's touch id.
+typedef struct WlTouchPoint {
+    int32_t id;
+    uint32_t window;
+    double x, y;
+} WlTouchPoint;
+
+static WlTouchPoint touchPoints[16];
+static int touchCount;
+
+static WlTouchPoint *touch_point(int32_t id) {
+    for (int i = 0; i < touchCount; i++)
+        if (touchPoints[i].id == id) return &touchPoints[i];
+    return NULL;
+}
+
+static void push_touch(WlTouchPoint *point, uint32_t phase) {
+    SilkWindowEvent event = silk_event(SILK_EVENT_TOUCH, point->window);
+    event.code = (uint32_t)point->id;
+    event.phase = phase;
+    event.x = point->x;
+    event.y = point->y;
+    event.modifiers = modifierBits;
+    silk_queue_push(&event);
+}
+
+static void forget_touch(WlTouchPoint *point) {
+    *point = touchPoints[--touchCount];
+}
+
+static void touch_down(void *data, struct wl_touch *t, uint32_t serial, uint32_t time,
+                       struct wl_surface *surface, int32_t id, wl_fixed_t x, wl_fixed_t y) {
+    WlWindow *window = find_surface(surface);
+    // A finger on the drawn title bar is not the app's.
+    if (!window || surface == window->titleSurface || touchCount == 16) return;
+    WlTouchPoint *point = &touchPoints[touchCount++];
+    point->id = id;
+    point->window = window->id;
+    point->x = wl_fixed_to_double(x);
+    point->y = wl_fixed_to_double(y);
+    push_touch(point, PHASE_BEGAN);
+}
+
+static void touch_up(void *data, struct wl_touch *t, uint32_t serial, uint32_t time, int32_t id) {
+    WlTouchPoint *point = touch_point(id);
+    if (!point) return;
+    push_touch(point, PHASE_ENDED);
+    forget_touch(point);
+}
+
+static void touch_motion(void *data, struct wl_touch *t, uint32_t time, int32_t id, wl_fixed_t x,
+                         wl_fixed_t y) {
+    WlTouchPoint *point = touch_point(id);
+    if (!point) return;
+    point->x = wl_fixed_to_double(x);
+    point->y = wl_fixed_to_double(y);
+    push_touch(point, PHASE_CHANGED);
+}
+
+static void touch_frame(void *data, struct wl_touch *t) {}
+
+// The compositor took every finger, for a gesture of its own.
+static void touch_cancel(void *data, struct wl_touch *t) {
+    while (touchCount > 0) {
+        push_touch(&touchPoints[touchCount - 1], PHASE_CANCELLED);
+        touchCount--;
+    }
+}
+
+static void touch_shape(void *data, struct wl_touch *t, int32_t id, wl_fixed_t major,
+                        wl_fixed_t minor) {}
+static void touch_orientation(void *data, struct wl_touch *t, int32_t id, wl_fixed_t orientation) {}
+
+static const struct wl_touch_listener touchListener = {
+    touch_down, touch_up, touch_motion, touch_frame, touch_cancel, touch_shape, touch_orientation,
+};
+
+// ---------------------------------------------------------------------------------------
 // Seat and registry.
 
 static void seat_capabilities(void *data, struct wl_seat *s, uint32_t capabilities) {
@@ -1283,6 +1367,14 @@ static void seat_capabilities(void *data, struct wl_seat *s, uint32_t capabiliti
     } else if (!(capabilities & WL_SEAT_CAPABILITY_POINTER) && pointer) {
         wl_pointer_release(pointer);
         pointer = NULL;
+    }
+    if ((capabilities & WL_SEAT_CAPABILITY_TOUCH) && !touch) {
+        touch = wl_seat_get_touch(s);
+        wl_touch_add_listener(touch, &touchListener, NULL);
+    } else if (!(capabilities & WL_SEAT_CAPABILITY_TOUCH) && touch) {
+        touch_cancel(NULL, touch);
+        wl_touch_release(touch);
+        touch = NULL;
     }
 }
 

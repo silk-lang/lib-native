@@ -44,6 +44,7 @@ enum {
     SILK_EVENT_TRAY_CLICKED = 30,      // code: the mouse button
     SILK_EVENT_NOTIFICATION_CLICKED = 31, // code: the notification's id
     SILK_EVENT_CONTEXT_MENU_CLOSED = 32,  // window: closed without an item chosen
+    SILK_EVENT_TOUCH = 33,                // code: the touch's id; x, y; phase: began to cancelled
 };
 
 // tray_commit flags.
@@ -115,7 +116,7 @@ typedef struct SilkWindowEvent {
     uint32_t modifiers;  // event.Modifiers bits
     uint32_t flags;
     uint32_t count;      // click count, number of strings
-    uint32_t phase;      // Phase for scroll and pinch
+    uint32_t phase;      // Phase for scroll, pinch and touch
     double x, y;         // position or size in points
     double dx, dy;       // scroll delta, pinch delta in dx
     double value;        // scale factor, target time
