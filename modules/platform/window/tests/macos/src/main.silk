@@ -204,12 +204,19 @@ effect fn smoke(checks: &mut Checks) -> ()
   checks.check(shortcut.text.view() == "", "a shortcut types no text")
 
   // Every keyword, then a cursor from pixels.
+  StderrWriter.print("info  cursor zoom-in\n", &())
   platform.setCursor(window, Cursor.ZoomIn)
+  StderrWriter.print("info  cursor cell\n", &())
   platform.setCursor(window, Cursor.Cell)
+  StderrWriter.print("info  cursor no-drop\n", &())
   platform.setCursor(window, Cursor.NoDrop)
+  StderrWriter.print("info  cursor move\n", &())
   platform.setCursor(window, Cursor.Move)
+  StderrWriter.print("info  cursor se-resize\n", &())
   platform.setCursor(window, Cursor.ResizeDownRight)
+  StderrWriter.print("info  cursor grab\n", &())
   platform.setCursor(window, Cursor.OpenHand)
+  StderrWriter.print("info  cursor from pixels\n", &())
   let mut cursorPixels: [u8; 1024] = [0; 1024]
   cursorPixels[3] = 255
   let cursorImage = CursorImage {
