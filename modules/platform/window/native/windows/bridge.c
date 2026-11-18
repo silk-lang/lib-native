@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "../common/core.h"
+#include "../common/cursors.h"
 #include "keys.h"
 
 #ifndef WM_DPICHANGED
@@ -72,6 +73,7 @@ typedef struct Win32Window {
     double minWidth, minHeight;
     struct { bool pending, forced; } frame;
     uint32_t cursor;
+    HCURSOR custom; // from set_cursor_image, while it shows
     bool imeEnabled;
     HIMC savedContext;
     double imeX, imeY, imeWidth, imeHeight;
@@ -855,7 +857,80 @@ static bool push_touch(Win32Window *window, UINT message, WPARAM wParam) {
     return true;
 }
 
-static HCURSOR cursor_handle(uint32_t cursor) {
+
+// A cursor from `rgba` (width * height, not premultiplied), each pixel drawn `factor` times
+// larger.
+static HCURSOR pixel_cursor(const uint8_t *rgba, uint32_t width, uint32_t height, uint32_t hotX,
+                            uint32_t hotY, uint32_t factor) {
+    if (factor < 1) factor = 1;
+    uint32_t w = width * factor, h = height * factor;
+    BITMAPINFO info = {0};
+    info.bmiHeader.biSize = sizeof info.bmiHeader;
+    info.bmiHeader.biWidth = (LONG)w;
+    info.bmiHeader.biHeight = -(LONG)h;
+    info.bmiHeader.biPlanes = 1;
+    info.bmiHeader.biBitCount = 32;
+    info.bmiHeader.biCompression = BI_RGB;
+    void *bits = NULL;
+    HDC screen = GetDC(NULL);
+    HBITMAP color = CreateDIBSection(screen, &info, DIB_RGB_COLORS, &bits, NULL, 0);
+    ReleaseDC(NULL, screen);
+    if (!color || !bits) {
+        if (color) DeleteObject(color);
+        return NULL;
+    }
+    uint8_t *out = bits;
+    for (uint32_t y = 0; y < h; y++)
+        for (uint32_t x = 0; x < w; x++) {
+            const uint8_t *p = rgba + ((size_t)(y / factor) * width + x / factor) * 4;
+            uint8_t *q = out + ((size_t)y * w + x) * 4;
+            q[0] = p[2];
+            q[1] = p[1];
+            q[2] = p[0];
+            q[3] = p[3];
+        }
+    HBITMAP mask = CreateBitmap((int)w, (int)h, 1, 1, NULL);
+    ICONINFO icon = {FALSE, hotX * factor, hotY * factor, mask, color};
+    HCURSOR result = (HCURSOR)CreateIconIndirect(&icon);
+    DeleteObject(mask);
+    DeleteObject(color);
+    return result;
+}
+
+// The bundled image of `cursor` at `factor`, made once.
+static HCURSOR bundled_cursor(uint32_t cursor, uint32_t factor) {
+    static HCURSOR made[40][4];
+    if (cursor >= 40) return NULL;
+    if (factor < 1) factor = 1;
+    if (factor > 4) factor = 4;
+    if (made[cursor][factor - 1]) return made[cursor][factor - 1];
+    uint8_t rgba[SILK_CURSOR_ART * SILK_CURSOR_ART * 4];
+    uint32_t hotX, hotY;
+    if (!silk_cursor_bundled(cursor, 1, rgba, &hotX, &hotY)) return NULL;
+    made[cursor][factor - 1] = pixel_cursor(rgba, SILK_CURSOR_ART, SILK_CURSOR_ART, hotX, hotY, factor);
+    return made[cursor][factor - 1];
+}
+
+static uint32_t cursor_factor(Win32Window *window) {
+    UINT dpi = dpi_of(window->hwnd);
+    uint32_t factor = (dpi + 48) / 96;
+    return factor < 1 ? 1 : factor;
+}
+
+static HCURSOR cursor_handle(Win32Window *window) {
+    if (window->custom) return window->custom;
+    uint32_t cursor = window->cursor;
+    // Windows has no grab, grabbing, column, row, vertical text, copy, alias, context menu,
+    // zoom, cell or no-drop cursor: those are bundled images.
+    switch (cursor) {
+    case 4: case 5: case 15: case 16: case 17: case 18: case 19: case 20: case 25: case 26:
+    case 27: case 28: {
+        HCURSOR bundled = bundled_cursor(cursor, cursor_factor(window));
+        if (bundled) return bundled;
+        break;
+    }
+    default: break;
+    }
     static const WORD ids[] = {
         32512, // Arrow IDC_ARROW
         32513, // IBeam
@@ -876,7 +951,11 @@ static HCURSOR cursor_handle(uint32_t cursor) {
         32514, // Wait IDC_WAIT
         32650, // Progress IDC_APPSTARTING
         32651, // Help IDC_HELP
-        32512, 32512, // ZoomIn, ZoomOut: Windows has none
+        32512, 32512, // ZoomIn, ZoomOut
+        32515, // Cell
+        32648, // NoDrop
+        32646, 32646, // Move, AllScroll IDC_SIZEALL
+        32642, 32643, 32643, 32642, // ResizeUpLeft, UpRight, DownLeft, DownRight
     };
     if (cursor == 21) return NULL;
     if (cursor >= sizeof ids / sizeof ids[0]) cursor = 0;
@@ -1210,7 +1289,7 @@ static LRESULT CALLBACK window_proc(HWND hwnd, UINT message, WPARAM wParam, LPAR
     }
     case WM_SETCURSOR:
         if (LOWORD(lParam) == HTCLIENT) {
-            SetCursor(cursor_handle(window->cursor));
+            SetCursor(cursor_handle(window));
             result = TRUE;
         } else {
             handled = false;
@@ -1460,6 +1539,8 @@ void silk_window_close(uint32_t id) {
         window->dropTarget = NULL;
     }
     DestroyWindow(window->hwnd);
+    if (window->custom) DestroyCursor(window->custom);
+    window->custom = NULL;
     if (window->menu) DestroyMenu(window->menu);
     silk_queue_forget_window(id);
 }
@@ -1563,18 +1644,39 @@ void silk_window_start_window_drag(uint32_t id) {
     post_task(task);
 }
 
-void silk_window_set_cursor(uint32_t id, uint32_t cursor) {
-    Win32Window *window = find(id);
-    if (!window) return;
-    window->cursor = cursor;
+static void show_cursor(Win32Window *window) {
     POINT point;
     GetCursorPos(&point);
     if (WindowFromPoint(point) == window->hwnd) {
         ScreenToClient(window->hwnd, &point);
         RECT client;
         GetClientRect(window->hwnd, &client);
-        if (PtInRect(&client, point)) SetCursor(cursor_handle(cursor));
+        if (PtInRect(&client, point)) SetCursor(cursor_handle(window));
     }
+}
+
+void silk_window_set_cursor(uint32_t id, uint32_t cursor) {
+    Win32Window *window = find(id);
+    if (!window) return;
+    window->cursor = cursor;
+    HCURSOR old = window->custom;
+    window->custom = NULL;
+    show_cursor(window);
+    if (old) DestroyCursor(old);
+}
+
+uint8_t silk_window_set_cursor_image(uint32_t id, const uint8_t *pixels, uint32_t width,
+                                     uint32_t height, uint32_t hotX, uint32_t hotY, double scale) {
+    Win32Window *window = find(id);
+    if (!window) return 0;
+    double ratio = cursor_factor(window) / (scale > 0 ? scale : 1.0);
+    HCURSOR cursor = pixel_cursor(pixels, width, height, hotX, hotY, ratio >= 1.5 ? (uint32_t)lround(ratio) : 1);
+    if (!cursor) return 0;
+    HCURSOR old = window->custom;
+    window->custom = cursor;
+    show_cursor(window);
+    if (old) DestroyCursor(old);
+    return 1;
 }
 
 void silk_window_set_ime(uint32_t id, uint8_t enabled, double x, double y, double width,

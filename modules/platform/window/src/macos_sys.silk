@@ -172,6 +172,15 @@ static if Intrinsic.targetOperatingSystem() == "darwin" {
   pub unsafe extern "C" fn silk_macos_start_window_drag(window: u32) -> ()
   pub unsafe extern "C" fn silk_macos_set_controls(window: u32, height: f64, left: f64, top: f64) -> ()
   pub unsafe extern "C" fn silk_macos_set_cursor(window: u32, cursor: u32) -> ()
+  pub unsafe extern "C" fn silk_macos_set_cursor_image(
+    window: u32,
+    pixels: ?[*]const u8,
+    width: u32,
+    height: u32,
+    hotX: u32,
+    hotY: u32,
+    scale: f64,
+  ) -> u8
   pub unsafe extern "C" fn silk_macos_set_ime(
     window: u32,
     enabled: u8,
@@ -374,6 +383,18 @@ static if Intrinsic.targetOperatingSystem() == "darwin" {
 
   pub unsafe fn silk_macos_set_cursor(window: u32, cursor: u32) -> () {
     return ()
+  }
+
+  pub unsafe fn silk_macos_set_cursor_image(
+    window: u32,
+    pixels: ?[*]const u8,
+    width: u32,
+    height: u32,
+    hotX: u32,
+    hotY: u32,
+    scale: f64,
+  ) -> u8 {
+    return 0
   }
 
   pub unsafe fn silk_macos_set_ime(

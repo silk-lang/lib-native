@@ -31,6 +31,7 @@
 #include "cursor-shape-v1-client-protocol.h"
 #include "fractional-scale-v1-client-protocol.h"
 #include "linux.h"
+#include "../common/cursors.h"
 #include "text-input-unstable-v3-client-protocol.h"
 #include "viewporter-client-protocol.h"
 #include "xdg-decoration-unstable-v1-client-protocol.h"
@@ -82,6 +83,8 @@ typedef struct WlWindow {
     bool callbackEverFired;
     double due;
     uint32_t cursor;
+    uint8_t *custom; // set_cursor_image's RGBA pixels while they show, else NULL
+    uint32_t customWidth, customHeight, customHotX, customHotY, customScale;
     bool imeEnabled;
     double imeX, imeY, imeWidth, imeHeight;
     char *title;
@@ -694,16 +697,6 @@ static const struct wl_keyboard_listener keyboardListener = {
 // ---------------------------------------------------------------------------------------
 // Pointer and the title bar.
 
-static const char *cursor_name(uint32_t cursor) {
-    static const char *names[] = {
-        "default", "text", "pointer", "crosshair", "grabbing", "grab", "not-allowed",
-        "ew-resize", "ns-resize", "w-resize", "e-resize", "n-resize", "s-resize",
-        "nwse-resize", "nesw-resize", "col-resize", "row-resize", "vertical-text", "copy",
-        "alias", "context-menu", "none", "wait", "progress", "help", "zoom-in", "zoom-out",
-    };
-    return cursor < sizeof names / sizeof names[0] ? names[cursor] : "default";
-}
-
 static uint32_t cursor_shape(uint32_t cursor) {
     static const uint32_t shapes[] = {
         WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_DEFAULT, WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_TEXT,
@@ -719,13 +712,71 @@ static uint32_t cursor_shape(uint32_t cursor) {
         WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_CONTEXT_MENU, WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_DEFAULT,
         WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_WAIT, WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_PROGRESS,
         WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_HELP, WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_ZOOM_IN,
-        WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_ZOOM_OUT,
+        WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_ZOOM_OUT, WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_CELL,
+        WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_NO_DROP, WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_MOVE,
+        WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_ALL_SCROLL, WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_NW_RESIZE,
+        WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_NE_RESIZE, WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_SW_RESIZE,
+        WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_SE_RESIZE,
     };
     return cursor < sizeof shapes / sizeof shapes[0] ? shapes[cursor]
                                                      : WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_DEFAULT;
 }
 
-static void apply_cursor(uint32_t cursor) {
+// Shows `rgba` (not premultiplied) on the cursor surface, `scale` pixels per point.
+static void show_cursor_pixels(const uint8_t *rgba, uint32_t width, uint32_t height,
+                               uint32_t hotX, uint32_t hotY, uint32_t scale) {
+    if (!shm || !compositor) return;
+    if (scale < 1 || width % scale || height % scale) scale = 1;
+    int stride = (int)width * 4;
+    size_t size = (size_t)stride * height;
+    int fd = create_shm_file(size);
+    if (fd < 0) return;
+    uint32_t *pixels = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    if (pixels == MAP_FAILED) {
+        close(fd);
+        return;
+    }
+    for (size_t i = 0; i < (size_t)width * height; i++) {
+        const uint8_t *p = rgba + i * 4;
+        uint32_t a = p[3];
+        pixels[i] = (a << 24) | ((p[0] * a / 255) << 16) | ((p[1] * a / 255) << 8) | (p[2] * a / 255);
+    }
+    struct wl_shm_pool *pool = wl_shm_create_pool(shm, fd, (int32_t)size);
+    struct wl_buffer *buffer = wl_shm_pool_create_buffer(pool, 0, (int32_t)width, (int32_t)height,
+                                                         stride, WL_SHM_FORMAT_ARGB8888);
+    wl_buffer_add_listener(buffer, &bufferListener, NULL);
+    wl_shm_pool_destroy(pool);
+    munmap(pixels, size);
+    close(fd);
+    if (!cursorSurface) cursorSurface = wl_compositor_create_surface(compositor);
+    wl_pointer_set_cursor(pointer, pointerEnterSerial, cursorSurface, (int32_t)(hotX / scale),
+                          (int32_t)(hotY / scale));
+    wl_surface_set_buffer_scale(cursorSurface, (int32_t)scale);
+    wl_surface_attach(cursorSurface, buffer, 0, 0);
+    wl_surface_damage_buffer(cursorSurface, 0, 0, (int32_t)width, (int32_t)height);
+    wl_surface_commit(cursorSurface);
+}
+
+static bool theme_cursor(uint32_t cursor) {
+    if (!cursorTheme && shm) cursorTheme = wl_cursor_theme_load(getenv("XCURSOR_THEME"), silk_cursor_theme_size(), shm);
+    if (!cursorTheme) return false;
+    struct wl_cursor *found = NULL;
+    for (const char *const *name = silk_cursor_names(cursor); *name && !found; name++)
+        found = wl_cursor_theme_get_cursor(cursorTheme, *name);
+    if (!found || found->image_count == 0) return false;
+    struct wl_cursor_image *image = found->images[0];
+    struct wl_buffer *buffer = wl_cursor_image_get_buffer(image);
+    if (!cursorSurface) cursorSurface = wl_compositor_create_surface(compositor);
+    wl_pointer_set_cursor(pointer, pointerEnterSerial, cursorSurface, (int32_t)image->hotspot_x,
+                          (int32_t)image->hotspot_y);
+    wl_surface_set_buffer_scale(cursorSurface, 1);
+    wl_surface_attach(cursorSurface, buffer, 0, 0);
+    wl_surface_damage(cursorSurface, 0, 0, (int32_t)image->width, (int32_t)image->height);
+    wl_surface_commit(cursorSurface);
+    return true;
+}
+
+static void apply_cursor(uint32_t cursor, double scale) {
     if (!pointer) return;
     if (cursor == 21) { // Cursor.None
         wl_pointer_set_cursor(pointer, pointerEnterSerial, NULL, 0, 0);
@@ -735,22 +786,25 @@ static void apply_cursor(uint32_t cursor) {
         wp_cursor_shape_device_v1_set_shape(cursorShapeDevice, pointerEnterSerial, cursor_shape(cursor));
         return;
     }
-    if (!cursorTheme && shm) {
-        const char *size = getenv("XCURSOR_SIZE");
-        cursorTheme = wl_cursor_theme_load(getenv("XCURSOR_THEME"), size ? atoi(size) : 24, shm);
-    }
-    if (!cursorTheme) return;
-    struct wl_cursor *found = wl_cursor_theme_get_cursor(cursorTheme, cursor_name(cursor));
-    if (!found) found = wl_cursor_theme_get_cursor(cursorTheme, "left_ptr");
-    if (!found || found->image_count == 0) return;
-    struct wl_cursor_image *image = found->images[0];
-    struct wl_buffer *buffer = wl_cursor_image_get_buffer(image);
-    if (!cursorSurface) cursorSurface = wl_compositor_create_surface(compositor);
-    wl_pointer_set_cursor(pointer, pointerEnterSerial, cursorSurface, (int32_t)image->hotspot_x,
-                          (int32_t)image->hotspot_y);
-    wl_surface_attach(cursorSurface, buffer, 0, 0);
-    wl_surface_damage(cursorSurface, 0, 0, (int32_t)image->width, (int32_t)image->height);
-    wl_surface_commit(cursorSurface);
+    // The theme's cursor, then the bundled image, then the theme's arrow.
+    if (theme_cursor(cursor)) return;
+    uint32_t factor = scale > 1.0 ? (uint32_t)ceil(scale) : 1;
+    uint32_t size = SILK_CURSOR_ART * factor, hotX, hotY;
+    uint8_t *rgba = malloc((size_t)size * size * 4);
+    if (rgba && silk_cursor_bundled(cursor, factor, rgba, &hotX, &hotY))
+        show_cursor_pixels(rgba, size, size, hotX, hotY, factor);
+    else
+        theme_cursor(0);
+    free(rgba);
+}
+
+static void apply_window_cursor(WlWindow *window) {
+    if (!pointer) return;
+    if (window->custom)
+        show_cursor_pixels(window->custom, window->customWidth, window->customHeight,
+                           window->customHotX, window->customHotY, window->customScale);
+    else
+        apply_cursor(window->cursor, window->scale);
 }
 
 static int title_button_at(WlWindow *window, double x) {
@@ -773,10 +827,10 @@ static void pointer_enter(void *data, struct wl_pointer *p, uint32_t serial,
     pointerX = wl_fixed_to_double(x);
     pointerY = wl_fixed_to_double(y);
     if (pointerOnTitle) {
-        apply_cursor(0);
+        apply_cursor(0, window->scale);
         return;
     }
-    apply_cursor(window->cursor);
+    apply_window_cursor(window);
     SilkWindowEvent event = silk_event(SILK_EVENT_MOUSE_ENTERED, window->id);
     event.x = pointerX;
     event.y = pointerY;
@@ -1571,6 +1625,8 @@ void silk_wl_close(uint32_t id) {
     if (window->fractional) wp_fractional_scale_v1_destroy(window->fractional);
     wl_surface_destroy(window->surface);
     free(window->title);
+    free(window->custom);
+    window->custom = NULL;
     window->title = NULL;
     window->open = false;
     wl_display_flush(display);
@@ -1748,7 +1804,27 @@ void silk_wl_set_cursor(uint32_t id, uint32_t cursor) {
     WlWindow *window = find(id);
     if (!window) return;
     window->cursor = cursor;
-    if (pointerFocus == id && !pointerOnTitle) apply_cursor(cursor);
+    free(window->custom);
+    window->custom = NULL;
+    if (pointerFocus == id && !pointerOnTitle) apply_cursor(cursor, window->scale);
+}
+
+uint8_t silk_wl_set_cursor_image(uint32_t id, const uint8_t *pixels, uint32_t width,
+                                 uint32_t height, uint32_t hotX, uint32_t hotY, double scale) {
+    WlWindow *window = find(id);
+    if (!window || !shm) return 0;
+    uint8_t *copy = malloc((size_t)width * height * 4);
+    if (!copy) return 0;
+    memcpy(copy, pixels, (size_t)width * height * 4);
+    free(window->custom);
+    window->custom = copy;
+    window->customWidth = width;
+    window->customHeight = height;
+    window->customHotX = hotX;
+    window->customHotY = hotY;
+    window->customScale = scale >= 1.5 ? (uint32_t)lround(scale) : 1;
+    if (pointerFocus == id && !pointerOnTitle) apply_window_cursor(window);
+    return 1;
 }
 
 void silk_wl_set_ime(uint32_t id, bool enabled, double x, double y, double width, double height) {

@@ -22,6 +22,8 @@ import types {
   TitleBar,
   Wait,
   Cursor,
+  CursorImage,
+  cursorImageFits,
   ImeState,
   Appearance,
   RawSurface,
@@ -616,6 +618,24 @@ impl Platform for MacPlatform {
 
   fn setCursor(self: &mut Self, window: WindowId, cursor: Cursor) -> () {
     unsafe sys.silk_macos_set_cursor(window.value, u8.toU32(Cursor.value(cursor)))
+  }
+
+  effect fn setCursorImage(self: &mut Self, window: WindowId, image: &CursorImage<'_>) -> bool
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    if !cursorImageFits(image) {
+      return false
+    }
+    let shown = unsafe sys.silk_macos_set_cursor_image(
+      window.value,
+      Pointer.fromSlice(image.pixels),
+      image.width,
+      image.height,
+      image.hotX,
+      image.hotY,
+      image.scale,
+    )
+    return shown != 0
   }
 
   fn setIme(self: &mut Self, window: WindowId, ime: ImeState) -> () {

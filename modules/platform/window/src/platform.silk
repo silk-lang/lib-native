@@ -37,6 +37,7 @@ import types {
   WindowError,
   Wait,
   Cursor,
+  CursorImage,
   ImeState,
   Appearance,
   RawSurface,
@@ -100,7 +101,18 @@ pub interface Platform {
   /// press of a double click zooms or minimizes the window instead, as the user's settings say.
   fn startWindowDrag(self: &mut Self, window: WindowId) -> ()
 
+  /// Shows `cursor` over the window's content area. Systems without a cursor of their own for
+  /// a keyword show a bundled image of it.
   fn setCursor(self: &mut Self, window: WindowId, cursor: Cursor) -> ()
+
+  /// Shows `image` over the window's content area until the next `setCursor` or
+  /// `setCursorImage`, as CSS `cursor: url(...)` does. False when this backend draws no custom
+  /// cursors, or the image is empty or larger than 256 pixels a side; keep a keyword then.
+  effect fn setCursorImage(self: &mut Self, window: WindowId, image: &CursorImage<'_>) -> bool
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    return false
+  }
 
   /// What the input method needs. Call it when focus moves between text fields and when
   /// the caret moves, so the candidate window follows the caret.

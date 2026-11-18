@@ -5,7 +5,7 @@ import silk.num.u16
 import keys { KeyCode, NamedKey, keyCodeFromValue, namedKeyFromValue }
 import menu { MenuBar, OpenDialog, SaveDialog, Shortcut, SystemItem }
 import platform { Platform }
-import types { WindowId, WindowOptions, WindowError, Wait, Cursor, ImeState }
+import types { WindowId, WindowOptions, WindowError, Wait, Cursor, CursorImage, ImeState }
 import silk.collections.list { List }
 import silk.collections.bytes { Bytes }
 import clipboard { ClipboardEntry }
@@ -182,6 +182,40 @@ effect fn copyRich(platform: &mut HeadlessPlatform) -> () ! OutOfMemoryError | A
   match move run platform.readClipboardType("image/png") {
     Option<Bytes>.Some { value: _image } => run Testing.expect(false, "no image after a text write")
     _ => {}
+  }
+}
+
+test effect fn showsCursorImages() -> ()
+  ! AssertionError<'static> | WindowError | OutOfMemoryError {
+  let mut allocator = Allocator.systemAllocatorProvider()
+  let mut platform = HeadlessPlatform.make()
+  let window = run opened(&mut platform) |> Effect.provideMut<Allocator>(&mut allocator)
+  let pixels: [u8; 64] = [255; 64]
+  let image = CursorImage { width: 4, height: 4, pixels: &pixels, hotX: 1, hotY: 2, scale: 1.0 }
+  let shown = run platform.setCursorImage(window, &image) |> Effect.provideMut<Allocator>(&mut allocator)
+  run Testing.expect(shown, "shown")
+  let short = CursorImage { width: 5, height: 4, pixels: &pixels, hotX: 1, hotY: 2, scale: 1.0 }
+  let shortShown = run platform.setCursorImage(window, &short) |> Effect.provideMut<Allocator>(&mut allocator)
+  run Testing.expect(!shortShown, "pixels missing")
+  let outside = CursorImage { width: 4, height: 4, pixels: &pixels, hotX: 4, hotY: 0, scale: 1.0 }
+  let outsideShown = run platform.setCursorImage(window, &outside) |> Effect.provideMut<Allocator>(&mut allocator)
+  run Testing.expect(!outsideShown, "hot spot outside")
+  match platform.window(window) {
+    Option<&HeadlessWindow>.Some { value } => {
+      run Testing.expect(value.cursorImageWidth == 4 && value.cursorHotY == 2, "recorded")
+    }
+    _ => {
+      run Testing.expect(false, "window open")
+    }
+  }
+  platform.setCursor(window, Cursor.Cell)
+  match platform.window(window) {
+    Option<&HeadlessWindow>.Some { value } => {
+      run Testing.expect(value.cursor == Cursor.Cell && value.cursorImageWidth == 0, "keyword again")
+    }
+    _ => {
+      run Testing.expect(false, "window open")
+    }
   }
 }
 
