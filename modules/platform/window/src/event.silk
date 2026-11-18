@@ -211,6 +211,16 @@ pub union Event {
   },
   /// A trackpad pinch. `delta` is the change of the magnification, 0.1 for 10% larger.
   Pinch { pub window: WindowId, pub position: Point2<f64>, pub delta: f64, pub phase: Phase },
+  /// A finger on a touchscreen: `phase` is `Began` when it touches, `Changed` as it moves,
+  /// `Ended` when it lifts and `Cancelled` when the system took it. `id` names the finger
+  /// while it is down. Systems that turn touches into mouse events do not here.
+  Touch {
+    pub window: WindowId,
+    pub id: u32,
+    pub position: Point2<f64>,
+    pub phase: Phase,
+    pub modifiers: Modifiers,
+  },
 
   // Files dragged from other apps.
 

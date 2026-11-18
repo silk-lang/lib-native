@@ -27,7 +27,7 @@ const EVENT = {
   MOUSE_ENTERED: 17, MOUSE_EXITED: 18, SCROLL: 19, PINCH: 20, MENU_ACTION: 21,
   DIALOG_CLOSED: 22, APPEARANCE_CHANGED: 23, QUIT_REQUESTED: 24, FILE_DRAG_ENTERED: 25,
   FILE_DRAG_MOVED: 26, FILE_DRAG_LEFT: 27, FILE_DROPPED: 28, GLOBAL_SHORTCUT: 29,
-  TRAY_CLICKED: 30, NOTIFICATION_CLICKED: 31, CONTEXT_MENU_CLOSED: 32,
+  TRAY_CLICKED: 30, NOTIFICATION_CLICKED: 31, CONTEXT_MENU_CLOSED: 32, TOUCH: 33,
 };
 const FLAG = { REPEAT: 1, IME_HANDLED: 2, ON: 4, PRECISE: 8 };
 const MOD = { SHIFT: 1, CONTROL: 2, ALT: 4, META: 8, CAPS_LOCK: 16 };
@@ -553,13 +553,33 @@ export class WindowHost {
       record.modifiers = modifiersOf(e);
       return record;
     };
+    // A finger is a Touch event, phase 1 down to 4 cancelled (src/bridge.silk PHASES); the
+    // canvas has touch-action: none, so the page leaves every gesture to the app.
+    const touch = (e, phase) => {
+      const record = at(event(EVENT.TOUCH, window.id), e);
+      record.code = e.pointerId >>> 0;
+      record.phase = phase;
+      this.push(record);
+    };
+    const finger = e => e.pointerType === 'touch';
     canvas.addEventListener('pointermove', e => {
+      if (finger(e)) {
+        if (e.buttons) touch(e, 2);
+        return;
+      }
       this.push(at(event(EVENT.MOUSE_MOVED, window.id), e));
+    }, options);
+    canvas.addEventListener('pointercancel', e => {
+      if (finger(e)) touch(e, 4);
     }, options);
     canvas.addEventListener('pointerdown', e => {
       this.focusInput(window.id);
       e.preventDefault();
       if (e.pointerId !== undefined) try { canvas.setPointerCapture(e.pointerId); } catch {}
+      if (finger(e)) {
+        touch(e, 1);
+        return;
+      }
       const record = at(event(EVENT.MOUSE_DOWN, window.id), e);
       record.code = BUTTONS[e.button] ?? 5;
       const clicks = window.clicks;
@@ -571,14 +591,20 @@ export class WindowHost {
       this.push(record);
     }, options);
     canvas.addEventListener('pointerup', e => {
+      if (finger(e)) {
+        touch(e, 3);
+        return;
+      }
       const record = at(event(EVENT.MOUSE_UP, window.id), e);
       record.code = BUTTONS[e.button] ?? 5;
       this.push(record);
     }, options);
     canvas.addEventListener('pointerenter', e => {
-      this.push(at(event(EVENT.MOUSE_ENTERED, window.id), e));
+      if (!finger(e)) this.push(at(event(EVENT.MOUSE_ENTERED, window.id), e));
     }, options);
-    canvas.addEventListener('pointerleave', () => this.push(event(EVENT.MOUSE_EXITED, window.id)), options);
+    canvas.addEventListener('pointerleave', e => {
+      if (!finger(e)) this.push(event(EVENT.MOUSE_EXITED, window.id));
+    }, options);
     canvas.addEventListener('contextmenu', e => e.preventDefault(), options);
     canvas.addEventListener('wheel', e => {
       e.preventDefault();
@@ -591,7 +617,8 @@ export class WindowHost {
       if (e.ctrlKey && e.deltaMode === 0) {
         // Trackpad pinches arrive as wheel events with Control held.
         const pinch = at(event(EVENT.PINCH, window.id), e);
-        pinch.dx = -e.deltaY / 100;
+        // Chromium reports a scale s as deltaY = -100 ln(s).
+        pinch.dx = Math.exp(-e.deltaY / 100) - 1;
         this.push(pinch);
         return;
       }
