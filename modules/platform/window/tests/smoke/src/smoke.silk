@@ -11,7 +11,7 @@ import window.menu { MenuBar, OpenDialog, Shortcut, SystemItem }
 import window.shell { Notification, Tray, TrayIcon }
 // Interface methods resolve through this import; silk#2819 reports it as unused.
 import window.platform { Platform as _Platform }
-import window.types { WindowOptions, WindowError, Wait, ImeState, RawSurface, Cursor, CursorImage }
+import window.types { WindowOptions, WindowError, Wait, ImeState, RawSurface, WindowId, Cursor, CursorImage }
 import silk.core.effect { Effect }
 import silk.core.option { Option }
 import silk.geometry.point { Point2 }
@@ -505,8 +505,10 @@ effect fn smoke(checks: &mut Checks) -> ()
   }
 
   if backend == Backend.X11 || backend == Backend.Wayland {
-    // The Linux smoke task points SILK_WINDOW_DIALOG at a command that prints a path.
-    let dialogOptions = OpenDialog.file("Open", "svg,png")
+    // The Linux smoke task points SILK_WINDOW_DIALOG at a command that prints a path, or under
+    // X11 runs a FileChooser portal that answers the same (tests/linux/portal).
+    let mut dialogOptions = OpenDialog.file("Open", "svg,png")
+    dialogOptions.parent = Option<WindowId>.Some { value: window }
     drop run platform.openFileDialog(&dialogOptions)
     let closedDialog = run collect(&mut platform, 1.0)
     checks.check(

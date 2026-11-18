@@ -10,6 +10,7 @@ import silk.system.host_input { HostInput, HostInputError }
 import silk.text.string { String }
 import silk.num.usize
 import task_build { which }
+import task_codegen { path as packagePath }
 
 static if Intrinsic.targetOperatingSystem() == "linux" {
 import silk.collections.bytes { Bytes }
@@ -102,7 +103,11 @@ effect fn x11Child(program: string, display: string, socket: string) -> () ! Tas
   run waitFor(&path)
   let mut variable = run String.copy("DISPLAY=")
   run String.append(&mut variable, display)
-  run Task.exec("env", &["-u", "WAYLAND_DISPLAY", String.view(&variable), "SILK_WINDOW_BACKEND=x11", "SILK_WINDOW_SCALE=1", "SILK_WINDOW_DIALOG=printf \"/tmp/%s-%s.svg\\n\" \"$1\" \"$2\"", "timeout", "--signal=KILL", "120", program])
+  // Under X11 the dialog goes through a fake FileChooser portal where the machine can run one.
+  let session = run packagePath("tests/linux/portal/session.sh")
+  let sessionText = match Path.view(&session) { Option<string>.Some { value } => value
+    Option<string>.None => run Task.abort("package path is not UTF-8") }
+  run Task.exec("env", &["-u", "WAYLAND_DISPLAY", "-u", "SILK_WINDOW_DIALOG", String.view(&variable), "SILK_WINDOW_BACKEND=x11", "SILK_WINDOW_SCALE=1", sessionText, "timeout", "--signal=KILL", "120", program])
 }
 effect fn decimal(out: &mut String, value: usize) -> () ! OutOfMemoryError ? &mut Allocator {
   if value >= 10 { run decimal(&mut out, value / 10) }

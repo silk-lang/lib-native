@@ -30,11 +30,18 @@ typedef struct SilkFrameState {
     bool waiting; // Wayland: a frame callback is outstanding
 } SilkFrameState;
 
-// File-chooser dialogs run as zenity or kdialog processes (dialog.c).
+// File-chooser dialogs (dialog.c): the FileChooser portal when the session has one, else a
+// zenity or kdialog process. `parent` names the window for the portal ("x11:<xid>") or is "".
 uint32_t silk_dialog_open(const uint8_t *title, size_t titleLength, const uint8_t *directory,
                           size_t directoryLength, const uint8_t *extensions,
                           size_t extensionsLength, uint32_t flags, bool save,
-                          const uint8_t *name, size_t nameLength);
+                          const uint8_t *name, size_t nameLength, const char *parent);
+// Asks the FileChooser portal (dbus.c) for dialog `dialog`. False when there is no portal that
+// can show it, or SILK_WINDOW_PORTAL=0; then nothing was sent.
+bool silk_portal_dialog(uint32_t dialog, bool save, const char *title, const char *directory,
+                        const char *name, const char *label, char **extensions,
+                        size_t extensionCount, bool directories, bool multiple,
+                        const char *parent);
 // Adds the running dialogs' pipes to `fds` and returns how many it added.
 int silk_dialog_fds(struct pollfd *fds, int capacity);
 // Reads finished dialogs and queues DialogClosed for them.

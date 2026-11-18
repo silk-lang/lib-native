@@ -1,10 +1,12 @@
-// File dialogs on Linux run as a separate process, so they never block the event loop:
-// kdialog on KDE, zenity elsewhere (whichever exists). The process prints the chosen paths,
-// one per line, and exits nonzero when cancelled.
+// File dialogs on Linux go to the FileChooser portal when the session bus has one (dbus.c):
+// that is the desktop's own chooser, and the only one inside a Flatpak sandbox. Without it
+// they run as a separate process, so they never block the event loop: kdialog on KDE, zenity
+// elsewhere (whichever exists). The process prints the chosen paths, one per line, and exits
+// nonzero when cancelled.
 //
 // SILK_WINDOW_DIALOG replaces both with a shell command, run as
 //   sh -c "$SILK_WINDOW_DIALOG" silk-dialog <open|save> <title> <directory> <name> <extensions>
-// for tests and for desktops that prefer another chooser.
+// for tests and for desktops that prefer another chooser. SILK_WINDOW_PORTAL=0 skips the portal.
 #define _GNU_SOURCE
 #include <errno.h>
 #include <fcntl.h>
@@ -89,7 +91,8 @@ static bool prefer_kdialog(void) {
 uint32_t silk_dialog_open(const uint8_t *titleBytes, size_t titleLength,
                           const uint8_t *directoryBytes, size_t directoryLength,
                           const uint8_t *extensionsBytes, size_t extensionsLength, uint32_t flags,
-                          bool save, const uint8_t *nameBytes, size_t nameLength) {
+                          bool save, const uint8_t *nameBytes, size_t nameLength,
+                          const char *parent) {
     if (dialogCount == MAX_DIALOGS) return 0;
     char *title = silk_strndup(titleBytes, titleLength);
     char *directory = silk_strndup(directoryBytes, (flags & 8) ? directoryLength : 0);
@@ -104,6 +107,18 @@ uint32_t silk_dialog_open(const uint8_t *titleBytes, size_t titleLength,
     char *owned[8] = {0};
     int ownedCount = 0;
     const char *custom = getenv("SILK_WINDOW_DIALOG");
+    if (!custom) {
+        uint32_t portalDialog = silk_next_dialog_id();
+        if (silk_portal_dialog(portalDialog, save, title, directory, name, extensionsText,
+                               extensions, extensionCount, directories, multiple && !save, parent)) {
+            free(title);
+            free(directory);
+            free(name);
+            free(extensionsText);
+            silk_free_extensions(extensions);
+            return portalDialog;
+        }
+    }
     char *start = directory[0] ? format("%s/%s", directory, name) : strdup(name);
     if (!start) abort();
     owned[ownedCount++] = start;
