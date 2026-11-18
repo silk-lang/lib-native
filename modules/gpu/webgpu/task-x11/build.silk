@@ -1,0 +1,15 @@
+import silk.build.plan { Library, Plan }
+import silk.build.step { sourcePath }
+
+static fn plan() -> Plan {
+  let mut plan = Plan.empty()
+  if Intrinsic.targetOperatingSystem() == "linux" {
+    plan = plan |> Plan.compileNative("c", sourcePath("capture.c"), &["-std=c11"], &[])
+  }
+  if Intrinsic.targetOperatingSystem() == "linux" {
+    plan = plan |> Plan.linkLibrary("dl", Library.dynamicSearch())
+  }
+  return plan
+}
+
+pub const PLAN: Plan = plan()
