@@ -40,6 +40,7 @@ enum {
     SILK_EVENT_NOTIFICATION_CLICKED = 31, // code: the notification's id
     SILK_EVENT_CONTEXT_MENU_CLOSED = 32,  // a context menu closed with nothing chosen
     SILK_EVENT_TOUCH = 33,                // never sent: Macs have no touchscreens
+    SILK_EVENT_EDIT_COMMAND = 34,         // window; code: menu.EditCommand (the Edit menu)
 };
 
 // tray_commit flags.
@@ -147,6 +148,14 @@ uint32_t silk_macos_save_dialog(const uint8_t *title, size_t titleLength,
 // The clipboard's text, valid until the next read; NULL when it holds none.
 const uint8_t *silk_macos_clipboard_read(size_t *length);
 void silk_macos_clipboard_write(const uint8_t *text, size_t length);
+// Clipboard kinds: 0 text/plain, 1 text/html, 2 image/png. The kinds it holds, bit per kind.
+uint32_t silk_macos_clipboard_types(void);
+// The clipboard's data as `kind`, valid until the next read; NULL when it holds none. PNG is
+// converted from TIFF when only that is there.
+const uint8_t *silk_macos_clipboard_read_type(uint32_t kind, size_t *length);
+// Clears the clipboard, then puts one representation per add on it.
+void silk_macos_clipboard_begin(void);
+void silk_macos_clipboard_add(uint32_t kind, const uint8_t *data, size_t length);
 // 0 light, 1 dark.
 uint32_t silk_macos_appearance(void);
 

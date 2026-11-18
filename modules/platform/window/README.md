@@ -126,6 +126,21 @@ parented to the window under X11, unparented under Wayland), else run `zenity` o
 a child process. `SILK_WINDOW_DIALOG` names another command and `SILK_WINDOW_PORTAL=0` skips
 the portal.
 
+**Edit menu** (`SystemItem.Undo` to `SelectAll`). macOS installs Edit with these by default,
+and both macOS and Windows menu bars take them. Their shortcuts still reach the window as
+`KeyDown`, as on every system, so an app sees the key first; choosing an item with the mouse
+sends `Event.EditCommand`.
+
+**Clipboard** (`clipboard`). The clipboard holds one item with a representation per MIME
+type: `writeClipboardItem` puts text/plain, text/html and image/png on it in one write,
+`clipboardTypes` and `readClipboardType` read them back, and `readClipboard` and
+`writeClipboard` are the text-only shorthand. macOS maps them to the string, HTML and PNG
+pasteboard types (TIFF is converted when an app put no PNG). Windows uses `CF_UNICODETEXT`,
+`HTML Format` (the copied fragment, as browsers read it) and `PNG`, and also writes a
+`CF_DIBV5` bitmap for apps that only read bitmaps; reads fall back to `CF_DIBV5`/`CF_DIB`,
+converted with WIC. X11 offers `UTF8_STRING`, `text/html` and `image/png` targets and moves
+large data with INCR both ways. Wayland offers and receives the same MIME types.
+
 **Cursors.** Every CSS cursor keyword has a `Cursor`. A host shows its own where it has one
 (the X11 theme's by CSS name through libXcursor, loaded with `dlopen`; Wayland cursor-shape or
 the theme; macOS 15 frame resize cursors) and otherwise a bundled image from
@@ -229,7 +244,7 @@ wayland-protocols and wayland-scanner); `silk generate --check` checks all decla
   `startWindowDrag`.
 - Wayland global shortcuts, which go through the desktop portal and ask the user to bind them.
 - X11: frames are paced at 60 Hz (or `SILK_WINDOW_REFRESH_HZ`) rather than read from
-  XRandR, and clipboard transfers do not use INCR, so very large texts are refused.
+  XRandR.
 - Wayland: `focus` cannot raise a window (the protocol leaves that to the compositor), and
   the drawn title bar has no resize edges.
 - Windows: Text Services Framework; IMM32 covers the input methods people use, and TSF would

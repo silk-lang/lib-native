@@ -251,7 +251,20 @@ pub union Event {
   /// A menu from `Platform.showContextMenu` closed without an item chosen. A chosen item
   /// sends `MenuAction` instead.
   ContextMenuClosed { pub window: WindowId },
+  /// An Edit menu item (`SystemItem.Cut` and the rest) was chosen with the mouse, for the key
+  /// window. Its shortcut sends `KeyDown` instead.
+  EditCommand { pub window: WindowId, pub command: EditCommand },
   /// The user asked to quit, from the app menu or the system. The app decides whether to
   /// stop its event loop.
   QuitRequested,
+}
+
+/// What an Edit menu item asks of the key window (`Event.EditCommand`), from the items `menu.SystemItem` names.
+pub enum EditCommand {
+  Undo,
+  Redo,
+  Cut,
+  Copy,
+  Paste,
+  SelectAll,
 }

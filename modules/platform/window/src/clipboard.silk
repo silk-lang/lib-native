@@ -1,0 +1,19 @@
+//! What the clipboard holds: one item with a representation per MIME type, as on the web.
+//! Every backend maps text/plain and text/html (both UTF-8) and image/png to the system's
+//! own formats; other types are left out.
+import silk.collections.bytes { Bytes }
+import silk.text.string { String }
+
+/// One representation of a clipboard item: its MIME type and its bytes.
+pub struct ClipboardEntry {
+  pub mime: String,
+  pub data: Bytes,
+}
+
+/// The MIME types the clipboard maps, in the order `Platform.clipboardTypes` lists them.
+pub const CLIPBOARD_TYPES: [string<'static>; 3] = ["text/plain", "text/html", "image/png"]
+
+/// Whether the clipboard maps MIME type `mime`.
+pub fn supportsClipboardType(mime: string) -> bool {
+  return mime == CLIPBOARD_TYPES[0] || mime == CLIPBOARD_TYPES[1] || mime == CLIPBOARD_TYPES[2]
+}

@@ -161,6 +161,24 @@ static if Intrinsic.targetOperatingSystem() == "windows"
     capacity: usize,
   ) -> i64
   pub unsafe extern "C" fn silk_window_clipboard_write(text: ?[*]const u8, length: usize) -> ()
+  pub unsafe extern "C" fn silk_window_clipboard_types(
+    destination: ?[*]mut u8,
+    capacity: usize,
+  ) -> i64
+  pub unsafe extern "C" fn silk_window_clipboard_read_type(
+    mime: ?[*]const u8,
+    mimeLength: usize,
+    destination: ?[*]mut u8,
+    capacity: usize,
+  ) -> i64
+  pub unsafe extern "C" fn silk_window_clipboard_begin() -> ()
+  pub unsafe extern "C" fn silk_window_clipboard_add(
+    mime: ?[*]const u8,
+    mimeLength: usize,
+    data: ?[*]const u8,
+    length: usize,
+  ) -> ()
+  pub unsafe extern "C" fn silk_window_clipboard_commit() -> ()
   pub unsafe extern "C" fn silk_window_appearance() -> u32
   pub unsafe extern "C" fn silk_window_test_key(
     window: u32,
@@ -370,6 +388,24 @@ static if Intrinsic.targetOperatingSystem() == "windows"
       text: ?[*]const u8,
       length: usize,
     ) -> () as "window#silk_window_clipboard_write"
+    pub unsafe extern "C" fn silk_window_clipboard_types(
+      destination: ?[*]mut u8,
+      capacity: usize,
+    ) -> i64 as "window#silk_window_clipboard_types"
+    pub unsafe extern "C" fn silk_window_clipboard_read_type(
+      mime: ?[*]const u8,
+      mimeLength: usize,
+      destination: ?[*]mut u8,
+      capacity: usize,
+    ) -> i64 as "window#silk_window_clipboard_read_type"
+    pub unsafe extern "C" fn silk_window_clipboard_begin() -> () as "window#silk_window_clipboard_begin"
+    pub unsafe extern "C" fn silk_window_clipboard_add(
+      mime: ?[*]const u8,
+      mimeLength: usize,
+      data: ?[*]const u8,
+      length: usize,
+    ) -> () as "window#silk_window_clipboard_add"
+    pub unsafe extern "C" fn silk_window_clipboard_commit() -> () as "window#silk_window_clipboard_commit"
     pub unsafe extern "C" fn silk_window_appearance() -> u32 as "window#silk_window_appearance"
     pub unsafe extern "C" fn silk_window_test_key(
       window: u32,
@@ -647,6 +683,36 @@ static if Intrinsic.targetOperatingSystem() == "windows"
     }
 
     pub unsafe fn silk_window_clipboard_write(text: ?[*]const u8, length: usize) -> () {
+      return ()
+    }
+
+    pub unsafe fn silk_window_clipboard_types(destination: ?[*]mut u8, capacity: usize) -> i64 {
+      return -1
+    }
+
+    pub unsafe fn silk_window_clipboard_read_type(
+      mime: ?[*]const u8,
+      mimeLength: usize,
+      destination: ?[*]mut u8,
+      capacity: usize,
+    ) -> i64 {
+      return -1
+    }
+
+    pub unsafe fn silk_window_clipboard_begin() -> () {
+      return ()
+    }
+
+    pub unsafe fn silk_window_clipboard_add(
+      mime: ?[*]const u8,
+      mimeLength: usize,
+      data: ?[*]const u8,
+      length: usize,
+    ) -> () {
+      return ()
+    }
+
+    pub unsafe fn silk_window_clipboard_commit() -> () {
       return ()
     }
 

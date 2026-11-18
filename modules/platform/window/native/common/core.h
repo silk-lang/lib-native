@@ -68,6 +68,13 @@ enum {
     SILK_ITEM_ZOOM = 8,
     SILK_ITEM_TOGGLE_FULL_SCREEN = 9,
     SILK_ITEM_BRING_ALL_TO_FRONT = 10,
+    // The Edit menu; chosen, they send SILK_EVENT_EDIT_COMMAND with code item - SILK_ITEM_UNDO.
+    SILK_ITEM_UNDO = 11,
+    SILK_ITEM_REDO = 12,
+    SILK_ITEM_CUT = 13,
+    SILK_ITEM_COPY = 14,
+    SILK_ITEM_PASTE = 15,
+    SILK_ITEM_SELECT_ALL = 16,
 };
 
 // The committed menu bar.
@@ -123,3 +130,34 @@ void silk_push_drag(uint32_t kind, uint32_t window, double x, double y, const Si
 char **silk_split_extensions(const uint8_t *extensions, size_t length, size_t *count);
 void silk_free_extensions(char **list);
 char *silk_strndup(const uint8_t *bytes, size_t length);
+
+// Clipboard. The representations the bridge knows, by MIME type.
+enum { SILK_CLIP_TEXT = 0, SILK_CLIP_HTML = 1, SILK_CLIP_PNG = 2, SILK_CLIP_KINDS = 3 };
+// The MIME type of each kind: "text/plain", "text/html", "image/png".
+extern const char *const silk_clip_mime[SILK_CLIP_KINDS];
+// The kind MIME type `mime` names (parameters such as ";charset=utf-8" are ignored), or -1.
+int silk_clip_kind(const uint8_t *mime, size_t length);
+
+// One clipboard item: a representation per kind, `has` saying which.
+typedef struct SilkClip {
+    bool has[SILK_CLIP_KINDS];
+    SilkText data[SILK_CLIP_KINDS];
+} SilkClip;
+void silk_clip_free(SilkClip *clip);
+// What clipboard_add collected since clipboard_begin; clipboard_commit takes it.
+extern SilkClip silk_clip_pending;
+// Moves the pending item to `out`, freeing what `out` held.
+void silk_clip_take_pending(SilkClip *out);
+// "text/plain\ntext/html" for the kinds `has` marks, into `out` (at least 40 bytes); its length.
+size_t silk_clip_types_of(const bool has[SILK_CLIP_KINDS], char *out);
+
+// The two-call read protocol of clipboard_read, clipboard_types and clipboard_read_type: a
+// call without a buffer fetches into one cache, the next call with a buffer copies from it.
+// Whether the caller must fetch: no buffer, or nothing cached.
+bool silk_read_needs_fetch(const uint8_t *destination);
+// Caches a copy of `bytes`; NULL caches "none".
+void silk_read_set(const uint8_t *bytes, size_t length);
+// Caches `bytes`, which must come from malloc, taking it.
+void silk_read_adopt(uint8_t *bytes, size_t length);
+// Copies the cache into `destination` (up to `capacity`) and returns its length, -1 for none.
+int64_t silk_read_serve(uint8_t *destination, size_t capacity);

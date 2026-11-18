@@ -6,13 +6,14 @@
 //!
 //! AppKit's own loops (live resize, menu tracking) run on a second stack of the main thread,
 //! so `nextEvent` keeps returning events and frames while they run. See the README.
-import event { Event, Key, Modifiers, MouseButton, Phase, ScrollDelta }
+import event { Event, EditCommand, Key, Modifiers, MouseButton, Phase, ScrollDelta }
 import keys { keyCodeFromValue, namedKeyFromValue, KeyCode, NamedKey }
 import macos_sys as sys
 import macos_sys { RawEvent }
 import menu { MenuBar, MenuEntry, OpenDialog, SaveDialog, Shortcut, ShortcutKey, SystemItem }
 import platform { Platform }
 import shell { Tray, Notification }
+import clipboard { ClipboardEntry, CLIPBOARD_TYPES }
 import types {
   WindowId,
   DialogId,
@@ -28,6 +29,7 @@ import types {
   RawSurface,
 }
 import silk.collections.list { List }
+import silk.collections.bytes { Bytes }
 import silk.core.option { Option }
 import silk.core.result { Result }
 import silk.geometry.point { Point2 }
@@ -386,6 +388,22 @@ impl MacPlatform {
     if kind == sys.CONTEXT_MENU_CLOSED {
       return Option<Event>.some(Event.ContextMenuClosed { window: WindowId { value: raw.window } })
     }
+    if kind == sys.EDIT_COMMAND {
+      let command = if raw.code == 0 {
+        EditCommand.Undo
+      } else if raw.code == 1 {
+        EditCommand.Redo
+      } else if raw.code == 2 {
+        EditCommand.Cut
+      } else if raw.code == 3 {
+        EditCommand.Copy
+      } else if raw.code == 4 {
+        EditCommand.Paste
+      } else {
+        EditCommand.SelectAll
+      }
+      return Option<Event>.some(Event.EditCommand { window: WindowId { value: raw.window }, command: command })
+    }
     return Option<Event>.None
   }
 
@@ -716,6 +734,60 @@ impl Platform for MacPlatform {
     ! OutOfMemoryError
     ? &mut Allocator {
     unsafe sys.silk_macos_clipboard_write(MacPlatform.bytes(text), String.byteLength(text))
+  }
+
+  effect fn clipboardTypes(self: &mut Self) -> List<String>
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let kinds = unsafe sys.silk_macos_clipboard_types()
+    let mut types = List<String>.make()
+    let mut kind: u32 = 0
+    while kind < 3 {
+      if u32.shiftRight(kinds, kind) & 1 != 0 {
+        run types.append(run String.copy(CLIPBOARD_TYPES[u32.toUsize(kind)]))
+      }
+      kind = kind + 1
+    }
+    return move types
+  }
+
+  effect fn readClipboardType(self: &mut Self, mime: string) -> Option<Bytes>
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let mut kind: u32 = 0
+    while kind < 3 && CLIPBOARD_TYPES[u32.toUsize(kind)] != mime {
+      kind = kind + 1
+    }
+    if kind == 3 { return Option<Bytes>.None }
+    let mut length: usize = 0
+    let bytes = unsafe sys.silk_macos_clipboard_read_type(kind, Pointer.fromMutRef(&mut length))
+    match Pointer.nonNullMany(bytes) {
+      Option<[*]const u8>.Some { value } => {
+        let anchor = &self.*
+        let copy = run Bytes.copy(unsafe Pointer.borrowMany(anchor, value, length))
+        return Option<Bytes>.some(move copy)
+      }
+      _ => {
+        return Option<Bytes>.None
+      }
+    }
+  }
+
+  effect fn writeClipboardItem(self: &mut Self, entries: &[ClipboardEntry]) -> ()
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    unsafe sys.silk_macos_clipboard_begin()
+    let mut i: usize = 0
+    while i < entries.length {
+      let mut kind: u32 = 0
+      while kind < 3 && CLIPBOARD_TYPES[u32.toUsize(kind)] != entries[i].mime.view() {
+        kind = kind + 1
+      }
+      if kind < 3 {
+        unsafe sys.silk_macos_clipboard_add(kind, Pointer.fromSlice(entries[i].data.asSlice()), entries[i].data.length())
+      }
+      i = i + 1
+    }
   }
 
   fn appearance(self: &Self) -> Appearance {

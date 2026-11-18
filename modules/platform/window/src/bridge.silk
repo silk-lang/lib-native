@@ -10,11 +10,12 @@
 //! `backend()` says which one is running. See the README for how each behaves.
 import bridge_sys as sys
 import bridge_sys { RawEvent }
-import event { Event, Key, Modifiers, MouseButton, Phase, ScrollDelta }
+import event { Event, EditCommand, Key, Modifiers, MouseButton, Phase, ScrollDelta }
 import keys { keyCodeFromValue, namedKeyFromValue, KeyCode, NamedKey }
 import menu { MenuBar, MenuEntry, OpenDialog, SaveDialog, Shortcut, ShortcutKey, SystemItem }
 import platform { Platform }
 import shell { Tray, Notification }
+import clipboard { ClipboardEntry }
 import types {
   WindowId,
   DialogId,
@@ -30,6 +31,7 @@ import types {
   RawSurface,
 }
 import silk.collections.list { List }
+import silk.collections.bytes { Bytes }
 import silk.core.option { Option }
 import silk.core.result { Result }
 import silk.geometry.point { Point2 }
@@ -111,6 +113,7 @@ const NOTIFICATION_CLICKED: u32 = 31
 
 const CONTEXT_MENU_CLOSED: u32 = 32
 const TOUCH: u32 = 33
+const EDIT_COMMAND: u32 = 34
 
 const TRAY_TEMPLATE: u32 = 1
 
@@ -578,6 +581,22 @@ impl BridgePlatform {
     if kind == CONTEXT_MENU_CLOSED {
       return Option<Event>.some(Event.ContextMenuClosed { window: window })
     }
+    if kind == EDIT_COMMAND {
+      let command = if raw.code == 0 {
+        EditCommand.Undo
+      } else if raw.code == 1 {
+        EditCommand.Redo
+      } else if raw.code == 2 {
+        EditCommand.Cut
+      } else if raw.code == 3 {
+        EditCommand.Copy
+      } else if raw.code == 4 {
+        EditCommand.Paste
+      } else {
+        EditCommand.SelectAll
+      }
+      return Option<Event>.some(Event.EditCommand { window: window, command: command })
+    }
     return Option<Event>.None
   }
 
@@ -980,6 +999,53 @@ impl Platform for BridgePlatform {
     ! OutOfMemoryError
     ? &mut Allocator {
     unsafe sys.silk_window_clipboard_write(BridgePlatform.bytes(text), String.byteLength(text))
+  }
+
+  effect fn clipboardTypes(self: &mut Self) -> List<String>
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let mut types = List<String>.make()
+    let length = unsafe sys.silk_window_clipboard_types(BridgePlatform.noBytes(), 0)
+    if length <= 0 { return move types }
+    let mut bytes = run Bytes.zeroed(i64.toUsize(length))
+    drop unsafe sys.silk_window_clipboard_types(Pointer.fromMutSlice(bytes.asMutSlice()), bytes.length())
+    let list = run BridgePlatform.utf8(bytes.asSlice())
+    let mut names = String.split(list.view(), "\n")
+    while true {
+      match move names.next() {
+        Option<string>.Some { value } => run types.append(run String.copy(value))
+        _ => { break }
+      }
+    }
+    return move types
+  }
+
+  effect fn readClipboardType(self: &mut Self, mime: string) -> Option<Bytes>
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let name = BridgePlatform.bytes(mime)
+    let size = String.byteLength(mime)
+    let length = unsafe sys.silk_window_clipboard_read_type(name, size, BridgePlatform.noBytes(), 0)
+    if length < 0 { return Option<Bytes>.None }
+    let mut bytes = run Bytes.zeroed(i64.toUsize(length))
+    if length != 0 {
+      drop unsafe sys.silk_window_clipboard_read_type(name, size, Pointer.fromMutSlice(bytes.asMutSlice()), bytes.length())
+    }
+    return Option<Bytes>.some(move bytes)
+  }
+
+  effect fn writeClipboardItem(self: &mut Self, entries: &[ClipboardEntry]) -> ()
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    unsafe sys.silk_window_clipboard_begin()
+    let mut i: usize = 0
+    while i < entries.length {
+      let entry = &entries[i]
+      let mime = entry.mime.view()
+      unsafe sys.silk_window_clipboard_add(BridgePlatform.bytes(mime), String.byteLength(mime), Pointer.fromSlice(entry.data.asSlice()), entry.data.length())
+      i = i + 1
+    }
+    unsafe sys.silk_window_clipboard_commit()
   }
 
   fn appearance(self: &Self) -> Appearance {

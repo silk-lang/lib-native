@@ -743,6 +743,35 @@ static void fill_key(SilkWindowEvent *out, NSEvent *e, NSMutableArray<NSData *> 
     [texts addObject:utf8(text)];
 }
 
+// The Edit menu's items (menu.SystemItem Undo to SelectAll) reach the app as edit commands
+// when chosen with the mouse. Their shortcuts come here first and go on as KeyDown, as on the
+// other systems, so the app sees the key before the command it stands for.
+- (void)sendEditCommand:(uint32_t)command {
+    SilkWindowEvent out = blank_event(SILK_EVENT_EDIT_COMMAND, self.windowId);
+    out.code = command;
+    push(out);
+    flush();
+}
+- (void)undo:(id)sender { [self sendEditCommand:0]; }
+- (void)redo:(id)sender { [self sendEditCommand:1]; }
+- (void)cut:(id)sender { [self sendEditCommand:2]; }
+- (void)copy:(id)sender { [self sendEditCommand:3]; }
+- (void)paste:(id)sender { [self sendEditCommand:4]; }
+- (void)selectAll:(id)sender { [self sendEditCommand:5]; }
+
+- (BOOL)performKeyEquivalent:(NSEvent *)e {
+    NSEventModifierFlags held = e.modifierFlags & (NSEventModifierFlagCommand | NSEventModifierFlagControl
+        | NSEventModifierFlagOption | NSEventModifierFlagShift);
+    NSString *key = e.charactersIgnoringModifiers.lowercaseString;
+    BOOL editing = self.window.firstResponder == self && (held & NSEventModifierFlagCommand)
+        && !(held & (NSEventModifierFlagControl | NSEventModifierFlagOption))
+        && ([key isEqualToString:@"z"] || [key isEqualToString:@"x"] || [key isEqualToString:@"c"]
+            || [key isEqualToString:@"v"] || [key isEqualToString:@"a"]);
+    if (!editing) return [super performKeyEquivalent:e];
+    [self keyDown:e];
+    return YES;
+}
+
 - (void)keyDown:(NSEvent *)e {
     SilkWindowEvent out = blank_event(SILK_EVENT_KEY_DOWN, self.windowId);
     NSMutableArray<NSData *> *texts = [NSMutableArray array];
@@ -1108,7 +1137,8 @@ static NSMenuItem *system_item(uint32_t item) {
     NSString *app = NSProcessInfo.processInfo.processName;
     NSMenuItem *menuItem = nil;
     // menu.SystemItem: About, Services, Hide, HideOthers, ShowAll, Quit, CloseWindow,
-    // Minimize, Zoom, ToggleFullScreen, BringAllToFront.
+    // Minimize, Zoom, ToggleFullScreen, BringAllToFront, Undo, Redo, Cut, Copy, Paste,
+    // SelectAll.
     switch (item) {
     case 0:
         menuItem = [[NSMenuItem alloc] initWithTitle:[@"About " stringByAppendingString:app]
@@ -1169,6 +1199,25 @@ static NSMenuItem *system_item(uint32_t item) {
                                               action:@selector(arrangeInFront:)
                                        keyEquivalent:@""];
         break;
+    case 11:
+        menuItem = [[NSMenuItem alloc] initWithTitle:@"Undo" action:@selector(undo:) keyEquivalent:@"z"];
+        break;
+    case 12:
+        menuItem = [[NSMenuItem alloc] initWithTitle:@"Redo" action:@selector(redo:) keyEquivalent:@"z"];
+        menuItem.keyEquivalentModifierMask = NSEventModifierFlagCommand | NSEventModifierFlagShift;
+        break;
+    case 13:
+        menuItem = [[NSMenuItem alloc] initWithTitle:@"Cut" action:@selector(cut:) keyEquivalent:@"x"];
+        break;
+    case 14:
+        menuItem = [[NSMenuItem alloc] initWithTitle:@"Copy" action:@selector(copy:) keyEquivalent:@"c"];
+        break;
+    case 15:
+        menuItem = [[NSMenuItem alloc] initWithTitle:@"Paste" action:@selector(paste:) keyEquivalent:@"v"];
+        break;
+    case 16:
+        menuItem = [[NSMenuItem alloc] initWithTitle:@"Select All" action:@selector(selectAll:) keyEquivalent:@"a"];
+        break;
     default:
         return nil;
     }
@@ -1182,6 +1231,16 @@ static void install_default_menu(void) {
     [appMenu addItem:system_item(5)];
     appItem.submenu = appMenu;
     [bar addItem:appItem];
+
+    // Edit, so that the system's own text services and the menu commands reach the app.
+    NSMenuItem *editItem = [[NSMenuItem alloc] initWithTitle:@"Edit" action:nil keyEquivalent:@""];
+    NSMenu *editMenu = [[NSMenu alloc] initWithTitle:@"Edit"];
+    [editMenu addItem:system_item(11)];
+    [editMenu addItem:system_item(12)];
+    [editMenu addItem:[NSMenuItem separatorItem]];
+    for (uint32_t item = 13; item <= 16; item++) [editMenu addItem:system_item(item)];
+    editItem.submenu = editMenu;
+    [bar addItem:editItem];
     NSApp.mainMenu = bar;
 }
 
@@ -1825,6 +1884,57 @@ void silk_macos_clipboard_write(const uint8_t *text, size_t length) {
         NSPasteboard *pasteboard = [NSPasteboard generalPasteboard];
         [pasteboard clearContents];
         [pasteboard setString:string_from(text, length) forType:NSPasteboardTypeString];
+    }
+}
+
+static NSPasteboardType pasteboard_type(uint32_t kind) {
+    return kind == 0 ? NSPasteboardTypeString : kind == 1 ? NSPasteboardTypeHTML : NSPasteboardTypePNG;
+}
+
+uint32_t silk_macos_clipboard_types(void) {
+    @autoreleasepool {
+        NSArray<NSPasteboardType> *types = [NSPasteboard generalPasteboard].types;
+        uint32_t kinds = 0;
+        if ([types containsObject:NSPasteboardTypeString]) kinds |= 1;
+        if ([types containsObject:NSPasteboardTypeHTML]) kinds |= 2;
+        if ([types containsObject:NSPasteboardTypePNG] || [types containsObject:NSPasteboardTypeTIFF]) kinds |= 4;
+        return kinds;
+    }
+}
+
+const uint8_t *silk_macos_clipboard_read_type(uint32_t kind, size_t *length) {
+    @autoreleasepool {
+        NSPasteboard *pasteboard = [NSPasteboard generalPasteboard];
+        NSData *data = nil;
+        if (kind == 0) {
+            NSString *text = [pasteboard stringForType:NSPasteboardTypeString];
+            data = text ? utf8(text) : nil;
+        } else {
+            data = [pasteboard dataForType:pasteboard_type(kind)];
+            if (!data && kind == 2) {
+                NSData *tiff = [pasteboard dataForType:NSPasteboardTypeTIFF];
+                NSBitmapImageRep *image = tiff ? [NSBitmapImageRep imageRepWithData:tiff] : nil;
+                data = image ? [image representationUsingType:NSBitmapImageFileTypePNG properties:@{}] : nil;
+            }
+        }
+        clipboardText = [data copy];
+        *length = clipboardText.length;
+        if (!clipboardText) return NULL;
+        return clipboardText.length ? clipboardText.bytes : (const uint8_t *)"";
+    }
+}
+
+void silk_macos_clipboard_begin(void) {
+    @autoreleasepool {
+        [[NSPasteboard generalPasteboard] clearContents];
+    }
+}
+
+void silk_macos_clipboard_add(uint32_t kind, const uint8_t *data, size_t length) {
+    @autoreleasepool {
+        if (kind > 2) return;
+        [[NSPasteboard generalPasteboard] setData:[NSData dataWithBytes:data length:length]
+                                          forType:pasteboard_type(kind)];
     }
 }
 

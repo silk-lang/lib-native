@@ -156,12 +156,8 @@ static bool textInputActive;
 
 // Clipboard.
 static struct wl_data_source *ownSource;
-static uint8_t *ownText;
-static size_t ownLength;
+static SilkClip own; // what ownSource offers
 static struct wl_data_offer *selectionOffer;
-static bool selectionOfferHasText;
-static uint8_t *readText;
-static int64_t readLength = -1;
 
 static WlWindow *find(uint32_t id) {
     for (size_t i = 0; i < windowCount; i++)
@@ -1071,10 +1067,19 @@ static const struct zwp_text_input_v3_listener textInputListener = {
 
 static void source_target(void *data, struct wl_data_source *source, const char *mime) {}
 
+// The kind a Wayland MIME type names, or -1.
+static int mime_kind(const char *mime) {
+    if (strcmp(mime, "UTF8_STRING") == 0 || strcmp(mime, "STRING") == 0 || strcmp(mime, "TEXT") == 0)
+        return SILK_CLIP_TEXT;
+    return silk_clip_kind((const uint8_t *)mime, strlen(mime));
+}
+
 static void source_send(void *data, struct wl_data_source *source, const char *mime, int32_t fd) {
+    int kind = mime_kind(mime);
+    const SilkText *text = kind >= 0 && own.has[kind] ? &own.data[kind] : &(SilkText){NULL, 0};
     size_t written = 0;
-    while (written < ownLength) {
-        ssize_t n = write(fd, ownText + written, ownLength - written);
+    while (written < text->length) {
+        ssize_t n = write(fd, text->bytes + written, text->length - written);
         if (n < 0 && errno == EINTR) continue;
         if (n <= 0) break;
         written += (size_t)n;
@@ -1098,15 +1103,14 @@ static const struct wl_data_source_listener sourceListener = {
 
 // What an offer has, filled in by its `offer` events before it is entered or selected.
 typedef struct OfferTypes {
-    bool text;
+    bool has[SILK_CLIP_KINDS];
     bool uris;
 } OfferTypes;
 
 static void offer_offer(void *data, struct wl_data_offer *offer, const char *mime) {
     OfferTypes *types = wl_data_offer_get_user_data(offer);
-    if (strcmp(mime, "text/plain;charset=utf-8") == 0 || strcmp(mime, "UTF8_STRING") == 0 ||
-        strcmp(mime, "text/plain") == 0)
-        types->text = true;
+    int kind = mime_kind(mime);
+    if (kind >= 0) types->has[kind] = true;
     if (strcmp(mime, "text/uri-list") == 0) types->uris = true;
 }
 static void offer_source_actions(void *data, struct wl_data_offer *offer, uint32_t actions) {}
@@ -1121,7 +1125,7 @@ static int offerTypesNext;
 
 static void device_data_offer(void *data, struct wl_data_device *device, struct wl_data_offer *offer) {
     OfferTypes *types = &offerTypes[offerTypesNext++ % 64];
-    types->text = types->uris = false;
+    memset(types, 0, sizeof *types);
     wl_data_offer_add_listener(offer, &offerListener, types);
 }
 
@@ -1214,78 +1218,105 @@ static void device_drop(void *data, struct wl_data_device *device) {
 static void device_selection(void *data, struct wl_data_device *device, struct wl_data_offer *offer) {
     if (selectionOffer) wl_data_offer_destroy(selectionOffer);
     selectionOffer = offer;
-    selectionOfferHasText = offer && ((OfferTypes *)wl_data_offer_get_user_data(offer))->text;
 }
 
 static const struct wl_data_device_listener deviceListener = {
     device_data_offer, device_enter, device_leave, device_motion, device_drop, device_selection,
 };
 
-int64_t silk_wl_clipboard_read(uint8_t *destination, size_t capacity) {
-    if (ownSource) {
-        if (destination && capacity) memcpy(destination, ownText, ownLength < capacity ? ownLength : capacity);
-        return (int64_t)ownLength;
+// The MIME type to receive kind `kind` as, from what the selection offers.
+static const char *const receiveAs[SILK_CLIP_KINDS] = {"text/plain;charset=utf-8", "text/html", "image/png"};
+
+static bool offer_has(int kind) {
+    return selectionOffer && ((OfferTypes *)wl_data_offer_get_user_data(selectionOffer))->has[kind];
+}
+
+int64_t silk_wl_clipboard_types(uint8_t *destination, size_t capacity) {
+    if (silk_read_needs_fetch(destination)) {
+        bool has[SILK_CLIP_KINDS];
+        for (int kind = 0; kind < SILK_CLIP_KINDS; kind++) has[kind] = ownSource ? own.has[kind] : offer_has(kind);
+        char list[64];
+        size_t length = silk_clip_types_of(has, list);
+        silk_read_set(length ? (const uint8_t *)list : NULL, length);
     }
-    if (destination && readLength >= 0) {
-        size_t length = (size_t)readLength;
-        if (capacity) memcpy(destination, readText, length < capacity ? length : capacity);
-        return readLength;
-    }
-    free(readText);
-    readText = NULL;
-    readLength = -1;
-    if (!selectionOffer || !selectionOfferHasText) return -1;
+    return silk_read_serve(destination, capacity);
+}
+
+// Reads the selection as `mime` through a pipe, waiting up to a second for the source.
+static void receive(const char *mime) {
     int pipes[2];
-    if (pipe2(pipes, O_CLOEXEC) != 0) return -1;
-    wl_data_offer_receive(selectionOffer, "text/plain;charset=utf-8", pipes[1]);
+    if (pipe2(pipes, O_CLOEXEC) != 0) {
+        silk_read_set(NULL, 0);
+        return;
+    }
+    wl_data_offer_receive(selectionOffer, mime, pipes[1]);
     close(pipes[1]);
     wl_display_flush(display);
     size_t length = 0, size = 0;
-    uint8_t *text = NULL;
+    uint8_t *bytes = NULL;
     double deadline = silk_now() + 1.0;
     for (;;) {
         double now = silk_now();
         if (now >= deadline) break;
         struct pollfd fd = {pipes[0], POLLIN, 0};
         if (poll(&fd, 1, (int)ceil((deadline - now) * 1000.0)) <= 0) break;
-        if (length + 4096 > size) {
-            size = (length + 4096) * 2;
-            uint8_t *grown = realloc(text, size);
+        if (length + 65536 > size) {
+            size = (length + 65536) * 2;
+            uint8_t *grown = realloc(bytes, size);
             if (!grown) abort();
-            text = grown;
+            bytes = grown;
         }
-        ssize_t n = read(pipes[0], text + length, 4096);
+        ssize_t n = read(pipes[0], bytes + length, 65536);
         if (n < 0 && errno == EINTR) continue;
         if (n <= 0) break;
         length += (size_t)n;
     }
     close(pipes[0]);
-    readText = text ? text : malloc(1);
-    readLength = (int64_t)length;
-    if (destination && capacity) memcpy(destination, readText, length < capacity ? length : capacity);
-    return readLength;
+    silk_read_adopt(bytes ? bytes : malloc(1), length);
 }
 
-void silk_wl_clipboard_write(const uint8_t *text, size_t length) {
-    free(ownText);
-    ownText = malloc(length ? length : 1);
-    if (!ownText) abort();
-    if (length) memcpy(ownText, text, length);
-    ownLength = length;
+int64_t silk_wl_clipboard_read_type(int kind, uint8_t *destination, size_t capacity) {
+    if (silk_read_needs_fetch(destination)) {
+        if (ownSource) {
+            if (own.has[kind]) silk_read_set(own.data[kind].bytes, own.data[kind].length);
+            else silk_read_set(NULL, 0);
+        } else if (offer_has(kind)) {
+            receive(receiveAs[kind]);
+        } else {
+            silk_read_set(NULL, 0);
+        }
+    }
+    return silk_read_serve(destination, capacity);
+}
+
+int64_t silk_wl_clipboard_read(uint8_t *destination, size_t capacity) {
+    return silk_wl_clipboard_read_type(SILK_CLIP_TEXT, destination, capacity);
+}
+
+void silk_wl_clipboard_commit(void) {
+    silk_clip_take_pending(&own);
     if (ownSource) {
         wl_data_source_destroy(ownSource);
         ownSource = NULL;
     }
-    if (!dataDeviceManager) {
-        return;
-    }
+    if (!dataDeviceManager) return;
     ownSource = wl_data_device_manager_create_data_source(dataDeviceManager);
     wl_data_source_add_listener(ownSource, &sourceListener, NULL);
-    wl_data_source_offer(ownSource, "text/plain;charset=utf-8");
-    wl_data_source_offer(ownSource, "UTF8_STRING");
-    wl_data_source_offer(ownSource, "text/plain");
+    if (own.has[SILK_CLIP_TEXT]) {
+        wl_data_source_offer(ownSource, "text/plain;charset=utf-8");
+        wl_data_source_offer(ownSource, "UTF8_STRING");
+        wl_data_source_offer(ownSource, "text/plain");
+    }
+    if (own.has[SILK_CLIP_HTML]) wl_data_source_offer(ownSource, "text/html");
+    if (own.has[SILK_CLIP_PNG]) wl_data_source_offer(ownSource, "image/png");
     if (dataDevice) wl_data_device_set_selection(dataDevice, ownSource, lastSerial);
     wl_display_flush(display);
+}
+
+void silk_wl_clipboard_write(const uint8_t *text, size_t length) {
+    silk_window_clipboard_begin();
+    silk_window_clipboard_add((const uint8_t *)"text/plain", 10, text, length);
+    silk_wl_clipboard_commit();
 }
 
 // ---------------------------------------------------------------------------------------

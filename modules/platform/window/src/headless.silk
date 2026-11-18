@@ -4,6 +4,7 @@
 import event { Event, Modifiers, MouseButton }
 import keys { KeyCode }
 import shell { Tray, Notification }
+import clipboard { ClipboardEntry, CLIPBOARD_TYPES, supportsClipboardType }
 import menu { MenuBar, MenuEntry, OpenDialog, SaveDialog }
 import platform { Platform }
 import types {
@@ -20,6 +21,7 @@ import types {
   RawSurface,
 }
 import silk.collections.list { List }
+import silk.collections.bytes { Bytes }
 import silk.core.option { Option }
 import silk.core.ownership { Copy }
 import silk.geometry.point { Point2 }
@@ -84,7 +86,7 @@ impl Copy for HeadlessContextMenu {}
 pub struct HeadlessPlatform {
   windows: List<HeadlessWindow>,
   queue: List<Event>,
-  clipboard: Option<String>,
+  clipboard: List<ClipboardEntry>,
   appearance: Appearance,
   nextDialog: u32,
   /// The seconds between display refreshes; `targetTime` advances by it per frame.
@@ -119,7 +121,7 @@ impl HeadlessPlatform {
     return HeadlessPlatform {
       windows: List<HeadlessWindow>.make(),
       queue: List<Event>.make(),
-      clipboard: Option<String>.None,
+      clipboard: List<ClipboardEntry>.make(),
       appearance: Appearance.Light,
       nextDialog: 1,
       refreshInterval: 1.0 / 60.0,
@@ -537,10 +539,10 @@ impl Platform for HeadlessPlatform {
   effect fn readClipboard(self: &mut Self) -> Option<String>
     ! OutOfMemoryError
     ? &mut Allocator {
-    match &self.clipboard {
-      Option<String>.Some { value } => {
-        let copy = run String.copy(value.view())
-        return Option<String>.some(move copy)
+    match move run self.readClipboardType("text/plain") {
+      Option<Bytes>.Some { value } => {
+        let text = run String.copy(unsafe String.fromUtf8Unchecked(value.asSlice()))
+        return Option<String>.some(move text)
       }
       _ => {
         return Option<String>.None
@@ -551,8 +553,59 @@ impl Platform for HeadlessPlatform {
   effect fn writeClipboard(self: &mut Self, text: string) -> ()
     ! OutOfMemoryError
     ? &mut Allocator {
-    let copy = run String.copy(text)
-    self.clipboard = Option<String>.some(move copy)
+    let entry = ClipboardEntry { mime: run String.copy("text/plain"), data: run Bytes.copy(String.utf8Bytes(text)) }
+    self.clipboard = List<ClipboardEntry>.make()
+    run self.clipboard.append(move entry)
+  }
+
+  effect fn clipboardTypes(self: &mut Self) -> List<String>
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let mut types = List<String>.make()
+    let mut kind: usize = 0
+    while kind < CLIPBOARD_TYPES.length {
+      let name = CLIPBOARD_TYPES[kind]
+      kind = kind + 1
+      let mut i: usize = 0
+      while i < self.clipboard.length() {
+        if self.clipboard.asSlice()[i].mime.view() == name {
+          run types.append(run String.copy(name))
+          break
+        }
+        i = i + 1
+      }
+    }
+    return move types
+  }
+
+  effect fn readClipboardType(self: &mut Self, mime: string) -> Option<Bytes>
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let mut i: usize = 0
+    while i < self.clipboard.length() {
+      let entry = &self.clipboard.asSlice()[i]
+      if entry.mime.view() == mime {
+        let copy = run Bytes.copy(entry.data.asSlice())
+        return Option<Bytes>.some(move copy)
+      }
+      i = i + 1
+    }
+    return Option<Bytes>.None
+  }
+
+  /// Keeps the entries of the types the clipboard maps, as a system clipboard would.
+  effect fn writeClipboardItem(self: &mut Self, entries: &[ClipboardEntry]) -> ()
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    self.clipboard = List<ClipboardEntry>.make()
+    let mut i: usize = 0
+    while i < entries.length {
+      if supportsClipboardType(entries[i].mime.view()) {
+        let entry = ClipboardEntry { mime: run String.copy(entries[i].mime.view()), data: run Bytes.copy(entries[i].data.asSlice()) }
+        run self.clipboard.append(move entry)
+      }
+      i = i + 1
+    }
   }
 
   fn appearance(self: &Self) -> Appearance {

@@ -7,6 +7,8 @@ import menu { MenuBar, OpenDialog, SaveDialog, Shortcut, SystemItem }
 import platform { Platform }
 import types { WindowId, WindowOptions, WindowError, Wait, Cursor, CursorImage, ImeState }
 import silk.collections.list { List }
+import silk.collections.bytes { Bytes }
+import clipboard { ClipboardEntry }
 import silk.core.effect { Effect }
 import silk.core.option { Option }
 import silk.geometry.rect { Rect }
@@ -152,6 +154,34 @@ test effect fn recordsWindowState() -> ()
     _ => {
       run Testing.expect(false, "clipboard text")
     }
+  }
+  run copyRich(&mut platform) |> Effect.provideMut<Allocator>(&mut allocator)
+}
+
+effect fn copyRich(platform: &mut HeadlessPlatform) -> () ! OutOfMemoryError | AssertionError<'static> ? &mut Allocator {
+  let mut entries = List<ClipboardEntry>.make()
+  run entries.append(ClipboardEntry { mime: run String.copy("text/rtf"), data: run Bytes.copy(b"rtf") })
+  run entries.append(ClipboardEntry { mime: run String.copy("image/png"), data: run Bytes.copy(b"PNG") })
+  run entries.append(ClipboardEntry { mime: run String.copy("text/html"), data: run Bytes.copy(b"<b>bold</b>") })
+  run entries.append(ClipboardEntry { mime: run String.copy("text/plain"), data: run Bytes.copy(b"bold") })
+  run platform.writeClipboardItem(entries.asSlice())
+  let types = run platform.clipboardTypes()
+  run Testing.expect(types.length() == 3, "unmapped types are left out")
+  run Testing.expect(types.asSlice()[0].view() == "text/plain" && types.asSlice()[2].view() == "image/png", "types in order")
+  match move run platform.readClipboardType("text/html") {
+    Option<Bytes>.Some { value } => run Testing.expect(value.asSlice() == b"<b>bold</b>", "html")
+    _ => run Testing.expect(false, "html read")
+  }
+  match move run platform.readClipboard() {
+    Option<String>.Some { value } => run Testing.expect(value.view() == "bold", "text of a rich copy")
+    _ => run Testing.expect(false, "text read")
+  }
+  run platform.writeClipboard("plain")
+  let after = run platform.clipboardTypes()
+  run Testing.expect(after.length() == 1, "a text write replaces the item")
+  match move run platform.readClipboardType("image/png") {
+    Option<Bytes>.Some { value: _image } => run Testing.expect(false, "no image after a text write")
+    _ => {}
   }
 }
 

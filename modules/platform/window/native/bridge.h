@@ -45,6 +45,7 @@ enum {
     SILK_EVENT_NOTIFICATION_CLICKED = 31, // code: the notification's id
     SILK_EVENT_CONTEXT_MENU_CLOSED = 32,  // window: closed without an item chosen
     SILK_EVENT_TOUCH = 33,                // code: the touch's id; x, y; phase: began to cancelled
+    SILK_EVENT_EDIT_COMMAND = 34,         // window; code: menu.EditCommand (the Edit menu)
 };
 
 // tray_commit flags.
@@ -191,6 +192,19 @@ uint32_t silk_window_save_dialog(const uint8_t *title, size_t titleLength,
 // silk_window_next_event runs, so a second call with a large enough buffer reads it all.
 int64_t silk_window_clipboard_read(uint8_t *destination, size_t capacity);
 void silk_window_clipboard_write(const uint8_t *text, size_t length);
+// The MIME types the clipboard holds now, of text/plain, text/html and image/png, joined by
+// '\n', with the same two-call protocol as clipboard_read; -1 when it holds none of them.
+int64_t silk_window_clipboard_types(uint8_t *destination, size_t capacity);
+// The clipboard's data as MIME type `mime` (text is UTF-8), with the same protocol as
+// clipboard_read; -1 when it does not hold that type.
+int64_t silk_window_clipboard_read_type(const uint8_t *mime, size_t mimeLength,
+                                        uint8_t *destination, size_t capacity);
+// Replaces the clipboard with one item that has a representation per clipboard_add between
+// clipboard_begin and clipboard_commit (text/plain, text/html or image/png).
+void silk_window_clipboard_begin(void);
+void silk_window_clipboard_add(const uint8_t *mime, size_t mimeLength, const uint8_t *data,
+                               size_t length);
+void silk_window_clipboard_commit(void);
 // 0 light, 1 dark.
 uint32_t silk_window_appearance(void);
 
