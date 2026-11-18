@@ -309,6 +309,8 @@ static void check_appearance(void) {
 @property(nonatomic, strong) NSDictionary *axAction;
 @property(nonatomic) uint32_t axFocused;
 @property(nonatomic) uint32_t axPreviousFocus;
+@property(nonatomic, strong) NSMutableDictionary<id, NSNumber *> *touchIds;
+@property(nonatomic) uint32_t nextTouchId;
 @end
 
 @interface SilkNSWindow : NSWindow
@@ -458,6 +460,10 @@ static void push_resize(SilkView *view) {
         self.cursor = [NSCursor arrowCursor];
         self.marked = [NSMutableAttributedString new];
         self.markedSelection = NSMakeRange(0, 0);
+        // Fingers on a touchscreen arrive as direct touches; the trackpad's stay gestures.
+        self.allowedTouchTypes = NSTouchTypeMaskDirect;
+        self.touchIds = [NSMutableDictionary new];
+        self.nextTouchId = 1;
     }
     return self;
 }
@@ -624,11 +630,48 @@ static uint32_t other_button(NSEvent *event) {
     }
 }
 
+// Touchscreen fingers. The tree makes pointer and touch events from them, so the mouse events
+// AppKit makes from the same fingers are dropped while one is down.
+
+- (BOOL)fingerMouse:(NSEvent *)e {
+    return self.touchIds.count > 0 && e.subtype == NSEventSubtypeTouch;
+}
+
+- (void)pushTouches:(NSEvent *)e phase:(NSTouchPhase)phase value:(uint32_t)value {
+    for (NSTouch *touch in [e touchesMatchingPhase:phase inView:self]) {
+        if (touch.type != NSTouchTypeDirect) continue;
+        NSNumber *known = self.touchIds[touch.identity];
+        if (!known) {
+            if (value != 1) continue;
+            known = @(self.nextTouchId);
+            self.nextTouchId = self.nextTouchId == UINT32_MAX ? 1 : self.nextTouchId + 1;
+            self.touchIds[touch.identity] = known;
+        }
+        NSPoint position = [touch locationInView:self];
+        SilkWindowEvent out = blank_event(SILK_EVENT_TOUCH, self.windowId);
+        out.code = known.unsignedIntValue;
+        out.phase = value;
+        out.x = position.x;
+        out.y = position.y;
+        out.modifiers = modifier_bits(e.modifierFlags);
+        push(out);
+        if (value == 3 || value == 4) [self.touchIds removeObjectForKey:touch.identity];
+    }
+    flush();
+}
+
+- (void)touchesBeganWithEvent:(NSEvent *)e { [self pushTouches:e phase:NSTouchPhaseBegan value:1]; }
+- (void)touchesMovedWithEvent:(NSEvent *)e { [self pushTouches:e phase:NSTouchPhaseMoved value:2]; }
+- (void)touchesEndedWithEvent:(NSEvent *)e { [self pushTouches:e phase:NSTouchPhaseEnded value:3]; }
+- (void)touchesCancelledWithEvent:(NSEvent *)e { [self pushTouches:e phase:NSTouchPhaseCancelled value:4]; }
+
 - (void)mouseDown:(NSEvent *)e {
+    if ([self fingerMouse:e]) return;
     self.pressed = e;
     [self pushMouse:SILK_EVENT_MOUSE_DOWN event:e button:0];
 }
 - (void)mouseUp:(NSEvent *)e {
+    if ([self fingerMouse:e]) return;
     self.pressed = nil;
     [self pushMouse:SILK_EVENT_MOUSE_UP event:e button:0];
 }
@@ -649,7 +692,10 @@ static uint32_t other_button(NSEvent *event) {
     if (top != self.window.windowNumber) return;
     [self pushMouse:SILK_EVENT_MOUSE_MOVED event:e button:0];
 }
-- (void)mouseDragged:(NSEvent *)e { [self pushMouse:SILK_EVENT_MOUSE_MOVED event:e button:0]; }
+- (void)mouseDragged:(NSEvent *)e {
+    if ([self fingerMouse:e]) return;
+    [self pushMouse:SILK_EVENT_MOUSE_MOVED event:e button:0];
+}
 - (void)rightMouseDragged:(NSEvent *)e { [self pushMouse:SILK_EVENT_MOUSE_MOVED event:e button:0]; }
 - (void)otherMouseDragged:(NSEvent *)e { [self pushMouse:SILK_EVENT_MOUSE_MOVED event:e button:0]; }
 - (void)mouseEntered:(NSEvent *)e { [self pushMouse:SILK_EVENT_MOUSE_ENTERED event:e button:0]; }
