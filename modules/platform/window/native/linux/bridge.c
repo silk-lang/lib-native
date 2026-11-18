@@ -242,13 +242,25 @@ void silk_linux_system_item(uint32_t window, uint32_t item) {
     }
 }
 
+// The portal's name for a window: "x11:<xid>" on X11. Wayland would need xdg-foreign to
+// export a handle, so there the dialog has no parent.
+static void dialog_parent(uint32_t window, char *out, size_t capacity) {
+    out[0] = 0;
+    void *first = NULL, *second = NULL;
+    uint64_t xid = 0;
+    if (window && backend == SILK_BACKEND_X11 &&
+        silk_x11_raw_surface(window, &first, &second, &xid) == SILK_SURFACE_XLIB)
+        snprintf(out, capacity, "x11:%llx", (unsigned long long)xid);
+}
+
 uint32_t silk_window_open_dialog(const uint8_t *title, size_t titleLength,
                                  const uint8_t *directory, size_t directoryLength,
                                  const uint8_t *extensions, size_t extensionsLength,
                                  uint32_t flags, uint32_t parent) {
-    (void)parent;
+    char parentName[40];
+    dialog_parent(parent, parentName, sizeof parentName);
     return silk_dialog_open(title, titleLength, directory, directoryLength, extensions,
-                            extensionsLength, flags, false, NULL, 0);
+                            extensionsLength, flags, false, NULL, 0, parentName);
 }
 
 uint32_t silk_window_save_dialog(const uint8_t *title, size_t titleLength,
@@ -256,9 +268,10 @@ uint32_t silk_window_save_dialog(const uint8_t *title, size_t titleLength,
                                  const uint8_t *name, size_t nameLength,
                                  const uint8_t *extensions, size_t extensionsLength,
                                  uint32_t flags, uint32_t parent) {
-    (void)parent;
+    char parentName[40];
+    dialog_parent(parent, parentName, sizeof parentName);
     return silk_dialog_open(title, titleLength, directory, directoryLength, extensions,
-                            extensionsLength, flags, true, name, nameLength);
+                            extensionsLength, flags, true, name, nameLength, parentName);
 }
 
 int64_t silk_window_clipboard_read(uint8_t *destination, size_t capacity) {

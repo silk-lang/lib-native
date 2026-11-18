@@ -743,7 +743,9 @@ export class WindowHost {
 
   // ---------------------------------------------------------------------------------
   // Dialogs: an open dialog is a file input, and needs a user gesture to show. Its paths
-  // are the file names; dialogFiles(id) has the File objects. Save dialogs are not offered.
+  // are the file names (relative paths for a directory); dialogFiles(id) has the File
+  // objects. A save dialog is showSaveFilePicker where the browser has it: its path is the
+  // chosen name, and dialogFiles(id) holds the FileSystemFileHandle to write through.
 
   silk_window_open_dialog(titlePtr, titleLength, dirPtr, dirLength, extPtr, extLength, flags, parent) {
     const document = globalThis.document;
@@ -776,7 +778,27 @@ export class WindowHost {
     return id;
   }
 
-  silk_window_save_dialog() { return 0; }
+  silk_window_save_dialog(titlePtr, titleLength, dirPtr, dirLength, namePtr, nameLength, extPtr, extLength, flags, parent) {
+    const pick = globalThis.showSaveFilePicker;
+    if (!this.started || typeof pick !== 'function') return 0;
+    const id = this.nextDialog++;
+    const extensions = this.text(extPtr, extLength).split(',').map(s => s.trim()).filter(Boolean);
+    const options = { suggestedName: this.text(namePtr, nameLength) || undefined };
+    if (extensions.length) {
+      options.types = [{ description: extensions.join(', '), accept: { 'application/octet-stream': extensions.map(e => `.${e}`) } }];
+    }
+    const finish = handles => {
+      this.dialogs.set(id, handles);
+      const record = event(EVENT.DIALOG_CLOSED);
+      record.code = id;
+      record.count = handles.length;
+      record.texts = handles.map(handle => handle.name);
+      this.push(record);
+    };
+    // Rejects when cancelled, or without a user gesture.
+    pick.call(globalThis, options).then(handle => finish([handle]), () => finish([]));
+    return id;
+  }
 
   // ---------------------------------------------------------------------------------
   // Clipboard: reads are synchronous, so they return what the app last wrote or what was
