@@ -1,7 +1,6 @@
 [package]
 name = "gpu-metal-examples-headless-render"
 version = "0.1.0"
-silk-version = "0.1.0-dev.87+37fa5f8857de"
 source = "src"
 main = "main.silk"
 
