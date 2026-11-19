@@ -1,7 +1,6 @@
 [package]
 name = "gpu-webgpu-examples"
 version = "0.1.0"
-silk-version = "0.1.0-dev.87+37fa5f8857de"
 kind = "executable"
 exports = ["samples", "workloads", "generated_shaders", "session", "browser"]
 

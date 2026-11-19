@@ -4,7 +4,6 @@ version = "0.1.0"
 kind = "executable"
 source = "src"
 main = "tasks.silk"
-silk-version = "0.1.0-dev.87+37fa5f8857de"
 
 [workspace]
 members = [
@@ -25,4 +24,4 @@ members = [
   "modules/platform/window/tests/smoke",
   "modules/platform/window/tests/windows"
 ]
-silk-version = "0.1.0-dev.87+37fa5f8857de"
+silk-version = "0.1.0-dev.88+17d1a1b4d501"

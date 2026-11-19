@@ -3,7 +3,6 @@ include = ["browser"]
 name = "platform-window"
 description = "Native windows, input, IME, menus, dialogs and display-paced frames"
 version = "0.1.0"
-silk-version = "0.1.0-dev.87+37fa5f8857de"
 kind = "library"
 exports = ["lib", "types", "event", "keys", "menu", "shell", "clipboard", "platform", "headless", "accessibility", "macos", "native", "bridge", "bridge_sys"]
 
