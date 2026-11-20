@@ -85,7 +85,7 @@ typedef struct Win32Window {
 } Win32Window;
 
 typedef struct Task {
-    int kind; // 1 open dialog, 2 save dialog, 3 window drag, 4 context menu
+    int kind; // 1 open dialog, 2 save dialog, 3 window drag, 4 context menu, 5 file drag
     uint32_t id;
     POINT point;
     HMENU menu;
@@ -1952,8 +1952,121 @@ uint8_t silk_window_set_progress(double fraction) {
     return 1;
 }
 
+// Dragging files out: the shell makes the data object for the files, DoDragDrop runs the
+// drag's modal loop from the pump, and the drop source follows the left button.
+typedef struct DropSource {
+    IDropSource source;
+    LONG references;
+} DropSource;
+
+static HRESULT STDMETHODCALLTYPE drop_query(IDropSource *self, REFIID riid, void **out) {
+    if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IDropSource)) {
+        *out = self;
+        self->lpVtbl->AddRef(self);
+        return S_OK;
+    }
+    *out = NULL;
+    return E_NOINTERFACE;
+}
+static ULONG STDMETHODCALLTYPE drop_add_ref(IDropSource *self) {
+    return (ULONG)InterlockedIncrement(&((DropSource *)self)->references);
+}
+static ULONG STDMETHODCALLTYPE drop_release(IDropSource *self) {
+    LONG left = InterlockedDecrement(&((DropSource *)self)->references);
+    if (left == 0) free(self);
+    return (ULONG)left;
+}
+static HRESULT STDMETHODCALLTYPE drop_continue(IDropSource *self, BOOL escape, DWORD keys) {
+    if (escape) return DRAGDROP_S_CANCEL;
+    return (keys & MK_LBUTTON) ? S_OK : DRAGDROP_S_DROP;
+}
+static HRESULT STDMETHODCALLTYPE drop_feedback(IDropSource *self, DWORD effect) {
+    return DRAGDROP_S_USEDEFAULTCURSORS;
+}
+static IDropSourceVtbl dropSourceVtbl = {drop_query, drop_add_ref, drop_release, drop_continue,
+                                         drop_feedback};
+
+static void run_file_drag(Task *task) {
+    Win32Window *window = find(task->window);
+    if (!window || !task->name) return;
+    PIDLIST_ABSOLUTE items[64];
+    UINT count = 0;
+    for (WCHAR *line = task->name; *line && count < 64;) {
+        WCHAR *end = wcschr(line, L'\n');
+        if (end) *end = 0;
+        if (*line) {
+            PIDLIST_ABSOLUTE item = ILCreateFromPathW(line);
+            if (item) items[count++] = item;
+        }
+        if (!end) break;
+        line = end + 1;
+    }
+    IShellItemArray *array = NULL;
+    IDataObject *data = NULL;
+    if (count && SUCCEEDED(SHCreateShellItemArrayFromIDLists(count, (PCIDLIST_ABSOLUTE_ARRAY)items,
+                                                             &array))) {
+        array->lpVtbl->BindToHandler(array, NULL, &BHID_DataObject, &IID_IDataObject,
+                                     (void **)&data);
+        array->lpVtbl->Release(array);
+    }
+    for (UINT i = 0; i < count; i++) ILFree(items[i]);
+    DropSource *source = data ? calloc(1, sizeof *source) : NULL;
+    if (source) {
+        source->source.lpVtbl = &dropSourceVtbl;
+        source->references = 1;
+        ReleaseCapture();
+        DWORD effect = DROPEFFECT_NONE;
+        DoDragDrop(data, &source->source, DROPEFFECT_COPY | DROPEFFECT_LINK, &effect);
+        source->source.lpVtbl->Release(&source->source);
+    }
+    if (data) data->lpVtbl->Release(data);
+    // The drag loop took the button's release, so the window would never see it.
+    POINT point;
+    GetCursorPos(&point);
+    ScreenToClient(window->hwnd, &point);
+    SilkWindowEvent event = silk_event(SILK_EVENT_MOUSE_UP, window->id);
+    event.x = point.x / window->scale;
+    event.y = point.y / window->scale;
+    event.modifiers = current_modifiers();
+    silk_queue_push(&event);
+}
+
+uint8_t silk_window_start_file_drag(uint32_t id, const uint8_t *paths, size_t length) {
+    if (!find(id) || !length || !(GetKeyState(VK_LBUTTON) & 0x8000)) return 0;
+    Task *task = calloc(1, sizeof *task);
+    if (!task) return 0;
+    task->kind = 5;
+    task->window = id;
+    task->name = wide(paths, length);
+    post_task(task);
+    return 1;
+}
+
+uint8_t silk_window_open_url(const uint8_t *url, size_t length) {
+    if (!length) return 0;
+    WCHAR *target = wide(url, length);
+    HINSTANCE result = ShellExecuteW(NULL, L"open", target, NULL, NULL, SW_SHOWNORMAL);
+    free(target);
+    return (INT_PTR)result > 32 ? 1 : 0;
+}
+
+uint8_t silk_window_reveal_path(const uint8_t *path, size_t length) {
+    if (!length) return 0;
+    WCHAR *target = wide(path, length);
+    for (WCHAR *c = target; *c; c++)
+        if (*c == L'/') *c = L'\\';
+    PIDLIST_ABSOLUTE item = ILCreateFromPathW(target);
+    free(target);
+    if (!item) return 0;
+    HRESULT shown = SHOpenFolderAndSelectItems(item, 0, NULL, 0);
+    ILFree(item);
+    return SUCCEEDED(shown) ? 1 : 0;
+}
+
 static void run_task(Task *task) {
-    if (task->kind == 4) {
+    if (task->kind == 5) {
+        run_file_drag(task);
+    } else if (task->kind == 4) {
         run_context_menu(task);
     } else if (task->kind == 3) {
         Win32Window *window = find(task->window);

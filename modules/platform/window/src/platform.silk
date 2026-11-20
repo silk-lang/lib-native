@@ -235,4 +235,32 @@ pub interface Platform {
     ? &mut Allocator {
     return false
   }
+
+  /// Opens `url` with the system's handler for it: a web page in the default browser, a
+  /// `mailto:` link in the mail app, a `file:` URL in the app for its type. False when the
+  /// system has no way to open URLs or refused this one.
+  effect fn openUrl(self: &mut Self, url: string) -> bool
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    return false
+  }
+
+  /// Shows the file or folder at `path` selected in the system's file manager (Finder,
+  /// Explorer). False when the system has no file manager to show it in.
+  effect fn revealPath(self: &mut Self, path: string) -> bool
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    return false
+  }
+
+  /// Starts dragging the files at `paths` out of `window`, so another app (Finder, a mail
+  /// draft, a terminal) can take them; call it while the mouse button is down, from the
+  /// `MouseDown` or a `MouseMoved` after it. The system draws the dragged icons and the
+  /// window gets a `MouseUp` when the drag ends. False when this backend cannot drag files
+  /// out, or no button is down.
+  effect fn startFileDrag(self: &mut Self, window: WindowId, paths: &[String]) -> bool
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    return false
+  }
 }

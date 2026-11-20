@@ -717,6 +717,15 @@ export class WindowHost {
   silk_window_context_menu_commit() { return 0; }
   silk_window_set_progress() { return 0; }
 
+  // A web page opens URLs in a new tab; it has no file manager and drags no files out.
+  silk_window_open_url(ptr, length) {
+    const url = this.text(ptr, length);
+    if (!/^[a-z][a-z0-9+.-]*:/i.test(url)) return 0;
+    return globalThis.open?.(url, '_blank', 'noopener') !== undefined ? 1 : 0;
+  }
+  silk_window_reveal_path() { return 0; }
+  silk_window_start_file_drag() { return 0; }
+
   // An installed web app's badge (the Badging API): a count, or a dot for other text.
   silk_window_set_badge(ptr, length) {
     const nav = globalThis.navigator;

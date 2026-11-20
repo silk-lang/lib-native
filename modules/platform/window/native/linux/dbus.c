@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/wait.h>
 #include "linux.h"
 
 // The parts of the libdbus ABI used here (dbus/dbus.h). The iterator is larger than libdbus's
@@ -1015,6 +1016,101 @@ uint8_t silk_window_set_badge(const uint8_t *text, size_t length) {
 uint8_t silk_window_set_progress(double fraction) {
     launcherProgress = fraction < 0 ? -1.0 : fraction > 1 ? 1.0 : fraction;
     return launcher_update();
+}
+
+// ---------------------------------------------------------------------------------------
+// URLs and the file manager.
+
+// Runs `xdg-open target` detached: the child forks again and exits, so nothing is left to reap.
+static uint8_t xdg_open(const char *target) {
+    pid_t child = fork();
+    if (child < 0) return 0;
+    if (child == 0) {
+        if (fork() == 0) {
+            execlp("xdg-open", "xdg-open", target, (char *)NULL);
+            _exit(127);
+        }
+        _exit(0);
+    }
+    int status = 0;
+    while (waitpid(child, &status, 0) < 0 && errno == EINTR) {
+    }
+    return WIFEXITED(status) && WEXITSTATUS(status) == 0 ? 1 : 0;
+}
+
+uint8_t silk_window_open_url(const uint8_t *url, size_t length) {
+    if (!length) return 0;
+    char *target = silk_strndup(url, length);
+    if (!target) return 0;
+    uint8_t opened = strchr(target, ':') ? xdg_open(target) : 0;
+    free(target);
+    return opened;
+}
+
+// org.freedesktop.FileManager1 (Nautilus, Dolphin, Nemo, Thunar) selects the item; without one
+// the folder holding it opens.
+uint8_t silk_window_reveal_path(const uint8_t *path, size_t length) {
+    if (!length || path[0] != '/') return 0;
+    char *target = silk_strndup(path, length);
+    if (!target) return 0;
+    uint8_t shown = 0;
+    if (load()) {
+        DBusMessage *call = dbus.message_new_method_call(
+            "org.freedesktop.FileManager1", "/org/freedesktop/FileManager1",
+            "org.freedesktop.FileManager1", "ShowItems");
+        if (call) {
+            DBusMessageIter args, uris;
+            dbus.message_iter_init_append(call, &args);
+            dbus.message_iter_open_container(&args, T_ARRAY, "s", &uris);
+            size_t size = strlen(target) * 3 + 8;
+            char *uri = malloc(size);
+            if (uri) {
+                // file:// with every byte outside the unreserved set and '/' escaped.
+                size_t at = (size_t)snprintf(uri, size, "file://");
+                for (const unsigned char *c = (const unsigned char *)target; *c; c++) {
+                    if ((*c >= 'a' && *c <= 'z') || (*c >= 'A' && *c <= 'Z') ||
+                        (*c >= '0' && *c <= '9') || strchr("/-._~", *c)) {
+                        uri[at++] = (char)*c;
+                    } else {
+                        at += (size_t)snprintf(uri + at, size - at, "%%%02X", *c);
+                    }
+                }
+                uri[at] = 0;
+                append_string(&uris, uri);
+                free(uri);
+            }
+            dbus.message_iter_close_container(&args, &uris);
+            append_string(&args, "");
+            DBusError error;
+            dbus.error_init(&error);
+            DBusMessage *reply = dbus.connection_send_with_reply_and_block(bus, call, 2000, &error);
+            dbus.message_unref(call);
+            if (reply) {
+                shown = dbus.message_get_type(reply) == MESSAGE_METHOD_RETURN;
+                dbus.message_unref(reply);
+            }
+            dbus.error_free(&error);
+        }
+    }
+    if (!shown) {
+        char *slash = strrchr(target, '/');
+        if (slash) {
+            if (slash == target) slash[1] = 0;
+            else *slash = 0;
+            shown = xdg_open(target);
+        }
+    }
+    free(target);
+    return shown;
+}
+
+// Dragging files out needs a toolkit's drag source (XDND or wl_data_source), which this
+// backend does not have.
+uint8_t silk_window_start_file_drag(uint32_t window, const uint8_t *paths, size_t length) {
+    (void)window;
+    (void)paths;
+    (void)length;
+    return 0;
 }
 
 // A Linux window has no toolkit to draw a context menu: the app draws its own.

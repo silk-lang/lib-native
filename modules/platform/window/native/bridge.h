@@ -242,6 +242,15 @@ uint8_t silk_window_context_menu_commit(uint32_t window, double x, double y);
 uint8_t silk_window_set_badge(const uint8_t *text, size_t length);
 uint8_t silk_window_set_progress(double fraction);
 
+// Opens `url` with the system's handler for it (the default browser for a web page). Returns
+// 1 when the system took it, 0 otherwise.
+uint8_t silk_window_open_url(const uint8_t *url, size_t length);
+// Shows the file or folder at `path` selected in the file manager. 1 when shown.
+uint8_t silk_window_reveal_path(const uint8_t *path, size_t length);
+// Drags the files at `paths` (separated by newlines) out of the window while the mouse button
+// is down. 1 when the drag started, 0 when the backend cannot drag files out.
+uint8_t silk_window_start_file_drag(uint32_t window, const uint8_t *paths, size_t length);
+
 // Test hooks for the smoke tests: drive the system as the user would. Each returns 1 when
 // it did something and 0 when the backend cannot simulate it.
 //
