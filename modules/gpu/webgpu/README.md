@@ -16,7 +16,11 @@ There are two layers:
   - asynchronous requests that can be polled or awaited;
   - mapped buffers with checked copies;
   - capability snapshots;
-  - host-owned surfaces.
+  - host-owned surfaces;
+  - `shared_texture`: textures over memory another device or API owns (Dawn's shared texture
+    memory and shared fences), and `SharedImage`, memory two devices of one process share. These
+    are native Dawn extensions; a software adapter such as lavapipe has no fence feature and
+    cannot use them.
 
 ## Example
 

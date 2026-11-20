@@ -383,6 +383,19 @@ effect fn exports(bindings: string) -> String
     rest = suffix(rest, end)
   }
   if symbols.length() == 0 { run Task.abort("No Dawn C exports found in generated_webgpu.silk.") }
+  // Dawn extensions outside the webgpu.h schema that sys/native/callbacks.c calls (shared texture
+  // memory and shared fences).
+  let extensions = ["wgpuDeviceImportSharedFence", "wgpuDeviceImportSharedTextureMemory",
+    "wgpuSharedFenceAddRef", "wgpuSharedFenceExportInfo", "wgpuSharedFenceRelease",
+    "wgpuSharedTextureMemoryAddRef", "wgpuSharedTextureMemoryBeginAccess",
+    "wgpuSharedTextureMemoryCreateTexture", "wgpuSharedTextureMemoryEndAccess",
+    "wgpuSharedTextureMemoryEndAccessStateFreeMembers", "wgpuSharedTextureMemoryGetProperties",
+    "wgpuSharedTextureMemoryIsDeviceLost", "wgpuSharedTextureMemoryRelease"]
+  let mut extension: usize = 0
+  while extension < extensions.length {
+    run symbols.append(extensions[extension])
+    extension = extension + 1
+  }
   run symbols.sort()
   let mut output = run String.copy("EXPORTS\n")
   let values = symbols.asSlice()
