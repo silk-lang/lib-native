@@ -63,7 +63,7 @@ effect fn checked(binary: string, case: usize, n: u64, frames: u64, prefix: &[st
 effect fn timestamp() -> String ! TaskError | OutOfMemoryError | WriterError ? &mut Allocator {
   let mut clock = OsSystemClock.make()
   let now = run SystemClock.now() |> Effect.provideMut<SystemClock>(&mut clock)
-  let seconds = SystemClock.seconds(&now)
+  let seconds = now.unixSeconds()
   let days = seconds / 86400
   let daytime = seconds % 86400
   let z = days + 719468

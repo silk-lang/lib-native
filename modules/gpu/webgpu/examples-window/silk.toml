@@ -1,7 +1,7 @@
 [package]
 name = "gpu-webgpu-examples-window"
 version = "0.1.0"
-silk-version = "0.1.0-dev.88+17d1a1b4d501"
+silk-version = "0.1.0-dev.90+43166993a300"
 
 [dependencies]
 webgpu_sys = { path = "../sys", package = "gpu-webgpu-sys" }
