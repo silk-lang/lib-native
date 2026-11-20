@@ -2372,6 +2372,8 @@ void silk_ca_begin(void) {
 
 void silk_ca_commit(void) {
     [CATransaction commit];
+    // A thread with no run loop has no implicit transaction to carry these to the window server.
+    [CATransaction flush];
 }
 
 void *silk_ca_canvas_layer_create(void *parent) {
@@ -2435,7 +2437,18 @@ void silk_ca_canvas_layer_set(void *handle, const SilkCanvasLayerState *state, v
         content.contentsScale = s;
         content.opaque = state->opaque != 0;
         content.opacity = (float)state->opacity;
-        if (io_surface) content.contents = (__bridge id)io_surface;
+        if (io_surface) {
+            // The same IOSurface comes back with new pixels (a swap chain reuses its images): Core
+            // Animation keeps what it read of a surface unless told the contents changed.
+            SEL changed = NSSelectorFromString(@"setContentsChanged");
+            if (content.contents == (__bridge id)io_surface && ![content respondsToSelector:changed]) {
+                content.contents = nil;
+            }
+            content.contents = (__bridge id)io_surface;
+            if ([content respondsToSelector:changed]) {
+                ((void (*)(id, SEL))objc_msgSend)(content, changed);
+            }
+        }
     }
 }
 
@@ -2518,4 +2531,30 @@ void *silk_ca_test_iosurface_create(uint32_t width, uint32_t height) {
 
 void silk_ca_layer_set_contents_scale(void *layer, double scale) {
     if (layer) ((__bridge CALayer *)layer).contentsScale = scale;
+}
+
+// What Core Animation holds for a canvas layer and its parent, as one line of text: for traces.
+void silk_ca_canvas_layer_describe(void *handle, char *out, size_t capacity) {
+    if (!out || capacity == 0) return;
+    out[0] = 0;
+    if (!handle) return;
+    @autoreleasepool {
+        CALayer *clip = (__bridge CALayer *)handle;
+        CALayer *content = clip.sublayers.firstObject;
+        CALayer *parent = clip.superlayer;
+        NSUInteger index = parent ? [parent.sublayers indexOfObjectIdenticalTo:clip] : NSNotFound;
+        snprintf(out, capacity,
+                 "clip=(%.1f,%.1f %.1fx%.1f)pt hidden=%d masks=%d radius=%.1f content=(%.1f,%.1f %.1fx%.1f)pt"
+                 " opacity=%.2f scale=%.1f contents=%s parent=%s parent-bounds=(%.1fx%.1f) parent-flipped=%d"
+                 " parent-scale=%.1f parent-hidden=%d index=%ld of %lu window=%s",
+                 clip.frame.origin.x, clip.frame.origin.y, clip.frame.size.width, clip.frame.size.height,
+                 clip.hidden ? 1 : 0, clip.masksToBounds ? 1 : 0, clip.cornerRadius,
+                 content.frame.origin.x, content.frame.origin.y, content.frame.size.width, content.frame.size.height,
+                 content.opacity, content.contentsScale, content.contents ? "yes" : "no",
+                 parent ? NSStringFromClass([parent class]).UTF8String : "none",
+                 parent.bounds.size.width, parent.bounds.size.height, parent.geometryFlipped ? 1 : 0,
+                 parent.contentsScale, parent.hidden ? 1 : 0,
+                 index == NSNotFound ? -1L : (long)index, (unsigned long)parent.sublayers.count,
+                 parent.superlayer ? "attached" : "detached");
+    }
 }

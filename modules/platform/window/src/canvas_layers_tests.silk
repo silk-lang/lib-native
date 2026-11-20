@@ -56,6 +56,9 @@ test effect fn canvasLayersHoldTheirPlaceClipAndSurface() -> ()
   run Testing.expect(near(now.scale, 2.0), "at the window's scale")
   run Testing.expect(now.opaque == 1, "opaque as asked")
   run Testing.expect(same(shown, surface), "showing the IOSurface")
+  let mut text: [u8; 512] = [0; 512]
+  let length = layer.describe(&mut text)
+  run Testing.expect(length > 40 && text[0] == 99, "a description of the layer (clip=...)")
 
   // A later frame moves the canvas and keeps the surface when none is given; hidden hides it.
   state.y = 90.0

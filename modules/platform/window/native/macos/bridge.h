@@ -127,6 +127,7 @@ void *silk_ca_detached_layer_create(double width, double height, int flipped, in
 void silk_ca_layer_release(void *layer);
 void *silk_ca_test_iosurface_create(uint32_t width, uint32_t height);
 void silk_ca_layer_set_contents_scale(void *layer, double scale);
+void silk_ca_canvas_layer_describe(void *handle, char *out, size_t capacity);
 void silk_macos_set_title(uint32_t window, const uint8_t *title, size_t length);
 void silk_macos_set_content_size(uint32_t window, double width, double height);
 void silk_macos_set_min_content_size(uint32_t window, double width, double height);

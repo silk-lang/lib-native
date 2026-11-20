@@ -101,6 +101,22 @@ impl CanvasLayer {
     return out
   }
 
+  /// What Core Animation holds for the layers and their parent, as one line (for traces):
+  /// places in points, visibility, contents, the parent's class, bounds and geometry, and where
+  /// the canvas sits among its sublayers. Empty elsewhere than macOS.
+  pub fn describe(self: &Self, out: &mut [u8]) -> usize {
+    if out.length == 0 {
+      return 0
+    }
+    out[0] = 0
+    unsafe sys.silk_ca_canvas_layer_describe(self.handle, Pointer.fromMutSlice<u8>(&mut out), out.length)
+    let mut n: usize = 0
+    while n < out.length && out[n] != 0 {
+      n = n + 1
+    }
+    return n
+  }
+
   /// The clip layer's index among `parent`'s sublayers, or -1 when it is not one of them.
   pub unsafe fn indexIn(self: &Self, parent: ?*mut u8) -> i32 {
     return unsafe sys.silk_ca_layer_index_of(parent, self.handle)
