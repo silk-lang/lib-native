@@ -405,6 +405,19 @@ effect fn sharedImage(instance: &Instance) -> bool
     row = row + 1
   }
   run consumer.checkErrors()
+
+  // Everything shared is released while both devices are alive, and neither device reports an
+  // error for it afterwards.
+  drop imported
+  drop end
+  drop source
+  drop target
+  drop shown
+  drop written
+  drop image
+  instance.processEvents()
+  run producer.checkErrors()
+  run consumer.checkErrors()
   return true
 }
 
@@ -423,6 +436,12 @@ effect fn program() -> i32
   let sharedChecked = run sharedImage(&instance) |> Effect.provideMut<Allocator>(&mut allocator)
   drop instance
   if observer.liveHandles() != 0 || observer.failureCount() != 0 {
+    if observer.liveHandles() != 0 {
+      writeMessage(b"FAIL live GPU handles remain\n", true)
+    }
+    if observer.failureCount() != 0 {
+      writeMessage(b"FAIL a device reported an error nothing read\n", true)
+    }
     return 2
   }
   if sharedChecked {
