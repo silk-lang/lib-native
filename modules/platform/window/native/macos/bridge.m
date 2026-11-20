@@ -2419,7 +2419,9 @@ void silk_ca_canvas_layer_set(void *handle, const SilkCanvasLayerState *state, v
     @autoreleasepool {
         CALayer *clip = (__bridge CALayer *)handle;
         CALayer *content = clip.sublayers.firstObject;
-        double s = state->scale > 0.0 ? state->scale : 1.0;
+        // No scale given: the window's layer knows its own.
+        double given = state->scale > 0.0 ? state->scale : clip.superlayer.contentsScale;
+        double s = given > 0.0 ? given : 1.0;
         clip.frame = pointsRect(clip.superlayer, state->clip_x, state->clip_y, state->clip_width, state->clip_height, s);
         clip.cornerRadius = state->corner_radius / s;
         clip.hidden = state->hidden != 0;
@@ -2512,4 +2514,8 @@ void *silk_ca_test_iosurface_create(uint32_t width, uint32_t height) {
         (id)kIOSurfacePixelFormat: @((uint32_t)'BGRA'),
     };
     return (void *)IOSurfaceCreate((__bridge CFDictionaryRef)props);
+}
+
+void silk_ca_layer_set_contents_scale(void *layer, double scale) {
+    if (layer) ((__bridge CALayer *)layer).contentsScale = scale;
 }

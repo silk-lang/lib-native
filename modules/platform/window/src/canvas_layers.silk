@@ -40,7 +40,7 @@ pub fn commit() -> () {
 
 /// A canvas's place: the canvas at (`x`, `y`) with its size, shown inside the clip rect with
 /// its corner radius, in device pixels from the window's top-left corner; `scale` is the
-/// window's device pixels per point.
+/// window's device pixels per point, or 0 for the window layer's own (its `contentsScale`).
 pub fn state(
   x: f64,
   y: f64,
@@ -140,4 +140,9 @@ pub unsafe fn releaseLayer(layer: ?*mut u8) -> () {
 /// (it releases any Core Foundation object).
 pub fn testSurface(width: u32, height: u32) -> ?*mut u8 {
   return unsafe sys.silk_ca_test_iosurface_create(width, height)
+}
+
+/// Sets a layer's device pixels per point, as a window does to its layer: for tests.
+pub fn setContentsScale(layer: ?*mut u8, scale: f64) -> () {
+  unsafe sys.silk_ca_layer_set_contents_scale(layer, scale)
 }

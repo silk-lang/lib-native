@@ -102,6 +102,28 @@ test effect fn canvasLayersWorkUnderBottomLeftGeometry() -> ()
   unsafe canvas_layers.releaseLayer(window)
 }
 
+test effect fn canvasLayersTakeTheWindowLayersScaleWhenGivenNone() -> ()
+  ! AssertionError<'static> {
+  if !canvas_layers.supported() {
+    return ()
+  }
+  let window = canvas_layers.detachedLayer(400.0, 300.0, true, true)
+  canvas_layers.setContentsScale(window, 2.0)
+  let made = unsafe CanvasLayer.create(window)
+  if let Option<CanvasLayer>.Some { value: layer } = &made {
+    let state = canvas_layers.state(40.0, 60.0, 200.0, 100.0, 40.0, 60.0, 200.0, 100.0, 0.0, 0.0)
+    unsafe layer.set(&state, Pointer.null<u8>())
+    let mut shown: ?*mut u8 = Pointer.null<u8>()
+    let now = layer.current(&mut shown)
+    run Testing.expect(near(now.scale, 2.0), "the window layer's scale")
+    run Testing.expect(near(now.x, 40.0) && near(now.width, 200.0), "places in device pixels at that scale")
+  } else {
+    run Testing.expect(false, "a canvas layer")
+  }
+  drop made
+  unsafe canvas_layers.releaseLayer(window)
+}
+
 test effect fn metalLayersPresentInTransactionsWhenAsked() -> ()
   ! AssertionError<'static> {
   if !canvas_layers.supported() {

@@ -195,6 +195,7 @@ static if Intrinsic.targetOperatingSystem() == "darwin" {
   pub unsafe extern "C" fn silk_ca_detached_layer_create(width: f64, height: f64, flipped: i32, metal: i32) -> ?*mut u8
   pub unsafe extern "C" fn silk_ca_layer_release(layer: ?*mut u8) -> ()
   pub unsafe extern "C" fn silk_ca_test_iosurface_create(width: u32, height: u32) -> ?*mut u8
+  pub unsafe extern "C" fn silk_ca_layer_set_contents_scale(layer: ?*mut u8, scale: f64) -> ()
   pub unsafe extern "C" fn silk_macos_set_title(
     window: u32,
     title: ?[*]const u8,
@@ -419,6 +420,8 @@ static if Intrinsic.targetOperatingSystem() == "darwin" {
   pub unsafe fn silk_ca_test_iosurface_create(width: u32, height: u32) -> ?*mut u8 {
     return Pointer.null<u8>()
   }
+
+  pub unsafe fn silk_ca_layer_set_contents_scale(layer: ?*mut u8, scale: f64) -> () {}
 
   pub unsafe fn silk_macos_set_title(window: u32, title: ?[*]const u8, length: usize) -> () {
     return ()
