@@ -24,4 +24,4 @@ members = [
   "modules/platform/window/tests/smoke",
   "modules/platform/window/tests/windows"
 ]
-silk-version = "0.1.0-dev.88+17d1a1b4d501"
+silk-version = "0.1.0-dev.90+43166993a300"

@@ -1,6 +1,6 @@
 [package]
 name = "native-task-browser"
 version = "0.1.0"
-silk-version = "0.1.0-dev.88+17d1a1b4d501"
+silk-version = "0.1.0-dev.90+43166993a300"
 kind = "library"
 exports = ["cdp", "display"]

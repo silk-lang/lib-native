@@ -1,4 +1,5 @@
 static if Intrinsic.targetOperatingSystem() != "windows" {
+  import silk.num.u32
   import silk.cli.task { Task, TaskError }
   import silk.collections.bytes { Bytes }
   import silk.collections.list { List }
@@ -21,7 +22,7 @@ static if Intrinsic.targetOperatingSystem() != "windows" {
   import silk.system.host_input { HostInput, HostInputError }
   import silk.system.monotonic_clock { MonotonicClock, ReadyWatch }
   import silk.system.monotonic_clock_native { OsMonotonicClock }
-  import silk.system.system_clock { Instant, SystemClock }
+  import silk.time.mark { Mark }
   import silk.system.subprocess { Subprocess, SubprocessError, SpawnOptions, Stdio, ExitStatus }
   import silk.text.string { String, InvalidUtf8 }
   import task_support { pathText, rootPath }
@@ -131,13 +132,13 @@ static if Intrinsic.targetOperatingSystem() != "windows" {
       |> Effect.provideMut<MonotonicClock>(&mut clock)
   }
 
-  effect fn deadline(milliseconds: u64) -> Instant {
+  effect fn deadline(milliseconds: u64) -> Mark {
     let mut clock = OsMonotonicClock.make()
     let now = run MonotonicClock.now() |> Effect.provideMut<MonotonicClock>(&mut clock)
     return MonotonicClock.deadlineAfter(&now, milliseconds * 1000000)
   }
 
-  effect fn ready(fd: i32, writing: bool, until: &Instant) -> ()
+  effect fn ready(fd: i32, writing: bool, until: &Mark) -> ()
     ! TaskError | OutOfMemoryError
     ? &mut Allocator {
     let mut clock = OsMonotonicClock.make()
@@ -147,8 +148,8 @@ static if Intrinsic.targetOperatingSystem() != "windows" {
       ReadyWatch.forRead(i32.toUsize(fd))
     }
     let mut watches = [watch]
-    let copy = SystemClock.make(SystemClock.seconds(until), SystemClock.nanoseconds(until))
-    let count = run MonotonicClock.waitReady(&mut watches, Option<Instant>.some(move copy))
+    let copy = Mark.make(until.*.seconds(), u32.toI64(until.*.subsecondNanoseconds()))
+    let count = run MonotonicClock.waitReady(&mut watches, Option<Mark>.some(move copy))
       |> Effect.provideMut<MonotonicClock>(&mut clock)
     if count == 0 {
       run Task.abort("Chrome DevTools Protocol timed out")
@@ -170,7 +171,7 @@ static if Intrinsic.targetOperatingSystem() != "windows" {
     stopped: bool,
     pub errors: List<Value>,
     pub timeoutMs: u64,
-    runtimeLimit: Option<Instant>,
+    runtimeLimit: Option<Mark>,
   }
   impl Drop for Browser {
     fn drop(self: &mut Self) -> () {
@@ -372,18 +373,18 @@ static if Intrinsic.targetOperatingSystem() != "windows" {
       stopped: false,
       errors: List<Value>.make(),
       timeoutMs: 30000,
-      runtimeLimit: Option<Instant>.none(),
+      runtimeLimit: Option<Mark>.none(),
     }
   }
 
   pub effect fn limitRuntime(browser: &mut Browser, milliseconds: u64) -> () {
-    browser.runtimeLimit = Option<Instant>.some(run deadline(milliseconds))
+    browser.runtimeLimit = Option<Mark>.some(run deadline(milliseconds))
   }
 
-  fn before(left: &Instant, right: &Instant) -> bool {
-    return SystemClock.seconds(left) < SystemClock.seconds(right)
-      || (SystemClock.seconds(left) == SystemClock.seconds(right)
-        && SystemClock.nanoseconds(left) < SystemClock.nanoseconds(right))
+  fn before(left: &Mark, right: &Mark) -> bool {
+    return left.*.seconds() < right.*.seconds()
+      || (left.*.seconds() == right.*.seconds()
+        && u32.toI64(left.*.subsecondNanoseconds()) < u32.toI64(right.*.subsecondNanoseconds()))
   }
 
   pub effect fn send(
@@ -430,12 +431,12 @@ static if Intrinsic.targetOperatingSystem() != "windows" {
     run wire.append(b"}\0")
     let mut until = run deadline(browser.timeoutMs)
     match &browser.runtimeLimit {
-      Option<Instant>.Some { value } => {
+      Option<Mark>.Some { value } => {
         if before(&value, &until) {
-          until = SystemClock.make(SystemClock.seconds(&value), SystemClock.nanoseconds(&value))
+          until = Mark.make(value.seconds(), u32.toI64(value.subsecondNanoseconds()))
         }
       }
-      Option<Instant>.None => {}
+      Option<Mark>.None => {}
     }
     let now = run deadline(0)
     if !before(&now, &until) {
@@ -524,7 +525,7 @@ static if Intrinsic.targetOperatingSystem() != "windows" {
     }
   }
 
-  effect fn receive(browser: &mut Browser, until: &Instant) -> Value
+  effect fn receive(browser: &mut Browser, until: &Mark) -> Value
     ! TaskError | OutOfMemoryError
     ? &mut Allocator {
     while true {

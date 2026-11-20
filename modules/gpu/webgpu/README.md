@@ -96,7 +96,7 @@ Maintenance uses typed Silk tasks: `generate`, `generate-browser`, `embed-shader
 `rect-shader`, `schema-source`, `window`, `test-window`, `bench`, `bench-compare`,
 and `ab`. Run them from this package or supply its manifest path. Explicit path
 arguments are relative to the invoking directory; omitted paths use package-local defaults.
-The manifests pin **0.1.0-dev.88+17d1a1b4d501**.
+The manifests pin **0.1.0-dev.90+43166993a300**.
 
 On Windows only, managed subprocess support is blocked by
 [silk#3034](https://github.com/silk-lang/silk/issues/3034). Timeout-managed ABI,
