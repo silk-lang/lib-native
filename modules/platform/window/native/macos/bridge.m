@@ -15,6 +15,7 @@
 #import <Cocoa/Cocoa.h>
 #import <Carbon/Carbon.h>
 #import <QuartzCore/QuartzCore.h>
+#import <IOSurface/IOSurface.h>
 #import <UserNotifications/UserNotifications.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 #import <objc/message.h>
@@ -2354,4 +2355,161 @@ uint8_t silk_macos_test_drop(uint32_t window, uint32_t kind, double x, double y,
                              const uint8_t *paths, size_t length) {
     // AppKit drags come from another app's dragging session; there is nothing to post.
     return 0;
+}
+
+// ---------------------------------------------------------------------------------------------
+// GPU canvas layers: a canvas whose frames are IOSurfaces shows in a layer of its own above the
+// window's CAMetalLayer, so a canvas frame changes that layer's contents and nothing else. Each
+// canvas is two layers: a clip layer (masksToBounds, with the clip's corner radius) holding the
+// content layer, whose contents are the IOSurface. Every call may run on any thread: changes go
+// in an explicit transaction with actions disabled (silk_ca_begin / silk_ca_commit), so nothing
+// animates and nothing waits for the main thread's implicit transaction.
+
+void silk_ca_begin(void) {
+    [CATransaction begin];
+    [CATransaction setDisableActions:YES];
+}
+
+void silk_ca_commit(void) {
+    [CATransaction commit];
+}
+
+void *silk_ca_canvas_layer_create(void *parent) {
+    if (!parent) return NULL;
+    @autoreleasepool {
+        CALayer *superlayer = (__bridge CALayer *)parent;
+        CALayer *clip = [CALayer layer];
+        clip.anchorPoint = CGPointZero;
+        clip.masksToBounds = YES;
+        clip.hidden = YES;
+        CALayer *content = [CALayer layer];
+        content.anchorPoint = CGPointZero;
+        content.contentsGravity = kCAGravityResize;
+        [clip addSublayer:content];
+        silk_ca_begin();
+        [superlayer addSublayer:clip];
+        silk_ca_commit();
+        return (__bridge_retained void *)clip;
+    }
+}
+
+void silk_ca_canvas_layer_destroy(void *handle) {
+    if (!handle) return;
+    @autoreleasepool {
+        CALayer *clip = (__bridge_transfer CALayer *)handle;
+        silk_ca_begin();
+        [clip removeFromSuperlayer];
+        silk_ca_commit();
+    }
+}
+
+// Rects are in the window's device pixels from its top-left corner; `scale` turns them into the
+// superlayer's points.
+static CGRect pointsRect(CALayer *superlayer, double x, double y, double w, double h, double scale) {
+    double s = scale > 0.0 ? scale : 1.0;
+    CGRect r = CGRectMake(x / s, y / s, w / s, h / s);
+    if (superlayer && !superlayer.geometryFlipped) {
+        r.origin.y = superlayer.bounds.size.height - r.origin.y - r.size.height;
+    }
+    return r;
+}
+
+void silk_ca_canvas_layer_set(void *handle, const SilkCanvasLayerState *state, void *io_surface) {
+    if (!handle || !state) return;
+    @autoreleasepool {
+        CALayer *clip = (__bridge CALayer *)handle;
+        CALayer *content = clip.sublayers.firstObject;
+        double s = state->scale > 0.0 ? state->scale : 1.0;
+        clip.frame = pointsRect(clip.superlayer, state->clip_x, state->clip_y, state->clip_width, state->clip_height, s);
+        clip.cornerRadius = state->corner_radius / s;
+        clip.hidden = state->hidden != 0;
+        // The content layer sits at the canvas's place, relative to the clip's corner.
+        CGRect canvas = CGRectMake((state->x - state->clip_x) / s, (state->y - state->clip_y) / s,
+                                   state->width / s, state->height / s);
+        if (clip.superlayer && !clip.superlayer.geometryFlipped) {
+            canvas.origin.y = clip.bounds.size.height - canvas.origin.y - canvas.size.height;
+        }
+        content.frame = canvas;
+        content.contentsScale = s;
+        content.opaque = state->opaque != 0;
+        content.opacity = (float)state->opacity;
+        if (io_surface) content.contents = (__bridge id)io_surface;
+    }
+}
+
+void silk_ca_canvas_layer_get(void *handle, SilkCanvasLayerState *out, void **io_surface) {
+    if (!handle || !out) return;
+    @autoreleasepool {
+        CALayer *clip = (__bridge CALayer *)handle;
+        CALayer *content = clip.sublayers.firstObject;
+        double s = content.contentsScale > 0.0 ? content.contentsScale : 1.0;
+        CGRect c = clip.frame;
+        if (clip.superlayer && !clip.superlayer.geometryFlipped) {
+            c.origin.y = clip.superlayer.bounds.size.height - c.origin.y - c.size.height;
+        }
+        CGRect r = content.frame;
+        if (clip.superlayer && !clip.superlayer.geometryFlipped) {
+            r.origin.y = clip.bounds.size.height - r.origin.y - r.size.height;
+        }
+        out->clip_x = c.origin.x * s;
+        out->clip_y = c.origin.y * s;
+        out->clip_width = c.size.width * s;
+        out->clip_height = c.size.height * s;
+        out->x = (c.origin.x + r.origin.x) * s;
+        out->y = (c.origin.y + r.origin.y) * s;
+        out->width = r.size.width * s;
+        out->height = r.size.height * s;
+        out->corner_radius = clip.cornerRadius * s;
+        out->opacity = content.opacity;
+        out->scale = s;
+        out->opaque = content.opaque ? 1 : 0;
+        out->hidden = clip.hidden ? 1 : 0;
+        out->masks = clip.masksToBounds ? 1 : 0;
+        if (io_surface) *io_surface = (__bridge void *)content.contents;
+    }
+}
+
+int silk_ca_layer_index_of(void *parent, void *handle) {
+    if (!parent || !handle) return -1;
+    CALayer *superlayer = (__bridge CALayer *)parent;
+    NSUInteger at = [superlayer.sublayers indexOfObjectIdenticalTo:(__bridge CALayer *)handle];
+    return at == NSNotFound ? -1 : (int)at;
+}
+
+void silk_ca_metal_layer_presents_with_transaction(void *layer, int on) {
+    if (!layer) return;
+    CAMetalLayer *metal = (__bridge CAMetalLayer *)layer;
+    if ([metal isKindOfClass:[CAMetalLayer class]]) metal.presentsWithTransaction = on != 0;
+}
+
+int silk_ca_metal_layer_presents_with_transaction_get(void *layer) {
+    if (!layer) return 0;
+    CAMetalLayer *metal = (__bridge CAMetalLayer *)layer;
+    return [metal isKindOfClass:[CAMetalLayer class]] && metal.presentsWithTransaction ? 1 : 0;
+}
+
+// A layer with no window, for tests: a CAMetalLayer when `metal`, of `width` x `height` points.
+void *silk_ca_detached_layer_create(double width, double height, int flipped, int metal) {
+    @autoreleasepool {
+        CALayer *layer = metal ? [CAMetalLayer layer] : [CALayer layer];
+        layer.anchorPoint = CGPointZero;
+        layer.bounds = CGRectMake(0, 0, width, height);
+        layer.geometryFlipped = flipped != 0;
+        return (__bridge_retained void *)layer;
+    }
+}
+
+void silk_ca_layer_release(void *layer) {
+    if (layer) CFRelease(layer);
+}
+
+// A small BGRA IOSurface, for tests of canvas layers.
+void *silk_ca_test_iosurface_create(uint32_t width, uint32_t height) {
+    NSDictionary *props = @{
+        (id)kIOSurfaceWidth: @(width),
+        (id)kIOSurfaceHeight: @(height),
+        (id)kIOSurfaceBytesPerElement: @4,
+        (id)kIOSurfacePixelFormat: @((uint32_t)'BGRA'),
+    };
+    return (void *)IOSurfaceCreate((__bridge CFDictionaryRef)props);
 }

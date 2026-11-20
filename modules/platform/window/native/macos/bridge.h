@@ -100,6 +100,32 @@ void silk_macos_request_frame(uint32_t window);
 void silk_macos_content_size(uint32_t window, double *width, double *height);
 double silk_macos_scale_factor(uint32_t window);
 void *silk_macos_metal_layer(uint32_t window);
+
+/// A GPU canvas layer's place and look (bridge.m, "GPU canvas layers"). Rects are device pixels
+/// from the window's top-left corner.
+typedef struct SilkCanvasLayerState {
+    double x, y, width, height;
+    double clip_x, clip_y, clip_width, clip_height;
+    double corner_radius;
+    double opacity;
+    double scale;
+    uint32_t opaque;
+    uint32_t hidden;
+    uint32_t masks;
+} SilkCanvasLayerState;
+
+void silk_ca_begin(void);
+void silk_ca_commit(void);
+void *silk_ca_canvas_layer_create(void *parent);
+void silk_ca_canvas_layer_destroy(void *handle);
+void silk_ca_canvas_layer_set(void *handle, const SilkCanvasLayerState *state, void *io_surface);
+void silk_ca_canvas_layer_get(void *handle, SilkCanvasLayerState *out, void **io_surface);
+int silk_ca_layer_index_of(void *parent, void *handle);
+void silk_ca_metal_layer_presents_with_transaction(void *layer, int on);
+int silk_ca_metal_layer_presents_with_transaction_get(void *layer);
+void *silk_ca_detached_layer_create(double width, double height, int flipped, int metal);
+void silk_ca_layer_release(void *layer);
+void *silk_ca_test_iosurface_create(uint32_t width, uint32_t height);
 void silk_macos_set_title(uint32_t window, const uint8_t *title, size_t length);
 void silk_macos_set_content_size(uint32_t window, double width, double height);
 void silk_macos_set_min_content_size(uint32_t window, double width, double height);

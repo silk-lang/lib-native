@@ -294,6 +294,10 @@ effect fn sharedImage(instance: &Instance) -> bool
     fail GpuError.status(0xffff0020)
   }
   let image = run SharedImage.create(4, 2)
+  // A new image is the process's own: nothing else reads it yet, and a layer can show it.
+  if image.inUse() || Pointer.isNull(unsafe image.ioSurface()) {
+    fail GpuError.status(0xffff0027)
+  }
   let written = run SharedTextureMemory.importImage(&producer, b"shared (producer)", &image)
   let shown = run SharedTextureMemory.importImage(&consumer, b"shared (consumer)", &image)
   let properties = run shown.properties()

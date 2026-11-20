@@ -3,6 +3,27 @@
 import silk.core.ownership { Copy }
 import silk.mem.pointer { Pointer }
 
+/// `SilkCanvasLayerState` in bridge.h: a GPU canvas layer's place and look, in device pixels
+/// from the window's top-left corner.
+pub extern "C" struct CanvasLayerState {
+  pub x: f64,
+  pub y: f64,
+  pub width: f64,
+  pub height: f64,
+  pub clipX: f64,
+  pub clipY: f64,
+  pub clipWidth: f64,
+  pub clipHeight: f64,
+  pub cornerRadius: f64,
+  pub opacity: f64,
+  pub scale: f64,
+  pub opaque: u32,
+  pub hidden: u32,
+  pub masks: u32,
+}
+
+impl Copy for CanvasLayerState {}
+
 /// `SilkWindowEvent` in bridge.h.
 pub extern "C" struct RawEvent {
   pub kind: u32,
@@ -154,6 +175,26 @@ static if Intrinsic.targetOperatingSystem() == "darwin" {
   ) -> ()
   pub unsafe extern "C" fn silk_macos_scale_factor(window: u32) -> f64
   pub unsafe extern "C" fn silk_macos_metal_layer(window: u32) -> ?*mut u8
+  pub unsafe extern "C" fn silk_ca_begin() -> ()
+  pub unsafe extern "C" fn silk_ca_commit() -> ()
+  pub unsafe extern "C" fn silk_ca_canvas_layer_create(parent: ?*mut u8) -> ?*mut u8
+  pub unsafe extern "C" fn silk_ca_canvas_layer_destroy(handle: ?*mut u8) -> ()
+  pub unsafe extern "C" fn silk_ca_canvas_layer_set(
+    handle: ?*mut u8,
+    state: *const CanvasLayerState,
+    ioSurface: ?*mut u8,
+  ) -> ()
+  pub unsafe extern "C" fn silk_ca_canvas_layer_get(
+    handle: ?*mut u8,
+    out: *mut CanvasLayerState,
+    ioSurface: *mut ?*mut u8,
+  ) -> ()
+  pub unsafe extern "C" fn silk_ca_layer_index_of(parent: ?*mut u8, handle: ?*mut u8) -> i32
+  pub unsafe extern "C" fn silk_ca_metal_layer_presents_with_transaction(layer: ?*mut u8, on: i32) -> ()
+  pub unsafe extern "C" fn silk_ca_metal_layer_presents_with_transaction_get(layer: ?*mut u8) -> i32
+  pub unsafe extern "C" fn silk_ca_detached_layer_create(width: f64, height: f64, flipped: i32, metal: i32) -> ?*mut u8
+  pub unsafe extern "C" fn silk_ca_layer_release(layer: ?*mut u8) -> ()
+  pub unsafe extern "C" fn silk_ca_test_iosurface_create(width: u32, height: u32) -> ?*mut u8
   pub unsafe extern "C" fn silk_macos_set_title(
     window: u32,
     title: ?[*]const u8,
@@ -342,6 +383,40 @@ static if Intrinsic.targetOperatingSystem() == "darwin" {
   }
 
   pub unsafe fn silk_macos_metal_layer(window: u32) -> ?*mut u8 {
+    return Pointer.null<u8>()
+  }
+
+  pub unsafe fn silk_ca_begin() -> () {}
+
+  pub unsafe fn silk_ca_commit() -> () {}
+
+  pub unsafe fn silk_ca_canvas_layer_create(parent: ?*mut u8) -> ?*mut u8 {
+    return Pointer.null<u8>()
+  }
+
+  pub unsafe fn silk_ca_canvas_layer_destroy(handle: ?*mut u8) -> () {}
+
+  pub unsafe fn silk_ca_canvas_layer_set(handle: ?*mut u8, state: *const CanvasLayerState, ioSurface: ?*mut u8) -> () {}
+
+  pub unsafe fn silk_ca_canvas_layer_get(handle: ?*mut u8, out: *mut CanvasLayerState, ioSurface: *mut ?*mut u8) -> () {}
+
+  pub unsafe fn silk_ca_layer_index_of(parent: ?*mut u8, handle: ?*mut u8) -> i32 {
+    return -1
+  }
+
+  pub unsafe fn silk_ca_metal_layer_presents_with_transaction(layer: ?*mut u8, on: i32) -> () {}
+
+  pub unsafe fn silk_ca_metal_layer_presents_with_transaction_get(layer: ?*mut u8) -> i32 {
+    return 0
+  }
+
+  pub unsafe fn silk_ca_detached_layer_create(width: f64, height: f64, flipped: i32, metal: i32) -> ?*mut u8 {
+    return Pointer.null<u8>()
+  }
+
+  pub unsafe fn silk_ca_layer_release(layer: ?*mut u8) -> () {}
+
+  pub unsafe fn silk_ca_test_iosurface_create(width: u32, height: u32) -> ?*mut u8 {
     return Pointer.null<u8>()
   }
 
