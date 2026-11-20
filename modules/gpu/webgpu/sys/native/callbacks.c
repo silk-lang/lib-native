@@ -437,6 +437,14 @@ void silkWebgpuReleaseIOSurface(void *surface) {
         CFRelease((CFTypeRef)surface);
     }
 }
+
+/* Whether a process (WindowServer, Core Animation) still uses the surface: 1, 0, or -1 for none. */
+int32_t silkWebgpuIOSurfaceInUse(void *surface) {
+    if (surface == NULL) {
+        return -1;
+    }
+    return IOSurfaceIsInUse((IOSurfaceRef)surface) ? 1 : 0;
+}
 #else
 void *silkWebgpuCreateIOSurface(uint32_t width, uint32_t height) {
     (void)width;
@@ -446,6 +454,11 @@ void *silkWebgpuCreateIOSurface(uint32_t width, uint32_t height) {
 
 void silkWebgpuReleaseIOSurface(void *surface) {
     (void)surface;
+}
+
+int32_t silkWebgpuIOSurfaceInUse(void *surface) {
+    (void)surface;
+    return -1;
 }
 #endif
 

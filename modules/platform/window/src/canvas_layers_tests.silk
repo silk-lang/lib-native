@@ -1,0 +1,142 @@
+//! Canvas layers without a window: a detached layer stands for the window's CAMetalLayer, and
+//! the tests read back what Core Animation holds. Elsewhere than macOS there is nothing to check.
+import canvas_layers
+import canvas_layers { CanvasLayer }
+import silk.core.option { Option }
+import silk.mem.pointer { Pointer }
+import silk.testing.testing { AssertionError, Testing }
+
+fn same(a: ?*mut u8, b: ?*mut u8) -> bool {
+  return Pointer.address<u8>(a) == Pointer.address<u8>(b)
+}
+
+fn near(a: f64, b: f64) -> bool {
+  return a - b < 0.001 && b - a < 0.001
+}
+
+test effect fn canvasLayersHoldTheirPlaceClipAndSurface() -> ()
+  ! AssertionError<'static> {
+  if !canvas_layers.supported() {
+    let none = unsafe CanvasLayer.create(Pointer.null<u8>())
+    run Testing.expect(none.isNone(), "no canvas layers here")
+    return ()
+  }
+  // A window of 400 x 300 points at 2x, top-left geometry as the window's view has.
+  let window = canvas_layers.detachedLayer(400.0, 300.0, true, true)
+  run Testing.expect(!Pointer.isNull(window), "a detached layer")
+  let made = unsafe CanvasLayer.create(window)
+  let layer = match move made {
+    Option<CanvasLayer>.Some { value } => move value
+    Option<CanvasLayer>.None => {
+      run Testing.expect(false, "a canvas layer over the window's layer")
+      return ()
+    }
+  }
+  run Testing.expect(unsafe layer.indexIn(window) == 0, "the canvas layer is a sublayer of the window's layer")
+  let mut shown: ?*mut u8 = Pointer.null<u8>()
+  let first = layer.current(&mut shown)
+  run Testing.expect(first.hidden == 1, "a new canvas layer is hidden")
+  run Testing.expect(Pointer.isNull(shown), "and shows nothing")
+
+  // A 200 x 100 device pixel canvas at (40, 60), clipped by a rounded 160 x 80 box at (60, 70).
+  let surface = canvas_layers.testSurface(200, 100)
+  run Testing.expect(!Pointer.isNull(surface), "a test IOSurface")
+  let mut state = canvas_layers.state(40.0, 60.0, 200.0, 100.0, 60.0, 70.0, 160.0, 80.0, 12.0, 2.0)
+  state.opaque = 1
+  canvas_layers.begin()
+  unsafe layer.set(&state, surface)
+  canvas_layers.commit()
+  let now = layer.current(&mut shown)
+  run Testing.expect(now.hidden == 0, "set shows the layer")
+  run Testing.expect(near(now.x, 40.0) && near(now.y, 60.0), "at the canvas's place")
+  run Testing.expect(near(now.width, 200.0) && near(now.height, 100.0), "at the canvas's size")
+  run Testing.expect(near(now.clipX, 60.0) && near(now.clipY, 70.0), "clipped at the clip's place")
+  run Testing.expect(near(now.clipWidth, 160.0) && near(now.clipHeight, 80.0), "to the clip's size")
+  run Testing.expect(near(now.cornerRadius, 12.0) && now.masks == 1, "with the clip's corner radius, masking")
+  run Testing.expect(near(now.scale, 2.0), "at the window's scale")
+  run Testing.expect(now.opaque == 1, "opaque as asked")
+  run Testing.expect(same(shown, surface), "showing the IOSurface")
+  let mut text: [u8; 512] = [0; 512]
+  let length = layer.describe(&mut text)
+  run Testing.expect(length > 40 && text[0] == 99, "a description of the layer (clip=...)")
+
+  // A later frame moves the canvas and keeps the surface when none is given; hidden hides it.
+  state.y = 90.0
+  state.clipY = 90.0
+  state.hidden = 1
+  state.opacity = 0.5
+  state.opaque = 0
+  canvas_layers.begin()
+  unsafe layer.set(&state, Pointer.null<u8>())
+  canvas_layers.commit()
+  let later = layer.current(&mut shown)
+  run Testing.expect(near(later.y, 90.0) && near(later.clipY, 90.0), "moves with its place")
+  run Testing.expect(later.hidden == 1, "hides")
+  run Testing.expect(near(later.opacity, 0.5) && later.opaque == 0, "takes opacity and transparency")
+  run Testing.expect(same(shown, surface), "keeps the last surface")
+
+  drop layer
+  let again = unsafe CanvasLayer.create(window)
+  run Testing.expect(again.isSome(), "a window takes another canvas layer")
+  drop again
+  unsafe canvas_layers.releaseLayer(surface)
+  unsafe canvas_layers.releaseLayer(window)
+}
+
+test effect fn canvasLayersWorkUnderBottomLeftGeometry() -> ()
+  ! AssertionError<'static> {
+  if !canvas_layers.supported() {
+    return ()
+  }
+  // A superlayer with Core Animation's default geometry: places are still from the top left.
+  let window = canvas_layers.detachedLayer(400.0, 300.0, false, false)
+  let made = unsafe CanvasLayer.create(window)
+  if let Option<CanvasLayer>.Some { value: layer } = &made {
+    let state = canvas_layers.state(10.0, 20.0, 100.0, 50.0, 10.0, 20.0, 100.0, 50.0, 0.0, 1.0)
+    unsafe layer.set(&state, Pointer.null<u8>())
+    let mut shown: ?*mut u8 = Pointer.null<u8>()
+    let now = layer.current(&mut shown)
+    run Testing.expect(near(now.x, 10.0) && near(now.y, 20.0), "the place reads back from the top left")
+    run Testing.expect(near(now.clipY, 20.0), "and so does the clip")
+  } else {
+    run Testing.expect(false, "a canvas layer")
+  }
+  drop made
+  unsafe canvas_layers.releaseLayer(window)
+}
+
+test effect fn canvasLayersTakeTheWindowLayersScaleWhenGivenNone() -> ()
+  ! AssertionError<'static> {
+  if !canvas_layers.supported() {
+    return ()
+  }
+  let window = canvas_layers.detachedLayer(400.0, 300.0, true, true)
+  canvas_layers.setContentsScale(window, 2.0)
+  let made = unsafe CanvasLayer.create(window)
+  if let Option<CanvasLayer>.Some { value: layer } = &made {
+    let state = canvas_layers.state(40.0, 60.0, 200.0, 100.0, 40.0, 60.0, 200.0, 100.0, 0.0, 0.0)
+    unsafe layer.set(&state, Pointer.null<u8>())
+    let mut shown: ?*mut u8 = Pointer.null<u8>()
+    let now = layer.current(&mut shown)
+    run Testing.expect(near(now.scale, 2.0), "the window layer's scale")
+    run Testing.expect(near(now.x, 40.0) && near(now.width, 200.0), "places in device pixels at that scale")
+  } else {
+    run Testing.expect(false, "a canvas layer")
+  }
+  drop made
+  unsafe canvas_layers.releaseLayer(window)
+}
+
+test effect fn metalLayersPresentInTransactionsWhenAsked() -> ()
+  ! AssertionError<'static> {
+  if !canvas_layers.supported() {
+    return ()
+  }
+  let metal = canvas_layers.detachedLayer(100.0, 100.0, true, true)
+  run Testing.expect(!(unsafe canvas_layers.presentsWithTransactionOf(metal)), "off by default")
+  unsafe canvas_layers.presentsWithTransaction(metal, true)
+  run Testing.expect(unsafe canvas_layers.presentsWithTransactionOf(metal), "on when asked")
+  unsafe canvas_layers.presentsWithTransaction(metal, false)
+  run Testing.expect(!(unsafe canvas_layers.presentsWithTransactionOf(metal)), "off again")
+  unsafe canvas_layers.releaseLayer(metal)
+}

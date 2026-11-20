@@ -72,6 +72,9 @@ static fn plan() -> Plan {
     plan = plan |> Plan.linkFramework("QuartzCore", Framework.make())
   }
   if Intrinsic.targetOperatingSystem() == "darwin" {
+    plan = plan |> Plan.linkFramework("IOSurface", Framework.make())
+  }
+  if Intrinsic.targetOperatingSystem() == "darwin" {
     plan = plan |> Plan.linkFramework("UniformTypeIdentifiers", Framework.make())
   }
   if Intrinsic.targetOperatingSystem() == "darwin" {

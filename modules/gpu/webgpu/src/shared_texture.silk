@@ -187,6 +187,10 @@ static if Intrinsic.targetArchitecture() != "wasm32" {
     surface: ?*mut u8,
   ) -> () as "silkWebgpuReleaseIOSurface"
 
+  unsafe extern "C" fn ioSurfaceInUseNative(
+    surface: ?*mut u8,
+  ) -> i32 as "silkWebgpuIOSurfaceInUse"
+
   unsafe extern "C" fn fenceAddRefNative(fence: ?*mut u8) -> () as "silkWebgpuSharedFenceAddRef"
 
   unsafe extern "C" fn fenceReleaseNative(fence: ?*mut u8) -> () as "silkWebgpuSharedFenceRelease"
@@ -394,6 +398,23 @@ impl SharedImage {
     } else {
       return &NO_FEATURES
     }
+  }
+
+  /// Whether another process still reads the image: Core Animation and the window server keep
+  /// using an IOSurface a layer showed for a while after the layer moves on to another. Draw
+  /// into the image again only once this is false. False where images do not exist.
+  pub fn inUse(self: &Self) -> bool {
+    static if Intrinsic.targetArchitecture() == "wasm32" {
+      return false
+    } else {
+      return unsafe ioSurfaceInUseNative(self.handle) == 1
+    }
+  }
+
+  /// The `IOSurfaceRef`, for a layer to show (canvas layers of `platform-window`). The caller
+  /// must not release it or outlive the image.
+  pub unsafe fn ioSurface(self: &Self) -> ?*mut u8 {
+    return self.handle
   }
 
   pub effect fn create(width: u32, height: u32) -> SharedImage

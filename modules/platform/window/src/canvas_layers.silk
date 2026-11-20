@@ -1,0 +1,164 @@
+//! GPU canvas layers (macOS): a canvas whose frames are IOSurfaces shows in a Core Animation
+//! layer of its own, above the window's CAMetalLayer, so a canvas frame only changes that
+//! layer's contents and the window's surface is not drawn for it.
+//!
+//! A [`CanvasLayer`] is two layers: a clip layer (masks to its bounds, with the clip's corner
+//! radius) holding the content layer whose contents are the IOSurface. Make one over the
+//! window's layer (`MacPlatform.metalLayer`, or the raw surface's layer) with
+//! [`CanvasLayer.create`], place it and show frames with [`CanvasLayer.set`], and group the
+//! changes of one window frame with [`begin`] and [`commit`]: they are one Core Animation
+//! transaction, with actions disabled, from any thread.
+//!
+//! Elsewhere every call does nothing and [`CanvasLayer.create`] answers none: callers draw the
+//! canvas into the window as before.
+import macos_sys as sys
+import macos_sys as raw
+
+/// A canvas layer's place and look (see [`state`]).
+pub type CanvasLayerState = raw.CanvasLayerState
+import silk.core.option { Option }
+import silk.core.ownership { Drop }
+import silk.mem.pointer { Pointer }
+
+/// Whether this system has canvas layers.
+pub fn supported() -> bool {
+  static if Intrinsic.targetOperatingSystem() == "darwin" {
+    return true
+  } else {
+    return false
+  }
+}
+
+/// Starts a transaction: the layer changes until [`commit`] show together.
+pub fn begin() -> () {
+  unsafe sys.silk_ca_begin()
+}
+
+pub fn commit() -> () {
+  unsafe sys.silk_ca_commit()
+}
+
+/// A canvas's place: the canvas at (`x`, `y`) with its size, shown inside the clip rect with
+/// its corner radius, in device pixels from the window's top-left corner; `scale` is the
+/// window's device pixels per point, or 0 for the window layer's own (its `contentsScale`).
+pub fn state(
+  x: f64,
+  y: f64,
+  width: f64,
+  height: f64,
+  clipX: f64,
+  clipY: f64,
+  clipWidth: f64,
+  clipHeight: f64,
+  cornerRadius: f64,
+  scale: f64,
+) -> CanvasLayerState {
+  return CanvasLayerState {
+    x: x,
+    y: y,
+    width: width,
+    height: height,
+    clipX: clipX,
+    clipY: clipY,
+    clipWidth: clipWidth,
+    clipHeight: clipHeight,
+    cornerRadius: cornerRadius,
+    opacity: 1.0,
+    scale: scale,
+    opaque: 0,
+    hidden: 0,
+    masks: 1,
+  }
+}
+
+/// One canvas's layers over a window's layer. Dropping it removes them.
+pub struct CanvasLayer {
+  handle: ?*mut u8,
+}
+
+impl CanvasLayer {
+  /// Layers over `parent`, a `CALayer` (the window's CAMetalLayer), hidden until the first
+  /// [`CanvasLayer.set`]. None where canvas layers do not exist or `parent` is null.
+  pub unsafe fn create(parent: ?*mut u8) -> Option<CanvasLayer> {
+    let handle = unsafe sys.silk_ca_canvas_layer_create(parent)
+    if Pointer.isNull(handle) {
+      return Option<CanvasLayer>.None
+    }
+    return Option<CanvasLayer>.some(CanvasLayer { handle: handle })
+  }
+
+  /// Places the layers as `state` says and, when `ioSurface` (an `IOSurfaceRef`) is not null,
+  /// shows it. The surface must hold the finished frame: Core Animation reads it as it is.
+  pub unsafe fn set(self: &Self, state: &CanvasLayerState, ioSurface: ?*mut u8) -> () {
+    unsafe sys.silk_ca_canvas_layer_set(self.handle, Pointer.fromRef(state), ioSurface)
+  }
+
+  /// What the layers show now, read back from Core Animation, and the `IOSurfaceRef` they show
+  /// (null when none).
+  pub fn current(self: &Self, ioSurface: &mut ?*mut u8) -> CanvasLayerState {
+    let mut out = state(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0)
+    unsafe sys.silk_ca_canvas_layer_get(self.handle, Pointer.fromMutRef(&mut out), Pointer.fromMutRef(&mut ioSurface))
+    return out
+  }
+
+  /// What Core Animation holds for the layers and their parent, as one line (for traces):
+  /// places in points, visibility, contents, the parent's class, bounds and geometry, and where
+  /// the canvas sits among its sublayers. Empty elsewhere than macOS.
+  pub fn describe(self: &Self, out: &mut [u8]) -> usize {
+    if out.length == 0 {
+      return 0
+    }
+    out[0] = 0
+    unsafe sys.silk_ca_canvas_layer_describe(self.handle, Pointer.fromMutSlice<u8>(&mut out), out.length)
+    let mut n: usize = 0
+    while n < out.length && out[n] != 0 {
+      n = n + 1
+    }
+    return n
+  }
+
+  /// The clip layer's index among `parent`'s sublayers, or -1 when it is not one of them.
+  pub unsafe fn indexIn(self: &Self, parent: ?*mut u8) -> i32 {
+    return unsafe sys.silk_ca_layer_index_of(parent, self.handle)
+  }
+}
+
+impl Drop for CanvasLayer {
+  fn drop(self: &mut Self) -> () {
+    unsafe sys.silk_ca_canvas_layer_destroy(self.handle)
+  }
+}
+
+/// Makes a CAMetalLayer present its drawables inside Core Animation transactions (`on`), so a
+/// window frame and the canvas layers' new places show together; off is Core Animation's
+/// default, presenting at once.
+pub unsafe fn presentsWithTransaction(metalLayer: ?*mut u8, on: bool) -> () {
+  unsafe sys.silk_ca_metal_layer_presents_with_transaction(metalLayer, if on { 1 } else { 0 })
+}
+
+/// Whether `metalLayer` presents inside transactions.
+pub unsafe fn presentsWithTransactionOf(metalLayer: ?*mut u8) -> bool {
+  return unsafe sys.silk_ca_metal_layer_presents_with_transaction_get(metalLayer) != 0
+}
+
+/// A layer with no window, `width` x `height` points (a CAMetalLayer when `metal`), with
+/// top-left geometry when `flipped`, as a window's view has: for tests. Release it with
+/// [`releaseLayer`].
+pub fn detachedLayer(width: f64, height: f64, flipped: bool, metal: bool) -> ?*mut u8 {
+  return unsafe sys.silk_ca_detached_layer_create(width, height, if flipped { 1 } else { 0 }, if metal { 1 } else { 0 })
+}
+
+pub unsafe fn releaseLayer(layer: ?*mut u8) -> () {
+  unsafe sys.silk_ca_layer_release(layer)
+}
+
+/// A small BGRA `IOSurfaceRef` for tests (null elsewhere). Release it with [`releaseLayer`]
+/// (it releases any Core Foundation object).
+pub fn testSurface(width: u32, height: u32) -> ?*mut u8 {
+  return unsafe sys.silk_ca_test_iosurface_create(width, height)
+}
+
+/// Sets a layer's device pixels per point, as a window does to its layer: for tests.
+pub fn setContentsScale(layer: ?*mut u8, scale: f64) -> () {
+  unsafe sys.silk_ca_layer_set_contents_scale(layer, scale)
+}
