@@ -1101,6 +1101,34 @@ impl Platform for BridgePlatform {
     return unsafe sys.silk_window_set_progress(fraction) != 0
   }
 
+  effect fn openUrl(self: &mut Self, url: string) -> bool
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    return unsafe sys.silk_window_open_url(BridgePlatform.bytes(url), String.byteLength(url)) != 0
+  }
+
+  effect fn revealPath(self: &mut Self, path: string) -> bool
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    return unsafe sys.silk_window_reveal_path(BridgePlatform.bytes(path), String.byteLength(path)) != 0
+  }
+
+  effect fn startFileDrag(self: &mut Self, window: WindowId, paths: &[String]) -> bool
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let mut joined = String.make()
+    let mut i: usize = 0
+    while i < paths.length {
+      if i > 0 {
+        run joined.append("\n")
+      }
+      run joined.append(String.view(&paths[i]))
+      i = i + 1
+    }
+    let text = String.view(&joined)
+    return unsafe sys.silk_window_start_file_drag(window.value, BridgePlatform.bytes(text), String.byteLength(text)) != 0
+  }
+
   effect fn registerShortcut(self: &mut Self, id: u32, code: KeyCode, modifiers: Modifiers) -> bool
     ! OutOfMemoryError
     ? &mut Allocator {

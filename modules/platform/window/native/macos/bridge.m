@@ -2211,6 +2211,79 @@ void silk_macos_set_progress(double fraction) {
 }
 
 // ---------------------------------------------------------------------------------------
+// URLs, Finder and dragging files out.
+
+uint8_t silk_macos_open_url(const uint8_t *url, size_t length) {
+    @autoreleasepool {
+        NSURL *target = length ? [NSURL URLWithString:string_from(url, length)] : nil;
+        if (!target || !target.scheme) return 0;
+        return [NSWorkspace.sharedWorkspace openURL:target] ? 1 : 0;
+    }
+}
+
+uint8_t silk_macos_reveal_path(const uint8_t *path, size_t length) {
+    @autoreleasepool {
+        if (!length) return 0;
+        NSURL *target = [NSURL fileURLWithPath:string_from(path, length)];
+        if (![NSFileManager.defaultManager fileExistsAtPath:target.path]) return 0;
+        [NSWorkspace.sharedWorkspace activateFileViewerSelectingURLs:@[ target ]];
+        return 1;
+    }
+}
+
+@interface SilkView (FileDrag) <NSDraggingSource>
+@end
+
+@implementation SilkView (FileDrag)
+- (NSDragOperation)draggingSession:(NSDraggingSession *)session
+    sourceOperationMaskForDraggingContext:(NSDraggingContext)context {
+    return context == NSDraggingContextOutsideApplication ? NSDragOperationCopy | NSDragOperationLink |
+                                                                NSDragOperationGeneric
+                                                          : NSDragOperationCopy;
+}
+
+// AppKit's drag loop takes the button's release, so the window would never see it.
+- (void)draggingSession:(NSDraggingSession *)session
+           endedAtPoint:(NSPoint)screenPoint
+              operation:(NSDragOperation)operation {
+    self.pressed = nil;
+    NSPoint inWindow = [self.window convertPointFromScreen:screenPoint];
+    NSPoint position = [self convertPoint:inWindow fromView:nil];
+    SilkWindowEvent out = blank_event(SILK_EVENT_MOUSE_UP, self.windowId);
+    out.x = position.x;
+    out.y = position.y;
+    out.modifiers = modifier_bits(NSEvent.modifierFlags);
+    push(out);
+    flush();
+}
+@end
+
+uint8_t silk_macos_start_file_drag(uint32_t window, const uint8_t *paths, size_t length) {
+    @autoreleasepool {
+        SilkView *view = find_window(window).view;
+        NSEvent *event = view.pressed;
+        if (!view || !event || ([NSEvent pressedMouseButtons] & 1) == 0 || !length) return 0;
+        NSPoint at = [view convertPoint:event.locationInWindow fromView:nil];
+        NSMutableArray<NSDraggingItem *> *items = [NSMutableArray array];
+        for (NSString *line in [string_from(paths, length) componentsSeparatedByString:@"\n"]) {
+            if (line.length == 0) continue;
+            NSURL *url = [NSURL fileURLWithPath:line];
+            NSDraggingItem *item = [[NSDraggingItem alloc] initWithPasteboardWriter:url];
+            NSImage *icon = [NSWorkspace.sharedWorkspace iconForFile:line];
+            icon.size = NSMakeSize(32, 32);
+            // Each icon is offset a little from the one before, as Finder stacks them.
+            CGFloat offset = (CGFloat)MIN(items.count, 4) * 4;
+            [item setDraggingFrame:NSMakeRect(at.x - 16 + offset, at.y - 16 + offset, 32, 32)
+                          contents:icon];
+            [items addObject:item];
+        }
+        if (items.count == 0) return 0;
+        [view beginDraggingSessionWithItems:items event:event source:view];
+        return 1;
+    }
+}
+
+// ---------------------------------------------------------------------------------------
 // Global shortcuts: Carbon hot keys, which need no accessibility permission.
 
 typedef struct HotKey {

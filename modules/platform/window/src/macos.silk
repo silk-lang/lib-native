@@ -845,6 +845,34 @@ impl Platform for MacPlatform {
     return true
   }
 
+  effect fn openUrl(self: &mut Self, url: string) -> bool
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    return unsafe sys.silk_macos_open_url(MacPlatform.bytes(url), String.byteLength(url)) != 0
+  }
+
+  effect fn revealPath(self: &mut Self, path: string) -> bool
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    return unsafe sys.silk_macos_reveal_path(MacPlatform.bytes(path), String.byteLength(path)) != 0
+  }
+
+  effect fn startFileDrag(self: &mut Self, window: WindowId, paths: &[String]) -> bool
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let mut joined = String.make()
+    let mut i: usize = 0
+    while i < paths.length {
+      if i > 0 {
+        run joined.append("\n")
+      }
+      run joined.append(String.view(&paths[i]))
+      i = i + 1
+    }
+    let text = String.view(&joined)
+    return unsafe sys.silk_macos_start_file_drag(window.value, MacPlatform.bytes(text), String.byteLength(text)) != 0
+  }
+
   effect fn registerShortcut(self: &mut Self, id: u32, code: KeyCode, modifiers: Modifiers) -> bool
     ! OutOfMemoryError
     ? &mut Allocator {

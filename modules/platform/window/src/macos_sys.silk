@@ -323,6 +323,13 @@ static if Intrinsic.targetOperatingSystem() == "darwin" {
   pub unsafe extern "C" fn silk_macos_context_menu_commit(window: u32, x: f64, y: f64) -> u8
   pub unsafe extern "C" fn silk_macos_set_badge(text: ?[*]const u8, length: usize) -> ()
   pub unsafe extern "C" fn silk_macos_set_progress(fraction: f64) -> ()
+  pub unsafe extern "C" fn silk_macos_open_url(url: ?[*]const u8, length: usize) -> u8
+  pub unsafe extern "C" fn silk_macos_reveal_path(path: ?[*]const u8, length: usize) -> u8
+  pub unsafe extern "C" fn silk_macos_start_file_drag(
+    window: u32,
+    paths: ?[*]const u8,
+    length: usize,
+  ) -> u8
   pub unsafe extern "C" fn silk_macos_shortcut_register(id: u32, code: u32, modifiers: u32) -> u8
   pub unsafe extern "C" fn silk_macos_shortcut_unregister(id: u32) -> ()
   pub unsafe extern "C" fn silk_macos_notify(
@@ -657,6 +664,18 @@ static if Intrinsic.targetOperatingSystem() == "darwin" {
 
   pub unsafe fn silk_macos_set_progress(fraction: f64) -> () {
     return ()
+  }
+
+  pub unsafe fn silk_macos_open_url(url: ?[*]const u8, length: usize) -> u8 {
+    return 0
+  }
+
+  pub unsafe fn silk_macos_reveal_path(path: ?[*]const u8, length: usize) -> u8 {
+    return 0
+  }
+
+  pub unsafe fn silk_macos_start_file_drag(window: u32, paths: ?[*]const u8, length: usize) -> u8 {
+    return 0
   }
 
   pub unsafe fn silk_macos_shortcut_register(id: u32, code: u32, modifiers: u32) -> u8 {

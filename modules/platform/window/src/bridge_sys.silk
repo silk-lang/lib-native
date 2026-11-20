@@ -246,6 +246,13 @@ static if Intrinsic.targetOperatingSystem() == "windows"
   pub unsafe extern "C" fn silk_window_context_menu_commit(window: u32, x: f64, y: f64) -> u8
   pub unsafe extern "C" fn silk_window_set_badge(text: ?[*]const u8, length: usize) -> u8
   pub unsafe extern "C" fn silk_window_set_progress(fraction: f64) -> u8
+  pub unsafe extern "C" fn silk_window_open_url(url: ?[*]const u8, length: usize) -> u8
+  pub unsafe extern "C" fn silk_window_reveal_path(path: ?[*]const u8, length: usize) -> u8
+  pub unsafe extern "C" fn silk_window_start_file_drag(
+    window: u32,
+    paths: ?[*]const u8,
+    length: usize,
+  ) -> u8
 } else {
   static if Intrinsic.targetArchitecture() == "wasm32" {
     pub unsafe extern "C" fn silk_window_start() -> i32 as "window#silk_window_start"
@@ -492,6 +499,19 @@ static if Intrinsic.targetOperatingSystem() == "windows"
     pub unsafe extern "C" fn silk_window_set_progress(
       fraction: f64,
     ) -> u8 as "window#silk_window_set_progress"
+    pub unsafe extern "C" fn silk_window_open_url(
+      url: ?[*]const u8,
+      length: usize,
+    ) -> u8 as "window#silk_window_open_url"
+    pub unsafe extern "C" fn silk_window_reveal_path(
+      path: ?[*]const u8,
+      length: usize,
+    ) -> u8 as "window#silk_window_reveal_path"
+    pub unsafe extern "C" fn silk_window_start_file_drag(
+      window: u32,
+      paths: ?[*]const u8,
+      length: usize,
+    ) -> u8 as "window#silk_window_start_file_drag"
   } else {
     pub unsafe fn silk_window_start() -> i32 {
       return 3
@@ -830,6 +850,22 @@ static if Intrinsic.targetOperatingSystem() == "windows"
     }
 
     pub unsafe fn silk_window_set_progress(fraction: f64) -> u8 {
+      return 0
+    }
+
+    pub unsafe fn silk_window_open_url(url: ?[*]const u8, length: usize) -> u8 {
+      return 0
+    }
+
+    pub unsafe fn silk_window_reveal_path(path: ?[*]const u8, length: usize) -> u8 {
+      return 0
+    }
+
+    pub unsafe fn silk_window_start_file_drag(
+      window: u32,
+      paths: ?[*]const u8,
+      length: usize,
+    ) -> u8 {
       return 0
     }
   }
