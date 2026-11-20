@@ -286,7 +286,10 @@ effect fn sharedImage(instance: &Instance) -> bool
   }
   let descriptor = DeviceDescriptor.default().withRequiredFeatures(features)
   let producer = run adapter.requestDevice(&descriptor)
-  let consumer = run adapter.requestDevice(&descriptor)
+  // An adapter makes one device; the second device comes from a second request for the same
+  // adapter.
+  let second = run instance.requestAdapter(&RequestAdapterOptions.default())
+  let consumer = run second.requestDevice(&descriptor)
   if !SharedImage.supported(&producer) || !SharedImage.supported(&consumer) {
     fail GpuError.status(0xffff0020)
   }
