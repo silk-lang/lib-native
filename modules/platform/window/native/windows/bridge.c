@@ -1959,7 +1959,7 @@ typedef struct DropSource {
     LONG references;
 } DropSource;
 
-static HRESULT STDMETHODCALLTYPE drop_query(IDropSource *self, REFIID riid, void **out) {
+static HRESULT STDMETHODCALLTYPE source_query(IDropSource *self, REFIID riid, void **out) {
     if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IDropSource)) {
         *out = self;
         self->lpVtbl->AddRef(self);
@@ -1968,23 +1968,23 @@ static HRESULT STDMETHODCALLTYPE drop_query(IDropSource *self, REFIID riid, void
     *out = NULL;
     return E_NOINTERFACE;
 }
-static ULONG STDMETHODCALLTYPE drop_add_ref(IDropSource *self) {
+static ULONG STDMETHODCALLTYPE source_add_ref(IDropSource *self) {
     return (ULONG)InterlockedIncrement(&((DropSource *)self)->references);
 }
-static ULONG STDMETHODCALLTYPE drop_release(IDropSource *self) {
+static ULONG STDMETHODCALLTYPE source_release(IDropSource *self) {
     LONG left = InterlockedDecrement(&((DropSource *)self)->references);
     if (left == 0) free(self);
     return (ULONG)left;
 }
-static HRESULT STDMETHODCALLTYPE drop_continue(IDropSource *self, BOOL escape, DWORD keys) {
+static HRESULT STDMETHODCALLTYPE source_continue(IDropSource *self, BOOL escape, DWORD keys) {
     if (escape) return DRAGDROP_S_CANCEL;
     return (keys & MK_LBUTTON) ? S_OK : DRAGDROP_S_DROP;
 }
-static HRESULT STDMETHODCALLTYPE drop_feedback(IDropSource *self, DWORD effect) {
+static HRESULT STDMETHODCALLTYPE source_feedback(IDropSource *self, DWORD effect) {
     return DRAGDROP_S_USEDEFAULTCURSORS;
 }
-static IDropSourceVtbl dropSourceVtbl = {drop_query, drop_add_ref, drop_release, drop_continue,
-                                         drop_feedback};
+static IDropSourceVtbl dropSourceVtbl = {source_query, source_add_ref, source_release, source_continue,
+                                         source_feedback};
 
 static void run_file_drag(Task *task) {
     Win32Window *window = find(task->window);
