@@ -4,7 +4,7 @@ name = "gpu-webgpu"
 description = "WebGPU through Dawn natively and navigator.gpu in browsers, with one API"
 version = "0.1.0"
 kind = "library"
-exports = ["runtime", "resources", "descriptors", "surface", "diagnostics", "capabilities", "host_memory"]
+exports = ["runtime", "resources", "descriptors", "surface", "diagnostics", "capabilities", "host_memory", "shared_texture"]
 
 [dependencies]
 browser_driver = { path = "task-browser", package = "native-task-browser" }

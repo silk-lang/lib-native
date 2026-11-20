@@ -1,0 +1,759 @@
+//! Textures that live outside this device: Dawn's shared texture memory and shared fences.
+//!
+//! Another process or API (a browser engine's compositor, a video decoder, a second Vulkan device)
+//! hands over GPU memory as a Linux dma-buf, a Vulkan opaque file descriptor, a macOS IOSurface or
+//! a Windows DXGI shared handle. [`SharedTextureMemory`] imports it once; each use is an access:
+//! [`SharedTextureMemory.beginAccess`] on a texture made with
+//! [`SharedTextureMemory.createTexture`], commands that sample or copy it, then
+//! [`SharedTextureMemory.endAccess`], which returns the fences the producer must wait on before it
+//! writes the memory again. Fences the producer signals when it finished writing go into
+//! [`BeginAccess.fences`].
+//!
+//! Each kind needs its Dawn feature on the device: request it with
+//! `DeviceDescriptor.withRequiredFeatures` ([`FEATURE_DMA_BUF`] and the others) after checking
+//! `Adapter.hasFeature`. These are native Dawn extensions. On the web, every import fails with
+//! [`SHARED_TEXTURE_UNAVAILABLE`].
+import webgpu_sys.generated_webgpu as sys
+import silk.collections.list { List }
+import silk.core.ownership { Copy, Drop }
+import silk.mem.allocator { Allocator, OutOfMemoryError }
+import silk.mem.pointer { Pointer }
+import silk.num.i32
+import silk.num.u32
+import silk.num.u64
+import silk.num.usize
+import descriptors as desc
+import diagnostics { HandleLease }
+import resources { Texture }
+import runtime { Device, GpuError }
+
+/// Linux dma-buf import ([`SharedTextureMemory.importDmaBuf`]).
+pub const FEATURE_DMA_BUF: u32 = 0x0005001f
+
+/// Vulkan opaque file descriptor import ([`SharedTextureMemory.importOpaqueFd`]).
+pub const FEATURE_OPAQUE_FD: u32 = 0x00050020
+
+/// Windows DXGI shared handle import ([`SharedTextureMemory.importDxgiSharedHandle`]).
+pub const FEATURE_DXGI_SHARED_HANDLE: u32 = 0x00050022
+
+/// macOS IOSurface import ([`SharedTextureMemory.importIOSurface`]).
+pub const FEATURE_IOSURFACE: u32 = 0x00050024
+
+/// Vulkan semaphores as opaque file descriptors ([`SharedFence.importVkSemaphoreOpaqueFd`]).
+pub const FEATURE_FENCE_VK_SEMAPHORE_OPAQUE_FD: u32 = 0x00050026
+
+/// Linux sync files ([`SharedFence.importSyncFd`]).
+pub const FEATURE_FENCE_SYNC_FD: u32 = 0x00050027
+
+/// D3D12 fences as DXGI shared handles ([`SharedFence.importDxgiSharedHandle`]).
+pub const FEATURE_FENCE_DXGI_SHARED_HANDLE: u32 = 0x00050029
+
+/// Metal shared events ([`SharedFence.importMtlSharedEvent`]).
+pub const FEATURE_FENCE_MTL_SHARED_EVENT: u32 = 0x0005002a
+
+/// [`FenceExport.kind`] values.
+pub const FENCE_VK_SEMAPHORE_OPAQUE_FD: u32 = 1
+
+pub const FENCE_SYNC_FD: u32 = 2
+
+pub const FENCE_DXGI_SHARED_HANDLE: u32 = 4
+
+pub const FENCE_MTL_SHARED_EVENT: u32 = 5
+
+/// Shared textures were used on the web, or an argument is outside what the helpers accept (more
+/// than 4 dma-buf planes or 8 fences, or begin fences and values of different lengths).
+pub const SHARED_TEXTURE_UNAVAILABLE: u32 = 0xfffffffa
+
+/// The most fences one [`SharedTextureMemory.beginAccess`] passes, and one
+/// [`SharedTextureMemory.endAccess`] returns.
+pub const MAX_FENCES: usize = 8
+
+/// The most planes a dma-buf import takes.
+pub const MAX_PLANES: usize = 4
+
+static if Intrinsic.targetArchitecture() != "wasm32" {
+  unsafe extern "C" fn importDmaBufNative(
+    device: sys.WGPUDevice,
+    label: sys.WGPUStringView,
+    width: u32,
+    height: u32,
+    drmFormat: u32,
+    drmModifier: u64,
+    planeCount: usize,
+    fds: ?[*]const i32,
+    offsets: ?[*]const u64,
+    strides: ?[*]const u32,
+  ) -> ?*mut u8 as "silkWebgpuImportDmaBuf"
+
+  unsafe extern "C" fn importOpaqueFdNative(
+    device: sys.WGPUDevice,
+    label: sys.WGPUStringView,
+    vkImageCreateInfo: ?*const u8,
+    memoryFd: i32,
+    memoryTypeIndex: u32,
+    allocationSize: u64,
+    dedicatedAllocation: u32,
+  ) -> ?*mut u8 as "silkWebgpuImportOpaqueFd"
+
+  unsafe extern "C" fn importIOSurfaceNative(
+    device: sys.WGPUDevice,
+    label: sys.WGPUStringView,
+    ioSurface: ?*mut u8,
+  ) -> ?*mut u8 as "silkWebgpuImportIOSurface"
+
+  unsafe extern "C" fn importDxgiSharedHandleNative(
+    device: sys.WGPUDevice,
+    label: sys.WGPUStringView,
+    handle: ?*mut u8,
+    useKeyedMutex: u32,
+  ) -> ?*mut u8 as "silkWebgpuImportDxgiSharedHandle"
+
+  unsafe extern "C" fn propertiesNative(
+    memory: ?*mut u8,
+    out: ?[*]mut u32,
+  ) -> u32 as "silkWebgpuSharedTextureMemoryProperties"
+
+  unsafe extern "C" fn createTextureNative(
+    memory: ?*mut u8,
+    label: sys.WGPUStringView,
+  ) -> sys.WGPUTexture as "silkWebgpuSharedTextureMemoryCreateTexture"
+
+  unsafe extern "C" fn beginAccessNative(
+    memory: ?*mut u8,
+    texture: sys.WGPUTexture,
+    initialized: u32,
+    concurrentRead: u32,
+    fenceCount: usize,
+    fences: ?[*]const ?*mut u8,
+    signaledValues: ?[*]const u64,
+    useVkLayout: u32,
+    vkOldLayout: i32,
+    vkNewLayout: i32,
+  ) -> u32 as "silkWebgpuSharedTextureMemoryBeginAccess"
+
+  unsafe extern "C" fn endAccessNative(
+    memory: ?*mut u8,
+    texture: sys.WGPUTexture,
+    useVkLayout: u32,
+    capacity: usize,
+    fences: ?[*]mut ?*mut u8,
+    values: ?[*]mut u64,
+    out: ?[*]mut i32,
+  ) -> u32 as "silkWebgpuSharedTextureMemoryEndAccess"
+
+  unsafe extern "C" fn isDeviceLostNative(
+    memory: ?*mut u8,
+  ) -> u32 as "silkWebgpuSharedTextureMemoryIsDeviceLost"
+
+  unsafe extern "C" fn memoryAddRefNative(
+    memory: ?*mut u8,
+  ) -> () as "silkWebgpuSharedTextureMemoryAddRef"
+
+  unsafe extern "C" fn memoryReleaseNative(
+    memory: ?*mut u8,
+  ) -> () as "silkWebgpuSharedTextureMemoryRelease"
+
+  unsafe extern "C" fn importSyncFdFenceNative(device: sys.WGPUDevice, fd: i32) ->
+    ?*mut u8 as "silkWebgpuImportSyncFdFence"
+
+  unsafe extern "C" fn importVkSemaphoreOpaqueFdFenceNative(device: sys.WGPUDevice, fd: i32) ->
+    ?*mut u8 as "silkWebgpuImportVkSemaphoreOpaqueFdFence"
+
+  unsafe extern "C" fn importMtlSharedEventFenceNative(device: sys.WGPUDevice, event: ?*mut u8) ->
+    ?*mut u8 as "silkWebgpuImportMtlSharedEventFence"
+
+  unsafe extern "C" fn importDxgiSharedHandleFenceNative(
+    device: sys.WGPUDevice,
+    handle: ?*mut u8,
+  ) -> ?*mut u8 as "silkWebgpuImportDxgiSharedHandleFence"
+
+  unsafe extern "C" fn fenceExportNative(
+    fence: ?*mut u8,
+    fd: *mut i32,
+    handle: *mut ?*mut u8,
+  ) -> u32 as "silkWebgpuSharedFenceExport"
+
+  unsafe extern "C" fn fenceIsSignaledNative(
+    fence: ?*mut u8,
+    value: u64,
+  ) -> i32 as "silkWebgpuSharedFenceIsSignaled"
+
+  unsafe extern "C" fn createIOSurfaceNative(
+    width: u32,
+    height: u32,
+  ) -> ?*mut u8 as "silkWebgpuCreateIOSurface"
+
+  unsafe extern "C" fn releaseIOSurfaceNative(
+    surface: ?*mut u8,
+  ) -> () as "silkWebgpuReleaseIOSurface"
+
+  unsafe extern "C" fn fenceAddRefNative(fence: ?*mut u8) -> () as "silkWebgpuSharedFenceAddRef"
+
+  unsafe extern "C" fn fenceReleaseNative(fence: ?*mut u8) -> () as "silkWebgpuSharedFenceRelease"
+}
+
+fn flag(value: bool) -> u32 {
+  return if value {
+    1
+  } else {
+    0
+  }
+}
+
+/// One plane of a dma-buf: its file descriptor (borrowed; Dawn duplicates what it keeps), byte
+/// offset and row stride.
+pub struct DmaBufPlane {
+  pub fd: i32,
+  pub offset: u64,
+  pub stride: u32,
+}
+
+impl Copy for DmaBufPlane {}
+
+/// A dma-buf as a producer describes it: size, DRM fourcc format, format modifier and planes.
+/// Single-plane `DRM_FORMAT_ARGB8888` (`0x34325241`) and `DRM_FORMAT_ABGR8888` (`0x34324241`)
+/// import as BGRA8 and RGBA8 textures.
+pub struct DmaBufDescriptor<'a> {
+  pub width: u32,
+  pub height: u32,
+  pub drmFormat: u32,
+  pub drmModifier: u64,
+  pub planes: &'a [DmaBufPlane],
+}
+
+/// Memory a Vulkan device exported as an opaque file descriptor, with the `VkImageCreateInfo` it
+/// was created with (its chain must hold a `VkExternalMemoryImageCreateInfo`, and its flags
+/// `VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT`). Dawn takes ownership of `memoryFd` on success.
+pub struct OpaqueFdDescriptor {
+  pub vkImageCreateInfo: ?*const u8,
+  pub memoryFd: i32,
+  pub memoryTypeIndex: u32,
+  pub allocationSize: u64,
+  pub dedicatedAllocation: bool,
+}
+
+impl Copy for OpaqueFdDescriptor {}
+
+/// What an imported memory is: its size, `WGPUTextureFormat` and the usages its textures allow.
+pub struct SharedTextureProperties {
+  pub width: u32,
+  pub height: u32,
+  pub format: u32,
+  pub usage: u64,
+}
+
+impl Copy for SharedTextureProperties {}
+
+/// A GPU synchronization primitive shared with the producer of a [`SharedTextureMemory`].
+pub struct SharedFence {
+  handle: ?*mut u8,
+}
+
+/// A fence's kind ([`FENCE_SYNC_FD`] and the others) and handle: `fd` for the file descriptor
+/// kinds (owned by the fence; duplicate it to keep it), `handle` for the others.
+pub struct FenceExport {
+  pub kind: u32,
+  pub fd: i32,
+  pub handle: ?*mut u8,
+}
+
+impl Copy for FenceExport {}
+
+effect fn fenceOf(handle: ?*mut u8) -> SharedFence
+  ! GpuError {
+  if Pointer.isNull(handle) {
+    fail GpuError.status(sys.WGPUStatus_Error)
+  }
+  return SharedFence { handle: handle }
+}
+
+impl SharedFence {
+  /// A Linux sync file the producer signals. Dawn duplicates `fd`; the caller still owns it.
+  pub effect fn importSyncFd(device: &Device, fd: i32) -> SharedFence
+    ! GpuError {
+    static if Intrinsic.targetArchitecture() == "wasm32" {
+      fail GpuError.status(SHARED_TEXTURE_UNAVAILABLE)
+    } else {
+      return run fenceOf(unsafe importSyncFdFenceNative(unsafe device.raw(), fd))
+    }
+  }
+
+  /// A Vulkan semaphore exported as an opaque file descriptor.
+  pub effect fn importVkSemaphoreOpaqueFd(device: &Device, fd: i32) -> SharedFence
+    ! GpuError {
+    static if Intrinsic.targetArchitecture() == "wasm32" {
+      fail GpuError.status(SHARED_TEXTURE_UNAVAILABLE)
+    } else {
+      return run fenceOf(unsafe importVkSemaphoreOpaqueFdFenceNative(unsafe device.raw(), fd))
+    }
+  }
+
+  /// An `MTLSharedEvent` (an Objective-C object pointer).
+  pub effect fn importMtlSharedEvent(device: &Device, event: ?*mut u8) -> SharedFence
+    ! GpuError {
+    static if Intrinsic.targetArchitecture() == "wasm32" {
+      fail GpuError.status(SHARED_TEXTURE_UNAVAILABLE)
+    } else {
+      return run fenceOf(unsafe importMtlSharedEventFenceNative(unsafe device.raw(), event))
+    }
+  }
+
+  /// A D3D12 fence's DXGI shared handle.
+  pub effect fn importDxgiSharedHandle(device: &Device, handle: ?*mut u8) -> SharedFence
+    ! GpuError {
+    static if Intrinsic.targetArchitecture() == "wasm32" {
+      fail GpuError.status(SHARED_TEXTURE_UNAVAILABLE)
+    } else {
+      return run fenceOf(unsafe importDxgiSharedHandleFenceNative(unsafe device.raw(), handle))
+    }
+  }
+
+  /// The fence's kind and handle, to pass back to the producer.
+  pub fn exportInfo(self: &Self) -> FenceExport {
+    static if Intrinsic.targetArchitecture() == "wasm32" {
+      return FenceExport { kind: 0, fd: -1, handle: Pointer.null<u8>() }
+    } else {
+      let mut fd: i32 = -1
+      let mut handle: ?*mut u8 = Pointer.null<u8>()
+      let kind = unsafe fenceExportNative(
+        self.handle,
+        Pointer.fromMutRef(&mut fd),
+        Pointer.fromMutRef(&mut handle),
+      )
+      return FenceExport { kind: kind, fd: fd, handle: handle }
+    }
+  }
+
+  /// Whether the fence reached `value`, without waiting: [`FENCE_SIGNALED`], [`FENCE_PENDING`],
+  /// or [`FENCE_UNKNOWN`] for a fence type that cannot be asked (pass such a fence to
+  /// [`SharedTextureMemory.beginAccessAfter`], which waits on the GPU). Sync files and Metal
+  /// shared events can be asked.
+  pub fn poll(self: &Self, value: u64) -> i32 {
+    static if Intrinsic.targetArchitecture() == "wasm32" {
+      return FENCE_UNKNOWN
+    } else {
+      return unsafe fenceIsSignaledNative(self.handle, value)
+    }
+  }
+
+  // The caller must not release this borrowed handle or outlive its owner.
+  pub unsafe fn raw(self: &Self) -> ?*mut u8 {
+    return self.handle
+  }
+
+  pub fn dup(self: &Self) -> SharedFence {
+    static if Intrinsic.targetArchitecture() != "wasm32" {
+      unsafe fenceAddRefNative(self.handle)
+    }
+    return SharedFence { handle: self.handle }
+  }
+}
+
+impl Drop for SharedFence {
+  fn drop(self: &mut Self) -> () {
+    static if Intrinsic.targetArchitecture() != "wasm32" {
+      unsafe fenceReleaseNative(self.handle)
+    }
+  }
+}
+
+/// [`SharedFence.poll`] results.
+pub const FENCE_SIGNALED: i32 = 1
+
+pub const FENCE_PENDING: i32 = 0
+
+pub const FENCE_UNKNOWN: i32 = -1
+
+/// GPU memory this process allocated to share between two of its devices: the producer side of a
+/// [`SharedTextureMemory`]. Import it on each device with [`SharedTextureMemory.importImage`].
+/// Today only macOS can allocate one (a BGRA8 IOSurface); elsewhere [`SharedImage.create`] fails
+/// with [`SHARED_TEXTURE_UNAVAILABLE`] and callers copy pixels through the CPU.
+pub struct SharedImage {
+  handle: ?*mut u8,
+  pub width: u32,
+  pub height: u32,
+}
+
+impl SharedImage {
+  /// Whether `device` can import what [`SharedImage.create`] allocates on this system and can
+  /// hand over the fences that order the accesses.
+  pub fn supported(device: &Device) -> bool {
+    static if Intrinsic.targetOperatingSystem() == "darwin" {
+      return device.hasFeature(FEATURE_IOSURFACE)
+        && device.hasFeature(FEATURE_FENCE_MTL_SHARED_EVENT)
+    } else {
+      return false
+    }
+  }
+
+  /// The device features [`SharedImage.supported`] needs on this system, to request when the
+  /// adapter has them. Empty where shared images cannot be allocated.
+  pub fn features() -> &'static [u32] {
+    static if Intrinsic.targetOperatingSystem() == "darwin" {
+      return &IOSURFACE_FEATURES
+    } else {
+      return &NO_FEATURES
+    }
+  }
+
+  pub effect fn create(width: u32, height: u32) -> SharedImage
+    ! GpuError {
+    static if Intrinsic.targetArchitecture() == "wasm32" {
+      fail GpuError.status(SHARED_TEXTURE_UNAVAILABLE)
+    } else {
+      if width == 0 || height == 0 {
+        fail GpuError.status(SHARED_TEXTURE_UNAVAILABLE)
+      }
+      let handle = unsafe createIOSurfaceNative(width, height)
+      if Pointer.isNull(handle) {
+        fail GpuError.status(SHARED_TEXTURE_UNAVAILABLE)
+      }
+      return SharedImage { handle: handle, width: width, height: height }
+    }
+  }
+}
+
+impl Drop for SharedImage {
+  fn drop(self: &mut Self) -> () {
+    static if Intrinsic.targetArchitecture() != "wasm32" {
+      unsafe releaseIOSurfaceNative(self.handle)
+    }
+  }
+}
+
+const IOSURFACE_FEATURES: [u32; 2] = [FEATURE_IOSURFACE, FEATURE_FENCE_MTL_SHARED_EVENT]
+
+const NO_FEATURES: [u32; 0] = []
+
+/// How an access starts: whether the memory already holds the producer's pixels, and what to wait
+/// for before reading them.
+pub struct BeginAccess {
+  /// The contents are defined (a producer wrote them). False lets Dawn treat them as cleared.
+  pub initialized: bool,
+  /// Other devices may read at the same time; the texture must then be read only.
+  pub concurrentRead: bool,
+  /// For images a Vulkan producer handed over: pass `vulkanOldLayout` and `vulkanNewLayout`
+  /// (`VkImageLayout` values) to Dawn.
+  pub useVulkanLayout: bool,
+  pub vulkanOldLayout: i32,
+  pub vulkanNewLayout: i32,
+}
+
+impl Copy for BeginAccess {}
+
+impl BeginAccess {
+  /// Initialized contents, no fences, no Vulkan layouts.
+  pub fn ready() -> BeginAccess {
+    return BeginAccess {
+      initialized: true,
+      concurrentRead: false,
+      useVulkanLayout: false,
+      vulkanOldLayout: 0,
+      vulkanNewLayout: 0,
+    }
+  }
+}
+
+/// How an access ended: whether the contents are initialized, the fences the producer must wait
+/// on before writing again (with their values), and on Vulkan the layouts Dawn left the image in.
+pub struct AccessEnd {
+  pub initialized: bool,
+  pub fences: List<SharedFence>,
+  pub signaledValues: List<u64>,
+  pub vulkanOldLayout: i32,
+  pub vulkanNewLayout: i32,
+}
+
+/// Imported GPU memory that textures are made from. Keep it while the producer may hand the same
+/// memory over again; drop it to release Dawn's reference.
+pub struct SharedTextureMemory {
+  handle: ?*mut u8,
+  lease: HandleLease,
+}
+
+effect fn memoryOf(device: &Device, handle: ?*mut u8) -> SharedTextureMemory
+  ! GpuError {
+  if Pointer.isNull(handle) {
+    fail GpuError.status(sys.WGPUStatus_Error)
+  }
+  let observer = device.diagnostics()
+  return SharedTextureMemory { handle: handle, lease: HandleLease.track(&observer) }
+}
+
+impl SharedTextureMemory {
+  /// Imports a Linux dma-buf. Needs [`FEATURE_DMA_BUF`].
+  pub effect fn importDmaBuf(
+    device: &Device,
+    label: &[u8],
+    descriptor: &DmaBufDescriptor<'_>,
+  ) -> SharedTextureMemory
+    ! GpuError {
+    static if Intrinsic.targetArchitecture() == "wasm32" {
+      fail GpuError.status(SHARED_TEXTURE_UNAVAILABLE)
+    } else {
+      let count = descriptor.planes.length
+      if count == 0 || count > MAX_PLANES {
+        fail GpuError.status(SHARED_TEXTURE_UNAVAILABLE)
+      }
+      let mut fds: [i32; 4] = [-1; 4]
+      let mut offsets: [u64; 4] = [0; 4]
+      let mut strides: [u32; 4] = [0; 4]
+      let mut i: usize = 0
+      while i < count {
+        let plane = descriptor.planes[i]
+        fds[i] = plane.fd
+        offsets[i] = plane.offset
+        strides[i] = plane.stride
+        i = i + 1
+      }
+      let handle = unsafe importDmaBufNative(
+        unsafe device.raw(),
+        desc.stringView(label),
+        descriptor.width,
+        descriptor.height,
+        descriptor.drmFormat,
+        descriptor.drmModifier,
+        count,
+        Pointer.fromSlice<i32>(&fds),
+        Pointer.fromSlice<u64>(&offsets),
+        Pointer.fromSlice<u32>(&strides),
+      )
+      return run memoryOf(device, handle)
+    }
+  }
+
+  /// Imports memory a Vulkan device exported as an opaque file descriptor. Needs
+  /// [`FEATURE_OPAQUE_FD`] and a Vulkan device of the same driver and physical device.
+  pub effect fn importOpaqueFd(
+    device: &Device,
+    label: &[u8],
+    descriptor: OpaqueFdDescriptor,
+  ) -> SharedTextureMemory
+    ! GpuError {
+    static if Intrinsic.targetArchitecture() == "wasm32" {
+      fail GpuError.status(SHARED_TEXTURE_UNAVAILABLE)
+    } else {
+      let handle = unsafe importOpaqueFdNative(
+        unsafe device.raw(),
+        desc.stringView(label),
+        descriptor.vkImageCreateInfo,
+        descriptor.memoryFd,
+        descriptor.memoryTypeIndex,
+        descriptor.allocationSize,
+        flag(descriptor.dedicatedAllocation),
+      )
+      return run memoryOf(device, handle)
+    }
+  }
+
+  /// Imports an `IOSurfaceRef`. Needs [`FEATURE_IOSURFACE`] (Metal).
+  pub effect fn importIOSurface(
+    device: &Device,
+    label: &[u8],
+    ioSurface: ?*mut u8,
+  ) -> SharedTextureMemory
+    ! GpuError {
+    static if Intrinsic.targetArchitecture() == "wasm32" {
+      fail GpuError.status(SHARED_TEXTURE_UNAVAILABLE)
+    } else {
+      let handle = unsafe importIOSurfaceNative(
+        unsafe device.raw(),
+        desc.stringView(label),
+        ioSurface,
+      )
+      return run memoryOf(device, handle)
+    }
+  }
+
+  /// Imports `image` on `device`. Each device that uses the image imports it once.
+  pub effect fn importImage(
+    device: &Device,
+    label: &[u8],
+    image: &SharedImage,
+  ) -> SharedTextureMemory
+    ! GpuError {
+    return run SharedTextureMemory.importIOSurface(device, label, image.handle)
+  }
+
+  /// Imports a D3D11 or D3D12 texture's DXGI shared handle. Needs
+  /// [`FEATURE_DXGI_SHARED_HANDLE`] (D3D12 or D3D11 backend).
+  pub effect fn importDxgiSharedHandle(
+    device: &Device,
+    label: &[u8],
+    handle: ?*mut u8,
+    useKeyedMutex: bool,
+  ) -> SharedTextureMemory
+    ! GpuError {
+    static if Intrinsic.targetArchitecture() == "wasm32" {
+      fail GpuError.status(SHARED_TEXTURE_UNAVAILABLE)
+    } else {
+      let memory = unsafe importDxgiSharedHandleNative(
+        unsafe device.raw(),
+        desc.stringView(label),
+        handle,
+        flag(useKeyedMutex),
+      )
+      return run memoryOf(device, memory)
+    }
+  }
+
+  /// The memory's size, format and allowed usages.
+  pub effect fn properties(self: &Self) -> SharedTextureProperties
+    ! GpuError {
+    static if Intrinsic.targetArchitecture() == "wasm32" {
+      fail GpuError.status(SHARED_TEXTURE_UNAVAILABLE)
+    } else {
+      let mut out: [u32; 5] = [0; 5]
+      let status = unsafe propertiesNative(self.handle, Pointer.fromMutSlice<u32>(&mut out))
+      if status != sys.WGPUStatus_Success {
+        fail GpuError.status(status)
+      }
+      return SharedTextureProperties {
+        width: out[0],
+        height: out[1],
+        format: out[2],
+        usage: u32.toU64(out[3]) | u64.shiftLeft(u32.toU64(out[4]), 32),
+      }
+    }
+  }
+
+  /// A texture over the whole memory, with its format and every usage it allows. Sample or copy
+  /// it only between [`SharedTextureMemory.beginAccess`] and [`SharedTextureMemory.endAccess`].
+  pub effect fn createTexture(self: &Self, label: &[u8]) -> Texture
+    ! GpuError {
+    static if Intrinsic.targetArchitecture() == "wasm32" {
+      fail GpuError.status(SHARED_TEXTURE_UNAVAILABLE)
+    } else {
+      let handle = unsafe createTextureNative(self.handle, desc.stringView(label))
+      if Pointer.isNull(handle) {
+        fail GpuError.status(sys.WGPUStatus_Error)
+      }
+      return unsafe Texture.adopt(handle)
+    }
+  }
+
+  /// Starts an access to `texture` (made by this memory's [`SharedTextureMemory.createTexture`]).
+  pub effect fn beginAccess(self: &Self, texture: &Texture, access: BeginAccess) -> ()
+    ! GpuError {
+    let fences: [SharedFence; 0] = []
+    let values: [u64; 0] = []
+    run self.beginAccessAfter(texture, access, &fences, &values)
+  }
+
+  /// [`SharedTextureMemory.beginAccess`] after waiting on `fences` (at most [`MAX_FENCES`]), each
+  /// signaled with its value in `signaledValues`.
+  pub effect fn beginAccessAfter(
+    self: &Self,
+    texture: &Texture,
+    access: BeginAccess,
+    fences: &[SharedFence],
+    signaledValues: &[u64],
+  ) -> ()
+    ! GpuError {
+    static if Intrinsic.targetArchitecture() == "wasm32" {
+      fail GpuError.status(SHARED_TEXTURE_UNAVAILABLE)
+    } else {
+      let count = fences.length
+      if count > MAX_FENCES || signaledValues.length != count {
+        fail GpuError.status(SHARED_TEXTURE_UNAVAILABLE)
+      }
+      let mut handles: [?*mut u8; 8] = [Pointer.null<u8>(); 8]
+      let mut i: usize = 0
+      while i < count {
+        handles[i] = unsafe fences[i].raw()
+        i = i + 1
+      }
+      let status = unsafe beginAccessNative(
+        self.handle,
+        unsafe texture.raw(),
+        flag(access.initialized),
+        flag(access.concurrentRead),
+        count,
+        Pointer.fromSlice<?*mut u8>(&handles),
+        Pointer.fromSlice<u64>(signaledValues),
+        flag(access.useVulkanLayout),
+        access.vulkanOldLayout,
+        access.vulkanNewLayout,
+      )
+      if status != sys.WGPUStatus_Success {
+        fail GpuError.status(status)
+      }
+    }
+  }
+
+  /// Ends the access to `texture`. Set `vulkanLayout` to read back the layouts a Vulkan backend
+  /// left the image in. Submit the commands that used the texture first.
+  pub effect fn endAccess(self: &Self, texture: &Texture, vulkanLayout: bool) -> AccessEnd
+    ! GpuError | OutOfMemoryError
+    ? &mut Allocator {
+    static if Intrinsic.targetArchitecture() == "wasm32" {
+      fail GpuError.status(SHARED_TEXTURE_UNAVAILABLE)
+    } else {
+      let mut fences: [?*mut u8; 8] = [Pointer.null<u8>(); 8]
+      let mut values: [u64; 8] = [0; 8]
+      let mut out: [i32; 4] = [0; 4]
+      let status = unsafe endAccessNative(
+        self.handle,
+        unsafe texture.raw(),
+        flag(vulkanLayout),
+        MAX_FENCES,
+        Pointer.fromMutSlice<?*mut u8>(&mut fences),
+        Pointer.fromMutSlice<u64>(&mut values),
+        Pointer.fromMutSlice<i32>(&mut out),
+      )
+      let returned = if out[1] < 0 {
+        0
+      } else if i32.toUsize(out[1]) > MAX_FENCES {
+        MAX_FENCES
+      } else {
+        i32.toUsize(out[1])
+      }
+      let mut end = AccessEnd {
+        initialized: out[0] != 0,
+        fences: List<SharedFence>.make(),
+        signaledValues: List<u64>.make(),
+        vulkanOldLayout: out[2],
+        vulkanNewLayout: out[3],
+      }
+      let mut i: usize = 0
+      while i < returned {
+        run end.fences.append(SharedFence { handle: fences[i] })
+        run end.signaledValues.append(values[i])
+        i = i + 1
+      }
+      if status != sys.WGPUStatus_Success {
+        fail GpuError.status(status)
+      }
+      return move end
+    }
+  }
+
+  /// Whether the device this memory was imported on is lost.
+  pub fn isDeviceLost(self: &Self) -> bool {
+    static if Intrinsic.targetArchitecture() == "wasm32" {
+      return true
+    } else {
+      return unsafe isDeviceLostNative(self.handle) != 0
+    }
+  }
+
+  // The caller must not release this borrowed handle or outlive its owner.
+  pub unsafe fn raw(self: &Self) -> ?*mut u8 {
+    return self.handle
+  }
+
+  pub fn dup(self: &Self) -> SharedTextureMemory {
+    static if Intrinsic.targetArchitecture() != "wasm32" {
+      unsafe memoryAddRefNative(self.handle)
+    }
+    return SharedTextureMemory { handle: self.handle, lease: self.lease.dup() }
+  }
+}
+
+impl Drop for SharedTextureMemory {
+  fn drop(self: &mut Self) -> () {
+    static if Intrinsic.targetArchitecture() != "wasm32" {
+      unsafe memoryReleaseNative(self.handle)
+    }
+  }
+}

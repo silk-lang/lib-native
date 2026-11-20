@@ -10,13 +10,21 @@ import webgpu.descriptors {
   ComputePassDescriptor,
   ColorTargetState,
   FragmentState,
+  Extent3D,
   Limits,
   RenderPipelineDescriptor,
+  TexelCopyBufferInfo,
+  TexelCopyBufferLayout,
+  TexelCopyTextureInfo,
   VertexState
 }
 import webgpu.resources as gpu
+import webgpu.shared_texture as shared
+import webgpu.shared_texture { BeginAccess, SharedFence, SharedImage, SharedTextureMemory }
+import silk.collections.list { List }
 import silk.mem.pointer { Pointer }
-import silk.mem.allocator { OutOfMemoryError }
+import silk.num.usize
+import silk.mem.allocator { Allocator, OutOfMemoryError }
 import silk.core.effect { Effect }
 import silk.core.result { Result }
 import silk.io.writer { Writer }
@@ -258,6 +266,161 @@ effect fn cachedPipeline(instance: &Instance, directory: &[u8]) -> ()
   run device.checkErrors()
 }
 
+/// Two devices of one adapter share one image: the first writes it and ends its access, the
+/// second waits for the fences of that access and reads the pixels back. Returns false where the
+/// adapter cannot share (then nothing is checked).
+effect fn sharedImage(instance: &Instance) -> bool
+  ! GpuError | OutOfMemoryError
+  ? &mut Allocator {
+  let adapter = run instance.requestAdapter(&RequestAdapterOptions.default())
+  let features = SharedImage.features()
+  if features.length == 0 {
+    return false
+  }
+  let mut at: usize = 0
+  while at < features.length {
+    if !adapter.hasFeature(features[at]) {
+      return false
+    }
+    at = at + 1
+  }
+  let descriptor = DeviceDescriptor.default().withRequiredFeatures(features)
+  let producer = run adapter.requestDevice(&descriptor)
+  // An adapter makes one device; the second device comes from a second request for the same
+  // adapter.
+  let second = run instance.requestAdapter(&RequestAdapterOptions.default())
+  let consumer = run second.requestDevice(&descriptor)
+  if !SharedImage.supported(&producer) || !SharedImage.supported(&consumer) {
+    fail GpuError.status(0xffff0020)
+  }
+  let image = run SharedImage.create(4, 2)
+  let written = run SharedTextureMemory.importImage(&producer, b"shared (producer)", &image)
+  let shown = run SharedTextureMemory.importImage(&consumer, b"shared (consumer)", &image)
+  let properties = run shown.properties()
+  if properties.width != 4 || properties.height != 2
+    || properties.format != sys.WGPUTextureFormat_BGRA8Unorm {
+    fail GpuError.status(0xffff0021)
+  }
+  let target = run written.createTexture(b"shared target")
+  let source = run shown.createTexture(b"shared source")
+
+  let mut pixels: [u8; 32] = [0; 32]
+  at = 0
+  while at < 32 {
+    pixels[at] = usize.toU8(at * 7 + 3)
+    at = at + 1
+  }
+  let mut size = Extent3D.default()
+  size.setWidth(4)
+  size.setHeight(2)
+  size.setDepthOrArrayLayers(1)
+  let mut layout = TexelCopyBufferLayout.default()
+  layout.setBytesPerRow(256)
+  layout.setRowsPerImage(2)
+
+  let mut first = BeginAccess.ready()
+  first.initialized = false
+  run written.beginAccess(&target, first)
+  let producerQueue = run gpu.getQueue(&producer)
+  let mut tight = TexelCopyBufferLayout.default()
+  tight.setBytesPerRow(16)
+  tight.setRowsPerImage(2)
+  producerQueue.writeTexture(
+    &TexelCopyTextureInfo.default().withTexture(&target),
+    &pixels,
+    &tight,
+    &size,
+  )
+  let end = run written.endAccess(&target, false)
+  if !end.initialized {
+    fail GpuError.status(0xffff0022)
+  }
+  run producer.checkErrors()
+
+  // The fences can be asked without waiting, and reach their values once the write ran.
+  let fences = end.fences.asSlice()
+  let values = end.signaledValues.asSlice()
+  let mut spins: u32 = 0
+  at = 0
+  while at < fences.length {
+    let state = fences[at].poll(values[at])
+    if state == shared.FENCE_UNKNOWN {
+      fail GpuError.status(0xffff0023)
+    }
+    if state == shared.FENCE_SIGNALED {
+      at = at + 1
+    } else {
+      spins = spins + 1
+      if spins > 2000000 {
+        fail GpuError.status(0xffff0024)
+      }
+      instance.processEvents()
+    }
+  }
+
+  // A fence belongs to the device that made it: the consumer imports its handle.
+  let mut imported = List<SharedFence>.make()
+  at = 0
+  while at < fences.length {
+    let info = fences[at].exportInfo()
+    if info.kind != shared.FENCE_MTL_SHARED_EVENT {
+      fail GpuError.status(0xffff0025)
+    }
+    run imported.append(run SharedFence.importMtlSharedEvent(&consumer, info.handle))
+    at = at + 1
+  }
+  run shown.beginAccessAfter(&source, BeginAccess.ready(), imported.asSlice(), values)
+  let readback = run gpu.createBuffer(
+    &consumer,
+    &BufferDescriptor.make(
+      b"shared readback",
+      512,
+      sys.WGPUBufferUsage_CopyDst | sys.WGPUBufferUsage_MapRead,
+      false,
+    ),
+  )
+  let mut destination = TexelCopyBufferInfo.default().withBuffer(&readback)
+  destination.setLayout(layout)
+  let mut encoder = run gpu.createCommandEncoder(&consumer, b"shared read")
+  encoder.copyTextureToBuffer(
+    &TexelCopyTextureInfo.default().withTexture(&source),
+    &destination,
+    &size,
+  )
+  let commands = run encoder.finish(b"shared read")
+  let consumerQueue = run gpu.getQueue(&consumer)
+  consumerQueue.submit(&[commands.reference()])
+  drop run shown.endAccess(&source, false)
+  let bytes = run runtime.mapRead(&consumer, &readback, 0, 512)
+  let actual = bytes.asSlice()
+  let mut row: usize = 0
+  while row < 2 {
+    let mut column: usize = 0
+    while column < 16 {
+      if actual[row * 256 + column] != pixels[row * 16 + column] {
+        fail GpuError.status(0xffff0026)
+      }
+      column = column + 1
+    }
+    row = row + 1
+  }
+  run consumer.checkErrors()
+
+  // Everything shared is released while both devices are alive, and neither device reports an
+  // error for it afterwards.
+  drop imported
+  drop end
+  drop source
+  drop target
+  drop shown
+  drop written
+  drop image
+  instance.processEvents()
+  run producer.checkErrors()
+  run consumer.checkErrors()
+  return true
+}
+
 effect fn program() -> i32
   ! GpuError | OutOfMemoryError {
   if !rawInstanceSmoke() {
@@ -269,9 +432,22 @@ effect fn program() -> i32
   // The first device fills the cache, the second reads it back.
   run cachedPipeline(&instance, b"build/gpu-webgpu-cache-test")
   run cachedPipeline(&instance, b"build/gpu-webgpu-cache-test")
+  let mut allocator = Allocator.systemAllocatorProvider()
+  let sharedChecked = run sharedImage(&instance) |> Effect.provideMut<Allocator>(&mut allocator)
   drop instance
   if observer.liveHandles() != 0 || observer.failureCount() != 0 {
+    if observer.liveHandles() != 0 {
+      writeMessage(b"FAIL live GPU handles remain\n", true)
+    }
+    if observer.failureCount() != 0 {
+      writeMessage(b"FAIL a device reported an error nothing read\n", true)
+    }
     return 2
+  }
+  if sharedChecked {
+    writeMessage(b"PASS two devices share an image, with fences\n", false)
+  } else {
+    writeMessage(b"SKIP shared image: this adapter cannot share one between devices\n", false)
   }
   let message = b"PASS native instance, mapping, queue completion, validation scope, cancellation, pipeline cache, and handle accounting\n"
   writeMessage(message, false)
