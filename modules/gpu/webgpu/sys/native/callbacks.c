@@ -357,15 +357,19 @@ WGPUSharedFence silkWebgpuImportDxgiSharedHandleFence(WGPUDevice device, void *h
 /* The fence's type, and its handle: a file descriptor in *fd for the FD types, a pointer in
  * *handle for the others. Handles stay owned by the fence. */
 uint32_t silkWebgpuSharedFenceExport(WGPUSharedFence fence, int32_t *fd, void **handle) {
-    WGPUSharedFenceSyncFDExportInfo sync = WGPU_SHARED_FENCE_SYNC_FD_EXPORT_INFO_INIT;
+    /* The first call asks for the type alone: a fence takes only its own type's chain. */
     WGPUSharedFenceExportInfo info = WGPU_SHARED_FENCE_EXPORT_INFO_INIT;
-    info.nextInChain = &sync.chain;
     wgpuSharedFenceExportInfo(fence, &info);
     *fd = -1;
     *handle = NULL;
     switch (info.type) {
-    case WGPUSharedFenceType_SyncFD:
-        break;
+    case WGPUSharedFenceType_SyncFD: {
+        WGPUSharedFenceSyncFDExportInfo sync = WGPU_SHARED_FENCE_SYNC_FD_EXPORT_INFO_INIT;
+        info.nextInChain = &sync.chain;
+        wgpuSharedFenceExportInfo(fence, &info);
+        *fd = sync.handle;
+        return (uint32_t)info.type;
+    }
     case WGPUSharedFenceType_VkSemaphoreOpaqueFD: {
         WGPUSharedFenceVkSemaphoreOpaqueFDExportInfo opaque = WGPU_SHARED_FENCE_VK_SEMAPHORE_OPAQUE_FD_EXPORT_INFO_INIT;
         info.nextInChain = &opaque.chain;
@@ -390,8 +394,6 @@ uint32_t silkWebgpuSharedFenceExport(WGPUSharedFence fence, int32_t *fd, void **
     default:
         return (uint32_t)info.type;
     }
-    *fd = sync.handle;
-    return (uint32_t)info.type;
 }
 
 void silkWebgpuSharedFenceAddRef(WGPUSharedFence fence) {
