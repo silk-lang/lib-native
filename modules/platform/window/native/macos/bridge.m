@@ -299,7 +299,6 @@ static void check_appearance(void) {
 @property(nonatomic) NSRange markedSelection;
 @property(nonatomic) BOOL imeTouched;
 @property(nonatomic, strong) CADisplayLink *displayLink;
-@property(nonatomic) int idleRefreshes;
 @property(nonatomic, strong) NSTrackingArea *tracking;
 @property(nonatomic) BOOL handlingKey;
 @property(nonatomic, strong) NSEvent *pressed;
@@ -417,14 +416,9 @@ static NSString *ax_role(uint32_t role) {
 - (BOOL)canBecomeMainWindow { return YES; }
 @end
 
-// Refreshes with no frame requested after which a window's display link pauses.
-enum { SILK_IDLE_REFRESHES = 4 };
-
 static void push_frame(SilkView *view, double targetTime) {
-    // The display link keeps running: a window that draws frame after frame asks for the next
-    // one within this refresh, and a link resumed for each request can fire a refresh late.
-    // displayLinkFired: pauses it once nothing has been asked for a few refreshes.
     view.frameRequested = NO;
+    view.displayLink.paused = YES;
     SilkWindowEvent event = blank_event(SILK_EVENT_REQUEST_FRAME, view.windowId);
     event.value = targetTime;
     push(event);
@@ -504,17 +498,6 @@ static void push_resize(SilkView *view) {
         self.displayLink.paused = YES;
         [self.displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
     }
-    [self useFullRefreshRate];
-}
-
-// Asks for every refresh of the window's screen. Without a range, a display with a variable
-// refresh rate may call the link less often than it refreshes.
-- (void)useFullRefreshRate {
-    NSScreen *screen = self.window.screen;
-    if (!self.displayLink || !screen) return;
-    float rate = (float)screen.maximumFramesPerSecond;
-    if (rate <= 0) return;
-    self.displayLink.preferredFrameRateRange = CAFrameRateRangeMake(rate, rate, rate);
 }
 
 // SILK_WINDOW_IGNORE_OCCLUSION=1 keeps frames flowing while the system reports the window as
@@ -539,18 +522,10 @@ static BOOL window_visible(NSWindow *window) {
 - (void)displayLinkFired:(CADisplayLink *)link {
     // A covered or off-screen window keeps its request and draws when it shows again
     // (windowDidChangeOcclusionState: resumes the link).
-    if (!window_visible(self.window)) {
+    if (!self.frameRequested || !window_visible(self.window)) {
         link.paused = YES;
         return;
     }
-    if (!self.frameRequested) {
-        // Nothing asked for this refresh. The link stays on for a few more, so the next
-        // request of a run of frames is served by the very next refresh.
-        self.idleRefreshes += 1;
-        if (self.idleRefreshes >= SILK_IDLE_REFRESHES) link.paused = YES;
-        return;
-    }
-    self.idleRefreshes = 0;
     push_frame(self, link.targetTimestamp);
     flush();
 }
@@ -1015,7 +990,6 @@ static void place_controls(SilkWindow *record) {
     place_controls(self);
     [self pushFlag:SILK_EVENT_FULL_SCREEN_CHANGED on:NO];
 }
-- (void)windowDidChangeScreen:(NSNotification *)n { [self.view useFullRefreshRate]; }
 - (void)windowDidChangeOcclusionState:(NSNotification *)n {
     BOOL visible = window_visible(self.window);
     if (visible && self.view.frameRequested) self.view.displayLink.paused = NO;
@@ -1438,8 +1412,7 @@ void silk_macos_request_frame(uint32_t id) {
     SilkView *view = find_window(id).view;
     if (!view || view.frameRequested) return;
     view.frameRequested = YES;
-    view.idleRefreshes = 0;
-    if (view.displayLink.paused) view.displayLink.paused = NO;
+    view.displayLink.paused = NO;
 }
 
 void silk_macos_content_size(uint32_t id, double *width, double *height) {
