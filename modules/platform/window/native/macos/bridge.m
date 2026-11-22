@@ -500,8 +500,23 @@ static void push_resize(SilkView *view) {
     }
 }
 
+// SILK_WINDOW_IGNORE_OCCLUSION=1 keeps frames flowing while the system reports the window as
+// covered, as a browser does with occlusion throttling turned off. macOS can report a window on
+// screen as not visible for a few seconds; a benchmark that drives the window sets this so those
+// seconds do not count as dropped frames.
+static BOOL ignore_occlusion(void) {
+    static int ignore = -1;
+    if (ignore < 0) {
+        const char *value = getenv("SILK_WINDOW_IGNORE_OCCLUSION");
+        ignore = value && value[0] && strcmp(value, "0") != 0;
+    }
+    return ignore;
+}
+
 static BOOL window_visible(NSWindow *window) {
-    return window && (window.occlusionState & NSWindowOcclusionStateVisible) != 0;
+    if (!window) return NO;
+    if (ignore_occlusion()) return window.isVisible && !window.isMiniaturized;
+    return (window.occlusionState & NSWindowOcclusionStateVisible) != 0;
 }
 
 - (void)displayLinkFired:(CADisplayLink *)link {
