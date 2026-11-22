@@ -207,6 +207,12 @@ uint8_t silk_macos_context_menu_commit(uint32_t window, double x, double y);
 void silk_macos_set_badge(const uint8_t *text, size_t length);
 void silk_macos_set_progress(double fraction);
 
+// Opens a URL with its default app, shows a path selected in Finder, and drags files
+// (paths separated by newlines) out of a window while the button is down. 1 on success.
+uint8_t silk_macos_open_url(const uint8_t *url, size_t length);
+uint8_t silk_macos_reveal_path(const uint8_t *path, size_t length);
+uint8_t silk_macos_start_file_drag(uint32_t window, const uint8_t *paths, size_t length);
+
 // A shortcut that delivers GLOBAL_SHORTCUT with `id` whichever app has focus: the key with
 // KeyCode `code` and exactly the modifier bits `modifiers`. Registering an id again replaces
 // it. Returns 1 when registered, 0 when the system refused or has no global shortcuts.

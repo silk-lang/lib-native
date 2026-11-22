@@ -107,6 +107,11 @@ pub struct HeadlessPlatform {
   pub badge: String,
   /// The progress on the app's icon; negative for none.
   pub progress: f64,
+  /// Every URL opened and path revealed, oldest first.
+  pub openedUrls: List<String>,
+  pub revealedPaths: List<String>,
+  /// The paths of the last file drag started.
+  pub draggedFiles: List<String>,
 }
 
 impl HeadlessPlatform {
@@ -134,6 +139,9 @@ impl HeadlessPlatform {
       contextMenu: Option<HeadlessContextMenu>.None,
       badge: String.make(),
       progress: -1.0,
+      openedUrls: List<String>.make(),
+      revealedPaths: List<String>.make(),
+      draggedFiles: List<String>.make(),
     }
   }
 
@@ -685,6 +693,33 @@ impl Platform for HeadlessPlatform {
     ? &mut Allocator {
     self.progress = if fraction < 0.0 { -1.0 } else if fraction > 1.0 { 1.0 } else { fraction }
     return true
+  }
+
+  effect fn openUrl(self: &mut Self, url: string) -> bool
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    run self.openedUrls.append(run String.copy(url))
+    return true
+  }
+
+  effect fn revealPath(self: &mut Self, path: string) -> bool
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    run self.revealedPaths.append(run String.copy(path))
+    return true
+  }
+
+  effect fn startFileDrag(self: &mut Self, window: WindowId, paths: &[String]) -> bool
+    ! OutOfMemoryError
+    ? &mut Allocator {
+    let mut copied = List<String>.make()
+    let mut i: usize = 0
+    while i < paths.length {
+      run copied.append(run String.copy(String.view(&paths[i])))
+      i = i + 1
+    }
+    self.draggedFiles = move copied
+    return paths.length > 0
   }
 }
 
