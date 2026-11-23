@@ -566,7 +566,18 @@ static BOOL window_visible(NSWindow *window) {
     [super updateTrackingAreas];
 }
 
-- (void)cursorUpdate:(NSEvent *)event { [self.cursor set]; }
+// Whether `windowPoint` hits a native subview (such as a WKWebView) rather than the Silk view.
+static BOOL pointer_over_subview(SilkView *view, NSPoint windowPoint) {
+    if (!view || view.subviews.count == 0) return NO;
+    NSPoint inSuper = view.superview ? [view.superview convertPoint:windowPoint fromView:nil] : windowPoint;
+    NSView *hit = [view hitTest:inSuper];
+    return hit != nil && hit != view;
+}
+
+- (void)cursorUpdate:(NSEvent *)event {
+    if (pointer_over_subview(self, event.locationInWindow)) return;
+    [self.cursor set];
+}
 
 // Files dragged in from other apps.
 
@@ -704,9 +715,10 @@ static uint32_t other_button(NSEvent *event) {
     // The tracking area is active even while another app is in front, so a window shows
     // hover like other Mac windows do. AppKit also sends the moves while another app's
     // window covers this one; those are dropped unless this window is the one under the
-    // pointer.
+    // pointer. Moves over a native child view (e.g. WKWebView) belong to that view.
     NSInteger top = [NSWindow windowNumberAtPoint:[NSEvent mouseLocation] belowWindowWithWindowNumber:0];
     if (top != self.window.windowNumber) return;
+    if (pointer_over_subview(self, e.locationInWindow)) return;
     [self pushMouse:SILK_EVENT_MOUSE_MOVED event:e button:0];
 }
 - (void)mouseDragged:(NSEvent *)e {
@@ -1656,7 +1668,9 @@ static void show_cursor(SilkWindow *record, NSCursor *cursor) {
     record.view.cursor = cursor;
     NSPoint mouse = [record.window mouseLocationOutsideOfEventStream];
     NSPoint local = [record.view convertPoint:mouse fromView:nil];
-    if (NSPointInRect(local, record.view.bounds)) [record.view.cursor set];
+    if (NSPointInRect(local, record.view.bounds) && !pointer_over_subview(record.view, mouse)) {
+        [record.view.cursor set];
+    }
 }
 
 void silk_macos_set_cursor(uint32_t id, uint32_t cursor) {
